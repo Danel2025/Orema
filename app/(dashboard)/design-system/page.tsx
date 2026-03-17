@@ -140,16 +140,16 @@ export default function DesignSystemPage() {
                 Variants
               </Text>
               <Flex gap="3" wrap="wrap">
-                <Button variant="solid" color="orange">
+                <Button variant="solid" color="violet">
                   Solid
                 </Button>
-                <Button variant="soft" color="orange">
+                <Button variant="soft" color="violet">
                   Soft
                 </Button>
-                <Button variant="outline" color="orange">
+                <Button variant="outline" color="violet">
                   Outline
                 </Button>
-                <Button variant="ghost" color="orange">
+                <Button variant="ghost" color="violet">
                   Ghost
                 </Button>
               </Flex>
@@ -162,7 +162,7 @@ export default function DesignSystemPage() {
                 Colors
               </Text>
               <Flex gap="3" wrap="wrap">
-                <Button color="orange">Orange</Button>
+                <Button color="violet">Orange</Button>
                 <Button color="blue">Blue</Button>
                 <Button color="green">Green</Button>
                 <Button color="red">Red</Button>
@@ -178,16 +178,16 @@ export default function DesignSystemPage() {
                 Sizes
               </Text>
               <Flex gap="3" align="center" wrap="wrap">
-                <Button size="1" color="orange">
+                <Button size="1" color="violet">
                   Small
                 </Button>
-                <Button size="2" color="orange">
+                <Button size="2" color="violet">
                   Medium
                 </Button>
-                <Button size="3" color="orange">
+                <Button size="3" color="violet">
                   Large
                 </Button>
-                <Button size="4" color="orange">
+                <Button size="4" color="violet">
                   Extra Large
                 </Button>
               </Flex>
@@ -200,7 +200,7 @@ export default function DesignSystemPage() {
                 Icon Buttons
               </Text>
               <Flex gap="3" wrap="wrap">
-                <IconButton variant="solid" color="orange">
+                <IconButton variant="solid" color="violet">
                   <Plus size={18} />
                 </IconButton>
                 <IconButton variant="soft" color="blue">
@@ -230,13 +230,13 @@ export default function DesignSystemPage() {
                 Variants
               </Text>
               <Flex gap="3" wrap="wrap">
-                <Badge variant="solid" color="orange">
+                <Badge variant="solid" color="violet">
                   Solid
                 </Badge>
-                <Badge variant="soft" color="orange">
+                <Badge variant="soft" color="violet">
                   Soft
                 </Badge>
-                <Badge variant="outline" color="orange">
+                <Badge variant="outline" color="violet">
                   Outline
                 </Badge>
               </Flex>
@@ -286,7 +286,7 @@ export default function DesignSystemPage() {
             title="Ventes du jour"
             value={formatCurrency(125000)}
             icon={ShoppingCart}
-            color="orange"
+            color="violet"
             trend={{ value: "+12%", isPositive: true }}
           />
           <StatCard
@@ -363,7 +363,7 @@ export default function DesignSystemPage() {
                 Sizes
               </Text>
               <Flex gap="3" align="center">
-                <Avatar fallback="A" size="1" color="orange" />
+                <Avatar fallback="A" size="1" color="violet" />
                 <Avatar fallback="B" size="2" color="blue" />
                 <Avatar fallback="C" size="3" color="green" />
                 <Avatar fallback="D" size="4" color="purple" />
@@ -378,7 +378,7 @@ export default function DesignSystemPage() {
                 Colors
               </Text>
               <Flex gap="3">
-                <Avatar fallback="O" color="orange" size="3" />
+                <Avatar fallback="O" color="violet" size="3" />
                 <Avatar fallback="B" color="blue" size="3" />
                 <Avatar fallback="G" color="green" size="3" />
                 <Avatar fallback="R" color="red" size="3" />
@@ -398,7 +398,7 @@ export default function DesignSystemPage() {
           <Flex direction="column" gap="5" p="5">
             <Box>
               <Text size="1" color="gray" mb="3">
-                Accent Principal - Orange
+                Accent Principal - Violet
               </Text>
               <Flex gap="2" wrap="wrap">
                 {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].map((scale) => (
@@ -407,7 +407,7 @@ export default function DesignSystemPage() {
                     style={{
                       width: 60,
                       height: 60,
-                      backgroundColor: `var(--orange-${scale})`,
+                      backgroundColor: `var(--violet-${scale})`,
                       borderRadius: "var(--radius-2)",
                       display: "flex",
                       alignItems: "center",

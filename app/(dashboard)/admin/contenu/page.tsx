@@ -43,7 +43,7 @@ const contentTypes = [
     title: "Blog",
     description: "Gérez les articles, auteurs et catégories du blog",
     icon: Newspaper,
-    color: "orange",
+    color: "violet",
     href: "/admin/contenu/blog",
     createHref: "/admin/contenu/blog/nouveau",
     features: [
@@ -249,7 +249,7 @@ export default function ContenuPage() {
                 <Badge color="gray" variant="soft">
                   Brouillon = Masqué
                 </Badge>
-                <Badge color="orange" variant="soft">
+                <Badge color="violet" variant="soft">
                   Archivé = Masqué
                 </Badge>
               </Flex>

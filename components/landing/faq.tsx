@@ -75,7 +75,7 @@ function FAQItem({
         <Text
           size="3"
           weight="medium"
-          style={{ color: isOpen ? "var(--orange-11)" : "var(--gray-12)" }}
+          style={{ color: isOpen ? "var(--violet-11)" : "var(--gray-12)" }}
         >
           {question}
         </Text>
@@ -86,14 +86,13 @@ function FAQItem({
         >
           <ChevronDown
             size={20}
-            style={{ color: isOpen ? "var(--orange-9)" : "var(--gray-10)" }}
+            style={{ color: isOpen ? "var(--violet-9)" : "var(--gray-10)" }}
           />
         </motion.div>
       </button>
 
       <AnimatePresence>
-        {isOpen && (
-          <motion.div
+        {isOpen ? <motion.div
             initial={{ height: 0, opacity: 0 }}
             animate={{ height: "auto", opacity: 1 }}
             exit={{ height: 0, opacity: 0 }}
@@ -105,8 +104,7 @@ function FAQItem({
                 {answer}
               </Text>
             </div>
-          </motion.div>
-        )}
+          </motion.div> : null}
       </AnimatePresence>
     </div>
   );
@@ -205,7 +203,7 @@ export function FAQ() {
                 style={{
                   width: 48,
                   height: 48,
-                  background: "var(--orange-a3)",
+                  background: "var(--violet-a3)",
                   borderRadius: "50%",
                   display: "flex",
                   alignItems: "center",
@@ -214,7 +212,7 @@ export function FAQ() {
               >
                 <MessageCircleQuestion
                   size={24}
-                  style={{ color: "var(--orange-9)" }}
+                  style={{ color: "var(--violet-9)" }}
                 />
               </Box>
               <Heading size="4">Vous avez d&apos;autres questions ?</Heading>
@@ -229,7 +227,7 @@ export function FAQ() {
                 className="mt-2 inline-flex items-center gap-2 rounded-lg font-medium text-white"
                 style={{
                   background:
-                    "linear-gradient(135deg, var(--orange-9) 0%, var(--amber-9) 100%)",
+                    "linear-gradient(135deg, var(--violet-9) 0%, var(--purple-9) 100%)",
                   padding: "14px 24px",
                 }}
               >

@@ -20,6 +20,7 @@ pnpm format:check        # Check formatting without changes
 # Unit Tests (Vitest)
 pnpm test                # Run tests in watch mode
 pnpm test:run            # Run tests once
+pnpm test:run tests/unit/currency.test.ts   # Run a single test file
 pnpm test:ui             # Open Vitest UI
 pnpm test:coverage       # Run with coverage report
 
@@ -27,7 +28,6 @@ pnpm test:coverage       # Run with coverage report
 pnpm test:e2e            # Run E2E tests
 pnpm test:e2e:ui         # Open Playwright UI
 pnpm test:e2e:headed     # Run with visible browser
-pnpm test:e2e:debug      # Debug mode
 
 # Database (Supabase)
 pnpm db:types            # Generate TypeScript types from Supabase schema
@@ -37,166 +37,167 @@ pnpm check               # Run setup validation script
 pnpm validate:md         # Validate markdown structure
 ```
 
+## Environment Variables
+
+Required in `.env` (see `.env.example`):
+```
+NEXT_PUBLIC_SUPABASE_URL      # Supabase project URL
+NEXT_PUBLIC_SUPABASE_ANON_KEY # Supabase anon (public) key
+SUPABASE_SERVICE_ROLE_KEY     # Admin key - NEVER expose client-side
+AUTH_SECRET                   # JWT session secret
+```
+
 ## High-Level Architecture
 
-### Application Structure (Next.js 16 App Router)
+**Stack**: Next.js 16 (App Router, Turbopack) / React 19 / TypeScript 5 / Supabase (PostgreSQL) / Radix UI Themes 3 / Tailwind CSS 4 / Zustand 5 / TanStack Query 5
 
-```
-app/
-├── (auth)/             # Auth routes (login, register, logout)
-├── (dashboard)/        # Protected routes requiring authentication
-│   ├── caisse/        # POS interface - main sales module
-│   ├── salle/         # Floor plan - table management with drag & drop
-│   ├── produits/      # Product catalog management
-│   ├── stocks/        # Inventory and stock movements
-│   ├── clients/       # Customer management with loyalty
-│   ├── employes/      # Employee management with RBAC
-│   ├── rapports/      # Reports (Rapport Z, statistics)
-│   ├── parametres/    # Settings (printers, taxes, etc.)
-│   └── admin/         # Super admin routes
-├── (public)/          # Public pages (docs, blog, legal)
-└── api/               # API routes
-```
+**Path alias**: `@/*` maps to project root (e.g., `@/lib/db`, `@/components/ui`)
+
+### Route Groups (App Router)
+
+- `app/(auth)/` — Public auth routes (login, register, logout)
+- `app/(dashboard)/` — Protected routes (POS, products, reports, settings, etc.)
+- `app/(public)/` — Marketing pages (docs, blog, legal, FAQ)
+- `app/api/` — Route Handlers (REST endpoints)
+
+### Authentication & Route Protection
+
+**No middleware.ts** — Auth is enforced in `app/(dashboard)/layout.tsx`:
+1. Calls `getCurrentUser()` from `@/lib/auth` (checks Supabase session + loads user from DB)
+2. Redirects to `/login` if no user or no `etablissementId`
+3. Loads role-based permissions from DB via `getPermissionsForRole()`
+4. Provides `AuthUser` + permissions to all child routes via `DashboardProviders`
+
+PIN-based quick access for cashiers uses a separate `createAuthenticatedClient()` that sets RLS context.
 
 ### Data Layer
 
-- **`lib/db/`** - Supabase database layer replacing Prisma
-  - `client.ts` - Supabase client creation (browser and server)
-  - `queries/` - All database queries organized by domain (produits, ventes, tables, etc.)
-  - The `db` object in `index.ts` exposes all queries
-- **`lib/supabase/`** - Supabase configuration and helpers
-- **`types/supabase.ts`** - Auto-generated types from Supabase schema
+**Supabase only — NOT Prisma.** The `prisma/schema.prisma` file exists as documentation only.
 
-### State Management
+- `lib/supabase/client.ts` — Browser client (Client Components)
+- `lib/supabase/server.ts` — Server client (Server Components, Actions, Route Handlers)
+- `lib/supabase/server.ts` — `createServiceClient()` bypasses all RLS (admin only)
+- `lib/db/client.ts` — `createAuthenticatedClient(context)` for PIN auth with RLS context
+- `types/supabase.ts` — Auto-generated types (`pnpm db:types`)
 
-- **`stores/cart-store.ts`** - Shopping cart state (items, discounts, sale type, customer)
-- **`stores/session-store.ts`** - Cash register session state
-- **`stores/ui-store.ts`** - UI state (sidebar, modals)
-- **`stores/pin-lock-store.ts`** - PIN lock security state
-- **`stores/split-bill-store.ts`** - Bill splitting state
+**Query pattern**: All DB queries are exposed via `db` object from `@/lib/db`. Every query function takes a Supabase client as its first argument:
+
+```ts
+import { db, createClient } from '@/lib/db'
+
+// In a Server Action or Server Component
+const supabase = await createClient()
+const categories = await db.getCategories(supabase, etablissementId)
+const produit = await db.getProduitById(supabase, produitId)
+```
+
+Query files are organized by domain in `lib/db/queries/` (produits, ventes, tables, clients, stocks, rapports, etc.).
 
 ### Server Actions (`actions/`)
 
-Server Actions handle all mutations. Key modules:
-- `ventes.ts` - Sales creation, payment processing
-- `caisse.ts` - Cash register session open/close
-- `produits.ts`, `categories.ts` - Product management
-- `tables.ts` - Table status updates
-- `auth.ts`, `auth-supabase.ts` - Authentication
+All mutations go through Server Actions. Key modules:
+- `ventes.ts` — Sales creation, payment processing
+- `caisse.ts` — Cash register session open/close
+- `produits.ts`, `categories.ts` — Product/category CRUD
+- `tables.ts` — Table status updates
+- `auth.ts`, `auth-supabase.ts`, `auth-pin.ts` — Authentication flows
+- `split-bill.ts` — Bill splitting
+- `admin/blog.ts`, `admin/documentation.ts` — CMS content management
+
+### State Management (Zustand)
+
+- `stores/cart-store.ts` — Shopping cart (items, discounts, sale type, customer)
+- `stores/session-store.ts` — Cash register session state
+- `stores/ui-store.ts` — UI state (sidebar, modals)
+- `stores/pin-lock-store.ts` — PIN security lock
+- `stores/split-bill-store.ts` — Bill splitting
 
 ### UI Components
 
-- **`components/ui/`** - Base components wrapping Radix UI Themes (Box, Flex, Grid, Button, Card, etc.)
-- **`components/composed/`** - Higher-level composed components (StatCard, StatusBadge, EmptyState)
-- **`components/caisse/`** - POS-specific components
-- **`components/salle/`** - Floor plan components (TableItem, ZoneManager, FloorPlanToolbar)
-- **Imports**: Use `@/components/ui` for base components, `@/components/composed` for composed ones
+- `components/ui/` — Base wrappers around Radix UI Themes (Box, Flex, Grid, Button, Card, etc.)
+- `components/composed/` — Higher-level components (StatCard, StatusBadge, EmptyState)
+- `components/caisse/` — POS-specific components
+- `components/salle/` — Floor plan (TableItem, ZoneManager, drag & drop)
+- Domain folders: `produits/`, `stocks/`, `clients/`, `employes/`, `rapports/`, `parametres/`
 
-### Design System (`lib/design-system/`)
+Import from `@/components/ui` for base, `@/components/composed` for composed.
 
-- Currency formatting: `formatCurrency(15000)` → "15 000 FCFA"
-- Tax calculation: `calculateTax(amount, rate)`
-- Color utilities for Radix themes
+### Key Utilities (`lib/utils.ts`)
+
+Critical business functions — use these instead of writing custom logic:
+- `formatCurrency(15000)` → `"15 000 FCFA"` (XAF, no decimals)
+- `calculerTVA(montantHT, tauxTva)` — Calculates VAT amount
+- `calculerTTC(montantHT, tauxTva)` — HT to TTC
+- `calculerHT(montantTTC, tauxTva)` — TTC to HT
+- `calculerLigneVente(prix, quantite, taux)` — Full line calculation
+- `formatTicketNumber(date, seq)` → `"YYYYMMDD00001"`
+- `formatDate(date, format)` / `formatTime(date)` — Gabon timezone formatting
+- `cn(...classes)` — Tailwind class merging (clsx + twMerge)
+- `calculerRenduMonnaie(montant)` — Optimal FCFA bill/coin breakdown
+- `TVA_RATES` — `{ STANDARD: 18, REDUIT: 10, EXONERE: 0 }`
 
 ### Printing System (`lib/print/`)
 
-ESC/POS thermal printer support:
-- Receipt generation (`ticket.ts`)
-- Kitchen orders (`bon-cuisine.ts`)
-- Z Report (`rapport-z.ts`)
-- Multi-printer routing based on product categories
+ESC/POS thermal printer support with multi-printer routing:
+- `ticket.ts` / `ticket-client.ts` — Receipt generation
+- `bon-cuisine.ts` / `bon-bar.ts` — Kitchen/bar order slips
+- `rapport-z.ts` — Daily closing report
+- `router.ts` — Routes print jobs to correct printer based on product category
+
+### Validation Schemas (`schemas/`)
+
+Zod schemas for form validation, named `*.schema.ts` (e.g., `produit.schema.ts`, `vente.schema.ts`). Used with React Hook Form via `@hookform/resolvers`.
 
 ## Business Rules
 
-- **Currency**: XAF (FCFA) with no decimals
-- **Tax**: 18% standard VAT, 10% reduced, 0% exempt
-- **Ticket numbering**: Format `YYYYMMDD00001`, sequential per day
+- **Currency**: XAF (FCFA), no decimals — use `formatCurrency()` from `lib/utils.ts`
+- **Tax**: 18% standard, 10% reduced, 0% exempt — use `calculerTVA()` family
+- **Ticket numbering**: `YYYYMMDD00001`, sequential per day per establishment
 - **User roles**: SUPER_ADMIN, ADMIN, MANAGER, CAISSIER, SERVEUR
 - **Table statuses**: LIBRE, OCCUPEE, ATTENTE_COMMANDE, ATTENTE_ADDITION, A_NETTOYER
-
-## Organisation de la documentation
-
-### Convention des fichiers Markdown
-
-**Règle stricte :** Tous les fichiers `.md` doivent être organisés dans le dossier `/docs`, **sauf** :
-- `README.md` (à la racine - standard pour tout projet)
-- `CLAUDE.md` (à la racine - instructions pour l'IA)
-- `README.md` dans les sous-dossiers (ex: `components/README.md`)
-
-### Structure du dossier `/docs`
-
-```
-/docs
-  ├── /specs          # Spécifications et cahiers des charges
-  ├── /design         # Design system et guides de design
-  ├── /guides         # Guides de démarrage et setup
-  ├── /changelogs     # Historiques de changements
-  └── README.md       # Index de la documentation
-```
-
-### Lors de la création de documentation
-
-1. **JAMAIS** créer de fichiers `.md` à la racine (sauf exceptions listées)
-2. Placer la documentation dans la catégorie appropriée de `/docs`
-3. Mettre à jour `/docs/README.md` avec un lien vers le nouveau fichier
-4. Utiliser des noms de fichiers explicites en UPPERCASE (ex: `DESIGN_SYSTEM.md`)
-
-### Exemples
-
-✅ **Bon :**
-- `/docs/design/DESIGN_SYSTEM.md`
-- `/docs/guides/DEPLOYMENT.md`
-- `/docs/specs/API_SPECIFICATION.md`
-- `/README.md` (racine)
-
-❌ **Mauvais :**
-- `/DESIGN_SYSTEM.md` (à la racine)
-- `/API_DOCS.md` (à la racine)
-- `/CONTRIBUTING.md` (à la racine - devrait être dans `/docs/guides/`)
+- **Locale**: `fr-GA`, timezone `Africa/Libreville` (UTC+1, no DST)
 
 ## Base de données
 
 ### Supabase uniquement (PAS Prisma)
 
-**IMPORTANT :** Ce projet utilise **Supabase directement**, pas Prisma.
-
 - **NE JAMAIS** utiliser les commandes Prisma (`prisma migrate`, `prisma generate`, etc.)
 - Le fichier `prisma/schema.prisma` existe uniquement comme **référence/documentation** du schéma
 - Pour les migrations : créer des fichiers SQL dans `/supabase/migrations/`
 - Pour les requêtes : utiliser le client Supabase (`@supabase/supabase-js`)
-- Les types sont générés via `supabase gen types typescript`
+- Les types sont générés via `pnpm db:types`
 
 ### Migrations
 
 **RÈGLE OBLIGATOIRE :** Utiliser le MCP Supabase pour appliquer les migrations.
 
-Pour créer et appliquer une migration :
-1. Créer le fichier SQL dans `/supabase/migrations/` avec le format `YYYYMMDDHHMMSS_description.sql`
-2. **TOUJOURS** appliquer via le MCP Supabase : `mcp__supabase__apply_migration`
-3. **NE JAMAIS** utiliser `supabase db push` en CLI - utiliser le MCP
-
-Exemple d'utilisation du MCP :
-```
-mcp__supabase__apply_migration(
-  name: "add_new_column",
-  query: "ALTER TABLE table_name ADD COLUMN column_name TYPE;"
-)
-```
+1. Format du fichier : `YYYYMMDDHHMMSS_description.sql` dans `/supabase/migrations/`
+2. **TOUJOURS** appliquer via : `mcp__supabase__apply_migration`
+3. **NE JAMAIS** utiliser `supabase db push` en CLI
 
 Autres outils MCP Supabase utiles :
-- `mcp__supabase__list_migrations` - Lister les migrations appliquées
-- `mcp__supabase__execute_sql` - Exécuter du SQL (lecture)
-- `mcp__supabase__list_tables` - Lister les tables
-- `mcp__supabase__get_advisors` - Vérifier sécurité/performance
+- `mcp__supabase__list_migrations` — Lister les migrations appliquées
+- `mcp__supabase__execute_sql` — Exécuter du SQL (lecture)
+- `mcp__supabase__list_tables` — Lister les tables
+- `mcp__supabase__get_advisors` — Vérifier sécurité/performance
 
-## Autres conventions
+## Organisation de la documentation
 
-### Création de fichiers
-- **NE JAMAIS** créer de fichiers inutiles
-- **TOUJOURS** préférer éditer un fichier existant plutôt que d'en créer un nouveau
-- Ne créer de documentation que si **explicitement demandé** par l'utilisateur
+**Règle stricte :** Tous les fichiers `.md` dans `/docs`, **sauf** `README.md` et `CLAUDE.md` à la racine.
 
-### Style de code
-- Utiliser TypeScript strict
-- Composants React avec Radix UI Themes (pas shadcn/ui)
-- Suivre les conventions du projet (voir `/docs` pour les guides)
+```
+/docs
+  ├── /specs          # Spécifications et cahiers des charges
+  ├── /design         # Design system et guides
+  ├── /guides         # Guides de démarrage et setup
+  ├── /changelogs     # Historiques de changements
+  └── README.md       # Index de la documentation
+```
+
+## Conventions
+
+- **Supabase, pas Prisma** pour toutes les opérations DB
+- **Radix UI Themes**, pas shadcn/ui, pour les composants
+- TypeScript strict
+- Ne créer de documentation que si **explicitement demandé**
+- Préférer éditer un fichier existant plutôt qu'en créer un nouveau

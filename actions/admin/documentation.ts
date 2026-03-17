@@ -6,7 +6,7 @@
  */
 
 import { revalidatePath } from "next/cache";
-import { createServiceClient } from "@/lib/supabase/server";
+import { createClient, createServiceClient } from "@/lib/supabase/server";
 import { requireAuth, type AuthUser } from "@/lib/auth/supabase";
 import {
   docCategorySchema,
@@ -49,13 +49,13 @@ function revalidateDocPaths() {
  * Récupère toutes les catégories de documentation (public: publiées uniquement)
  */
 export async function getPublishedDocCategories() {
-  const supabase = createServiceClient();
+  const supabase = await createClient();
 
   const { data, error } = await supabase
     .from("doc_categories")
     .select(`
       *,
-      doc_articles(id)
+      doc_articles(id, slug, title, read_time, status)
     `)
     .eq("status", "PUBLISHED")
     .order("ordre", { ascending: true });
@@ -65,17 +65,23 @@ export async function getPublishedDocCategories() {
     return [];
   }
 
-  return data.map((cat) => ({
-    ...cat,
-    articleCount: cat.doc_articles?.length || 0,
-  }));
+  return data.map((cat) => {
+    const publishedArticles = (cat.doc_articles || []).filter(
+      (a: { status: string }) => a.status === "PUBLISHED"
+    );
+    return {
+      ...cat,
+      doc_articles: publishedArticles,
+      articleCount: publishedArticles.length,
+    };
+  });
 }
 
 /**
  * Récupère une catégorie par son slug (public: publiée uniquement)
  */
 export async function getPublishedDocCategoryBySlug(slug: string) {
-  const supabase = createServiceClient();
+  const supabase = await createClient();
 
   const { data, error } = await supabase
     .from("doc_categories")
@@ -109,7 +115,7 @@ export async function getPublishedDocArticleBySlugs(
   categorySlug: string,
   articleSlug: string
 ) {
-  const supabase = createServiceClient();
+  const supabase = await createClient();
 
   // Récupérer la catégorie
   const { data: category } = await supabase
@@ -521,7 +527,7 @@ export async function reorderDocCategories(orderedIds: string[]) {
  * Récupère un article par son slug (public: publié uniquement)
  */
 export async function getPublishedDocArticleBySlug(categorySlug: string, articleSlug: string) {
-  const supabase = createServiceClient();
+  const supabase = await createClient();
 
   // D'abord récupérer la catégorie
   const { data: category } = await supabase

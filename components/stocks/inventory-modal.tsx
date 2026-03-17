@@ -246,14 +246,12 @@ export function InventoryModal({ open, onOpenChange, onSuccess }: InventoryModal
                 </Select.Root>
               </Box>
 
-              {error && (
-                <Callout.Root color="red" size="1">
+              {error ? <Callout.Root color="red" size="1">
                   <Callout.Icon>
                     <AlertCircle size={16} />
                   </Callout.Icon>
                   <Callout.Text>{error}</Callout.Text>
-                </Callout.Root>
-              )}
+                </Callout.Root> : null}
             </Flex>
 
             <Flex gap="3" mt="4" justify="end">
@@ -376,14 +374,12 @@ export function InventoryModal({ open, onOpenChange, onSuccess }: InventoryModal
                 </Box>
               </ScrollArea>
 
-              {error && (
-                <Callout.Root color="orange" size="1">
+              {error ? <Callout.Root color="violet" size="1">
                   <Callout.Icon>
                     <AlertCircle size={16} />
                   </Callout.Icon>
                   <Callout.Text>{error}</Callout.Text>
-                </Callout.Root>
-              )}
+                </Callout.Root> : null}
             </Flex>
 
             <Flex gap="3" mt="4" justify="between">
@@ -434,13 +430,13 @@ export function InventoryModal({ open, onOpenChange, onSuccess }: InventoryModal
                       changedLines.length > 0 ? "var(--accent-a3)" : "var(--green-a3)",
                   }}
                 >
-                  <Text size="2" color={changedLines.length > 0 ? "orange" : "green"}>
+                  <Text size="2" color={changedLines.length > 0 ? "violet" : "green"}>
                     Écarts détectés
                   </Text>
                   <Text
                     size="5"
                     weight="bold"
-                    color={changedLines.length > 0 ? "orange" : "green"}
+                    color={changedLines.length > 0 ? "violet" : "green"}
                     style={{ fontVariantNumeric: "tabular-nums" }}
                   >
                     {changedLines.length}
@@ -561,14 +557,12 @@ export function InventoryModal({ open, onOpenChange, onSuccess }: InventoryModal
                 </Flex>
               )}
 
-              {error && (
-                <Callout.Root color="red" size="1">
+              {error ? <Callout.Root color="red" size="1">
                   <Callout.Icon>
                     <AlertCircle size={16} />
                   </Callout.Icon>
                   <Callout.Text>{error}</Callout.Text>
-                </Callout.Root>
-              )}
+                </Callout.Root> : null}
             </Flex>
 
             <Flex gap="3" mt="4" justify="between">

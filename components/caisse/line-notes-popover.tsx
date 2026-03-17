@@ -118,8 +118,7 @@ export function LineNotesPopover({ item, children }: LineNotesPopoverProps) {
 
           {/* Actions */}
           <Flex gap="2" justify="end">
-            {item.notes && (
-              <Button
+            {item.notes ? <Button
                 size="1"
                 variant="soft"
                 color="red"
@@ -128,8 +127,7 @@ export function LineNotesPopover({ item, children }: LineNotesPopoverProps) {
               >
                 <X size={14} />
                 Effacer
-              </Button>
-            )}
+              </Button> : null}
             <Popover.Close>
               <Button size="1" variant="soft" color="gray">
                 Annuler

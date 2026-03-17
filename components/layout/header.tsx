@@ -2,10 +2,10 @@
 
 import Link from "next/link";
 import type { Route } from "next";
+import Image from "next/image";
 import { usePathname } from "next/navigation";
-import { useMemo } from "react";
+import { useMemo , useEffect, useState } from "react";
 import { Bell, Search, Sun, Moon, LayoutDashboard, ShoppingCart, UtensilsCrossed, Package, Warehouse, Users, UserCircle, BarChart3, Settings } from "lucide-react";
-import { useEffect, useState } from "react";
 import { useTheme } from "next-themes";
 import { UserMenu } from "./user-menu";
 import { useAuth } from "@/lib/auth/context";
@@ -87,23 +87,13 @@ export function Header() {
         <div style={{ display: "flex", alignItems: "center", gap: 24, flexShrink: 0 }}>
           {/* Logo */}
           <Link href="/dashboard" style={{ textDecoration: "none", display: "flex", alignItems: "center", gap: 10 }}>
-            <div
-              style={{
-                width: 36,
-                height: 36,
-                borderRadius: 8,
-                backgroundColor: "var(--accent-9)",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                color: "white",
-                fontWeight: 700,
-                fontSize: 18,
-                flexShrink: 0,
-              }}
-            >
-              O
-            </div>
+            <Image
+              src="/images/logos/ic-lg.webp"
+              alt="Oréma N+"
+              width={36}
+              height={36}
+              style={{ objectFit: "contain", flexShrink: 0 }}
+            />
             <span style={{ fontWeight: 700, fontSize: 16, color: "var(--gray-12)", whiteSpace: "nowrap" }}>
               Oréma N+
             </span>

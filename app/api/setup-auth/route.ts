@@ -3,7 +3,8 @@
  * Migré vers Supabase (déjà partiellement Supabase)
  */
 
-import { NextRequest, NextResponse } from 'next/server'
+import type { NextRequest} from 'next/server';
+import { NextResponse } from 'next/server'
 import { createClient as createSupabaseAdminClient } from '@supabase/supabase-js'
 import { createClient } from '@/lib/db'
 import { hashPassword, hashPin } from '@/lib/auth/password'

@@ -42,7 +42,7 @@ interface StockListProps {
 
 const statusConfig: Record<
   StockStatus,
-  { label: string; color: "green" | "orange" | "red"; icon: React.ReactNode }
+  { label: string; color: "green" | "violet" | "red"; icon: React.ReactNode }
 > = {
   OK: {
     label: "OK",
@@ -51,7 +51,7 @@ const statusConfig: Record<
   },
   ALERTE: {
     label: "Alerte",
-    color: "orange",
+    color: "violet",
     icon: <AlertTriangle size={14} />,
   },
   RUPTURE: {

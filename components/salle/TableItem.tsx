@@ -187,8 +187,7 @@ export function TableItem({
       )}
 
       {/* Montant de la vente en cours */}
-      {venteEnCours && (
-        <div
+      {venteEnCours ? <div
           style={{
             display: "flex",
             alignItems: "center",
@@ -201,8 +200,7 @@ export function TableItem({
           <span style={{ fontSize: 11, fontWeight: 600 }}>
             {formatPrice(venteEnCours.totalFinal)} F
           </span>
-        </div>
-      )}
+        </div> : null}
 
     </div>
   );

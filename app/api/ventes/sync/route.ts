@@ -3,7 +3,8 @@
  * Migré vers Supabase - Version optimisée
  */
 
-import { NextRequest, NextResponse } from "next/server";
+import type { NextRequest} from "next/server";
+import { NextResponse } from "next/server";
 import { createClient } from "@/lib/db";
 import { getCurrentUser } from "@/lib/auth";
 import { getEtablissementId } from "@/lib/etablissement";

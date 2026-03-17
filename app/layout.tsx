@@ -1,6 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { Gabarito } from "next/font/google";
-import { JetBrains_Mono } from "next/font/google";
+import { Gabarito , JetBrains_Mono } from "next/font/google";
 import { Providers } from "./providers";
 import "./globals.css";
 
@@ -21,6 +20,7 @@ const jetbrainsMono = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL("https://orema-nplus.ga"),
   title: "Oréma N+ | Système de Caisse POS",
   description: "Système de point de vente moderne pour restaurants, bars et commerces en Afrique",
   keywords: ["POS", "caisse", "restaurant", "Gabon", "Afrique", "point de vente"],

@@ -9,7 +9,7 @@
  */
 
 import { revalidatePath } from 'next/cache'
-import { createServiceClient, db } from '@/lib/db'
+import { createAuthenticatedClient, createServiceClient, db } from '@/lib/db'
 import { hashPassword, hashPin, requireAuth, requireAnyRole } from '@/lib/auth'
 import {
   createEmployeSchema,
@@ -46,6 +46,20 @@ export async function generateRandomPin(): Promise<string> {
 }
 
 /**
+ * Crée un client authentifié pour les actions employes.
+ * Utilise requireAuth/requireAnyRole en amont pour la validation des permissions.
+ */
+async function getAuthClientFromSession(session: { userId: string; etablissementId: string | null; role: string }) {
+  if (!session.etablissementId) throw new Error("Aucun établissement associé");
+  const supabase = await createAuthenticatedClient({
+    userId: session.userId,
+    etablissementId: session.etablissementId,
+    role: session.role,
+  });
+  return supabase;
+}
+
+/**
  * Recuperer tous les employes de l'etablissement
  * Protection: Le SUPER_ADMIN n'est visible que par lui-même ou d'autres SUPER_ADMIN
  */
@@ -67,7 +81,7 @@ export async function getEmployes(): Promise<
   try {
     const session = await requireAuth()
     if (!session.etablissementId) return { success: false, error: "Aucun établissement associé" }
-    const supabase = createServiceClient()
+    const supabase = await getAuthClientFromSession(session)
 
     const employes = await db.getEmployes(supabase, session.etablissementId)
 
@@ -123,11 +137,12 @@ export async function getEmployeById(
 > {
   try {
     const session = await requireAuth()
-    const supabase = createServiceClient()
+    const supabase = await getAuthClientFromSession(session)
 
+    // RLS filtre par etablissement_id
     const employe = await db.getEmployeById(supabase, id)
 
-    if (!employe || employe.etablissement_id !== session.etablissementId) {
+    if (!employe) {
       return {
         success: false,
         error: 'Employe non trouve',
@@ -169,7 +184,7 @@ export async function createEmploye(
     // Verifier les permissions (SUPER_ADMIN ou ADMIN)
     const session = await requireAnyRole(['SUPER_ADMIN', 'ADMIN'])
     if (!session.etablissementId) return { success: false, error: "Aucun établissement associé" }
-    const supabase = createServiceClient()
+    const supabase = await getAuthClientFromSession(session)
 
     // Valider les donnees
     const validated = createEmployeSchema.parse(input)
@@ -186,6 +201,7 @@ export async function createEmploye(
 
     // 1. Creer l'utilisateur dans Supabase Auth
     // Le trigger on_auth_user_created synchronise automatiquement avec utilisateurs
+    // Note: createServiceClient nécessaire pour les opérations auth.admin
     const adminSupabase = createServiceClient()
     const { data: authData, error: authError } = await adminSupabase.auth.admin.createUser({
       email: validated.email,
@@ -195,7 +211,7 @@ export async function createEmploye(
         nom: validated.nom,
         prenom: validated.prenom,
         role: validated.role,
-        etablissement_id: session.etablissementId,
+        etablissement_id: session.etablissementId!,
       },
     })
 
@@ -231,7 +247,7 @@ export async function createEmploye(
         password: hashedPassword,
         pin_code: hashedPin,
         actif: validated.actif,
-        etablissement_id: session.etablissementId,
+        etablissement_id: session.etablissementId!,
       })
       .eq('email', validated.email)
       .select()
@@ -252,7 +268,7 @@ export async function createEmploye(
       entite_id: employe.id,
       description: `Creation employe ${employe.prenom} ${employe.nom} (${employe.role})`,
       utilisateur_id: session.userId,
-      etablissement_id: session.etablissementId,
+      etablissement_id: session.etablissementId!,
     })
 
     revalidatePath('/employes')
@@ -280,15 +296,15 @@ export async function updateEmploye(
   try {
     // Verifier les permissions
     const session = await requireAnyRole(['SUPER_ADMIN', 'ADMIN'])
-    const supabase = createServiceClient()
+    const supabase = await getAuthClientFromSession(session)
 
     // Valider les donnees
     const validated = updateEmployeSchema.parse(input)
 
-    // Verifier que l'employe existe et appartient a l'etablissement
+    // Verifier que l'employe existe (RLS filtre par etablissement_id)
     const existingEmploye = await db.getEmployeById(supabase, validated.id)
 
-    if (!existingEmploye || existingEmploye.etablissement_id !== session.etablissementId) {
+    if (!existingEmploye) {
       return {
         success: false,
         error: 'Employe non trouve',
@@ -331,7 +347,7 @@ export async function updateEmploye(
       entite_id: validated.id,
       description: `Mise a jour employe ${validated.prenom} ${validated.nom}`,
       utilisateur_id: session.userId,
-      etablissement_id: session.etablissementId,
+      etablissement_id: session.etablissementId!,
     })
 
     revalidatePath('/employes')
@@ -356,15 +372,15 @@ export async function resetEmployePin(
   try {
     // Verifier les permissions
     const session = await requireAnyRole(['SUPER_ADMIN', 'ADMIN'])
-    const supabase = createServiceClient()
+    const supabase = await getAuthClientFromSession(session)
 
     // Valider les donnees
     const validated = resetPinSchema.parse(input)
 
-    // Verifier que l'employe existe
+    // Verifier que l'employe existe (RLS filtre par etablissement_id)
     const employe = await db.getEmployeById(supabase, validated.employeId)
 
-    if (!employe || employe.etablissement_id !== session.etablissementId) {
+    if (!employe) {
       return {
         success: false,
         error: 'Employe non trouve',
@@ -392,7 +408,7 @@ export async function resetEmployePin(
       entite_id: validated.employeId,
       description: `Reset PIN employe ${employe.prenom} ${employe.nom}`,
       utilisateur_id: session.userId,
-      etablissement_id: session.etablissementId,
+      etablissement_id: session.etablissementId!,
     })
 
     revalidatePath('/employes')
@@ -422,15 +438,15 @@ export async function resetEmployePassword(
   try {
     // Verifier les permissions
     const session = await requireAnyRole(['SUPER_ADMIN', 'ADMIN'])
-    const supabase = createServiceClient()
+    const supabase = await getAuthClientFromSession(session)
 
     // Valider les donnees
     const validated = resetPasswordSchema.parse(input)
 
-    // Verifier que l'employe existe
+    // Verifier que l'employe existe (RLS filtre par etablissement_id)
     const employe = await db.getEmployeById(supabase, validated.employeId)
 
-    if (!employe || employe.etablissement_id !== session.etablissementId) {
+    if (!employe) {
       return {
         success: false,
         error: 'Employe non trouve',
@@ -446,6 +462,7 @@ export async function resetEmployePassword(
     }
 
     // 1. Trouver l'utilisateur dans Supabase Auth par email
+    // Note: createServiceClient nécessaire pour les opérations auth.admin
     const adminSupabase = createServiceClient()
     const { data: authUsers, error: listError } = await adminSupabase.auth.admin.listUsers()
 
@@ -482,7 +499,7 @@ export async function resetEmployePassword(
       entite_id: validated.employeId,
       description: `Reset mot de passe employe ${employe.prenom} ${employe.nom}`,
       utilisateur_id: session.userId,
-      etablissement_id: session.etablissementId,
+      etablissement_id: session.etablissementId!,
     })
 
     revalidatePath('/employes')
@@ -506,15 +523,15 @@ export async function toggleEmployeStatus(
   try {
     // Verifier les permissions
     const session = await requireAnyRole(['SUPER_ADMIN', 'ADMIN'])
-    const supabase = createServiceClient()
+    const supabase = await getAuthClientFromSession(session)
 
     // Valider les donnees
     const validated = toggleStatusSchema.parse(input)
 
-    // Verifier que l'employe existe
+    // Verifier que l'employe existe (RLS filtre par etablissement_id)
     const employe = await db.getEmployeById(supabase, validated.employeId)
 
-    if (!employe || employe.etablissement_id !== session.etablissementId) {
+    if (!employe) {
       return {
         success: false,
         error: 'Employe non trouve',
@@ -549,7 +566,7 @@ export async function toggleEmployeStatus(
       entite_id: validated.employeId,
       description: `${validated.actif ? 'Activation' : 'Desactivation'} employe ${employe.prenom} ${employe.nom}`,
       utilisateur_id: session.userId,
-      etablissement_id: session.etablissementId,
+      etablissement_id: session.etablissementId!,
     })
 
     revalidatePath('/employes')
@@ -573,12 +590,12 @@ export async function deleteEmploye(employeId: string): Promise<ActionResult> {
   try {
     // Verifier les permissions
     const session = await requireAnyRole(['SUPER_ADMIN', 'ADMIN'])
-    const supabase = createServiceClient()
+    const supabase = await getAuthClientFromSession(session)
 
-    // Verifier que l'employe existe
+    // Verifier que l'employe existe (RLS filtre par etablissement_id)
     const employe = await db.getEmployeById(supabase, employeId)
 
-    if (!employe || employe.etablissement_id !== session.etablissementId) {
+    if (!employe) {
       return {
         success: false,
         error: 'Employe non trouve',
@@ -609,13 +626,7 @@ export async function deleteEmploye(employeId: string): Promise<ActionResult> {
       }
     }
 
-    // Verifier s'il a des ventes associees
-    const ventesCount = await db.countVentes(supabase, session.etablissementId, {
-      statut: undefined, // Toutes les ventes
-    })
-
-    // Note: countVentes ne filtre pas par utilisateur actuellement
-    // On utilise une requête directe pour le moment
+    // Verifier s'il a des ventes associees (RLS filtre par etablissement_id)
     const { count: userVentesCount } = await supabase
       .from('ventes')
       .select('*', { count: 'exact', head: true })
@@ -629,6 +640,7 @@ export async function deleteEmploye(employeId: string): Promise<ActionResult> {
     }
 
     // 1. Supprimer de Supabase Auth
+    // Note: createServiceClient nécessaire pour les opérations auth.admin
     const adminSupabase = createServiceClient()
     const { data: authUsers, error: listError } = await adminSupabase.auth.admin.listUsers()
 
@@ -657,7 +669,7 @@ export async function deleteEmploye(employeId: string): Promise<ActionResult> {
       entite_id: employeId,
       description: `Suppression employe ${employe.prenom} ${employe.nom}`,
       utilisateur_id: session.userId,
-      etablissement_id: session.etablissementId,
+      etablissement_id: session.etablissementId!,
     })
 
     revalidatePath('/employes')
@@ -685,12 +697,12 @@ export async function syncEmployeToSupabase(
   try {
     // Verifier les permissions
     const session = await requireAnyRole(['SUPER_ADMIN', 'ADMIN'])
-    const supabase = createServiceClient()
+    const supabase = await getAuthClientFromSession(session)
 
-    // Verifier que l'employe existe
+    // Verifier que l'employe existe (RLS filtre par etablissement_id)
     const employe = await db.getEmployeById(supabase, employeId)
 
-    if (!employe || employe.etablissement_id !== session.etablissementId) {
+    if (!employe) {
       return {
         success: false,
         error: 'Employe non trouve',
@@ -698,6 +710,7 @@ export async function syncEmployeToSupabase(
     }
 
     // Verifier si l'utilisateur existe deja dans Supabase Auth
+    // Note: createServiceClient nécessaire pour les opérations auth.admin
     const adminSupabase = createServiceClient()
     const { data: authUsers, error: listError } = await adminSupabase.auth.admin.listUsers()
 
@@ -747,7 +760,7 @@ export async function syncEmployeToSupabase(
       entite_id: employeId,
       description: `Synchronisation Supabase Auth employe ${employe.prenom} ${employe.nom}`,
       utilisateur_id: session.userId,
-      etablissement_id: session.etablissementId,
+      etablissement_id: session.etablissementId!,
     })
 
     return { success: true }
@@ -774,12 +787,12 @@ export async function getEmployeStats(employeId: string): Promise<
 > {
   try {
     const session = await requireAuth()
-    const supabase = createServiceClient()
+    const supabase = await getAuthClientFromSession(session)
 
-    // Verifier que l'employe existe dans l'etablissement
+    // Verifier que l'employe existe (RLS filtre par etablissement_id)
     const employe = await db.getEmployeById(supabase, employeId)
 
-    if (!employe || employe.etablissement_id !== session.etablissementId) {
+    if (!employe) {
       return {
         success: false,
         error: 'Employe non trouve',
@@ -872,7 +885,7 @@ export async function saveRoleAllowedRoutes(input: {
   try {
     const session = await requireAnyRole(['SUPER_ADMIN', 'ADMIN'])
     if (!session.etablissementId) return { success: false, error: "Aucun établissement associé" }
-    const supabase = createServiceClient()
+    const supabase = await getAuthClientFromSession(session)
 
     const { saveAllowedRoutesForRole } = await import('@/lib/permissions-db')
     await saveAllowedRoutesForRole(input.role, input.allowedRoutes, session.etablissementId)
@@ -884,7 +897,7 @@ export async function saveRoleAllowedRoutes(input: {
       entite_id: input.role,
       description: `Modification des pages autorisées pour le rôle ${input.role} (${input.allowedRoutes ? input.allowedRoutes.length + ' pages' : 'accès standard'})`,
       utilisateur_id: session.userId,
-      etablissement_id: session.etablissementId,
+      etablissement_id: session.etablissementId!,
     })
 
     revalidatePath('/employes')
@@ -908,12 +921,12 @@ export async function updateEmployeAllowedRoutes(input: {
   try {
     // Verifier les permissions (seuls les admins peuvent modifier les acces)
     const session = await requireAnyRole(['SUPER_ADMIN', 'ADMIN'])
-    const supabase = createServiceClient()
+    const supabase = await getAuthClientFromSession(session)
 
-    // Verifier que l'employe existe
+    // Verifier que l'employe existe (RLS filtre par etablissement_id)
     const employe = await db.getEmployeById(supabase, input.employeId)
 
-    if (!employe || employe.etablissement_id !== session.etablissementId) {
+    if (!employe) {
       return {
         success: false,
         error: 'Employe non trouve',
@@ -949,7 +962,7 @@ export async function updateEmployeAllowedRoutes(input: {
       entite_id: input.employeId,
       description: `Modification des pages autorisees pour ${employe.prenom} ${employe.nom} (${input.allowedRoutes.length} pages)`,
       utilisateur_id: session.userId,
-      etablissement_id: session.etablissementId,
+      etablissement_id: session.etablissementId!,
     })
 
     revalidatePath('/employes')

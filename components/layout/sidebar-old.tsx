@@ -193,11 +193,9 @@ export function Sidebar() {
                     >
                       {item.label}
                     </Text>
-                    {item.badge && (
-                      <Badge color="red" variant="solid" size="1">
+                    {item.badge ? <Badge color="red" variant="solid" size="1">
                         Hot
-                      </Badge>
-                    )}
+                      </Badge> : null}
                   </Link>
                 );
               })}

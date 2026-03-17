@@ -199,7 +199,7 @@ export function InvoiceSettings({ initialData }: InvoiceSettingsProps) {
               {typeFactureOptions.map((option) => (
                 <Badge
                   key={option.value}
-                  color={typeFactureDefaut === option.value ? "orange" : "gray"}
+                  color={typeFactureDefaut === option.value ? "violet" : "gray"}
                   variant={typeFactureDefaut === option.value ? "solid" : "soft"}
                   size="2"
                 >
@@ -645,7 +645,7 @@ export function InvoiceSettings({ initialData }: InvoiceSettingsProps) {
                   {typeFactureOptions.map((option) => (
                     <Badge
                       key={option.value}
-                      color={previewType === option.value ? "orange" : "gray"}
+                      color={previewType === option.value ? "violet" : "gray"}
                       variant={previewType === option.value ? "solid" : "soft"}
                       size="1"
                       style={{ cursor: "pointer" }}

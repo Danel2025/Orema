@@ -160,7 +160,7 @@ export function PeakHoursChart({ initialData }: PeakHoursChartProps) {
                 <Text
                   size="1"
                   weight="medium"
-                  color={i === 0 ? "orange" : "gray"}
+                  color={i === 0 ? "violet" : "gray"}
                 >
                   {peak.label} - {peak.nombreVentes} ventes
                 </Text>

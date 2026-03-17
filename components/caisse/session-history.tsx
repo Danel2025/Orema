@@ -282,7 +282,7 @@ export function SessionHistory({ onRefresh }: SessionHistoryProps) {
       >
         <Dialog.Content maxWidth="600px">
           <Dialog.Title>
-            Rapport Z - {selectedSession && formatDate(selectedSession.dateCloture, "long")}
+            Rapport Z - {selectedSession ? formatDate(selectedSession.dateCloture, "long") : null}
           </Dialog.Title>
           <Dialog.Description size="2" color="gray" mb="4">
             Details de la session de caisse

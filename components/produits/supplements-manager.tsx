@@ -193,8 +193,7 @@ export function SupplementsManager({ produitId, produitNom, onClose }: Supplemen
           ) : (
             <>
               {/* Formulaire d'ajout/édition */}
-              {showForm && (
-                <form
+              {showForm ? <form
                   onSubmit={handleSubmit}
                   style={{
                     padding: 16,
@@ -265,8 +264,7 @@ export function SupplementsManager({ produitId, produitNom, onClose }: Supplemen
                       {editingId ? "Modifier" : "Ajouter"}
                     </button>
                   </div>
-                </form>
-              )}
+                </form> : null}
 
               {/* Liste des suppléments */}
               {supplements.length === 0 ? (

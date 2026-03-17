@@ -28,7 +28,7 @@ interface KPICardProps {
   icon: React.ReactNode;
   trend?: number | null;
   trendLabel?: string;
-  color: "orange" | "blue" | "green" | "purple" | "amber" | "cyan";
+  color: "violet" | "blue" | "green" | "purple" | "amber" | "cyan";
   isLoading?: boolean;
 }
 
@@ -42,20 +42,20 @@ function KPICard({
   isLoading,
 }: KPICardProps) {
   const colorMap = {
-    orange: "var(--accent-9)",
+    violet: "var(--accent-9)",
     blue: "var(--blue-9)",
     green: "var(--green-9)",
     purple: "var(--purple-9)",
-    amber: "var(--amber-9)",
+    amber: "var(--purple-9)",
     cyan: "var(--cyan-9)",
   };
 
   const bgColorMap = {
-    orange: "var(--accent-a3)",
+    violet: "var(--accent-a3)",
     blue: "var(--blue-a3)",
     green: "var(--green-a3)",
     purple: "var(--purple-a3)",
-    amber: "var(--amber-a3)",
+    amber: "var(--purple-a3)",
     cyan: "var(--cyan-a3)",
   };
 
@@ -162,7 +162,7 @@ export function KPICards({ kpis, isLoading }: KPICardsProps) {
             title=""
             value=""
             icon={null}
-            color="orange"
+            color="violet"
             isLoading
           />
         ))}
@@ -178,7 +178,7 @@ export function KPICards({ kpis, isLoading }: KPICardsProps) {
         icon={<DollarSign size={24} />}
         trend={kpis.comparaisonJour}
         trendLabel="vs. hier"
-        color="orange"
+        color="violet"
       />
 
       <KPICard

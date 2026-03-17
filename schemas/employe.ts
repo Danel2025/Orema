@@ -24,9 +24,9 @@ export const ROLE_LABELS: Record<RoleType, string> = {
 /**
  * Couleurs des badges de role
  */
-export const ROLE_COLORS: Record<RoleType, 'red' | 'orange' | 'amber' | 'blue' | 'green'> = {
+export const ROLE_COLORS: Record<RoleType, 'red' | 'violet' | 'amber' | 'blue' | 'green'> = {
   SUPER_ADMIN: 'red',
-  ADMIN: 'orange',
+  ADMIN: 'violet',
   MANAGER: 'amber',
   CAISSIER: 'blue',
   SERVEUR: 'green',

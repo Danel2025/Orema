@@ -14,7 +14,7 @@ export type RadixColor = ComponentPropsWithoutRef<typeof Badge>["color"];
 export const statusColors = {
   success: "green",
   error: "red",
-  warning: "orange",
+  warning: "violet",
   info: "blue",
   pending: "amber",
   active: "green",
@@ -25,7 +25,7 @@ export const statusColors = {
  * Couleurs pour les catégories de produits
  */
 export const categoryColors = [
-  "orange",
+  "violet",
   "blue",
   "green",
   "purple",
@@ -41,7 +41,7 @@ export const categoryColors = [
  * Couleurs pour les statistiques
  */
 export const chartColors = {
-  primary: "var(--orange-9)",
+  primary: "var(--violet-9)",
   secondary: "var(--blue-9)",
   tertiary: "var(--green-9)",
   quaternary: "var(--purple-9)",

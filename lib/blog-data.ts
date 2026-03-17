@@ -1,3 +1,5 @@
+import type {
+  LucideIcon} from "lucide-react";
 import {
   Lightbulb,
   Zap,
@@ -8,8 +10,7 @@ import {
   Smartphone,
   CreditCard,
   Users,
-  Globe,
-  LucideIcon,
+  Globe
 } from "lucide-react";
 
 export interface BlogPost {
@@ -42,7 +43,7 @@ export const blogPosts: BlogPost[] = [
     authorRole: "Rédaction",
     date: "28 janvier 2026",
     readTime: "8 min",
-    color: "orange",
+    color: "violet",
     tags: ["Digitalisation", "Commerce", "Gabon"],
     featured: true,
     content: `

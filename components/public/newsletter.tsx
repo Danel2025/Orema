@@ -102,7 +102,7 @@ export function Newsletter({
                   borderRadius: 8,
                   border: "none",
                   background:
-                    "linear-gradient(135deg, var(--orange-9) 0%, var(--amber-9) 100%)",
+                    "linear-gradient(135deg, var(--violet-9) 0%, var(--purple-9) 100%)",
                   color: "white",
                   fontSize: 14,
                   fontWeight: 600,
@@ -131,7 +131,7 @@ export function Newsletter({
       p="8"
       style={{
         background:
-          "linear-gradient(135deg, var(--orange-9) 0%, var(--amber-9) 100%)",
+          "linear-gradient(135deg, var(--violet-9) 0%, var(--purple-9) 100%)",
         borderRadius: 24,
         textAlign: "center",
       }}

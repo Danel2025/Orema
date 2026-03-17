@@ -8,10 +8,10 @@ import { TableItem } from "./TableItem";
 import { FloorPlanToolbar, type ToolType } from "./FloorPlanToolbar";
 import { DecorElement, type DecorElementData, type DecorType, getEffectiveDimensions } from "./DecorElement";
 import { ZoneElement, type ZoneData, ZONE_COLORS } from "./ZoneElement";
-import { createZone, updateZone, deleteZone as deleteZoneAction, updateZonesPositions } from "@/actions/tables";
+import { createZone, updateZone, deleteZone as deleteZoneAction, updateZonesPositions , updateTablesPositions } from "@/actions/tables";
 import { ElementContextMenu } from "./ElementContextMenu";
 import { TableContextMenu } from "./TableContextMenu";
-import { updateTablesPositions } from "@/actions/tables";
+
 import { useFloorPlanHistory } from "@/hooks/useFloorPlanHistory";
 import { useFloorPlanKeyboard } from "@/hooks/useFloorPlanKeyboard";
 import type { StatutTableType, FormeTableType } from "@/schemas/table.schema";
@@ -1121,8 +1121,7 @@ export function FloorPlan({
 
         <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
           {/* Undo/Redo controls (only in edit mode) */}
-          {isEditMode && (
-            <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
+          {isEditMode ? <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
               <Tooltip content="Annuler (Ctrl+Z)">
                 <IconButton
                   size="2"
@@ -1148,8 +1147,7 @@ export function FloorPlan({
                 </IconButton>
               </Tooltip>
               <Separator orientation="vertical" size="1" style={{ height: 24, marginLeft: 8, marginRight: 4 }} />
-            </div>
-          )}
+            </div> : null}
 
           {/* Zoom controls */}
           <div
@@ -1306,8 +1304,7 @@ export function FloorPlan({
       {/* Main content with toolbar */}
       <div style={{ display: "flex", flex: 1, minHeight: 0, overflow: "hidden" }}>
         {/* Left toolbar (only in edit mode) */}
-        {isEditMode && (
-          <div style={{
+        {isEditMode ? <div style={{
             padding: 12,
             borderRight: "1px solid var(--gray-a5)",
             overflowY: "auto",
@@ -1325,8 +1322,7 @@ export function FloorPlan({
               gridSize={gridSize}
               onGridSizeChange={setGridSize}
             />
-          </div>
-        )}
+          </div> : null}
 
         {/* Floor plan canvas */}
         <div
@@ -1386,8 +1382,7 @@ export function FloorPlan({
           }}
         >
           {/* Grid background infinie - visible uniquement si snap activé */}
-          {snapEnabled && (
-            <div
+          {snapEnabled ? <div
               style={{
                 position: "absolute",
                 // Taille très large pour couvrir tout déplacement possible
@@ -1404,8 +1399,7 @@ export function FloorPlan({
                 transition: isPanning ? "none" : "opacity 0.2s",
                 pointerEvents: "none",
               }}
-            />
-          )}
+            /> : null}
 
           <div
             style={{
@@ -1419,8 +1413,7 @@ export function FloorPlan({
           >
 
             {/* Ghost preview pour l'outil de creation actif */}
-            {isEditMode && activeTool !== "select" && mousePosition && (
-              (() => {
+            {isEditMode && activeTool !== "select" && mousePosition ? (() => {
                 const config = getGhostPreviewConfig(activeTool);
                 if (!config.size) return null;
 
@@ -1447,8 +1440,7 @@ export function FloorPlan({
                     {config.icon}
                   </div>
                 );
-              })()
-            )}
+              })() : null}
 
             {/* Zones (rendered first, behind everything) */}
             {zones.map((zone) => (
@@ -1628,7 +1620,7 @@ export function FloorPlan({
             })}
 
             {/* Poignées de rotation aux coins - uniquement pour les tables (les décors utilisent les poignées de resize) */}
-            {isEditMode && editSelectedTableId && (() => {
+            {isEditMode && editSelectedTableId ? (() => {
               const el = getSelectedElementCorners();
               if (!el) return null;
 
@@ -1676,10 +1668,10 @@ export function FloorPlan({
                   {hoveredRotationCorner === key && <RotateCw size={10} color="white" />}
                 </div>
               ));
-            })()}
+            })() : null}
 
             {/* Indicateur d'angle pour l'élément sélectionné */}
-            {isEditMode && (() => {
+            {isEditMode ? (() => {
               const el = getSelectedElementCorners();
               if (!el || el.rotation === 0) return null;
               return (
@@ -1704,7 +1696,7 @@ export function FloorPlan({
                   {el.rotation}°
                 </div>
               );
-            })()}
+            })() : null}
 
             {/* Empty state */}
             {tables.length === 0 && decorElements.length === 0 && (
@@ -1798,8 +1790,7 @@ export function FloorPlan({
       </div>
 
       {/* Context menu */}
-      {contextMenu && isEditMode && (
-        <ElementContextMenu
+      {contextMenu && isEditMode ? <ElementContextMenu
           x={contextMenu.x}
           y={contextMenu.y}
           onClose={closeContextMenu}
@@ -1812,12 +1803,10 @@ export function FloorPlan({
           onIncreaseHeight={() => resizeElement(0, 20)}
           onDuplicate={duplicateElement}
           onDelete={handleDeleteSelected}
-        />
-      )}
+        /> : null}
 
       {/* Zone creation/edit dialog */}
-      {showZoneDialog && (
-        <ZoneCreationDialog
+      {showZoneDialog ? <ZoneCreationDialog
           editingZone={editingZone}
           onClose={() => {
             setShowZoneDialog(false);
@@ -1857,8 +1846,7 @@ export function FloorPlan({
               }
             }
           }}
-        />
-      )}
+        /> : null}
     </div>
   );
 }

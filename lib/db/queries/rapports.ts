@@ -273,7 +273,7 @@ export async function getPaiementsStatsByMode(
     dateFin?: string
   }
 ): Promise<PaiementStats[]> {
-  let query = client
+  const query = client
     .from('paiements')
     .select(`
       mode_paiement,
@@ -346,7 +346,7 @@ export async function getTopProduits(
   const limit = options?.limit ?? 10
 
   // Récupérer les lignes de vente avec les produits
-  let query = client
+  const query = client
     .from('lignes_vente')
     .select(`
       quantite,

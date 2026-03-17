@@ -4,7 +4,7 @@
  */
 
 export type TypeImprimante = "TICKET" | "CUISINE" | "BAR";
-export type TypeConnexion = "USB" | "RESEAU" | "SERIE" | "BLUETOOTH";
+export type TypeConnexion = "USB" | "RESEAU" | "SERIE" | "BLUETOOTH" | "SYSTEME";
 
 // Labels pour les types de vente
 export const TYPE_VENTE_LABELS: Record<string, string> = {

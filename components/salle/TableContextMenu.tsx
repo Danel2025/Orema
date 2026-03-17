@@ -135,26 +135,20 @@ export function TableContextMenu({
             </ContextMenu.Item>
           ) : (
             <>
-              {venteEnCours && (
-                <ContextMenu.Item onClick={handleViewOrder}>
+              {venteEnCours ? <ContextMenu.Item onClick={handleViewOrder}>
                   <Eye size={14} />
                   Voir la commande ({venteEnCours._count.lignes} articles)
-                </ContextMenu.Item>
-              )}
+                </ContextMenu.Item> : null}
 
-              {statut !== "ADDITION" && venteEnCours && (
-                <ContextMenu.Item onClick={handleRequestBill}>
+              {statut !== "ADDITION" && venteEnCours ? <ContextMenu.Item onClick={handleRequestBill}>
                   <Receipt size={14} />
                   Demander l'addition
-                </ContextMenu.Item>
-              )}
+                </ContextMenu.Item> : null}
 
-              {venteEnCours && (
-                <ContextMenu.Item onClick={handleOpenTransferModal}>
+              {venteEnCours ? <ContextMenu.Item onClick={handleOpenTransferModal}>
                   <ArrowRightLeft size={14} />
                   Transferer la table
-                </ContextMenu.Item>
-              )}
+                </ContextMenu.Item> : null}
             </>
           )}
 
@@ -215,23 +209,19 @@ export function TableContextMenu({
           <ContextMenu.Separator />
 
           {/* Actions d'edition */}
-          {onEdit && (
-            <ContextMenu.Item onClick={onEdit}>
+          {onEdit ? <ContextMenu.Item onClick={onEdit}>
               <Edit2 size={14} />
               Modifier la table
-            </ContextMenu.Item>
-          )}
+            </ContextMenu.Item> : null}
 
-          {onDelete && (
-            <ContextMenu.Item
+          {onDelete ? <ContextMenu.Item
               color="red"
               onClick={onDelete}
               disabled={!!venteEnCours}
             >
               <Trash2 size={14} />
               Supprimer la table
-            </ContextMenu.Item>
-          )}
+            </ContextMenu.Item> : null}
         </ContextMenu.Content>
       </ContextMenu.Root>
 

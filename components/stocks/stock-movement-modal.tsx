@@ -52,7 +52,7 @@ const mouvementTypes: {
   value: TypeMouvementType;
   label: string;
   icon: React.ReactNode;
-  color: "green" | "red" | "blue" | "orange";
+  color: "green" | "red" | "blue" | "violet";
   description: string;
 }[] = [
   {
@@ -80,7 +80,7 @@ const mouvementTypes: {
     value: "PERTE",
     label: "Perte",
     icon: <Trash2 size={16} />,
-    color: "orange",
+    color: "violet",
     description: "Casse, péremption, vol",
   },
 ];
@@ -209,8 +209,7 @@ export function StockMovementModal({
 
         <Flex direction="column" gap="4">
           {/* Sélection du produit (si pas pré-sélectionné) */}
-          {!produit && produits && (
-            <Box>
+          {!produit && produits ? <Box>
               <Text as="label" size="2" weight="medium" mb="1">
                 Produit *
               </Text>
@@ -224,12 +223,10 @@ export function StockMovementModal({
                   ))}
                 </Select.Content>
               </Select.Root>
-            </Box>
-          )}
+            </Box> : null}
 
           {/* Produit sélectionné */}
-          {selectedProduct && (
-            <Box
+          {selectedProduct ? <Box
               style={{
                 padding: 12,
                 borderRadius: 8,
@@ -253,8 +250,7 @@ export function StockMovementModal({
                   </Text>
                 </Flex>
               </Flex>
-            </Box>
-          )}
+            </Box> : null}
 
           {/* Type de mouvement */}
           <Box>
@@ -274,11 +270,9 @@ export function StockMovementModal({
                 ))}
               </Select.Content>
             </Select.Root>
-            {typeConfig && (
-              <Text size="1" color="gray" mt="1">
+            {typeConfig ? <Text size="1" color="gray" mt="1">
                 {typeConfig.description}
-              </Text>
-            )}
+              </Text> : null}
           </Box>
 
           {/* Quantité */}
@@ -380,14 +374,12 @@ export function StockMovementModal({
           </Box>
 
           {/* Erreur */}
-          {error && (
-            <Callout.Root color="red" size="1">
+          {error ? <Callout.Root color="red" size="1">
               <Callout.Icon>
                 <AlertCircle size={16} />
               </Callout.Icon>
               <Callout.Text>{error}</Callout.Text>
-            </Callout.Root>
-          )}
+            </Callout.Root> : null}
         </Flex>
 
         <Flex gap="3" mt="4" justify="end">
@@ -397,7 +389,7 @@ export function StockMovementModal({
             </Button>
           </Dialog.Close>
           <Button
-            color={typeConfig?.color || "orange"}
+            color={typeConfig?.color || "violet"}
             onClick={handleSubmit}
             disabled={isLoading || !selectedProduitId || isStockNegative}
           >

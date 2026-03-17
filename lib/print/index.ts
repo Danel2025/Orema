@@ -98,3 +98,11 @@ export {
 // Hooks (client-side only)
 // Note: Ces hooks doivent etre importes separement avec "use client"
 // import { usePrint, useAutoPrint, usePrinterTest } from "@/lib/print/hooks";
+
+// Web APIs (client-side only)
+// Ces modules utilisent les Web APIs du navigateur pour communiquer
+// directement avec les imprimantes USB/Serie/Bluetooth.
+// import { isWebSerialSupported, requestSerialPort, sendViaWebSerial } from "@/lib/print/web-serial";
+// import { isWebBluetoothSupported, requestBluetoothPrinter, sendViaWebBluetooth } from "@/lib/print/web-bluetooth";
+// import { getWebPrinterManager } from "@/lib/print/web-printer-manager";
+// import { useWebPrinter } from "@/hooks/useWebPrinter";

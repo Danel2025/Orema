@@ -1,3 +1,5 @@
+import type {
+  LucideIcon} from "lucide-react";
 import {
   Rocket,
   Settings,
@@ -7,8 +9,7 @@ import {
   Printer,
   BarChart3,
   Shield,
-  Code,
-  LucideIcon,
+  Code
 } from "lucide-react";
 
 export interface DocArticle {
@@ -497,7 +498,7 @@ Suivez-nous sur Facebook : @MonRestaurant
     icon: CreditCard,
     title: "Caisse & Ventes",
     description: "Gérez vos transactions",
-    color: "orange",
+    color: "violet",
     articles: [
       {
         slug: "interface-caisse",

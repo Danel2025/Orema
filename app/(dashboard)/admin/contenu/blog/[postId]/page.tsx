@@ -127,7 +127,7 @@ export default function EditBlogPostPage({
       authorId: "",
       featuredImage: "",
       icon: "FileText",
-      color: "orange",
+      color: "violet",
       status: "DRAFT",
       featured: false,
       tags: [],
@@ -169,7 +169,7 @@ export default function EditBlogPostPage({
           authorId: postData.author_id,
           featuredImage: postData.featured_image || "",
           icon: postData.icon || "FileText",
-          color: postData.color || "orange",
+          color: postData.color || "violet",
           status: postData.status,
           featured: postData.featured,
           tags: postData.tags?.map((t: { id: string }) => t.id) || [],
@@ -257,23 +257,19 @@ export default function EditBlogPostPage({
               <Flex align="center" gap="2">
                 <Heading size="5">Modifier l'article</Heading>
                 <Badge
-                  color={statusColor as "green" | "gray" | "orange"}
+                  color={statusColor as "green" | "gray" | "violet"}
                   variant="soft"
                   size="1"
                 >
                   {contentStatusLabels[watchedValues.status]}
                 </Badge>
-                {watchedValues.featured && (
-                  <Badge color="amber" variant="soft" size="1">
+                {watchedValues.featured ? <Badge color="amber" variant="soft" size="1">
                     <Star size={10} style={{ marginRight: 4 }} />
                     Vedette
-                  </Badge>
-                )}
-                {isDirty && (
-                  <Badge color="orange" variant="soft" size="1">
+                  </Badge> : null}
+                {isDirty ? <Badge color="violet" variant="soft" size="1">
                     Non enregistré
-                  </Badge>
-                )}
+                  </Badge> : null}
               </Flex>
               <Text size="2" color="gray">
                 /blog/{post.slug}
@@ -314,11 +310,9 @@ export default function EditBlogPostPage({
                       placeholder="Un titre accrocheur pour votre article"
                       {...register("title")}
                     />
-                    {errors.title && (
-                      <Text size="1" color="red" mt="1">
+                    {errors.title ? <Text size="1" color="red" mt="1">
                         {errors.title.message}
-                      </Text>
-                    )}
+                      </Text> : null}
                   </Box>
 
                   <Box>
@@ -334,11 +328,9 @@ export default function EditBlogPostPage({
                         <Text size="1" color="gray">/blog/</Text>
                       </TextField.Slot>
                     </TextField.Root>
-                    {errors.slug && (
-                      <Text size="1" color="red" mt="1">
+                    {errors.slug ? <Text size="1" color="red" mt="1">
                         {errors.slug.message}
-                      </Text>
-                    )}
+                      </Text> : null}
                   </Box>
 
                   <Box>
@@ -467,11 +459,9 @@ export default function EditBlogPostPage({
                         ))}
                       </Select.Content>
                     </Select.Root>
-                    {errors.categoryId && (
-                      <Text size="1" color="red" mt="1">
+                    {errors.categoryId ? <Text size="1" color="red" mt="1">
                         {errors.categoryId.message}
-                      </Text>
-                    )}
+                      </Text> : null}
                   </Box>
 
                   <Box>
@@ -494,11 +484,9 @@ export default function EditBlogPostPage({
                         ))}
                       </Select.Content>
                     </Select.Root>
-                    {errors.authorId && (
-                      <Text size="1" color="red" mt="1">
+                    {errors.authorId ? <Text size="1" color="red" mt="1">
                         {errors.authorId.message}
-                      </Text>
-                    )}
+                      </Text> : null}
                   </Box>
                 </Flex>
               </Card>
@@ -578,7 +566,7 @@ export default function EditBlogPostPage({
                     disabled={isSubmitting || !isDirty}
                     style={{
                       width: "100%",
-                      background: "linear-gradient(135deg, var(--orange-9) 0%, var(--amber-9) 100%)",
+                      background: "linear-gradient(135deg, var(--violet-9) 0%, var(--purple-9) 100%)",
                       cursor: isSubmitting ? "wait" : "pointer",
                       opacity: !isDirty ? 0.5 : 1,
                     }}

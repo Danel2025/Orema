@@ -159,8 +159,7 @@ export function ProductSearchModal({
             <TextField.Slot>
               <Search size={16} />
             </TextField.Slot>
-            {searchQuery && (
-              <TextField.Slot>
+            {searchQuery ? <TextField.Slot>
                 <IconButton
                   size="1"
                   variant="ghost"
@@ -169,8 +168,7 @@ export function ProductSearchModal({
                 >
                   <X size={14} />
                 </IconButton>
-              </TextField.Slot>
-            )}
+              </TextField.Slot> : null}
           </TextField.Root>
         </Box>
 
@@ -238,8 +236,7 @@ export function ProductSearchModal({
                             {prod.nom}
                           </Text>
                           <Flex align="center" gap="3">
-                            {cat && (
-                              <Flex align="center" gap="1">
+                            {cat ? <Flex align="center" gap="1">
                                 <Box
                                   style={{
                                     width: 8,
@@ -251,21 +248,16 @@ export function ProductSearchModal({
                                 <Text size="1" color="gray">
                                   {cat.nom}
                                 </Text>
-                              </Flex>
-                            )}
-                            {prod.codeBarre && (
-                              <Flex align="center" gap="1">
+                              </Flex> : null}
+                            {prod.codeBarre ? <Flex align="center" gap="1">
                                 <Barcode size={12} style={{ color: "var(--gray-9)" }} />
                                 <Text size="1" color="gray">
                                   {prod.codeBarre}
                                 </Text>
-                              </Flex>
-                            )}
-                            {prod.reference && (
-                              <Text size="1" color="gray">
+                              </Flex> : null}
+                            {prod.reference ? <Text size="1" color="gray">
                                 Ref: {prod.reference}
-                              </Text>
-                            )}
+                              </Text> : null}
                           </Flex>
                         </Flex>
                         <Flex direction="column" align="end" gap="1">
@@ -280,18 +272,14 @@ export function ProductSearchModal({
                           >
                             {formatCurrency(prix)}
                           </Text>
-                          {rupture && (
-                            <Text size="1" color="red">
+                          {rupture ? <Text size="1" color="red">
                               Rupture
-                            </Text>
-                          )}
+                            </Text> : null}
                           {prod.gererStock &&
                             prod.stockActuel != null &&
-                            prod.stockActuel > 0 && (
-                              <Text size="1" color="gray">
+                            prod.stockActuel > 0 ? <Text size="1" color="gray">
                                 Stock: {prod.stockActuel}
-                              </Text>
-                            )}
+                              </Text> : null}
                         </Flex>
                       </Flex>
                     </Box>

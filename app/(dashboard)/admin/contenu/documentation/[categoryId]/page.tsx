@@ -191,7 +191,7 @@ export default function CategoryDetailPage({
               <Flex align="center" gap="2">
                 <Heading size="5">{category.title}</Heading>
                 <Badge
-                  color={statusColor as "green" | "gray" | "orange"}
+                  color={statusColor as "green" | "gray" | "violet"}
                   variant="soft"
                   size="1"
                 >
@@ -223,8 +223,7 @@ export default function CategoryDetailPage({
       </motion.div>
 
       {/* Category Info Card */}
-      {category.description && (
-        <motion.div
+      {category.description ? <motion.div
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.3, delay: 0.1 }}
@@ -234,8 +233,7 @@ export default function CategoryDetailPage({
               {category.description}
             </Text>
           </Card>
-        </motion.div>
-      )}
+        </motion.div> : null}
 
       {/* Articles List */}
       <motion.div
@@ -306,7 +304,7 @@ export default function CategoryDetailPage({
 
                       <Table.Cell>
                         <Badge
-                          color={articleStatusColor as "green" | "gray" | "orange"}
+                          color={articleStatusColor as "green" | "gray" | "violet"}
                           variant="soft"
                           size="1"
                         >

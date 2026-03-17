@@ -309,16 +309,14 @@ export function DecorElement({
       )}
 
       {/* Rendu pour le mur droit - pas de rotation CSS, on utilise le swap de dimensions */}
-      {isStraightWall && (
-        <div
+      {isStraightWall ? <div
           style={{
             position: "absolute",
             inset: 2,
             backgroundColor: style.border,
             borderRadius: 2,
           }}
-        />
-      )}
+        /> : null}
 
       {/* Rendu pour les étagères */}
       {element.type === "shelf" && (
@@ -333,14 +331,11 @@ export function DecorElement({
           <rect x="2" y={displayHeight - Math.max(6, displayHeight * 0.3) - 2} width={displayWidth - 4} height={Math.max(4, displayHeight * 0.3)} fill={style.border} rx="1" />
         </svg>
       )}
-      {Icon && (
-        <Icon
+      {Icon ? <Icon
           size={Math.min(element.width, element.height) * 0.35}
           style={{ color: style.border, opacity: 0.8 }}
-        />
-      )}
-      {element.label && !isWallType && !isShelf && element.width > 60 && (
-        <span
+        /> : null}
+      {element.label && !isWallType && !isShelf && element.width > 60 ? <span
           style={{
             fontSize: 10,
             fontWeight: 600,
@@ -353,12 +348,10 @@ export function DecorElement({
           }}
         >
           {element.label}
-        </span>
-      )}
+        </span> : null}
 
       {/* Resize handles (only when selected in edit mode) */}
-      {isSelected && isEditMode && (
-        <>
+      {isSelected && isEditMode ? <>
           {RESIZE_HANDLES.map((handle) => {
             const isCorner = CORNER_POSITIONS.has(handle.position);
             const isCornerHovered = isCorner && activeResizeHandle === handle.position;
@@ -388,16 +381,14 @@ export function DecorElement({
                   }
                 }}
               >
-                {isCornerHovered && <RotateCw size={7} color="white" strokeWidth={3} />}
+                {isCornerHovered ? <RotateCw size={7} color="white" strokeWidth={3} /> : null}
               </div>
             );
           })}
-        </>
-      )}
+        </> : null}
 
       {/* Indicateur visuel pendant le resize - affiche les nouvelles dimensions en bas */}
-      {activeResizeHandle && isSelected && isEditMode && (
-        <div
+      {activeResizeHandle && isSelected && isEditMode ? <div
           style={{
             position: "absolute",
             bottom: -24,
@@ -416,8 +407,7 @@ export function DecorElement({
           }}
         >
           {Math.round(element.width)}×{Math.round(element.height)}
-        </div>
-      )}
+        </div> : null}
     </div>
   );
 }

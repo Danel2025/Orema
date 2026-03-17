@@ -81,8 +81,9 @@ export type FiscalFormData = z.infer<typeof fiscalSchema>;
  * Types de connexion imprimante
  */
 export const typeConnexionOptions = [
-  { value: "USB", label: "USB" },
+  { value: "SYSTEME", label: "Imprimante systeme" },
   { value: "RESEAU", label: "Reseau (IP)" },
+  { value: "USB", label: "USB" },
   { value: "SERIE", label: "Port Serie" },
   { value: "BLUETOOTH", label: "Bluetooth" },
 ] as const;
@@ -114,7 +115,7 @@ export const imprimanteSchema = z
       .min(2, "Le nom doit contenir au moins 2 caracteres")
       .max(50, "Le nom ne peut pas depasser 50 caracteres"),
     type: z.enum(["TICKET", "CUISINE", "BAR"]),
-    typeConnexion: z.enum(["USB", "RESEAU", "SERIE", "BLUETOOTH"]),
+    typeConnexion: z.enum(["USB", "RESEAU", "SERIE", "BLUETOOTH", "SYSTEME"]),
     adresseIp: z
       .string()
       .optional()
@@ -208,10 +209,10 @@ export const themeOptions = [
  * Couleurs d'accent disponibles
  */
 export const accentColors = [
-  { value: "orange", label: "Orange", hex: "#f97316" },
+  { value: "violet", label: "Violet", hex: "#7c3aed" },
   { value: "blue", label: "Bleu", hex: "#3b82f6" },
   { value: "green", label: "Vert", hex: "#22c55e" },
-  { value: "purple", label: "Violet", hex: "#a855f7" },
+  { value: "purple", label: "Pourpre", hex: "#a855f7" },
   { value: "red", label: "Rouge", hex: "#ef4444" },
   { value: "cyan", label: "Cyan", hex: "#06b6d4" },
   { value: "pink", label: "Rose", hex: "#ec4899" },
@@ -232,7 +233,7 @@ export const fontSizeOptions = [
  */
 export const apparenceSchema = z.object({
   theme: z.enum(["light", "dark", "auto"]).default("auto"),
-  accentColor: z.string().default("orange"),
+  accentColor: z.string().default("violet"),
   fontSize: z.enum(["small", "medium", "large"]).default("medium"),
 });
 

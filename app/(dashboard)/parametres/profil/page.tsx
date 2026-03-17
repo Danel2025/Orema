@@ -275,8 +275,7 @@ export default function ProfilPage() {
                 {user.email}
               </div>
 
-              {user.etablissementNom && (
-                <div
+              {user.etablissementNom ? <div
                   style={{
                     display: "flex",
                     alignItems: "center",
@@ -287,8 +286,7 @@ export default function ProfilPage() {
                 >
                   <Building2 size={16} />
                   {user.etablissementNom}
-                </div>
-              )}
+                </div> : null}
             </div>
           </div>
         </div>
@@ -342,8 +340,7 @@ export default function ProfilPage() {
             </div>
           </div>
 
-          {passwordSuccess && (
-            <div
+          {passwordSuccess ? <div
               style={{
                 display: "flex",
                 alignItems: "center",
@@ -358,8 +355,7 @@ export default function ProfilPage() {
             >
               <Check size={16} />
               Mot de passe mis à jour avec succès
-            </div>
-          )}
+            </div> : null}
 
           <form onSubmit={onPasswordSubmit}>
             <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
@@ -398,11 +394,9 @@ export default function ProfilPage() {
                     {showPasswords.current ? <EyeOff size={18} /> : <Eye size={18} />}
                   </button>
                 </div>
-                {passwordForm.formState.errors.currentPassword && (
-                  <p style={{ fontSize: 12, color: "var(--red-11)", marginTop: 4 }}>
+                {passwordForm.formState.errors.currentPassword ? <p style={{ fontSize: 12, color: "var(--red-11)", marginTop: 4 }}>
                     {passwordForm.formState.errors.currentPassword.message}
-                  </p>
-                )}
+                  </p> : null}
               </div>
 
               {/* Nouveau mot de passe */}
@@ -438,11 +432,9 @@ export default function ProfilPage() {
                     {showPasswords.new ? <EyeOff size={18} /> : <Eye size={18} />}
                   </button>
                 </div>
-                {passwordForm.formState.errors.newPassword && (
-                  <p style={{ fontSize: 12, color: "var(--red-11)", marginTop: 4 }}>
+                {passwordForm.formState.errors.newPassword ? <p style={{ fontSize: 12, color: "var(--red-11)", marginTop: 4 }}>
                     {passwordForm.formState.errors.newPassword.message}
-                  </p>
-                )}
+                  </p> : null}
               </div>
 
               {/* Confirmer mot de passe */}
@@ -480,11 +472,9 @@ export default function ProfilPage() {
                     {showPasswords.confirm ? <EyeOff size={18} /> : <Eye size={18} />}
                   </button>
                 </div>
-                {passwordForm.formState.errors.confirmPassword && (
-                  <p style={{ fontSize: 12, color: "var(--red-11)", marginTop: 4 }}>
+                {passwordForm.formState.errors.confirmPassword ? <p style={{ fontSize: 12, color: "var(--red-11)", marginTop: 4 }}>
                     {passwordForm.formState.errors.confirmPassword.message}
-                  </p>
-                )}
+                  </p> : null}
               </div>
 
               <button
@@ -506,7 +496,7 @@ export default function ProfilPage() {
                   opacity: isPendingPassword ? 0.7 : 1,
                 }}
               >
-                {isPendingPassword && <Loader2 size={16} className="animate-spin" />}
+                {isPendingPassword ? <Loader2 size={16} className="animate-spin" /> : null}
                 Mettre à jour
               </button>
             </div>
@@ -559,8 +549,7 @@ export default function ProfilPage() {
             </div>
           </div>
 
-          {pinSuccess && (
-            <div
+          {pinSuccess ? <div
               style={{
                 display: "flex",
                 alignItems: "center",
@@ -575,8 +564,7 @@ export default function ProfilPage() {
             >
               <Check size={16} />
               Code PIN mis à jour avec succès
-            </div>
-          )}
+            </div> : null}
 
           <form onSubmit={onPinSubmit}>
             <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
@@ -617,11 +605,9 @@ export default function ProfilPage() {
                     {showPins.current ? <EyeOff size={18} /> : <Eye size={18} />}
                   </button>
                 </div>
-                {pinForm.formState.errors.currentPin && (
-                  <p style={{ fontSize: 12, color: "var(--red-11)", marginTop: 4 }}>
+                {pinForm.formState.errors.currentPin ? <p style={{ fontSize: 12, color: "var(--red-11)", marginTop: 4 }}>
                     {pinForm.formState.errors.currentPin.message}
-                  </p>
-                )}
+                  </p> : null}
               </div>
 
               {/* Nouveau PIN */}
@@ -661,11 +647,9 @@ export default function ProfilPage() {
                     {showPins.new ? <EyeOff size={18} /> : <Eye size={18} />}
                   </button>
                 </div>
-                {pinForm.formState.errors.newPin && (
-                  <p style={{ fontSize: 12, color: "var(--red-11)", marginTop: 4 }}>
+                {pinForm.formState.errors.newPin ? <p style={{ fontSize: 12, color: "var(--red-11)", marginTop: 4 }}>
                     {pinForm.formState.errors.newPin.message}
-                  </p>
-                )}
+                  </p> : null}
               </div>
 
               {/* Confirmer PIN */}
@@ -705,11 +689,9 @@ export default function ProfilPage() {
                     {showPins.confirm ? <EyeOff size={18} /> : <Eye size={18} />}
                   </button>
                 </div>
-                {pinForm.formState.errors.confirmPin && (
-                  <p style={{ fontSize: 12, color: "var(--red-11)", marginTop: 4 }}>
+                {pinForm.formState.errors.confirmPin ? <p style={{ fontSize: 12, color: "var(--red-11)", marginTop: 4 }}>
                     {pinForm.formState.errors.confirmPin.message}
-                  </p>
-                )}
+                  </p> : null}
               </div>
 
               <button
@@ -731,7 +713,7 @@ export default function ProfilPage() {
                   opacity: isPendingPin ? 0.7 : 1,
                 }}
               >
-                {isPendingPin && <Loader2 size={16} className="animate-spin" />}
+                {isPendingPin ? <Loader2 size={16} className="animate-spin" /> : null}
                 Mettre à jour
               </button>
             </div>

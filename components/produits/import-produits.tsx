@@ -466,8 +466,7 @@ export function ImportProduits({ onClose, onSuccess }: ImportProduitsProps) {
           )}
 
           {/* Step: Result */}
-          {step === "result" && importResult && (
-            <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+          {step === "result" && importResult ? <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
               <div style={{ textAlign: "center", padding: 24 }}>
                 <CheckCircle size={48} style={{ color: "var(--green-9)", margin: "0 auto" }} />
                 <h3 style={{ fontSize: 18, fontWeight: 600, color: "var(--gray-12)", marginTop: 16 }}>
@@ -544,8 +543,7 @@ export function ImportProduits({ onClose, onSuccess }: ImportProduitsProps) {
                   ))}
                 </div>
               )}
-            </div>
-          )}
+            </div> : null}
         </div>
 
         {/* Footer */}

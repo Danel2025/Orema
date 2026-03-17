@@ -8,9 +8,12 @@ import {
   Flex,
   Grid,
   TextField,
+  Skeleton,
 } from "@radix-ui/themes";
 import { motion } from "motion/react";
 import { PageHeader } from "@/components/public";
+import type {
+  LucideIcon} from "lucide-react";
 import {
   Book,
   Smartphone,
@@ -20,8 +23,6 @@ import {
   FileText,
   Video,
   Zap,
-  LucideIcon,
-  // Icons pour les catégories
   ShoppingCart,
   Utensils,
   Package,
@@ -31,9 +32,12 @@ import {
   Printer,
   CreditCard,
   HardDrive,
+  AlertTriangle,
+  RefreshCw,
+  FolderOpen,
 } from "lucide-react";
 import Link from "next/link";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { getPublishedDocCategories } from "@/actions/admin/documentation";
 
 // Map des icônes par nom
@@ -87,7 +91,7 @@ const quickLinks = [
     title: "FAQ",
     description: "Questions fréquentes",
     href: "/faq",
-    color: "orange",
+    color: "violet",
   },
   {
     icon: Zap,
@@ -102,20 +106,26 @@ export default function DocsPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [categories, setCategories] = useState<DocCategory[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const loadCategories = useCallback(async () => {
+    setIsLoading(true);
+    setError(null);
+    try {
+      const data = await getPublishedDocCategories();
+      setCategories(data as unknown as DocCategory[]);
+    } catch (_err) {
+      setError(
+        "Impossible de charger la documentation. Veuillez verifier votre connexion et reessayer."
+      );
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
 
   useEffect(() => {
-    async function loadCategories() {
-      try {
-        const data = await getPublishedDocCategories();
-        setCategories(data as unknown as DocCategory[]);
-      } catch (error) {
-        console.error("Erreur chargement catégories:", error);
-      } finally {
-        setIsLoading(false);
-      }
-    }
     loadCategories();
-  }, []);
+  }, [loadCategories]);
 
   const filteredCategories = categories.filter(
     (category) =>
@@ -143,6 +153,7 @@ export default function DocsPage() {
             <Box position="relative">
               <Search
                 size={18}
+                aria-hidden="true"
                 style={{
                   position: "absolute",
                   left: 16,
@@ -156,6 +167,7 @@ export default function DocsPage() {
               <TextField.Root
                 size="3"
                 placeholder="Rechercher dans la documentation..."
+                aria-label="Rechercher dans la documentation"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 style={{
@@ -241,9 +253,9 @@ export default function DocsPage() {
             p="6"
             style={{
               background:
-                "linear-gradient(135deg, var(--orange-a2) 0%, var(--amber-a2) 100%)",
+                "linear-gradient(135deg, var(--violet-a2) 0%, var(--purple-a2) 100%)",
               borderRadius: 20,
-              border: "1px solid var(--orange-a4)",
+              border: "1px solid var(--violet-a4)",
             }}
           >
             <Grid columns={{ initial: "1", md: "3" }} gap="6" align="center">
@@ -251,11 +263,11 @@ export default function DocsPage() {
                 <Box
                   p="4"
                   style={{
-                    background: "var(--orange-a4)",
+                    background: "var(--violet-a4)",
                     borderRadius: 16,
                   }}
                 >
-                  <Book size={32} style={{ color: "var(--orange-9)" }} />
+                  <Book size={32} style={{ color: "var(--violet-9)" }} />
                 </Box>
                 <Box>
                   <Heading size="5" mb="1">
@@ -278,7 +290,7 @@ export default function DocsPage() {
                     padding: "12px 24px",
                     borderRadius: 9999,
                     background:
-                      "linear-gradient(135deg, var(--orange-9) 0%, var(--amber-9) 100%)",
+                      "linear-gradient(135deg, var(--violet-9) 0%, var(--purple-9) 100%)",
                     color: "white",
                     fontSize: 14,
                     fontWeight: 600,
@@ -302,6 +314,53 @@ export default function DocsPage() {
             Parcourir par catégorie
           </Heading>
 
+          {/* Error state */}
+          {error && !isLoading ? <Box
+              p="8"
+              mb="6"
+              style={{
+                background: "var(--red-a2)",
+                borderRadius: 16,
+                border: "1px solid var(--red-a5)",
+                textAlign: "center",
+              }}
+            >
+              <AlertTriangle
+                size={48}
+                style={{ color: "var(--red-9)", marginBottom: 16 }}
+              />
+              <Heading size="4" mb="2" style={{ color: "var(--red-11)" }}>
+                Erreur de chargement
+              </Heading>
+              <Text
+                size="3"
+                mb="5"
+                style={{ color: "var(--red-11)", display: "block" }}
+              >
+                {error}
+              </Text>
+              <button
+                onClick={loadCategories}
+                style={{
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: 8,
+                  padding: "12px 24px",
+                  borderRadius: 9999,
+                  border: "1px solid var(--red-a6)",
+                  background: "var(--red-a3)",
+                  color: "var(--red-11)",
+                  fontSize: 14,
+                  fontWeight: 600,
+                  cursor: "pointer",
+                  transition: "all 0.2s ease",
+                }}
+              >
+                <RefreshCw size={16} />
+                Reessayer
+              </button>
+            </Box> : null}
+
           {isLoading ? (
             <Grid columns={{ initial: "1", md: "2", lg: "3" }} gap="4">
               {[...Array(6)].map((_, i) => (
@@ -311,12 +370,51 @@ export default function DocsPage() {
                   style={{
                     background: "var(--gray-a2)",
                     borderRadius: 16,
-                    height: 250,
-                    animation: "pulse 2s infinite",
+                    border: "1px solid var(--gray-a4)",
                   }}
-                />
+                >
+                  <Flex align="center" gap="3" mb="4">
+                    <Skeleton style={{ width: 44, height: 44, borderRadius: 12 }} />
+                    <Box style={{ flex: 1 }}>
+                      <Skeleton style={{ height: 20, width: "60%", marginBottom: 4 }} />
+                      <Skeleton style={{ height: 14, width: "80%" }} />
+                    </Box>
+                  </Flex>
+                  <Flex direction="column" gap="2">
+                    <Skeleton style={{ height: 36, borderRadius: 8 }} />
+                    <Skeleton style={{ height: 36, borderRadius: 8 }} />
+                    <Skeleton style={{ height: 36, borderRadius: 8 }} />
+                  </Flex>
+                  <Box pt="3" mt="3" style={{ borderTop: "1px solid var(--gray-a4)" }}>
+                    <Skeleton style={{ height: 14, width: 140 }} />
+                  </Box>
+                </Box>
               ))}
             </Grid>
+          ) : error ? null : categories.length === 0 ? (
+            <Box
+              p="9"
+              style={{
+                background: "var(--gray-a2)",
+                borderRadius: 20,
+                textAlign: "center",
+              }}
+            >
+              <FolderOpen
+                size={56}
+                style={{ color: "var(--gray-8)", marginBottom: 20 }}
+              />
+              <Heading size="5" mb="3" color="gray">
+                Documentation en cours de redaction
+              </Heading>
+              <Text
+                size="3"
+                color="gray"
+                style={{ maxWidth: 400, margin: "0 auto", display: "block" }}
+              >
+                Les guides et tutoriels apparaitront ici prochainement. Revenez bientot.
+              </Text>
+            </Box>
           ) : filteredCategories.length === 0 ? (
             <Box
               p="8"
@@ -331,11 +429,31 @@ export default function DocsPage() {
                 style={{ color: "var(--gray-8)", marginBottom: 16 }}
               />
               <Heading size="4" mb="2" color="gray">
-                Aucun résultat
+                Aucun resultat
               </Heading>
-              <Text size="3" color="gray">
-                Aucun article ne correspond à votre recherche &quot;{searchQuery}&quot;
+              <Text
+                size="3"
+                color="gray"
+                style={{ display: "block", marginBottom: 16 }}
+              >
+                Aucun article ne correspond a votre recherche &quot;{searchQuery}&quot;
               </Text>
+              <button
+                onClick={() => setSearchQuery("")}
+                style={{
+                  padding: "10px 20px",
+                  borderRadius: 9999,
+                  border: "1px solid var(--gray-a6)",
+                  background: "transparent",
+                  color: "var(--gray-11)",
+                  fontSize: 14,
+                  fontWeight: 500,
+                  cursor: "pointer",
+                  transition: "all 0.2s ease",
+                }}
+              >
+                Effacer la recherche
+              </button>
             </Box>
           ) : (
             <Grid columns={{ initial: "1", md: "2", lg: "3" }} gap="4">
@@ -410,7 +528,7 @@ export default function DocsPage() {
                         ))}
                       </Flex>
 
-                      <Box pt="3" mt="auto" style={{ borderTop: "1px solid var(--gray-a4)" }}>
+                      <Box pt="3" mt="4" style={{ borderTop: "1px solid var(--gray-a4)" }}>
                         <Link
                           href={`/docs/${category.slug}`}
                           style={{
@@ -503,7 +621,7 @@ export default function DocsPage() {
             p="8"
             style={{
               background:
-                "linear-gradient(135deg, var(--orange-9) 0%, var(--amber-9) 100%)",
+                "linear-gradient(135deg, var(--violet-9) 0%, var(--purple-9) 100%)",
               borderRadius: 24,
               textAlign: "center",
             }}
@@ -534,7 +652,7 @@ export default function DocsPage() {
                 style={{
                   textDecoration: "none",
                   background: "white",
-                  color: "var(--orange-9)",
+                  color: "var(--violet-9)",
                   padding: "12px 24px",
                   borderRadius: 9999,
                   fontWeight: 600,

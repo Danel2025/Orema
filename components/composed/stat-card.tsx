@@ -13,26 +13,26 @@ export interface StatCardProps {
     value: string;
     isPositive: boolean;
   };
-  color?: "orange" | "blue" | "green" | "purple" | "red" | "amber";
+  color?: "violet" | "blue" | "green" | "purple" | "red" | "amber";
 }
 
-export function StatCard({ title, value, icon: Icon, trend, color = "orange" }: StatCardProps) {
+export function StatCard({ title, value, icon: Icon, trend, color = "violet" }: StatCardProps) {
   const colorMap = {
-    orange: "var(--accent-9)",
+    violet: "var(--accent-9)",
     blue: "var(--blue-9)",
     green: "var(--green-9)",
     purple: "var(--purple-9)",
     red: "var(--red-9)",
-    amber: "var(--amber-9)",
+    amber: "var(--purple-9)",
   };
 
   const bgColorMap = {
-    orange: "var(--accent-a3)",
+    violet: "var(--accent-a3)",
     blue: "var(--blue-a3)",
     green: "var(--green-a3)",
     purple: "var(--purple-a3)",
     red: "var(--red-a3)",
-    amber: "var(--amber-a3)",
+    amber: "var(--purple-a3)",
   };
 
   return (
@@ -97,8 +97,7 @@ export function StatCard({ title, value, icon: Icon, trend, color = "orange" }: 
       </div>
 
       {/* Trend (optionnel) */}
-      {trend && (
-        <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+      {trend ? <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
           <span
             style={{
               fontSize: 13,
@@ -111,8 +110,7 @@ export function StatCard({ title, value, icon: Icon, trend, color = "orange" }: 
           <span style={{ fontSize: 13, color: "var(--gray-10)" }}>
             vs. hier
           </span>
-        </div>
-      )}
+        </div> : null}
     </div>
   );
 }

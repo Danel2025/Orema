@@ -53,9 +53,9 @@ const ROLE_LABELS: Record<Role, string> = {
   SERVEUR: 'Serveur',
 }
 
-const ROLE_COLORS: Record<Role, 'red' | 'orange' | 'blue' | 'green' | 'gray'> = {
+const ROLE_COLORS: Record<Role, 'red' | 'violet' | 'blue' | 'green' | 'gray'> = {
   SUPER_ADMIN: 'red',
-  ADMIN: 'orange',
+  ADMIN: 'violet',
   MANAGER: 'blue',
   CAISSIER: 'green',
   SERVEUR: 'gray',
@@ -201,8 +201,7 @@ export function RolePermissionsModal({
                     </Button>
                   ))}
                 </Flex>
-                {activeTab !== 'SUPER_ADMIN' && permissionConfigs[activeTab]?.isEditable && (
-                  <Button
+                {activeTab !== 'SUPER_ADMIN' && permissionConfigs[activeTab]?.isEditable ? <Button
                     variant="outline"
                     color="gray"
                     size="1"
@@ -211,8 +210,7 @@ export function RolePermissionsModal({
                   >
                     <RefreshCw size={14} />
                     Réinitialiser {ROLE_LABELS[activeTab]}
-                  </Button>
-                )}
+                  </Button> : null}
               </Flex>
             </Box>
 
@@ -274,15 +272,13 @@ function RolePermissionsList({
       </Text>
 
       {/* Info sur les permissions personnalisees */}
-      {isCustom && (
-        <Callout.Root color="amber" size="1">
+      {isCustom ? <Callout.Root color="amber" size="1">
           <Callout.Icon>
             <Info size={14} />
           </Callout.Icon>
           <Callout.Text>
             Ce role a des permissions personnalisees.
-            {isEditable && (
-              <Button
+            {isEditable ? <Button
                 variant="ghost"
                 size="1"
                 color="amber"
@@ -292,11 +288,9 @@ function RolePermissionsList({
               >
                 <RefreshCw size={12} />
                 Reinitialiser
-              </Button>
-            )}
+              </Button> : null}
           </Callout.Text>
-        </Callout.Root>
-      )}
+        </Callout.Root> : null}
 
       {/* Info SUPER_ADMIN non modifiable */}
       {role === 'SUPER_ADMIN' && (
@@ -348,8 +342,7 @@ function RolePermissionsList({
               <Accordion.Content>
                 <Flex direction="column" gap="2" pb="3">
                   {/* Boutons tout activer/desactiver */}
-                  {isEditable && (
-                    <Flex gap="2" mb="2">
+                  {isEditable ? <Flex gap="2" mb="2">
                       <Button
                         variant="soft"
                         size="1"
@@ -370,8 +363,7 @@ function RolePermissionsList({
                         <X size={12} />
                         Tout desactiver
                       </Button>
-                    </Flex>
-                  )}
+                    </Flex> : null}
 
                   {/* Liste des permissions */}
                   {group.permissions.map((perm) => {

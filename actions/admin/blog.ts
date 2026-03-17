@@ -6,7 +6,7 @@
  */
 
 import { revalidatePath } from "next/cache";
-import { createServiceClient } from "@/lib/supabase/server";
+import { createClient, createServiceClient } from "@/lib/supabase/server";
 import { requireAuth, type AuthUser } from "@/lib/auth/supabase";
 import {
   blogPostSchema,
@@ -59,7 +59,7 @@ export async function getPublishedBlogPosts(options?: {
   offset?: number;
   featured?: boolean;
 }) {
-  const supabase = createServiceClient();
+  const supabase = await createClient();
 
   let query = supabase
     .from("blog_posts")
@@ -108,7 +108,7 @@ export async function getPublishedBlogPosts(options?: {
  * Récupère un post par son slug (public)
  */
 export async function getPublishedBlogPostBySlug(slug: string) {
-  const supabase = createServiceClient();
+  const supabase = await createClient();
 
   const { data, error } = await supabase
     .from("blog_posts")
@@ -146,7 +146,7 @@ export async function getFeaturedBlogPost() {
  * Récupère les posts liés (public)
  */
 export async function getRelatedBlogPosts(postId: string, categoryId: string, limit = 3) {
-  const supabase = createServiceClient();
+  const supabase = await createClient();
 
   const { data } = await supabase
     .from("blog_posts")
@@ -168,7 +168,7 @@ export async function getRelatedBlogPosts(postId: string, categoryId: string, li
  * Récupère toutes les catégories de blog (public)
  */
 export async function getPublishedBlogCategories() {
-  const supabase = createServiceClient();
+  const supabase = await createClient();
 
   const { data, error } = await supabase
     .from("blog_categories")
@@ -222,7 +222,8 @@ export async function getBlogPosts(filters?: BlogFilterData) {
   }
 
   if (filters?.search) {
-    query = query.or(`title.ilike.%${filters.search}%,excerpt.ilike.%${filters.search}%`);
+    const sanitized = filters.search.replace(/[%_\\'"(),.*]/g, '');
+    query = query.or(`title.ilike.%${sanitized}%,excerpt.ilike.%${sanitized}%`);
   }
 
   const { data, error } = await query;

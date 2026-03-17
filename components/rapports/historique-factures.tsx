@@ -163,7 +163,7 @@ export function HistoriqueFactures() {
       {/* Header */}
       <Flex justify="between" align="center" mb="4">
         <Flex align="center" gap="2">
-          <Receipt size={20} style={{ color: "var(--orange-9)" }} />
+          <Receipt size={20} style={{ color: "var(--violet-9)" }} />
           <Text size="4" weight="bold">
             Historique des factures
           </Text>
@@ -271,12 +271,10 @@ export function HistoriqueFactures() {
           </Box>
 
           {/* Reset */}
-          {hasActiveFilters && (
-            <Button variant="ghost" color="gray" onClick={handleResetFilters}>
+          {hasActiveFilters ? <Button variant="ghost" color="gray" onClick={handleResetFilters}>
               <X size={14} />
               Effacer
-            </Button>
-          )}
+            </Button> : null}
         </Flex>
       </Box>
 
@@ -368,9 +366,7 @@ export function HistoriqueFactures() {
                           <Utensils size={14} />
                           <Text size="2">
                             Table {facture.table.numero}
-                            {facture.table.zones && (
-                              <Text color="gray"> ({facture.table.zones.nom})</Text>
-                            )}
+                            {facture.table.zones ? <Text color="gray"> ({facture.table.zones.nom})</Text> : null}
                           </Text>
                         </Flex>
                       ) : (
@@ -534,41 +530,34 @@ export function HistoriqueFactures() {
                         </Text>
                       </Flex>
                     </Box>
-                    {selectedFacture.utilisateur && (
-                      <Box>
+                    {selectedFacture.utilisateur ? <Box>
                         <Text size="1" color="gray">
                           Caissier
                         </Text>
                         <Text size="2">
                           {selectedFacture.utilisateur.prenom} {selectedFacture.utilisateur.nom}
                         </Text>
-                      </Box>
-                    )}
-                    {selectedFacture.client && (
-                      <Box>
+                      </Box> : null}
+                    {selectedFacture.client ? <Box>
                         <Text size="1" color="gray">
                           Client
                         </Text>
                         <Text size="2">
                           {selectedFacture.client.prenom} {selectedFacture.client.nom}
                         </Text>
-                      </Box>
-                    )}
-                    {selectedFacture.table && (
-                      <Box>
+                      </Box> : null}
+                    {selectedFacture.table ? <Box>
                         <Text size="1" color="gray">
                           Table
                         </Text>
                         <Text size="2">
                           Table {selectedFacture.table.numero}
-                          {selectedFacture.table.zones && ` (${selectedFacture.table.zones.nom})`}
+                          {selectedFacture.table.zones ? ` (${selectedFacture.table.zones.nom})` : null}
                         </Text>
-                      </Box>
-                    )}
+                      </Box> : null}
                   </Flex>
 
-                  {selectedFacture.adresseLivraison && (
-                    <Box mt="3">
+                  {selectedFacture.adresseLivraison ? <Box mt="3">
                       <Text size="1" color="gray">
                         Adresse de livraison
                       </Text>
@@ -576,8 +565,7 @@ export function HistoriqueFactures() {
                         <MapPin size={14} />
                         <Text size="2">{selectedFacture.adresseLivraison}</Text>
                       </Flex>
-                    </Box>
-                  )}
+                    </Box> : null}
                 </Box>
 
                 {/* Articles */}
@@ -606,11 +594,9 @@ export function HistoriqueFactures() {
                                 + {ligne.supplements.map((s) => s.nom).join(", ")}
                               </Text>
                             )}
-                            {ligne.notes && (
-                              <Text size="1" color="orange">
+                            {ligne.notes ? <Text size="1" color="violet">
                                 Note: {ligne.notes}
-                              </Text>
-                            )}
+                              </Text> : null}
                           </Flex>
                         </Table.Cell>
                         <Table.Cell align="right">
@@ -679,8 +665,7 @@ export function HistoriqueFactures() {
                         <Text size="2" color="green">
                           Remise
                           {selectedFacture.typeRemise === "POURCENTAGE" &&
-                            selectedFacture.valeurRemise &&
-                            ` (${selectedFacture.valeurRemise}%)`}
+                            selectedFacture.valeurRemise ? ` (${selectedFacture.valeurRemise}%)` : null}
                         </Text>
                         <Text
                           size="2"
@@ -703,7 +688,7 @@ export function HistoriqueFactures() {
                         weight="bold"
                         style={{
                           fontFamily: "var(--font-google-sans-code), ui-monospace, monospace",
-                          color: "var(--orange-9)",
+                          color: "var(--violet-9)",
                         }}
                       >
                         {formatCurrency(selectedFacture.totalFinal)}
@@ -729,11 +714,9 @@ export function HistoriqueFactures() {
                                   {modeConfig?.icon}
                                   <Text size="2">{modeConfig?.label || paiement.modePaiement}</Text>
                                 </Flex>
-                                {paiement.reference && (
-                                  <Text size="1" color="gray">
+                                {paiement.reference ? <Text size="1" color="gray">
                                     Ref: {paiement.reference}
-                                  </Text>
-                                )}
+                                  </Text> : null}
                               </Table.Cell>
                               <Table.Cell align="right">
                                 <Text
@@ -766,16 +749,14 @@ export function HistoriqueFactures() {
                 )}
 
                 {/* Notes */}
-                {selectedFacture.notes && (
-                  <Box mt="4">
+                {selectedFacture.notes ? <Box mt="4">
                     <Text size="2" weight="bold" mb="1">
                       Notes
                     </Text>
                     <Text size="2" color="gray">
                       {selectedFacture.notes}
                     </Text>
-                  </Box>
-                )}
+                  </Box> : null}
               </Box>
             </ScrollArea>
           ) : (

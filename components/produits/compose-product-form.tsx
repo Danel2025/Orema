@@ -225,7 +225,7 @@ export function ComposeProductForm({
               <Flex gap="2" style={{ overflowX: "auto", paddingBottom: 4 }}>
                 <Button
                   variant={selectedCategoryFilter === null ? "solid" : "soft"}
-                  color={selectedCategoryFilter === null ? "orange" : "gray"}
+                  color={selectedCategoryFilter === null ? "violet" : "gray"}
                   size="1"
                   onClick={() => setSelectedCategoryFilter(null)}
                 >

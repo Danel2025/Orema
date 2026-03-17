@@ -110,7 +110,7 @@ export default function NouveauBlogPage() {
       authorId: "",
       featuredImage: "",
       icon: "FileText",
-      color: "orange",
+      color: "violet",
       status: "DRAFT",
       featured: false,
       tags: [],
@@ -268,11 +268,11 @@ export default function NouveauBlogPage() {
           <Box
             p="2"
             style={{
-              background: "var(--orange-a3)",
+              background: "var(--violet-a3)",
               borderRadius: 8,
             }}
           >
-            <Newspaper size={20} style={{ color: "var(--orange-9)" }} />
+            <Newspaper size={20} style={{ color: "var(--violet-9)" }} />
           </Box>
           <Box>
             <Heading size="5">Nouvel article</Heading>
@@ -306,11 +306,9 @@ export default function NouveauBlogPage() {
                       {...register("title")}
                       onChange={handleTitleChange}
                     />
-                    {errors.title && (
-                      <Text size="1" color="red" mt="1">
+                    {errors.title ? <Text size="1" color="red" mt="1">
                         {errors.title.message}
-                      </Text>
-                    )}
+                      </Text> : null}
                   </Box>
 
                   <Box>
@@ -326,11 +324,9 @@ export default function NouveauBlogPage() {
                         <Text size="1" color="gray">/blog/</Text>
                       </TextField.Slot>
                     </TextField.Root>
-                    {errors.slug && (
-                      <Text size="1" color="red" mt="1">
+                    {errors.slug ? <Text size="1" color="red" mt="1">
                         {errors.slug.message}
-                      </Text>
-                    )}
+                      </Text> : null}
                   </Box>
 
                   <Box>
@@ -453,8 +449,7 @@ export default function NouveauBlogPage() {
                         <Plus size={14} />
                       </Button>
                     </Flex>
-                    {showAddCategory && (
-                      <Flex gap="2" mb="2">
+                    {showAddCategory ? <Flex gap="2" mb="2">
                         <TextField.Root
                           size="2"
                           placeholder="Nouvelle catégorie"
@@ -470,8 +465,7 @@ export default function NouveauBlogPage() {
                         >
                           Ajouter
                         </Button>
-                      </Flex>
-                    )}
+                      </Flex> : null}
                     <Select.Root
                       value={watchedValues.categoryId}
                       onValueChange={(val) => setValue("categoryId", val)}
@@ -488,11 +482,9 @@ export default function NouveauBlogPage() {
                         ))}
                       </Select.Content>
                     </Select.Root>
-                    {errors.categoryId && (
-                      <Text size="1" color="red" mt="1">
+                    {errors.categoryId ? <Text size="1" color="red" mt="1">
                         {errors.categoryId.message}
-                      </Text>
-                    )}
+                      </Text> : null}
                   </Box>
 
                   {/* Author */}
@@ -511,8 +503,7 @@ export default function NouveauBlogPage() {
                         <Plus size={14} />
                       </Button>
                     </Flex>
-                    {showAddAuthor && (
-                      <Flex gap="2" mb="2">
+                    {showAddAuthor ? <Flex gap="2" mb="2">
                         <TextField.Root
                           size="2"
                           placeholder="Nom de l'auteur"
@@ -528,8 +519,7 @@ export default function NouveauBlogPage() {
                         >
                           Ajouter
                         </Button>
-                      </Flex>
-                    )}
+                      </Flex> : null}
                     <Select.Root
                       value={watchedValues.authorId}
                       onValueChange={(val) => setValue("authorId", val)}
@@ -546,11 +536,9 @@ export default function NouveauBlogPage() {
                         ))}
                       </Select.Content>
                     </Select.Root>
-                    {errors.authorId && (
-                      <Text size="1" color="red" mt="1">
+                    {errors.authorId ? <Text size="1" color="red" mt="1">
                         {errors.authorId.message}
-                      </Text>
-                    )}
+                      </Text> : null}
                   </Box>
                 </Flex>
               </Card>
@@ -571,8 +559,7 @@ export default function NouveauBlogPage() {
                     <Plus size={14} />
                   </Button>
                 </Flex>
-                {showAddTag && (
-                  <Flex gap="2" mb="3">
+                {showAddTag ? <Flex gap="2" mb="3">
                     <TextField.Root
                       size="2"
                       placeholder="Nouveau tag"
@@ -588,8 +575,7 @@ export default function NouveauBlogPage() {
                     >
                       Ajouter
                     </Button>
-                  </Flex>
-                )}
+                  </Flex> : null}
                 <ScrollArea style={{ maxHeight: 150 }}>
                   <Flex direction="column" gap="2">
                     {tags.map((tag) => (
@@ -664,7 +650,7 @@ export default function NouveauBlogPage() {
                     disabled={isSubmitting}
                     style={{
                       width: "100%",
-                      background: "linear-gradient(135deg, var(--orange-9) 0%, var(--amber-9) 100%)",
+                      background: "linear-gradient(135deg, var(--violet-9) 0%, var(--purple-9) 100%)",
                       cursor: isSubmitting ? "wait" : "pointer",
                     }}
                   >

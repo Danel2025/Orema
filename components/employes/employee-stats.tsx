@@ -169,20 +169,18 @@ export function EmployeeStats({
                   icon={<TrendingUp size={18} />}
                   label="Panier moyen"
                   value={isLoading ? null : formatCurrency(stats?.panierMoyen || 0)}
-                  color="orange"
+                  color="violet"
                 />
               </Grid>
             </Card>
 
             {/* Indicateur de performance */}
-            {stats && stats.totalVentes > 0 && (
-              <Card>
+            {stats && stats.totalVentes > 0 ? <Card>
                 <Text size="2" weight="bold" mb="2">
                   Indicateur de performance
                 </Text>
                 <PerformanceIndicator stats={stats} />
-              </Card>
-            )}
+              </Card> : null}
           </Flex>
         )}
 
@@ -202,21 +200,21 @@ interface StatItemProps {
   icon: React.ReactNode
   label: string
   value: string | null
-  color: 'blue' | 'green' | 'orange' | 'purple'
+  color: 'blue' | 'green' | 'violet' | 'purple'
 }
 
 function StatItem({ icon, label, value, color }: StatItemProps) {
   const colorMap = {
     blue: 'var(--blue-9)',
     green: 'var(--green-9)',
-    orange: 'var(--accent-9)',
+    violet: 'var(--violet-9)',
     purple: 'var(--purple-9)',
   }
 
   const bgColorMap = {
     blue: 'var(--blue-a3)',
     green: 'var(--green-a3)',
-    orange: 'var(--accent-a3)',
+    violet: 'var(--violet-a3)',
     purple: 'var(--purple-a3)',
   }
 

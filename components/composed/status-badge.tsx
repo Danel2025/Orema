@@ -29,11 +29,11 @@ const statusConfig: Record<StatusType, { color: ComponentPropsWithoutRef<typeof 
   pending: { color: "amber", label: "En attente" },
   success: { color: "green", label: "Succès" },
   error: { color: "red", label: "Erreur" },
-  warning: { color: "orange", label: "Attention" },
+  warning: { color: "violet", label: "Attention" },
   occupied: { color: "amber", label: "Occupée" },
   free: { color: "green", label: "Libre" },
   "in-preparation": { color: "blue", label: "En préparation" },
-  "bill-requested": { color: "orange", label: "Addition demandée" },
+  "bill-requested": { color: "violet", label: "Addition demandée" },
   "needs-cleaning": { color: "red", label: "À nettoyer" },
 };
 

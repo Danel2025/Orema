@@ -30,7 +30,7 @@ export function Hero() {
         transition={{ duration: 1.5 }}
         style={{
           background:
-            "radial-gradient(ellipse 80% 50% at 50% -20%, var(--orange-4), transparent)",
+            "radial-gradient(ellipse 80% 50% at 50% -20%, var(--violet-4), transparent)",
         }}
       />
 
@@ -41,7 +41,7 @@ export function Hero() {
         animate={{ scale: 1, opacity: 0.15 }}
         transition={{ duration: 2, ease: "easeOut" }}
         style={{
-          background: "var(--orange-6)",
+          background: "var(--violet-6)",
         }}
       />
       <motion.div
@@ -50,7 +50,7 @@ export function Hero() {
         animate={{ scale: 1, opacity: 0.1 }}
         transition={{ duration: 2, delay: 0.3, ease: "easeOut" }}
         style={{
-          background: "var(--amber-6)",
+          background: "var(--purple-6)",
         }}
       />
 
@@ -58,7 +58,7 @@ export function Hero() {
       <Box
         className="pointer-events-none absolute inset-0 opacity-[0.015]"
         style={{
-          backgroundImage: `url("data:image/svg+xml,%3Csvg width='80' height='80' viewBox='0 0 80 80' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23f97316' fill-opacity='1'%3E%3Cpath d='M40 40L20 20h40L40 40zm0 0L20 60h40L40 40z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`,
+          backgroundImage: `url("data:image/svg+xml,%3Csvg width='80' height='80' viewBox='0 0 80 80' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%237c3aed' fill-opacity='1'%3E%3Cpath d='M40 40L20 20h40L40 40zm0 0L20 60h40L40 40z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`,
         }}
       />
 
@@ -85,8 +85,8 @@ export function Hero() {
               <Box
                 className="rounded-full"
                 style={{
-                  background: "var(--orange-a3)",
-                  border: "1px solid var(--orange-a6)",
+                  background: "var(--violet-a3)",
+                  border: "1px solid var(--violet-a6)",
                   padding: "10px 20px",
                 }}
               >
@@ -100,7 +100,7 @@ export function Hero() {
                   <Text
                     size="2"
                     weight="medium"
-                    style={{ color: "var(--orange-11)" }}
+                    style={{ color: "var(--violet-11)" }}
                   >
                     🎉 Nouveau : Support Mobile Money Airtel & Moov
                   </Text>
@@ -119,17 +119,9 @@ export function Hero() {
               Le{" "}
               <motion.span
                 style={{
-                  background:
-                    "linear-gradient(135deg, var(--orange-9) 0%, var(--amber-9) 100%)",
-                  WebkitBackgroundClip: "text",
-                  WebkitTextFillColor: "transparent",
-                  backgroundClip: "text",
+                  color: "var(--violet-9)",
                   display: "inline-block",
                 }}
-                animate={{
-                  backgroundPosition: ["0% 50%", "100% 50%", "0% 50%"],
-                }}
-                transition={{ duration: 5, repeat: Infinity }}
               >
                 cœur
               </motion.span>{" "}
@@ -160,9 +152,8 @@ export function Hero() {
                 <Button
                   size="4"
                   style={{
-                    background:
-                      "linear-gradient(135deg, var(--orange-9) 0%, var(--amber-9) 100%)",
-                    boxShadow: "0 10px 30px rgba(249, 115, 22, 0.3)",
+                    background: "var(--violet-9)",
+                    boxShadow: "0 10px 30px rgba(139, 92, 246, 0.3)",
                   }}
                   asChild
                 >
@@ -287,7 +278,7 @@ export function Hero() {
               className="pointer-events-none absolute -inset-8 -z-10 rounded-3xl opacity-25 blur-3xl"
               style={{
                 background:
-                  "radial-gradient(ellipse at center, var(--orange-6), transparent 70%)",
+                  "radial-gradient(ellipse at center, var(--violet-6), transparent 70%)",
               }}
             />
           </FadeIn>

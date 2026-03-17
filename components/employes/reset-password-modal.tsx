@@ -82,9 +82,9 @@ function calculatePasswordStrength(password: string): number {
   return Math.min(score, 100)
 }
 
-function getStrengthColor(strength: number): 'red' | 'orange' | 'yellow' | 'green' {
+function getStrengthColor(strength: number): 'red' | 'violet' | 'yellow' | 'green' {
   if (strength < 30) return 'red'
-  if (strength < 50) return 'orange'
+  if (strength < 50) return 'violet'
   if (strength < 70) return 'yellow'
   return 'green'
 }
@@ -212,8 +212,7 @@ export function ResetPasswordModal({
 
         <Flex direction="column" gap="4">
           {/* Message de succès */}
-          {success && (
-            <Callout.Root color="green">
+          {success ? <Callout.Root color="green">
               <Callout.Icon>
                 <Check size={16} />
               </Callout.Icon>
@@ -247,8 +246,7 @@ export function ResetPasswordModal({
                   </Text>
                 </Flex>
               </Callout.Text>
-            </Callout.Root>
-          )}
+            </Callout.Root> : null}
 
           {/* Formulaire de saisie */}
           {!success && (
@@ -312,14 +310,12 @@ export function ResetPasswordModal({
                   <Progress value={strength} color={strengthColor} size="1" />
                 </Flex>
 
-                {error && (
-                  <Flex align="center" gap="1">
+                {error ? <Flex align="center" gap="1">
                     <AlertCircle size={12} style={{ color: 'var(--red-9)' }} />
                     <Text size="1" color="red">
                       {error}
                     </Text>
-                  </Flex>
-                )}
+                  </Flex> : null}
               </Flex>
 
               <Callout.Root color="amber" size="1">

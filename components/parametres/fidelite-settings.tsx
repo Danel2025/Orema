@@ -146,8 +146,7 @@ export function FideliteSettings({ initialData }: FideliteSettingsProps) {
         </Card>
 
         {/* Configuration des points */}
-        {fideliteActif && (
-          <Card size="3">
+        {fideliteActif ? <Card size="3">
             <Flex direction="column" gap="4">
               <Flex align="center" gap="2">
                 <Star size={20} style={{ color: "var(--accent-9)" }} />
@@ -169,11 +168,9 @@ export function FideliteSettings({ initialData }: FideliteSettingsProps) {
                     size="3"
                     placeholder="1"
                   />
-                  {errors.tauxPointsFidelite && (
-                    <Text size="1" color="red" mt="1">
+                  {errors.tauxPointsFidelite ? <Text size="1" color="red" mt="1">
                       {errors.tauxPointsFidelite.message}
-                    </Text>
-                  )}
+                    </Text> : null}
                   <Text size="1" color="gray" mt="1">
                     Points gagnes par tranche
                   </Text>
@@ -190,11 +187,9 @@ export function FideliteSettings({ initialData }: FideliteSettingsProps) {
                     size="3"
                     placeholder="100"
                   />
-                  {errors.valeurPointFidelite && (
-                    <Text size="1" color="red" mt="1">
+                  {errors.valeurPointFidelite ? <Text size="1" color="red" mt="1">
                       {errors.valeurPointFidelite.message}
-                    </Text>
-                  )}
+                    </Text> : null}
                   <Text size="1" color="gray" mt="1">
                     1 point = X FCFA de remise
                   </Text>
@@ -217,11 +212,9 @@ export function FideliteSettings({ initialData }: FideliteSettingsProps) {
                     <Calendar size={16} />
                   </TextField.Slot>
                 </TextField.Root>
-                {errors.dureeValiditeSolde && (
-                  <Text size="1" color="red" mt="1">
+                {errors.dureeValiditeSolde ? <Text size="1" color="red" mt="1">
                     {errors.dureeValiditeSolde.message}
-                  </Text>
-                )}
+                  </Text> : null}
                 <Text size="1" color="gray" mt="1">
                   Les points expirent apres cette duree d'inactivite
                 </Text>
@@ -251,8 +244,7 @@ export function FideliteSettings({ initialData }: FideliteSettingsProps) {
                 </Flex>
               </Box>
             </Flex>
-          </Card>
-        )}
+          </Card> : null}
 
         {/* Credit client */}
         <Card size="3">
@@ -291,8 +283,7 @@ export function FideliteSettings({ initialData }: FideliteSettingsProps) {
               )}
             />
 
-            {creditActif && (
-              <Box>
+            {creditActif ? <Box>
                 <Text as="label" size="2" weight="medium" mb="2">
                   Limite de credit par defaut (FCFA)
                 </Text>
@@ -303,27 +294,22 @@ export function FideliteSettings({ initialData }: FideliteSettingsProps) {
                   size="3"
                   placeholder="0"
                 />
-                {errors.limiteCreditDefaut && (
-                  <Text size="1" color="red" mt="1">
+                {errors.limiteCreditDefaut ? <Text size="1" color="red" mt="1">
                     {errors.limiteCreditDefaut.message}
-                  </Text>
-                )}
+                  </Text> : null}
                 <Text size="1" color="gray" mt="1">
                   0 = pas de credit par defaut (a definir par client)
                 </Text>
-              </Box>
-            )}
+              </Box> : null}
 
-            {creditActif && (
-              <Callout.Root color="amber" size="1">
+            {creditActif ? <Callout.Root color="amber" size="1">
                 <Callout.Icon>
                   <AlertCircle size={14} />
                 </Callout.Icon>
                 <Callout.Text size="1">
                   Le credit client peut etre ajuste individuellement depuis la fiche de chaque client.
                 </Callout.Text>
-              </Callout.Root>
-            )}
+              </Callout.Root> : null}
           </Flex>
         </Card>
 

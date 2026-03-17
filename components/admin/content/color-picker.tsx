@@ -35,11 +35,9 @@ export function ColorPicker({
 
   return (
     <Box>
-      {label && (
-        <Text size="2" weight="medium" mb="2" style={{ display: "block" }}>
+      {label ? <Text size="2" weight="medium" mb="2" style={{ display: "block" }}>
           {label}
-        </Text>
-      )}
+        </Text> : null}
 
       <Popover.Root open={open} onOpenChange={setOpen}>
         <Popover.Trigger>
@@ -57,7 +55,7 @@ export function ColorPicker({
               transition: "all 0.15s ease",
             }}
             onMouseEnter={(e) => {
-              e.currentTarget.style.borderColor = "var(--orange-7)";
+              e.currentTarget.style.borderColor = "var(--violet-7)";
             }}
             onMouseLeave={(e) => {
               e.currentTarget.style.borderColor = error ? "var(--red-8)" : "var(--gray-a5)";
@@ -143,7 +141,7 @@ export function ColorPicker({
                         transition: "all 0.15s ease",
                       }}
                     >
-                      {isSelected && <Check size={14} style={{ color: "white" }} />}
+                      {isSelected ? <Check size={14} style={{ color: "white" }} /> : null}
                     </Box>
                     <Text
                       size="1"
@@ -204,11 +202,9 @@ export function ColorPicker({
         </Popover.Content>
       </Popover.Root>
 
-      {error && (
-        <Text size="1" color="red" mt="1">
+      {error ? <Text size="1" color="red" mt="1">
           {error}
-        </Text>
-      )}
+        </Text> : null}
     </Box>
   );
 }

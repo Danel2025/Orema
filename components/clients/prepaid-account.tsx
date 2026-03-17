@@ -153,11 +153,9 @@ export function PrepaidAccount({
                           <Text size="2">
                             {tx.type === "RECHARGE" ? "Rechargement" : "Debit"}
                           </Text>
-                          {tx.numeroTicket && (
-                            <Text size="1" color="gray">
+                          {tx.numeroTicket ? <Text size="1" color="gray">
                               Ticket #{tx.numeroTicket}
-                            </Text>
-                          )}
+                            </Text> : null}
                         </Flex>
                       </Flex>
                       <Flex direction="column" align="end">
@@ -278,16 +276,14 @@ export function PrepaidAccount({
             </Flex>
 
             {/* Apercu */}
-            {montant && parseInt(montant) > 0 && (
-              <Card variant="surface" style={{ backgroundColor: "var(--green-a2)" }}>
+            {montant && parseInt(montant) > 0 ? <Card variant="surface" style={{ backgroundColor: "var(--green-a2)" }}>
                 <Flex justify="between" align="center">
                   <Text size="2">Nouveau solde apres rechargement</Text>
                   <Text size="3" weight="bold" color="green">
                     {formatCurrency(soldePrepaye + parseInt(montant))}
                   </Text>
                 </Flex>
-              </Card>
-            )}
+              </Card> : null}
           </Flex>
 
           {/* Actions */}
@@ -301,7 +297,7 @@ export function PrepaidAccount({
               onClick={handleRecharge}
               disabled={isLoading || !montant || parseInt(montant) <= 0}
             >
-              {isLoading && <Loader2 size={16} className="animate-spin" />}
+              {isLoading ? <Loader2 size={16} className="animate-spin" /> : null}
               Recharger
             </Button>
           </Flex>

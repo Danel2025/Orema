@@ -233,7 +233,7 @@ export function OpenSessionDialog({
                             width: 14,
                             height: 14,
                             borderRadius: "50%",
-                            backgroundColor: "var(--amber-9)",
+                            backgroundColor: "var(--purple-9)",
                           }}
                         />
                       )}

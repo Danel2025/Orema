@@ -134,36 +134,28 @@ export function ClientDetailModal({
                 >
                   {client.actif ? "Actif" : "Inactif"}
                 </Badge>
-                {onEdit && (
-                  <Button variant="soft" size="2" onClick={onEdit}>
+                {onEdit ? <Button variant="soft" size="2" onClick={onEdit}>
                     <Edit size={14} />
                     Modifier
-                  </Button>
-                )}
+                  </Button> : null}
               </Flex>
             </Flex>
 
             {/* Informations principales */}
             <Card variant="surface" mb="4">
               <Flex gap="4" wrap="wrap">
-                {client.telephone && (
-                  <Flex align="center" gap="2">
+                {client.telephone ? <Flex align="center" gap="2">
                     <Phone size={14} className="text-gray-500" />
                     <Text size="2">{client.telephone}</Text>
-                  </Flex>
-                )}
-                {client.email && (
-                  <Flex align="center" gap="2">
+                  </Flex> : null}
+                {client.email ? <Flex align="center" gap="2">
                     <Mail size={14} className="text-gray-500" />
                     <Text size="2">{client.email}</Text>
-                  </Flex>
-                )}
-                {client.adresse && (
-                  <Flex align="center" gap="2">
+                  </Flex> : null}
+                {client.adresse ? <Flex align="center" gap="2">
                     <MapPin size={14} className="text-gray-500" />
                     <Text size="2">{client.adresse}</Text>
-                  </Flex>
-                )}
+                  </Flex> : null}
               </Flex>
             </Card>
 

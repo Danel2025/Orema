@@ -42,7 +42,7 @@ const partnerTypes = [
       "Support prioritaire",
       "Co-marketing",
     ],
-    color: "orange",
+    color: "violet",
   },
   {
     icon: Truck,
@@ -112,28 +112,13 @@ const partnerTypes = [
 ];
 
 const stats = [
-  { value: "50+", label: "Partenaires actifs" },
-  { value: "15", label: "Intégrations disponibles" },
-  { value: "5", label: "Pays couverts" },
-  { value: "98%", label: "Satisfaction partenaires" },
+  { value: "6", label: "Types de partenariats" },
+  { value: "API", label: "Intégration ouverte" },
+  { value: "Gabon", label: "Marché prioritaire" },
+  { value: "100%", label: "Support inclus" },
 ];
 
-const testimonials = [
-  {
-    quote:
-      "Notre partenariat avec Oréma N+ nous permet de proposer une solution complète à nos clients restaurateurs. Le support est excellent.",
-    author: "Jean-Marc K.",
-    role: "Directeur, TechGabon Solutions",
-    rating: 5,
-  },
-  {
-    quote:
-      "L'API est bien documentée et l'équipe technique très réactive. L'intégration avec notre solution comptable s'est faite en quelques jours.",
-    author: "Fatou M.",
-    role: "CTO, AfriCompta",
-    rating: 5,
-  },
-];
+const testimonials: { quote: string; author: string; role: string; rating: number }[] = [];
 
 const steps = [
   {
@@ -181,7 +166,7 @@ export default function PartnersPage() {
               padding: "14px 28px",
               borderRadius: 9999,
               background:
-                "linear-gradient(135deg, var(--orange-9) 0%, var(--amber-9) 100%)",
+                "linear-gradient(135deg, var(--violet-9) 0%, var(--purple-9) 100%)",
               color: "white",
               fontSize: 14,
               fontWeight: 600,
@@ -223,7 +208,7 @@ export default function PartnersPage() {
                     style={{
                       display: "block",
                       background:
-                        "linear-gradient(135deg, var(--orange-9) 0%, var(--amber-9) 100%)",
+                        "linear-gradient(135deg, var(--violet-9) 0%, var(--purple-9) 100%)",
                       WebkitBackgroundClip: "text",
                       WebkitTextFillColor: "transparent",
                       backgroundClip: "text",
@@ -251,9 +236,9 @@ export default function PartnersPage() {
             p="8"
             style={{
               background:
-                "linear-gradient(135deg, var(--orange-a2) 0%, var(--amber-a2) 100%)",
+                "linear-gradient(135deg, var(--violet-a2) 0%, var(--purple-a2) 100%)",
               borderRadius: 24,
-              border: "1px solid var(--orange-a4)",
+              border: "1px solid var(--violet-a4)",
             }}
           >
             <Grid columns={{ initial: "1", md: "2" }} gap="8" align="center">
@@ -262,11 +247,11 @@ export default function PartnersPage() {
                   <Box
                     p="3"
                     style={{
-                      background: "var(--orange-a4)",
+                      background: "var(--violet-a4)",
                       borderRadius: 12,
                     }}
                   >
-                    <Handshake size={28} style={{ color: "var(--orange-9)" }} />
+                    <Handshake size={28} style={{ color: "var(--violet-9)" }} />
                   </Box>
                   <Heading size="6">Pourquoi nous rejoindre ?</Heading>
                 </Flex>
@@ -304,7 +289,7 @@ export default function PartnersPage() {
                       <item.icon
                         size={24}
                         style={{
-                          color: "var(--orange-9)",
+                          color: "var(--violet-9)",
                           marginBottom: 8,
                         }}
                       />
@@ -435,7 +420,7 @@ export default function PartnersPage() {
                       position: "absolute",
                       top: -10,
                       right: 16,
-                      color: "var(--orange-a4)",
+                      color: "var(--violet-a4)",
                       fontSize: 64,
                       lineHeight: 1,
                     }}
@@ -458,7 +443,8 @@ export default function PartnersPage() {
 
         <Separator size="4" my="9" />
 
-        {/* Testimonials */}
+        {/* Testimonials - section masquée en attendant de vrais témoignages */}
+        {testimonials.length > 0 && (
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -492,8 +478,8 @@ export default function PartnersPage() {
                       <Star
                         key={i}
                         size={16}
-                        fill="var(--amber-9)"
-                        style={{ color: "var(--amber-9)" }}
+                        fill="var(--purple-9)"
+                        style={{ color: "var(--purple-9)" }}
                       />
                     ))}
                   </Flex>
@@ -516,7 +502,7 @@ export default function PartnersPage() {
                         height: 40,
                         borderRadius: "50%",
                         background:
-                          "linear-gradient(135deg, var(--orange-9) 0%, var(--amber-9) 100%)",
+                          "linear-gradient(135deg, var(--violet-9) 0%, var(--purple-9) 100%)",
                         display: "flex",
                         alignItems: "center",
                         justifyContent: "center",
@@ -541,6 +527,7 @@ export default function PartnersPage() {
             ))}
           </Grid>
         </motion.div>
+        )}
 
         {/* CTA */}
         <motion.div
@@ -553,7 +540,7 @@ export default function PartnersPage() {
             p="8"
             style={{
               background:
-                "linear-gradient(135deg, var(--orange-9) 0%, var(--amber-9) 100%)",
+                "linear-gradient(135deg, var(--violet-9) 0%, var(--purple-9) 100%)",
               borderRadius: 24,
               textAlign: "center",
             }}
@@ -587,7 +574,7 @@ export default function PartnersPage() {
                   alignItems: "center",
                   gap: 8,
                   background: "white",
-                  color: "var(--orange-9)",
+                  color: "var(--violet-9)",
                   padding: "14px 28px",
                   borderRadius: 9999,
                   fontWeight: 600,

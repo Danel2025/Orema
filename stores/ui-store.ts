@@ -23,7 +23,7 @@ export const useUIStore = create<UIStore>()(
     (set) => ({
       // Etat initial
       theme: "auto",
-      accentColor: "orange",
+      accentColor: "violet",
       fontSize: "medium",
       sidebarOpen: true,
       activeModule: "dashboard",

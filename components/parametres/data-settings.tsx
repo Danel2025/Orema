@@ -324,19 +324,15 @@ export function DataSettings({ initialStats, initialBackups, initialBackupStats 
               size="3"
               color={isConfirmationValid ? "green" : undefined}
             />
-            {errors.confirmationText && (
-              <Text size="1" color="red" mt="1">
+            {errors.confirmationText ? <Text size="1" color="red" mt="1">
                 {errors.confirmationText.message}
-              </Text>
-            )}
-            {isConfirmationValid && (
-              <Flex align="center" gap="1" mt="2">
+              </Text> : null}
+            {isConfirmationValid ? <Flex align="center" gap="1" mt="2">
                 <CheckCircle2 size={14} style={{ color: "var(--green-9)" }} />
                 <Text size="1" color="green">
                   Confirmation valide
                 </Text>
-              </Flex>
-            )}
+              </Flex> : null}
           </Box>
 
           {/* Bouton de remise a zero */}

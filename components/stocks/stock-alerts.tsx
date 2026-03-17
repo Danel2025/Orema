@@ -90,7 +90,7 @@ export function StockAlerts({ alertes, onCreateMovement }: StockAlertsProps) {
             <Text size="3" weight="medium">
               Alertes de stock
             </Text>
-            <Badge color="orange" variant="soft">
+            <Badge color="violet" variant="soft">
               {alertes.length}
             </Badge>
           </Flex>
@@ -118,12 +118,12 @@ export function StockAlerts({ alertes, onCreateMovement }: StockAlertsProps) {
               flex: 1,
               padding: "12px 16px",
               borderRadius: 8,
-              backgroundColor: "var(--orange-a3)",
+              backgroundColor: "var(--violet-a3)",
             }}
           >
             <Flex align="center" gap="2">
               <AlertTriangle size={16} style={{ color: "var(--accent-9)" }} />
-              <Text size="2" color="orange" weight="medium">
+              <Text size="2" color="violet" weight="medium">
                 Alertes: {alertesOnly.length}
               </Text>
             </Flex>
@@ -163,11 +163,11 @@ export function StockAlerts({ alertes, onCreateMovement }: StockAlertsProps) {
                   backgroundColor:
                     alerte.statut === "RUPTURE"
                       ? "var(--red-a2)"
-                      : "var(--orange-a2)",
+                      : "var(--violet-a2)",
                   border: `1px solid ${
                     alerte.statut === "RUPTURE"
                       ? "var(--red-a6)"
-                      : "var(--orange-a6)"
+                      : "var(--violet-a6)"
                   }`,
                 }}
               >
@@ -209,7 +209,7 @@ export function StockAlerts({ alertes, onCreateMovement }: StockAlertsProps) {
 
                   <Flex align="center" gap="2">
                     <Badge
-                      color={alerte.statut === "RUPTURE" ? "red" : "orange"}
+                      color={alerte.statut === "RUPTURE" ? "red" : "violet"}
                       variant="soft"
                     >
                       {alerte.statut === "RUPTURE" ? "Rupture" : "Alerte"}
@@ -218,7 +218,7 @@ export function StockAlerts({ alertes, onCreateMovement }: StockAlertsProps) {
                       <IconButton
                         size="1"
                         variant="soft"
-                        color={alerte.statut === "RUPTURE" ? "red" : "orange"}
+                        color={alerte.statut === "RUPTURE" ? "red" : "violet"}
                         onClick={() => onCreateMovement(alerte.id, alerte.nom)}
                       >
                         <Plus size={14} />
@@ -258,9 +258,9 @@ export function StockAlertsWidget({
         padding: 12,
         borderRadius: 8,
         backgroundColor:
-          ruptures > 0 ? "var(--red-a3)" : "var(--orange-a3)",
+          ruptures > 0 ? "var(--red-a3)" : "var(--violet-a3)",
         border: `1px solid ${
-          ruptures > 0 ? "var(--red-a6)" : "var(--orange-a6)"
+          ruptures > 0 ? "var(--red-a6)" : "var(--violet-a6)"
         }`,
       }}
     >
@@ -282,7 +282,7 @@ export function StockAlertsWidget({
             </Text>
           </Flex>
         </Flex>
-        <Button size="1" variant="soft" color={ruptures > 0 ? "red" : "orange"} onClick={onViewAll}>
+        <Button size="1" variant="soft" color={ruptures > 0 ? "red" : "violet"} onClick={onViewAll}>
           Voir
         </Button>
       </Flex>

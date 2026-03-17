@@ -4,6 +4,7 @@ import Link from "next/link";
 import type { Route } from "next";
 import { usePathname } from "next/navigation";
 import { useMemo } from "react";
+import Image from "next/image";
 import { IconButton, Tooltip } from "@radix-ui/themes";
 import {
   LayoutDashboard,
@@ -91,23 +92,13 @@ export function Sidebar() {
         }}
       >
         <Link href="/dashboard" style={{ textDecoration: "none", display: "flex", alignItems: "center", gap: 12 }}>
-          <div
-            style={{
-              width: 40,
-              height: 40,
-              borderRadius: 8,
-              backgroundColor: "var(--accent-9)",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              color: "white",
-              fontWeight: 700,
-              fontSize: 20,
-              flexShrink: 0,
-            }}
-          >
-            O
-          </div>
+          <Image
+            src="/images/logos/ic-lg.webp"
+            alt="Oréma N+"
+            width={40}
+            height={40}
+            style={{ objectFit: "contain", flexShrink: 0 }}
+          />
           {!isCollapsed && (
             <div style={{ whiteSpace: "nowrap", overflow: "hidden" }}>
               <div style={{ fontWeight: 700, fontSize: 16, color: "var(--gray-12)" }}>

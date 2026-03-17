@@ -125,15 +125,13 @@ export default async function DashboardPage() {
             >
               {isCaisseOuverte ? "Caisse ouverte" : "Caisse fermée"}
             </div>
-            {isCaisseOuverte && sessionCaisse && (
-              <div style={{ fontSize: 12, color: "var(--green-10)" }}>
+            {isCaisseOuverte && sessionCaisse ? <div style={{ fontSize: 12, color: "var(--green-10)" }}>
                 Depuis{" "}
                 {new Date(sessionCaisse.date_ouverture).toLocaleTimeString(
                   "fr-FR",
                   { hour: "2-digit", minute: "2-digit" }
                 )}
-              </div>
-            )}
+              </div> : null}
           </div>
           <Link
             href="/caisse"
@@ -561,7 +559,7 @@ export default async function DashboardPage() {
                 marginBottom: 8,
               }}
             >
-              <TrendingUp size={18} style={{ color: "var(--amber-9)" }} />
+              <TrendingUp size={18} style={{ color: "var(--purple-9)" }} />
               <span style={{ fontSize: 13, color: "var(--gray-11)" }}>
                 Marge brute
               </span>
@@ -670,7 +668,7 @@ export default async function DashboardPage() {
                         hour: "2-digit",
                         minute: "2-digit",
                       })}
-                      {vente.client && ` • ${vente.client.nom}`}
+                      {vente.client ? ` • ${vente.client.nom}` : null}
                     </div>
                   </div>
                   <div
@@ -814,11 +812,11 @@ export default async function DashboardPage() {
                       borderRadius: 8,
                       backgroundColor:
                         index === 0
-                          ? "var(--amber-a3)"
+                          ? "var(--purple-a3)"
                           : index === 1
                             ? "var(--gray-a3)"
                             : index === 2
-                              ? "var(--orange-a3)"
+                              ? "var(--violet-a3)"
                               : "var(--gray-a2)",
                       display: "flex",
                       alignItems: "center",
@@ -827,11 +825,11 @@ export default async function DashboardPage() {
                       fontWeight: 600,
                       color:
                         index === 0
-                          ? "var(--amber-11)"
+                          ? "var(--purple-11)"
                           : index === 1
                             ? "var(--gray-11)"
                             : index === 2
-                              ? "var(--orange-11)"
+                              ? "var(--violet-11)"
                               : "var(--gray-10)",
                     }}
                   >
@@ -958,8 +956,8 @@ export default async function DashboardPage() {
       {(nombreProduits === 0 || nombreClients === 0) && (
         <div
           style={{
-            backgroundColor: "var(--amber-a3)",
-            border: "1px solid var(--amber-a6)",
+            backgroundColor: "var(--purple-a3)",
+            border: "1px solid var(--purple-a6)",
             borderRadius: 12,
             padding: 20,
             display: "flex",
@@ -986,13 +984,13 @@ export default async function DashboardPage() {
               style={{
                 fontSize: 15,
                 fontWeight: 600,
-                color: "var(--amber-11)",
+                color: "var(--purple-11)",
                 marginBottom: 4,
               }}
             >
               Configuration incomplète
             </h3>
-            <p style={{ fontSize: 14, color: "var(--amber-11)", margin: 0 }}>
+            <p style={{ fontSize: 14, color: "var(--purple-11)", margin: 0 }}>
               {nombreProduits === 0 && nombreClients === 0
                 ? "Ajoutez des produits et des clients pour commencer à vendre."
                 : nombreProduits === 0
@@ -1005,7 +1003,7 @@ export default async function DashboardPage() {
               <Link
                 href="/produits"
                 style={{
-                  backgroundColor: "var(--amber-9)",
+                  backgroundColor: "var(--purple-9)",
                   color: "white",
                   border: "none",
                   borderRadius: 8,
@@ -1023,8 +1021,8 @@ export default async function DashboardPage() {
                 href="/clients"
                 style={{
                   backgroundColor: "transparent",
-                  color: "var(--amber-11)",
-                  border: "1px solid var(--amber-a6)",
+                  color: "var(--purple-11)",
+                  border: "1px solid var(--purple-a6)",
                   borderRadius: 8,
                   padding: "8px 16px",
                   fontSize: 13,

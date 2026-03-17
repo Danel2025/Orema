@@ -26,8 +26,7 @@ export function DashboardCard({ title, description, icon: Icon, action, children
         {/* Header */}
         <Flex justify="between" align="center" p="4" pb="0">
           <Flex align="center" gap="3">
-            {Icon && (
-              <Flex
+            {Icon ? <Flex
                 align="center"
                 justify="center"
                 style={{
@@ -38,30 +37,25 @@ export function DashboardCard({ title, description, icon: Icon, action, children
                 }}
               >
                 <Icon style={{ width: 20, height: 20, color: "var(--accent-9)" }} />
-              </Flex>
-            )}
+              </Flex> : null}
             <Flex direction="column" gap="1">
               <Heading as="h3" size="4" weight="medium">
                 {title}
               </Heading>
-              {description && (
-                <Text size="1" color="gray">
+              {description ? <Text size="1" color="gray">
                   {description}
-                </Text>
-              )}
+                </Text> : null}
             </Flex>
           </Flex>
 
-          {action && (
-            <IconButton
+          {action ? <IconButton
               variant="ghost"
               color="gray"
               onClick={action.onClick}
               aria-label={action.label}
             >
               <action.icon style={{ width: 18, height: 18 }} />
-            </IconButton>
-          )}
+            </IconButton> : null}
         </Flex>
 
         <Separator size="4" />

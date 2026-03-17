@@ -229,11 +229,9 @@ export function RolePageAccessModal({
                   <Badge color={ROLE_COLORS[role]} size="1" variant="soft">
                     {ROLE_LABELS[role]}
                   </Badge>
-                  {configs[role].useCustomAccess && (
-                    <Badge color="orange" size="1">
+                  {configs[role].useCustomAccess ? <Badge color="violet" size="1">
                       {configs[role].allowedRoutes.length}
-                    </Badge>
-                  )}
+                    </Badge> : null}
                 </Flex>
               </Tabs.Trigger>
             ))}

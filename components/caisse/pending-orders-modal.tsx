@@ -140,7 +140,7 @@ export function PendingOrdersModal({
             <Clock size={20} />
             Commandes en attente
             {counts.all > 0 && (
-              <Badge color="orange" size="2">
+              <Badge color="violet" size="2">
                 {counts.all}
               </Badge>
             )}
@@ -201,7 +201,7 @@ export function PendingOrdersModal({
                             <Flex align="center" gap="2">
                               <Badge color={
                                 vente.type === "TABLE" ? "blue" :
-                                vente.type === "LIVRAISON" ? "green" : "orange"
+                                vente.type === "LIVRAISON" ? "green" : "violet"
                               }>
                                 {getTypeIcon(vente.type)}
                                 <Text size="1" ml="1">
@@ -217,15 +217,13 @@ export function PendingOrdersModal({
                             </Flex>
 
                             {/* Client si présent */}
-                            {vente.client && (
-                              <Flex align="center" gap="1">
+                            {vente.client ? <Flex align="center" gap="1">
                                 <User size={12} color="var(--gray-9)" />
                                 <Text size="1" color="gray">
                                   {vente.client.nom}
-                                  {vente.client.prenom && ` ${vente.client.prenom}`}
+                                  {vente.client.prenom ? ` ${vente.client.prenom}` : null}
                                 </Text>
-                              </Flex>
-                            )}
+                              </Flex> : null}
 
                             {/* Infos: articles + temps */}
                             <Flex align="center" gap="3">
@@ -240,7 +238,7 @@ export function PendingOrdersModal({
 
                           {/* Prix + Actions */}
                           <Flex direction="column" align="end" gap="2">
-                            <Text size="4" weight="bold" color="orange">
+                            <Text size="4" weight="bold" color="violet">
                               {formatCurrency(totalFinal)}
                             </Text>
                             <Flex gap="2">

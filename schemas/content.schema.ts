@@ -24,14 +24,14 @@ export const contentStatusLabels: Record<ContentStatus, string> = {
 export const contentStatusColors: Record<ContentStatus, string> = {
   DRAFT: "gray",
   PUBLISHED: "green",
-  ARCHIVED: "orange",
+  ARCHIVED: "violet",
 };
 
 /**
  * Couleurs Radix UI disponibles pour le contenu
  */
 export const contentColors = [
-  { value: "orange", label: "Orange" },
+  { value: "violet", label: "Violet" },
   { value: "blue", label: "Bleu" },
   { value: "green", label: "Vert" },
   { value: "purple", label: "Violet" },
@@ -41,7 +41,6 @@ export const contentColors = [
   { value: "pink", label: "Rose" },
   { value: "teal", label: "Teal" },
   { value: "indigo", label: "Indigo" },
-  { value: "violet", label: "Violet" },
   { value: "crimson", label: "Cramoisi" },
   { value: "grass", label: "Herbe" },
   { value: "sky", label: "Ciel" },

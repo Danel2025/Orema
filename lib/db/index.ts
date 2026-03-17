@@ -15,6 +15,9 @@
  */
 
 // Re-export des clients
+// Import des requêtes pour l'objet db
+import * as queries from './queries'
+
 export { createClient, createServiceClient, getServerClient, getServiceClient, createAuthenticatedClient } from './client'
 export type { DbClient, RlsContext } from './client'
 
@@ -23,9 +26,6 @@ export * from './types'
 
 // Re-export des utilitaires
 export * from './utils'
-
-// Import des requêtes pour l'objet db
-import * as queries from './queries'
 
 /**
  * Objet db contenant toutes les requêtes de base de données

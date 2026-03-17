@@ -55,7 +55,7 @@ export function ClientFormModal({
     setValue,
     reset,
     formState: { errors },
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+   
   } = useForm<ClientFormData>({
     resolver: zodResolver(clientSchema) as any,
     defaultValues: {
@@ -130,11 +130,9 @@ export function ClientFormModal({
                     <User size={16} />
                   </TextField.Slot>
                 </TextField.Root>
-                {errors.nom && (
-                  <Text size="1" color="red">
+                {errors.nom ? <Text size="1" color="red">
                     {errors.nom.message}
-                  </Text>
-                )}
+                  </Text> : null}
               </Flex>
 
               {/* Prenom */}
@@ -162,11 +160,9 @@ export function ClientFormModal({
                     <Phone size={16} />
                   </TextField.Slot>
                 </TextField.Root>
-                {errors.telephone && (
-                  <Text size="1" color="red">
+                {errors.telephone ? <Text size="1" color="red">
                     {errors.telephone.message}
-                  </Text>
-                )}
+                  </Text> : null}
               </Flex>
 
               {/* Email */}
@@ -184,11 +180,9 @@ export function ClientFormModal({
                     <Mail size={16} />
                   </TextField.Slot>
                 </TextField.Root>
-                {errors.email && (
-                  <Text size="1" color="red">
+                {errors.email ? <Text size="1" color="red">
                     {errors.email.message}
-                  </Text>
-                )}
+                  </Text> : null}
               </Flex>
 
               {/* Adresse */}
@@ -229,8 +223,7 @@ export function ClientFormModal({
               </Flex>
 
               {/* Limite credit */}
-              {creditAutorise && (
-                <Flex direction="column" gap="1">
+              {creditAutorise ? <Flex direction="column" gap="1">
                   <Text as="label" size="2" weight="medium">
                     Limite de credit (FCFA)
                   </Text>
@@ -245,8 +238,7 @@ export function ClientFormModal({
                       <Building2 size={16} />
                     </TextField.Slot>
                   </TextField.Root>
-                </Flex>
-              )}
+                </Flex> : null}
             </Flex>
 
             <Separator size="4" />
@@ -276,7 +268,7 @@ export function ClientFormModal({
               </Button>
             </Dialog.Close>
             <Button type="submit" disabled={isLoading}>
-              {isLoading && <Loader2 size={16} className="animate-spin" />}
+              {isLoading ? <Loader2 size={16} className="animate-spin" /> : null}
               {isEditing ? "Enregistrer" : "Creer le client"}
             </Button>
           </Flex>

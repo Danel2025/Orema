@@ -26,7 +26,7 @@ const steps = [
     title: "Inscrivez-vous",
     description:
       "Créez votre compte en 2 minutes. Aucune carte bancaire requise pour l'essai gratuit.",
-    color: "orange",
+    color: "violet",
   },
   {
     number: "02",
@@ -55,23 +55,23 @@ const steps = [
 ];
 
 const colorStyles = {
-  orange: {
-    bg: "linear-gradient(135deg, var(--orange-9) 0%, var(--amber-9) 100%)",
-    glow: "rgba(249, 115, 22, 0.3)",
-    light: "var(--orange-a3)",
+  violet: {
+    bg: "var(--violet-9)",
+    glow: "rgba(139, 92, 246, 0.3)",
+    light: "var(--violet-a3)",
   },
   blue: {
-    bg: "linear-gradient(135deg, var(--blue-9) 0%, var(--cyan-9) 100%)",
+    bg: "var(--blue-9)",
     glow: "rgba(59, 130, 246, 0.3)",
     light: "var(--blue-a3)",
   },
   green: {
-    bg: "linear-gradient(135deg, var(--green-9) 0%, var(--teal-9) 100%)",
+    bg: "var(--green-9)",
     glow: "rgba(34, 197, 94, 0.3)",
     light: "var(--green-a3)",
   },
   purple: {
-    bg: "linear-gradient(135deg, var(--purple-9) 0%, var(--violet-9) 100%)",
+    bg: "var(--purple-9)",
     glow: "rgba(147, 51, 234, 0.3)",
     light: "var(--purple-a3)",
   },
@@ -231,8 +231,7 @@ export function HowItWorks() {
             <Box
               className="rounded-full"
               style={{
-                background:
-                  "linear-gradient(135deg, var(--green-a3) 0%, var(--teal-a3) 100%)",
+                background: "var(--green-a3)",
                 border: "1px solid var(--green-a5)",
                 padding: "14px 24px",
               }}

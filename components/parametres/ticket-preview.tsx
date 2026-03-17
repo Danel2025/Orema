@@ -96,15 +96,13 @@ function TicketLine({
       >
         {left}
       </Text>
-      {right && (
-        <Text
+      {right ? <Text
           size="1"
           weight={bold ? "bold" : "regular"}
           style={{ fontFamily: "monospace", whiteSpace: "nowrap" }}
         >
           {right}
-        </Text>
-      )}
+        </Text> : null}
     </Flex>
   );
 }
@@ -237,8 +235,7 @@ export function TicketPreview({
 
       <Flex direction="column" gap="1">
         {/* Logo */}
-        {settings.afficherLogo && etablissement.logo && (
-          <Flex justify="center" mb="2">
+        {settings.afficherLogo && etablissement.logo ? <Flex justify="center" mb="2">
             <Box
               style={{
                 width: "80px",
@@ -254,47 +251,32 @@ export function TicketPreview({
                 [LOGO]
               </Text>
             </Box>
-          </Flex>
-        )}
+          </Flex> : null}
 
         {/* Infos établissement */}
-        {settings.afficherInfosEtablissement && (
-          <>
+        {settings.afficherInfosEtablissement ? <>
             <TicketCenter bold size="2">
               {etablissement.nom}
             </TicketCenter>
-            {etablissement.adresse && (
-              <TicketCenter>{etablissement.adresse}</TicketCenter>
-            )}
-            {etablissement.telephone && (
-              <TicketCenter>Tél: {etablissement.telephone}</TicketCenter>
-            )}
-          </>
-        )}
+            {etablissement.adresse ? <TicketCenter>{etablissement.adresse}</TicketCenter> : null}
+            {etablissement.telephone ? <TicketCenter>Tél: {etablissement.telephone}</TicketCenter> : null}
+          </> : null}
 
         {/* NIF / RCCM */}
-        {settings.afficherNifRccm && (
-          <>
-            {etablissement.nif && (
-              <TicketCenter>NIF: {etablissement.nif}</TicketCenter>
-            )}
-            {etablissement.rccm && (
-              <TicketCenter>RCCM: {etablissement.rccm}</TicketCenter>
-            )}
-          </>
-        )}
+        {settings.afficherNifRccm ? <>
+            {etablissement.nif ? <TicketCenter>NIF: {etablissement.nif}</TicketCenter> : null}
+            {etablissement.rccm ? <TicketCenter>RCCM: {etablissement.rccm}</TicketCenter> : null}
+          </> : null}
 
         <TicketSeparator style={settings.styleSeparateur} />
 
         {/* En-tête du type de document */}
-        {entete && (
-          <>
+        {entete ? <>
             <TicketCenter bold size="2">
               {entete}
             </TicketCenter>
             <TicketSeparator style={settings.styleSeparateur} />
-          </>
-        )}
+          </> : null}
 
         {/* Numéro et date */}
         <TicketLine left="N°: 20260130-00042" />
@@ -340,8 +322,7 @@ export function TicketPreview({
         />
 
         {/* Détail TVA */}
-        {settings.afficherDetailTva && (
-          <>
+        {settings.afficherDetailTva ? <>
             <TicketLine
               left="TVA (18%)"
               right={`${tva.toLocaleString("fr-FR")} F`}
@@ -350,8 +331,7 @@ export function TicketPreview({
               left="Total HT"
               right={`${(sousTotal - tva).toLocaleString("fr-FR")} F`}
             />
-          </>
-        )}
+          </> : null}
 
         <TicketSeparator style={settings.styleSeparateur} />
 
@@ -385,8 +365,7 @@ export function TicketPreview({
         <TicketSeparator style={settings.styleSeparateur} />
 
         {/* QR Code */}
-        {settings.afficherQrCode && (
-          <Flex justify="center" py="2">
+        {settings.afficherQrCode ? <Flex justify="center" py="2">
             <Box
               p="2"
               style={{
@@ -396,15 +375,12 @@ export function TicketPreview({
             >
               <QrCode size={48} style={{ color: "var(--gray-11)" }} />
             </Box>
-          </Flex>
-        )}
+          </Flex> : null}
 
         {/* Pied de page */}
-        {piedPage && (
-          <Box mt="2">
+        {piedPage ? <Box mt="2">
             <TicketCenter>{piedPage}</TicketCenter>
-          </Box>
-        )}
+          </Box> : null}
 
         {/* Mention légale pour pro-forma */}
         {typeFacture === "PRO_FORMA" && (

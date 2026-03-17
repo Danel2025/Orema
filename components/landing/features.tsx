@@ -27,7 +27,7 @@ const features = [
     title: "Caisse tactile intuitive",
     description:
       "Interface optimisée pour écrans tactiles. Vos employés sont opérationnels en quelques minutes.",
-    color: "orange" as const,
+    color: "violet" as const,
   },
   {
     icon: LayoutGrid,
@@ -67,10 +67,10 @@ const features = [
 ];
 
 const colorStyles = {
-  orange: {
-    bg: "var(--orange-a3)",
-    icon: "var(--orange-9)",
-    border: "var(--orange-a5)",
+  violet: {
+    bg: "var(--violet-a3)",
+    icon: "var(--violet-9)",
+    border: "var(--violet-a5)",
   },
   blue: {
     bg: "var(--blue-a3)",
@@ -88,9 +88,9 @@ const colorStyles = {
     border: "var(--purple-a5)",
   },
   amber: {
-    bg: "var(--amber-a3)",
-    icon: "var(--amber-9)",
-    border: "var(--amber-a5)",
+    bg: "var(--purple-a3)",
+    icon: "var(--purple-9)",
+    border: "var(--purple-a5)",
   },
   red: {
     bg: "var(--red-a3)",
@@ -115,15 +115,15 @@ export function Features() {
             <Box
               className="rounded-full"
               style={{
-                background: "var(--orange-a3)",
-                border: "1px solid var(--orange-a5)",
+                background: "var(--violet-a3)",
+                border: "1px solid var(--violet-a5)",
                 padding: "8px 18px",
               }}
             >
               <Text
                 size="2"
                 weight="medium"
-                style={{ color: "var(--orange-11)" }}
+                style={{ color: "var(--violet-11)" }}
               >
                 Fonctionnalités
               </Text>
@@ -196,9 +196,8 @@ export function Features() {
             size="3"
             mt="8"
             style={{
-              background:
-                "linear-gradient(135deg, var(--orange-a3) 0%, var(--amber-a3) 100%)",
-              border: "1px solid var(--orange-a5)",
+              background: "var(--violet-a3)",
+              border: "1px solid var(--violet-a5)",
             }}
           >
             <Flex
@@ -222,7 +221,7 @@ export function Features() {
                 whileTap={{ scale: 0.98 }}
                 className="flex cursor-pointer items-center gap-2 rounded-lg font-medium text-white transition-opacity hover:opacity-90"
                 style={{
-                  background: "var(--orange-9)",
+                  background: "var(--violet-9)",
                   flexShrink: 0,
                   padding: "12px 20px",
                 }}

@@ -248,11 +248,9 @@ export function ProductForm({
                       borderColor: errors.nom ? "var(--red-9)" : "var(--gray-a6)",
                     }}
                   />
-                  {errors.nom && (
-                    <p style={{ fontSize: 13, color: "var(--red-11)", marginTop: 4 }}>
+                  {errors.nom ? <p style={{ fontSize: 13, color: "var(--red-11)", marginTop: 4 }}>
                       {errors.nom.message}
-                    </p>
-                  )}
+                    </p> : null}
                 </div>
 
                 {/* Description */}
@@ -303,11 +301,9 @@ export function ProductForm({
                       </option>
                     ))}
                   </select>
-                  {errors.categorieId && (
-                    <p style={{ fontSize: 13, color: "var(--red-11)", marginTop: 4 }}>
+                  {errors.categorieId ? <p style={{ fontSize: 13, color: "var(--red-11)", marginTop: 4 }}>
                       {errors.categorieId.message}
-                    </p>
-                  )}
+                    </p> : null}
                 </div>
               </div>
             </div>
@@ -343,11 +339,9 @@ export function ProductForm({
                       borderColor: errors.prixVente ? "var(--red-9)" : "var(--gray-a6)",
                     }}
                   />
-                  {errors.prixVente && (
-                    <p style={{ fontSize: 13, color: "var(--red-11)", marginTop: 4 }}>
+                  {errors.prixVente ? <p style={{ fontSize: 13, color: "var(--red-11)", marginTop: 4 }}>
                       {errors.prixVente.message}
-                    </p>
-                  )}
+                    </p> : null}
                 </div>
 
                 {/* Prix d'achat */}
@@ -432,8 +426,7 @@ export function ProductForm({
               </div>
 
               {/* Champs stock (si activé) */}
-              {gererStock && (
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr", gap: 16 }}>
+              {gererStock ? <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr", gap: 16 }}>
                   <div>
                     <label style={labelStyle}>Stock actuel</label>
                     <input
@@ -473,8 +466,7 @@ export function ProductForm({
                       style={inputStyle}
                     />
                   </div>
-                </div>
-              )}
+                </div> : null}
             </div>
 
             {/* Section: Disponibilité */}
@@ -614,7 +606,7 @@ export function ProductForm({
                 opacity: isLoading ? 0.7 : 1,
               }}
             >
-              {isLoading && <Loader2 size={16} className="animate-spin" />}
+              {isLoading ? <Loader2 size={16} className="animate-spin" /> : null}
               {isEditing ? "Enregistrer" : "Créer le produit"}
             </button>
           </div>

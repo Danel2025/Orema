@@ -16,3 +16,12 @@ export {
 } from "./product-filters";
 export { SupplementsManager } from "./supplements-manager";
 export { ComposeProductForm, type ComposeProductData } from "./compose-product-form";
+export {
+  SupplementSelector,
+  type SupplementOption,
+  type SelectedSupplement,
+} from "./supplement-selector";
+export {
+  CompositeProductSection,
+  type CompositeComponent,
+} from "./composite-product-section";

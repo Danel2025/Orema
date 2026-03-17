@@ -402,29 +402,24 @@ export function CategoryList() {
       )}
 
       {/* Modal de création */}
-      {showForm && (
-        <CategoryForm
+      {showForm ? <CategoryForm
           imprimantes={imprimantes}
           onSubmit={handleCreate}
           onCancel={() => setShowForm(false)}
           isLoading={isSubmitting}
-        />
-      )}
+        /> : null}
 
       {/* Modal d'édition */}
-      {editingCategory && (
-        <CategoryForm
+      {editingCategory ? <CategoryForm
           initialData={editingCategory}
           imprimantes={imprimantes}
           onSubmit={handleUpdate}
           onCancel={() => setEditingCategory(null)}
           isLoading={isSubmitting}
-        />
-      )}
+        /> : null}
 
       {/* Modal de confirmation de suppression */}
-      {deleteConfirm && (
-        <div
+      {deleteConfirm ? <div
           style={{
             position: "fixed",
             inset: 0,
@@ -516,8 +511,7 @@ export function CategoryList() {
               </button>
             </div>
           </div>
-        </div>
-      )}
+        </div> : null}
     </div>
   );
 }

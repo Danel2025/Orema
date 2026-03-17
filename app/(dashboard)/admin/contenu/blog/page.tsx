@@ -193,9 +193,9 @@ export default function BlogPage() {
             <Box
               p="3"
               style={{
-                background: "linear-gradient(135deg, var(--orange-9) 0%, var(--amber-9) 100%)",
+                background: "linear-gradient(135deg, var(--violet-9) 0%, var(--purple-9) 100%)",
                 borderRadius: 12,
-                boxShadow: "0 4px 16px var(--orange-a4)",
+                boxShadow: "0 4px 16px var(--violet-a4)",
               }}
             >
               <Newspaper size={24} style={{ color: "white" }} />
@@ -222,7 +222,7 @@ export default function BlogPage() {
               <Button
                 size="3"
                 style={{
-                  background: "linear-gradient(135deg, var(--orange-9) 0%, var(--amber-9) 100%)",
+                  background: "linear-gradient(135deg, var(--violet-9) 0%, var(--purple-9) 100%)",
                   cursor: "pointer",
                 }}
               >
@@ -242,7 +242,7 @@ export default function BlogPage() {
       >
         <Grid columns="4" gap="4" mb="6">
           {[
-            { label: "Total", value: stats.total, color: "orange" },
+            { label: "Total", value: stats.total, color: "violet" },
             { label: "Publiés", value: stats.published, color: "green" },
             { label: "Brouillons", value: stats.draft, color: "gray" },
             { label: "En vedette", value: stats.featured, color: "amber" },
@@ -276,8 +276,7 @@ export default function BlogPage() {
       </motion.div>
 
       {/* Filters */}
-      {showFilters && (
-        <motion.div
+      {showFilters ? <motion.div
           initial={{ opacity: 0, height: 0 }}
           animate={{ opacity: 1, height: "auto" }}
           exit={{ opacity: 0, height: 0 }}
@@ -333,8 +332,7 @@ export default function BlogPage() {
               </Box>
             </Flex>
           </Card>
-        </motion.div>
-      )}
+        </motion.div> : null}
 
       {/* Posts Table */}
       <motion.div
@@ -404,9 +402,7 @@ export default function BlogPage() {
                               <Text size="2" weight="medium">
                                 {post.title}
                               </Text>
-                              {post.featured && (
-                                <Star size={14} style={{ color: "var(--amber-9)", fill: "var(--amber-9)" }} />
-                              )}
+                              {post.featured ? <Star size={14} style={{ color: "var(--purple-9)", fill: "var(--purple-9)" }} /> : null}
                             </Flex>
                             <Text size="1" color="gray">
                               /{post.slug}
@@ -417,7 +413,7 @@ export default function BlogPage() {
 
                       <Table.Cell>
                         {post.category ? (
-                          <Badge color={post.category.color as "blue" | "orange" | "green"} variant="soft" size="1">
+                          <Badge color={post.category.color as "blue" | "violet" | "green"} variant="soft" size="1">
                             {post.category.name}
                           </Badge>
                         ) : (
@@ -438,7 +434,7 @@ export default function BlogPage() {
 
                       <Table.Cell>
                         <Badge
-                          color={statusColor as "green" | "gray" | "orange"}
+                          color={statusColor as "green" | "gray" | "violet"}
                           variant="soft"
                           size="1"
                         >
@@ -524,7 +520,7 @@ export default function BlogPage() {
           {categories.length > 0 && (
             <Card size="2">
               <Flex align="center" gap="2" mb="3">
-                <Tag size={14} style={{ color: "var(--orange-9)" }} />
+                <Tag size={14} style={{ color: "var(--violet-9)" }} />
                 <Text size="2" weight="medium">Catégories</Text>
                 <Badge variant="soft" size="1" color="gray" ml="auto">
                   {categories.length}
@@ -544,7 +540,7 @@ export default function BlogPage() {
                     }}
                   >
                     <Text size="2">{cat.name}</Text>
-                    <Badge color={cat.color as "blue" | "orange" | "green"} variant="soft" size="1">
+                    <Badge color={cat.color as "blue" | "violet" | "green"} variant="soft" size="1">
                       {cat.postCount} article{cat.postCount > 1 ? "s" : ""}
                     </Badge>
                   </Flex>
@@ -557,7 +553,7 @@ export default function BlogPage() {
           {authors.length > 0 && (
             <Card size="2">
               <Flex align="center" gap="2" mb="3">
-                <User size={14} style={{ color: "var(--orange-9)" }} />
+                <User size={14} style={{ color: "var(--violet-9)" }} />
                 <Text size="2" weight="medium">Auteurs</Text>
                 <Badge variant="soft" size="1" color="gray" ml="auto">
                   {authors.length}
@@ -580,7 +576,7 @@ export default function BlogPage() {
                         size="1"
                         fallback={author.name.charAt(0)}
                         radius="full"
-                        color="orange"
+                        color="violet"
                       />
                       <Text size="2">{author.name}</Text>
                     </Flex>

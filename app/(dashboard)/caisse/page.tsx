@@ -809,9 +809,9 @@ export default function CaissePage() {
                 padding: "0 12px",
                 height: 36,
                 borderRadius: 8,
-                border: "1px solid var(--amber-a6)",
-                backgroundColor: pendingOrdersCount > 0 ? "var(--amber-a3)" : "transparent",
-                color: pendingOrdersCount > 0 ? "var(--amber-11)" : "var(--gray-11)",
+                border: "1px solid var(--purple-a6)",
+                backgroundColor: pendingOrdersCount > 0 ? "var(--purple-a3)" : "transparent",
+                color: pendingOrdersCount > 0 ? "var(--purple-11)" : "var(--gray-11)",
                 cursor: "pointer",
                 fontSize: 13,
                 fontWeight: 500,
@@ -821,7 +821,7 @@ export default function CaissePage() {
               {pendingOrdersCount > 0 && (
                 <span
                   style={{
-                    backgroundColor: "var(--amber-9)",
+                    backgroundColor: "var(--purple-9)",
                     color: "white",
                     fontSize: 11,
                     fontWeight: 600,
@@ -887,8 +887,7 @@ export default function CaissePage() {
         />
 
         {/* Modal de paiement */}
-        {showPayment && (
-          <CaissePayment
+        {showPayment ? <CaissePayment
             onClose={() => {
               setShowPayment(false);
               setVenteAPayer(null);
@@ -912,8 +911,7 @@ export default function CaissePage() {
                   }
                 : null
             }
-          />
-        )}
+          /> : null}
 
         {/* Dialog ouverture session */}
         <OpenSessionDialog
@@ -923,14 +921,12 @@ export default function CaissePage() {
         />
 
         {/* Dialog cloture session */}
-        {session && (
-          <CloseSessionDialog
+        {session ? <CloseSessionDialog
             open={showCloseSession}
             onOpenChange={setShowCloseSession}
             session={session}
             onSuccess={handleSessionChange}
-          />
-        )}
+          /> : null}
 
         {/* Modal commandes en attente */}
         <PendingOrdersModal

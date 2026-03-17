@@ -266,8 +266,7 @@ export function TransferTableModal({
         </div>
 
         {/* Animation de succes */}
-        {showSuccess && (
-          <div
+        {showSuccess ? <div
             style={{
               position: "absolute",
               inset: 0,
@@ -297,21 +296,19 @@ export function TransferTableModal({
             <Text size="5" weight="bold" style={{ color: "var(--green-11)" }}>
               {showMergeConfirm ? "Commandes fusionnees!" : "Transfert reussi!"}
             </Text>
-          </div>
-        )}
+          </div> : null}
 
         {/* Confirmation de fusion */}
-        {showMergeConfirm && !showSuccess && (
-          <div style={{ padding: 24 }}>
+        {showMergeConfirm && !showSuccess ? <div style={{ padding: 24 }}>
             <Flex
               direction="column"
               align="center"
               gap="4"
               style={{
                 padding: 24,
-                backgroundColor: "var(--amber-a2)",
+                backgroundColor: "var(--purple-a2)",
                 borderRadius: 12,
-                border: "1px solid var(--amber-a6)",
+                border: "1px solid var(--purple-a6)",
               }}
             >
               <div
@@ -319,7 +316,7 @@ export function TransferTableModal({
                   width: 56,
                   height: 56,
                   borderRadius: "50%",
-                  backgroundColor: "var(--amber-9)",
+                  backgroundColor: "var(--purple-9)",
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
@@ -384,8 +381,7 @@ export function TransferTableModal({
                   <Text size="5" weight="bold" style={{ display: "block" }}>
                     {selectedTable?.numero}
                   </Text>
-                  {selectedTable?.ventes[0] && (
-                    <>
+                  {selectedTable?.ventes[0] ? <>
                       <Badge color="blue" size="1" mt="1">
                         {selectedTable.ventes[0]._count.lignes} article(s)
                       </Badge>
@@ -396,8 +392,7 @@ export function TransferTableModal({
                       >
                         {formatTotal(selectedTable.ventes[0].totalFinal)}
                       </Text>
-                    </>
-                  )}
+                    </> : null}
                 </div>
               </Flex>
 
@@ -456,8 +451,7 @@ export function TransferTableModal({
                 )}
               </Button>
             </Flex>
-          </div>
-        )}
+          </div> : null}
 
         {/* Contenu principal */}
         {!showMergeConfirm && !showSuccess && (
@@ -606,7 +600,7 @@ export function TransferTableModal({
                                 transition: "all 0.15s",
                                 transform: isSelected ? "scale(1.02)" : "none",
                                 boxShadow: isSelected
-                                  ? "0 4px 12px rgba(249, 115, 22, 0.25)"
+                                  ? "0 4px 12px rgba(139, 92, 246, 0.25)"
                                   : "none",
                               }}
                             >
@@ -657,13 +651,12 @@ export function TransferTableModal({
                               </Flex>
 
                               {/* Info vente si occupee */}
-                              {hasVente && (
-                                <div
+                              {hasVente ? <div
                                   style={{
                                     marginTop: 8,
                                     padding: "6px 8px",
                                     borderRadius: 6,
-                                    backgroundColor: "var(--amber-a3)",
+                                    backgroundColor: "var(--purple-a3)",
                                   }}
                                 >
                                   <Flex
@@ -673,12 +666,12 @@ export function TransferTableModal({
                                   >
                                     <Receipt
                                       size={12}
-                                      style={{ color: "var(--amber-11)" }}
+                                      style={{ color: "var(--purple-11)" }}
                                     />
                                     <Text
                                       size="1"
                                       weight="bold"
-                                      style={{ color: "var(--amber-11)" }}
+                                      style={{ color: "var(--purple-11)" }}
                                     >
                                       {formatTotal(table.ventes[0].totalFinal)}
                                     </Text>
@@ -693,12 +686,10 @@ export function TransferTableModal({
                                   >
                                     Fusion possible
                                   </Text>
-                                </div>
-                              )}
+                                </div> : null}
 
                               {/* Indicateur de selection */}
-                              {isSelected && (
-                                <div
+                              {isSelected ? <div
                                   style={{
                                     marginTop: 8,
                                     padding: "4px 8px",
@@ -711,8 +702,7 @@ export function TransferTableModal({
                                   <Text size="1" weight="bold">
                                     Selectionne
                                   </Text>
-                                </div>
-                              )}
+                                </div> : null}
                             </button>
                           );
                         })}

@@ -40,11 +40,9 @@ export function StatusSelect({
 }: StatusSelectProps) {
   return (
     <Box>
-      {label && (
-        <Text size="2" weight="medium" mb="2" style={{ display: "block" }}>
+      {label ? <Text size="2" weight="medium" mb="2" style={{ display: "block" }}>
           {label}
-        </Text>
-      )}
+        </Text> : null}
 
       <Select.Root value={value} onValueChange={(v) => onChange(v as ContentStatus)}>
         <Select.Trigger
@@ -91,11 +89,9 @@ export function StatusSelect({
         </Text>
       </Box>
 
-      {error && (
-        <Text size="1" color="red" mt="1">
+      {error ? <Text size="1" color="red" mt="1">
           {error}
-        </Text>
-      )}
+        </Text> : null}
     </Box>
   );
 }

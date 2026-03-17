@@ -62,7 +62,7 @@ const PAYMENT_METHODS: {
   { id: "MOOV_MONEY", label: "Moov", icon: <Smartphone size={16} />, color: "cyan" },
   { id: "CHEQUE", label: "Cheque", icon: <FileText size={16} />, color: "amber" },
   { id: "VIREMENT", label: "Virement", icon: <Building2 size={16} />, color: "purple" },
-  { id: "COMPTE_CLIENT", label: "Compte", icon: <Wallet size={16} />, color: "orange" },
+  { id: "COMPTE_CLIENT", label: "Compte", icon: <Wallet size={16} />, color: "violet" },
 ];
 
 interface SplitBillModalProps {
@@ -345,11 +345,11 @@ export function SplitBillModal({ onComplete }: SplitBillModalProps) {
                   <Box
                     p="3"
                     style={{
-                      backgroundColor: ecart > 0 ? "var(--amber-a3)" : "var(--red-a3)",
+                      backgroundColor: ecart > 0 ? "var(--purple-a3)" : "var(--red-a3)",
                       borderRadius: 8,
                     }}
                   >
-                    <Text size="2" style={{ color: ecart > 0 ? "var(--amber-11)" : "var(--red-11)" }}>
+                    <Text size="2" style={{ color: ecart > 0 ? "var(--purple-11)" : "var(--red-11)" }}>
                       {ecart > 0
                         ? `Il reste ${formatCurrency(ecart)} a attribuer`
                         : `La somme depasse le total de ${formatCurrency(Math.abs(ecart))}`}
@@ -425,11 +425,11 @@ export function SplitBillModal({ onComplete }: SplitBillModalProps) {
                   <Box
                     p="3"
                     style={{
-                      backgroundColor: "var(--amber-a3)",
+                      backgroundColor: "var(--purple-a3)",
                       borderRadius: 8,
                     }}
                   >
-                    <Text size="2" weight="medium" style={{ color: "var(--amber-11)" }} mb="2" as="div">
+                    <Text size="2" weight="medium" style={{ color: "var(--purple-11)" }} mb="2" as="div">
                       Articles non attribues ({itemsNonAttribues.length})
                     </Text>
                     <Flex gap="2" wrap="wrap">
@@ -478,7 +478,7 @@ export function SplitBillModal({ onComplete }: SplitBillModalProps) {
                 Paye: {formatCurrency(totalPaye)} / {formatCurrency(total)}
               </Text>
               {resteAPayer > 0 && (
-                <Text size="2" style={{ color: "var(--amber-11)" }}>
+                <Text size="2" style={{ color: "var(--purple-11)" }}>
                   Reste: {formatCurrency(resteAPayer)}
                 </Text>
               )}
@@ -498,8 +498,7 @@ export function SplitBillModal({ onComplete }: SplitBillModalProps) {
           </Flex>
 
           {/* Erreur */}
-          {error && (
-            <Box
+          {error ? <Box
               p="3"
               mb="3"
               style={{
@@ -510,8 +509,7 @@ export function SplitBillModal({ onComplete }: SplitBillModalProps) {
               <Text size="2" style={{ color: "var(--red-11)" }}>
                 {error}
               </Text>
-            </Box>
-          )}
+            </Box> : null}
 
           {/* Boutons */}
           <Flex gap="3" justify="end">
@@ -617,11 +615,9 @@ function PartCard({
           <Text size="2" weight="medium" style={{ color: "var(--gray-12)" }}>
             {part.nom ?? `Personne ${index + 1}`}
           </Text>
-          {part.paye && part.modePaiement && (
-            <Text size="1" color="gray">
+          {part.paye && part.modePaiement ? <Text size="1" color="gray">
               {PAYMENT_METHODS.find((m) => m.id === part.modePaiement)?.label}
-            </Text>
-          )}
+            </Text> : null}
         </Box>
       </Flex>
 
@@ -756,11 +752,9 @@ function CustomPartCard({
           </Text>
         ) : (
           <>
-            {canRemove && (
-              <Button size="1" variant="ghost" color="red" onClick={onRemove}>
+            {canRemove ? <Button size="1" variant="ghost" color="red" onClick={onRemove}>
                 <Trash2 size={14} />
-              </Button>
-            )}
+              </Button> : null}
             <Button size="2" variant="soft" onClick={onPayClick} disabled={part.montant <= 0}>
               Payer
             </Button>
@@ -868,7 +862,7 @@ function ItemsPartCard({
             <Badge
               key={item.produitId}
               variant="surface"
-              color={part.paye ? "green" : "orange"}
+              color={part.paye ? "green" : "violet"}
               size="1"
               style={{ cursor: part.paye ? "default" : "pointer" }}
               onClick={() => !part.paye && onUnassignItem(item.produitId)}

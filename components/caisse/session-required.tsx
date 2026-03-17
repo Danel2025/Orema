@@ -132,7 +132,7 @@ export function SessionRequired({ children, onSessionChange }: SessionRequiredPr
           <Card
             style={{
               maxWidth: 400,
-              backgroundColor: "var(--amber-a2)",
+              backgroundColor: "var(--purple-a2)",
               borderColor: "var(--amber-a5)",
             }}
           >

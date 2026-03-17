@@ -33,7 +33,7 @@ import { FloorPlanSelector } from "./floor-plan-selector";
 // Couleurs de statut des tables
 const statutColors: Record<string, { bg: string; text: string; border: string }> = {
   LIBRE: { bg: "var(--green-a3)", text: "var(--green-11)", border: "var(--green-8)" },
-  OCCUPEE: { bg: "var(--amber-a3)", text: "var(--amber-11)", border: "var(--amber-8)" },
+  OCCUPEE: { bg: "var(--purple-a3)", text: "var(--purple-11)", border: "var(--amber-8)" },
   EN_PREPARATION: { bg: "var(--blue-a3)", text: "var(--blue-11)", border: "var(--blue-8)" },
   ADDITION: { bg: "var(--accent-a3)", text: "var(--accent-11)", border: "var(--accent-8)" },
   A_NETTOYER: { bg: "var(--red-a3)", text: "var(--red-11)", border: "var(--red-8)" },
@@ -178,8 +178,7 @@ function TableSelector() {
             <span style={{ fontSize: 14, fontWeight: 600, color: "var(--accent-11)" }}>
               Table {table.numero}
             </span>
-            {table.couverts && (
-              <span
+            {table.couverts ? <span
                 style={{
                   display: "flex",
                   alignItems: "center",
@@ -193,11 +192,8 @@ function TableSelector() {
               >
                 <Users size={12} />
                 {table.couverts}
-              </span>
-            )}
-            {table.zone && (
-              <span style={{ fontSize: 12, color: "var(--accent-10)" }}>({table.zone.nom})</span>
-            )}
+              </span> : null}
+            {table.zone ? <span style={{ fontSize: 12, color: "var(--accent-10)" }}>({table.zone.nom})</span> : null}
             <button
               onClick={() => setShowFloorPlan(true)}
               style={{
@@ -257,15 +253,13 @@ function TableSelector() {
       </div>
 
       {/* Modal Plan de salle */}
-      {showFloorPlan && (
-        <FloorPlanSelector
+      {showFloorPlan ? <FloorPlanSelector
           tables={tables}
           selectedTableId={tableId}
           onSelect={handleSelectTable}
           onClose={() => setShowFloorPlan(false)}
           onlyFreeTables={true}
-        />
-      )}
+        /> : null}
     </>
   );
 }
@@ -344,11 +338,9 @@ function DeliveryPanel() {
               <span style={{ fontSize: 14, fontWeight: 500, color: "var(--blue-11)" }}>
                 {client.nom} {client.prenom || ""}
               </span>
-              {client.telephone && (
-                <span style={{ fontSize: 12, color: "var(--blue-10)" }}>
+              {client.telephone ? <span style={{ fontSize: 12, color: "var(--blue-10)" }}>
                   ({client.telephone})
-                </span>
-              )}
+                </span> : null}
               <button
                 onClick={handleClearClient}
                 style={{
@@ -426,12 +418,10 @@ function DeliveryPanel() {
               >
                 {adresseLivraison}
               </span>
-              {telephoneLivraison && (
-                <span style={{ fontSize: 12, color: "var(--green-10)" }}>
+              {telephoneLivraison ? <span style={{ fontSize: 12, color: "var(--green-10)" }}>
                   <Phone size={12} style={{ display: "inline", marginRight: 4 }} />
                   {telephoneLivraison}
-                </span>
-              )}
+                </span> : null}
               <button
                 onClick={() => setShowAddressModal(true)}
                 style={{
@@ -470,14 +460,10 @@ function DeliveryPanel() {
       </div>
 
       {/* Modal client */}
-      {showClientModal && (
-        <ClientModal onSelect={handleClientSelect} onClose={() => setShowClientModal(false)} />
-      )}
+      {showClientModal ? <ClientModal onSelect={handleClientSelect} onClose={() => setShowClientModal(false)} /> : null}
 
       {/* Modal adresse */}
-      {showAddressModal && (
-        <AddressModal onClose={() => setShowAddressModal(false)} />
-      )}
+      {showAddressModal ? <AddressModal onClose={() => setShowAddressModal(false)} /> : null}
     </>
   );
 }
@@ -536,9 +522,7 @@ function EmporterPanel() {
             <span style={{ fontSize: 14, fontWeight: 500, color: "var(--blue-11)" }}>
               {client.nom} {client.prenom || ""}
             </span>
-            {client.telephone && (
-              <span style={{ fontSize: 12, color: "var(--blue-10)" }}>({client.telephone})</span>
-            )}
+            {client.telephone ? <span style={{ fontSize: 12, color: "var(--blue-10)" }}>({client.telephone})</span> : null}
             <button
               onClick={handleClearClient}
               style={{
@@ -575,9 +559,7 @@ function EmporterPanel() {
         )}
       </div>
 
-      {showClientModal && (
-        <ClientModal onSelect={handleClientSelect} onClose={() => setShowClientModal(false)} />
-      )}
+      {showClientModal ? <ClientModal onSelect={handleClientSelect} onClose={() => setShowClientModal(false)} /> : null}
     </>
   );
 }
@@ -753,13 +735,11 @@ function ClientModal({
                         <div style={{ fontWeight: 500, color: "var(--gray-12)" }}>
                           {c.nom} {c.prenom || ""}
                         </div>
-                        {c.telephone && (
-                          <div style={{ fontSize: 12, color: "var(--gray-10)" }}>
+                        {c.telephone ? <div style={{ fontSize: 12, color: "var(--gray-10)" }}>
                             {c.telephone}
-                          </div>
-                        )}
+                          </div> : null}
                       </div>
-                      {c.adresse && <MapPin size={14} style={{ color: "var(--gray-9)" }} />}
+                      {c.adresse ? <MapPin size={14} style={{ color: "var(--gray-9)" }} /> : null}
                     </button>
                   ))}
                 </div>

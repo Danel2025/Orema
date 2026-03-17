@@ -134,8 +134,7 @@ export function ProductCard({
         </div>
 
         {/* Badge stock bas */}
-        {stockBas && (
-          <div
+        {stockBas ? <div
             style={{
               position: "absolute",
               top: 8,
@@ -153,8 +152,7 @@ export function ProductCard({
           >
             <AlertTriangle size={12} />
             Stock bas
-          </div>
-        )}
+          </div> : null}
 
         {/* Badge inactif */}
         {!actif && (
@@ -221,8 +219,7 @@ export function ProductCard({
               <MoreVertical size={16} />
             </button>
 
-            {showMenu && (
-              <>
+            {showMenu ? <>
                 <div
                   style={{
                     position: "fixed",
@@ -269,8 +266,7 @@ export function ProductCard({
                     Modifier
                   </button>
 
-                  {onManageSupplements && (
-                    <button
+                  {onManageSupplements ? <button
                       onClick={() => {
                         onManageSupplements(id, nom);
                         setShowMenu(false);
@@ -292,8 +288,7 @@ export function ProductCard({
                     >
                       <ListPlus size={14} />
                       Suppléments
-                    </button>
-                  )}
+                    </button> : null}
 
                   <button
                     onClick={() => {
@@ -311,7 +306,7 @@ export function ProductCard({
                       backgroundColor: "transparent",
                       cursor: "pointer",
                       fontSize: 13,
-                      color: actif ? "var(--amber-11)" : "var(--green-11)",
+                      color: actif ? "var(--purple-11)" : "var(--green-11)",
                       textAlign: "left",
                     }}
                   >
@@ -351,14 +346,12 @@ export function ProductCard({
                     Supprimer
                   </button>
                 </div>
-              </>
-            )}
+              </> : null}
           </div>
         </div>
 
         {/* Description */}
-        {description && (
-          <p
+        {description ? <p
             style={{
               fontSize: 12,
               color: "var(--gray-10)",
@@ -371,8 +364,7 @@ export function ProductCard({
             }}
           >
             {description}
-          </p>
-        )}
+          </p> : null}
 
         {/* Prix et infos */}
         <div
@@ -404,8 +396,7 @@ export function ProductCard({
           </div>
 
           {/* Stock */}
-          {gererStock && (
-            <div
+          {gererStock ? <div
               style={{
                 textAlign: "right",
               }}
@@ -428,8 +419,7 @@ export function ProductCard({
               >
                 en stock
               </div>
-            </div>
-          )}
+            </div> : null}
         </div>
       </div>
     </div>

@@ -105,14 +105,14 @@ export function OrderDetailsModal({
     }
   };
 
-  const getTypeColor = (type: string): "blue" | "green" | "orange" | "gray" => {
+  const getTypeColor = (type: string): "blue" | "green" | "violet" | "gray" => {
     switch (type) {
       case "TABLE":
         return "blue";
       case "LIVRAISON":
         return "green";
       case "EMPORTER":
-        return "orange";
+        return "violet";
       default:
         return "gray";
     }
@@ -136,15 +136,11 @@ export function OrderDetailsModal({
               <Text ml="1">{getTypeLabel(order.type)}</Text>
             </Badge>
 
-            {order.table && (
-              <Badge color="blue" variant="soft" size="2">
+            {order.table ? <Badge color="blue" variant="soft" size="2">
                 <UtensilsCrossed size={14} />
                 <Text ml="1">Table {order.table.numero}</Text>
-                {order.table.zone && (
-                  <Text color="gray" ml="1">({order.table.zone.nom})</Text>
-                )}
-              </Badge>
-            )}
+                {order.table.zone ? <Text color="gray" ml="1">({order.table.zone.nom})</Text> : null}
+              </Badge> : null}
 
             <Badge color="gray" variant="soft" size="2">
               <Clock size={14} />
@@ -155,33 +151,27 @@ export function OrderDetailsModal({
           </Flex>
 
           {/* Client */}
-          {order.client && (
-            <Box mb="4" p="3" style={{ backgroundColor: "var(--gray-a2)", borderRadius: 8 }}>
+          {order.client ? <Box mb="4" p="3" style={{ backgroundColor: "var(--gray-a2)", borderRadius: 8 }}>
               <Flex align="center" gap="2" mb="2">
                 <User size={16} color="var(--gray-11)" />
                 <Text weight="medium">
                   {order.client.nom}
-                  {order.client.prenom && ` ${order.client.prenom}`}
+                  {order.client.prenom ? ` ${order.client.prenom}` : null}
                 </Text>
               </Flex>
-              {order.client.telephone && (
-                <Flex align="center" gap="2">
+              {order.client.telephone ? <Flex align="center" gap="2">
                   <Phone size={14} color="var(--gray-9)" />
                   <Text size="2" color="gray">{order.client.telephone}</Text>
-                </Flex>
-              )}
-            </Box>
-          )}
+                </Flex> : null}
+            </Box> : null}
 
           {/* Adresse livraison */}
-          {order.adresseLivraison && (
-            <Box mb="4" p="3" style={{ backgroundColor: "var(--green-a2)", borderRadius: 8 }}>
+          {order.adresseLivraison ? <Box mb="4" p="3" style={{ backgroundColor: "var(--green-a2)", borderRadius: 8 }}>
               <Flex align="start" gap="2">
                 <MapPin size={16} color="var(--green-11)" style={{ marginTop: 2 }} />
                 <Text size="2">{order.adresseLivraison}</Text>
               </Flex>
-            </Box>
-          )}
+            </Box> : null}
 
           <Separator size="4" mb="4" />
 
@@ -204,16 +194,12 @@ export function OrderDetailsModal({
                 <Table.Row key={ligne.id}>
                   <Table.Cell>
                     <Text size="2">{ligne.produit.nom}</Text>
-                    {ligne.supplements && ligne.supplements.length > 0 && (
-                      <Text size="1" color="gray" as="p">
+                    {ligne.supplements && ligne.supplements.length > 0 ? <Text size="1" color="gray" as="p">
                         + {ligne.supplements.map(s => s.nom).join(", ")}
-                      </Text>
-                    )}
-                    {ligne.notes && (
-                      <Text size="1" color="orange" as="p" style={{ fontStyle: "italic" }}>
+                      </Text> : null}
+                    {ligne.notes ? <Text size="1" color="violet" as="p" style={{ fontStyle: "italic" }}>
                         {ligne.notes}
-                      </Text>
-                    )}
+                      </Text> : null}
                   </Table.Cell>
                   <Table.Cell align="center">
                     <Text size="2">{ligne.quantite}</Text>
@@ -247,9 +233,7 @@ export function OrderDetailsModal({
               <Flex justify="between" mb="2">
                 <Text size="2" color="gray">
                   Remise
-                  {order.typeRemise === "POURCENTAGE" && order.valeurRemise && (
-                    <Text color="green"> (-{order.valeurRemise}%)</Text>
-                  )}
+                  {order.typeRemise === "POURCENTAGE" && order.valeurRemise ? <Text color="green"> (-{order.valeurRemise}%)</Text> : null}
                 </Text>
                 <Text size="2" color="green">-{formatCurrency(order.totalRemise)}</Text>
               </Flex>
@@ -259,20 +243,18 @@ export function OrderDetailsModal({
 
             <Flex justify="between">
               <Text size="3" weight="bold">Total à payer</Text>
-              <Text size="4" weight="bold" color="orange">
+              <Text size="4" weight="bold" color="violet">
                 {formatCurrency(order.totalFinal)}
               </Text>
             </Flex>
           </Box>
 
           {/* Notes */}
-          {order.notes && (
-            <Box mt="4" p="3" style={{ backgroundColor: "var(--amber-a2)", borderRadius: 8 }}>
+          {order.notes ? <Box mt="4" p="3" style={{ backgroundColor: "var(--purple-a2)", borderRadius: 8 }}>
               <Text size="2" color="amber">
                 <strong>Notes:</strong> {order.notes}
               </Text>
-            </Box>
-          )}
+            </Box> : null}
 
           {/* Serveur */}
           <Text size="1" color="gray" mt="4" as="p">
@@ -290,12 +272,10 @@ export function OrderDetailsModal({
             </Button>
           </Dialog.Close>
 
-          {onPayer && (
-            <Button color="green" onClick={onPayer}>
+          {onPayer ? <Button color="green" onClick={onPayer}>
               <CreditCard size={14} />
               Payer cette commande
-            </Button>
-          )}
+            </Button> : null}
         </Flex>
       </Dialog.Content>
     </Dialog.Root>

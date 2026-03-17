@@ -9,7 +9,7 @@
  */
 
 import { useAuth } from "@/lib/auth/context";
-import { redirect } from "next/navigation";
+import { redirect , usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import {
   Box,
@@ -32,7 +32,6 @@ import {
   Building2,
 } from "lucide-react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
 import { motion, AnimatePresence } from "motion/react";
 
 // Constantes pour les dimensions
@@ -113,14 +112,14 @@ function CollapsibleNavGroup({
             <Icon
               size={18}
               style={{
-                color: isGroupActive ? "var(--orange-9)" : "var(--gray-10)",
+                color: isGroupActive ? "var(--violet-9)" : "var(--gray-10)",
               }}
             />
             <Text
               size="2"
               weight="medium"
               style={{
-                color: isGroupActive ? "var(--orange-11)" : "var(--gray-11)",
+                color: isGroupActive ? "var(--violet-11)" : "var(--gray-11)",
                 flex: 1,
               }}
             >
@@ -166,7 +165,7 @@ function CollapsibleNavGroup({
                   style={{
                     borderRadius: 8,
                     background: childActive
-                      ? "linear-gradient(135deg, var(--orange-a3) 0%, var(--amber-a3) 100%)"
+                      ? "linear-gradient(135deg, var(--violet-a3) 0%, var(--purple-a3) 100%)"
                       : "transparent",
                     transition: "all 0.15s ease",
                     cursor: "pointer",
@@ -186,29 +185,27 @@ function CollapsibleNavGroup({
                     <ChildIcon
                       size={16}
                       style={{
-                        color: childActive ? "var(--orange-9)" : "var(--gray-10)",
+                        color: childActive ? "var(--violet-9)" : "var(--gray-10)",
                       }}
                     />
                     <Text
                       size="2"
                       weight={childActive ? "medium" : "regular"}
                       style={{
-                        color: childActive ? "var(--orange-11)" : "var(--gray-11)",
+                        color: childActive ? "var(--violet-11)" : "var(--gray-11)",
                       }}
                     >
                       {child.label}
                     </Text>
-                    {childActive && (
-                      <Box
+                    {childActive ? <Box
                         style={{
                           marginLeft: "auto",
                           width: 6,
                           height: 6,
                           borderRadius: "50%",
-                          background: "var(--orange-9)",
+                          background: "var(--violet-9)",
                         }}
-                      />
-                    )}
+                      /> : null}
                   </Flex>
                 </Box>
               </Link>
@@ -258,11 +255,11 @@ export default function AdminLayout({
               width: 64,
               height: 64,
               borderRadius: 16,
-              background: "linear-gradient(135deg, var(--orange-9) 0%, var(--amber-9) 100%)",
+              background: "linear-gradient(135deg, var(--violet-9) 0%, var(--purple-9) 100%)",
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
-              boxShadow: "0 8px 32px var(--orange-a5)",
+              boxShadow: "0 8px 32px var(--violet-a5)",
             }}
           >
             <Shield size={32} style={{ color: "white" }} />
@@ -315,7 +312,7 @@ export default function AdminLayout({
           p="5"
           style={{
             borderBottom: "1px solid var(--gray-a4)",
-            background: "linear-gradient(180deg, var(--orange-a2) 0%, transparent 100%)",
+            background: "linear-gradient(180deg, var(--violet-a2) 0%, transparent 100%)",
           }}
         >
           <Flex align="center" gap="3" mb="3">
@@ -324,11 +321,11 @@ export default function AdminLayout({
                 width: 40,
                 height: 40,
                 borderRadius: 10,
-                background: "linear-gradient(135deg, var(--orange-9) 0%, var(--amber-9) 100%)",
+                background: "linear-gradient(135deg, var(--violet-9) 0%, var(--purple-9) 100%)",
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
-                boxShadow: "0 4px 12px var(--orange-a4)",
+                boxShadow: "0 4px 12px var(--violet-a4)",
               }}
             >
               <Shield size={20} style={{ color: "white" }} />
@@ -338,7 +335,7 @@ export default function AdminLayout({
                 Admin Panel
               </Heading>
               <Flex align="center" gap="1" mt="1">
-                <Sparkles size={12} style={{ color: "var(--orange-9)" }} />
+                <Sparkles size={12} style={{ color: "var(--violet-9)" }} />
                 <Text size="1" color="gray">
                   SUPER_ADMIN
                 </Text>
@@ -401,7 +398,7 @@ export default function AdminLayout({
                     style={{
                       borderRadius: 8,
                       background: active
-                        ? "linear-gradient(135deg, var(--orange-a3) 0%, var(--amber-a3) 100%)"
+                        ? "linear-gradient(135deg, var(--violet-a3) 0%, var(--purple-a3) 100%)"
                         : "transparent",
                       transition: "all 0.15s ease",
                       cursor: "pointer",
@@ -421,29 +418,27 @@ export default function AdminLayout({
                       <Icon
                         size={18}
                         style={{
-                          color: active ? "var(--orange-9)" : "var(--gray-10)",
+                          color: active ? "var(--violet-9)" : "var(--gray-10)",
                         }}
                       />
                       <Text
                         size="2"
                         weight={active ? "medium" : "regular"}
                         style={{
-                          color: active ? "var(--orange-11)" : "var(--gray-11)",
+                          color: active ? "var(--violet-11)" : "var(--gray-11)",
                         }}
                       >
                         {item.label}
                       </Text>
-                      {active && (
-                        <Box
+                      {active ? <Box
                           style={{
                             marginLeft: "auto",
                             width: 6,
                             height: 6,
                             borderRadius: "50%",
-                            background: "var(--orange-9)",
+                            background: "var(--violet-9)",
                           }}
-                        />
-                      )}
+                        /> : null}
                     </Flex>
                   </Box>
                 </Link>
@@ -509,11 +504,11 @@ export default function AdminLayout({
           <Flex align="center" justify="between">
             <Flex align="center" gap="2">
               <Badge
-                color="orange"
+                color="violet"
                 variant="surface"
                 size="1"
                 style={{
-                  background: "linear-gradient(135deg, var(--orange-a3) 0%, var(--amber-a3) 100%)",
+                  background: "linear-gradient(135deg, var(--violet-a3) 0%, var(--purple-a3) 100%)",
                 }}
               >
                 <Flex align="center" gap="1">

@@ -135,14 +135,12 @@ export default function PinLoginPage() {
                     <MailIcon size={16} />
                   </TextField.Slot>
                 </TextField.Root>
-                {errors.email && (
-                  <Flex gap="1" align="center" mt="1">
+                {errors.email ? <Flex gap="1" align="center" mt="1">
                     <AlertCircleIcon size={14} color="var(--red-9)" />
                     <Text size="1" color="red">
                       {errors.email.message}
                     </Text>
-                  </Flex>
-                )}
+                  </Flex> : null}
               </Box>
 
               {/* Code PIN */}
@@ -189,14 +187,12 @@ export default function PinLoginPage() {
                   ))}
                 </Flex>
 
-                {errors.pin && (
-                  <Flex gap="1" align="center" mt="2" justify="center">
+                {errors.pin ? <Flex gap="1" align="center" mt="2" justify="center">
                     <AlertCircleIcon size={14} color="var(--red-9)" />
                     <Text size="1" color="red">
                       {errors.pin.message}
                     </Text>
-                  </Flex>
-                )}
+                  </Flex> : null}
               </Box>
 
               {/* Bouton de connexion */}

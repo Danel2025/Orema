@@ -617,8 +617,7 @@ export function FloorPlanSelector({
                       <rect x="0" y="12" width="100" height="6" fill={style.border} rx="1" />
                     </svg>
                   )}
-                  {element.label && !isWallType && !isShelf && element.width > 60 && (
-                    <span
+                  {element.label && !isWallType && !isShelf && element.width > 60 ? <span
                       style={{
                         fontSize: 10,
                         fontWeight: 600,
@@ -627,8 +626,7 @@ export function FloorPlanSelector({
                       }}
                     >
                       {element.label}
-                    </span>
-                  )}
+                    </span> : null}
                 </div>
               );
             })}
@@ -695,8 +693,7 @@ export function FloorPlanSelector({
                   }}
                 >
                   {/* Selected checkmark */}
-                  {isSelected && (
-                    <div
+                  {isSelected ? <div
                       style={{
                         position: "absolute",
                         top: -8,
@@ -713,8 +710,7 @@ export function FloorPlanSelector({
                       }}
                     >
                       <Check size={14} />
-                    </div>
-                  )}
+                    </div> : null}
 
                   {/* Table number */}
                   <span
@@ -811,8 +807,7 @@ export function FloorPlanSelector({
         </div>
 
         {/* Menu contextuel pour changer le statut */}
-        {contextMenu.visible && contextMenu.table && (
-          <div
+        {contextMenu.visible && contextMenu.table ? <div
             style={{
               position: "fixed",
               left: contextMenu.x,
@@ -875,12 +870,10 @@ export function FloorPlanSelector({
                 )}
               </button>
             ))}
-          </div>
-        )}
+          </div> : null}
 
         {/* Panel de confirmation avec nombre de couverts */}
-        {pendingTable && (
-          <div
+        {pendingTable ? <div
             style={{
               padding: "16px 20px",
               borderTop: "1px solid var(--gray-a6)",
@@ -895,11 +888,9 @@ export function FloorPlanSelector({
               <span style={{ fontSize: 14, fontWeight: 600, color: "var(--gray-12)" }}>
                 Table {pendingTable.numero}
               </span>
-              {pendingTable.zone && (
-                <span style={{ fontSize: 12, color: "var(--gray-10)" }}>
+              {pendingTable.zone ? <span style={{ fontSize: 12, color: "var(--gray-10)" }}>
                   ({pendingTable.zone.nom})
-                </span>
-              )}
+                </span> : null}
             </div>
 
             <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
@@ -966,8 +957,7 @@ export function FloorPlanSelector({
                 Confirmer
               </button>
             </div>
-          </div>
-        )}
+          </div> : null}
       </div>
     </div>
   );

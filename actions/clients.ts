@@ -7,8 +7,8 @@
  */
 
 import { revalidatePath } from "next/cache";
-import { createClient as getSupabaseClient, db } from "@/lib/db";
-import { getEtablissementId } from "@/lib/etablissement";
+import { createAuthenticatedClient, db } from "@/lib/db";
+import { getCurrentUser } from "@/lib/auth";
 import {
   clientSchema,
   rechargeCompteSchema,
@@ -88,8 +88,10 @@ export async function getClients(options?: {
   page?: number;
   limit?: number;
 }) {
-  const etablissementId = await getEtablissementId();
-  const supabase = await getSupabaseClient();
+  const user = await getCurrentUser();
+  if (!user || !user.etablissementId) return { clients: [], pagination: { page: 1, limit: 20, total: 0, totalPages: 0 } };
+  const etablissementId = user.etablissementId;
+  const supabase = await createAuthenticatedClient({ userId: user.userId, etablissementId, role: user.role });
   const page = options?.page || 1;
   const limit = options?.limit || 20;
 
@@ -134,12 +136,14 @@ export async function getClients(options?: {
  * Recupere un client par son ID avec ses statistiques
  */
 export async function getClientById(id: string): Promise<ClientWithStats | null> {
-  const etablissementId = await getEtablissementId();
-  const supabase = await getSupabaseClient();
+  const user = await getCurrentUser();
+  if (!user || !user.etablissementId) return null;
+  const etablissementId = user.etablissementId;
+  const supabase = await createAuthenticatedClient({ userId: user.userId, etablissementId, role: user.role });
 
   const client = await db.getClientById(supabase, id);
 
-  if (!client || client.etablissement_id !== etablissementId) {
+  if (!client) {
     return null;
   }
 
@@ -173,8 +177,10 @@ export async function getClientById(id: string): Promise<ClientWithStats | null>
  */
 export async function createClient(data: ClientFormData) {
   try {
-    const etablissementId = await getEtablissementId();
-    const supabase = await getSupabaseClient();
+    const user = await getCurrentUser();
+    if (!user || !user.etablissementId) return { success: false, error: "Vous devez être connecté" };
+    const etablissementId = user.etablissementId;
+    const supabase = await createAuthenticatedClient({ userId: user.userId, etablissementId, role: user.role });
 
     // Validation Zod
     const validated = clientSchema.safeParse(data);
@@ -261,8 +267,10 @@ export async function createClient(data: ClientFormData) {
  */
 export async function updateClient(id: string, data: ClientFormData) {
   try {
-    const etablissementId = await getEtablissementId();
-    const supabase = await getSupabaseClient();
+    const user = await getCurrentUser();
+    if (!user || !user.etablissementId) return { success: false, error: "Vous devez être connecté" };
+    const etablissementId = user.etablissementId;
+    const supabase = await createAuthenticatedClient({ userId: user.userId, etablissementId, role: user.role });
 
     // Validation Zod
     const validated = clientSchema.safeParse(data);
@@ -276,10 +284,10 @@ export async function updateClient(id: string, data: ClientFormData) {
     const { nom, prenom, telephone, email, adresse, creditAutorise, limitCredit, actif } =
       validated.data;
 
-    // Verifier que le client existe
+    // Verifier que le client existe (RLS filtre par établissement)
     const existing = await db.getClientById(supabase, id);
 
-    if (!existing || existing.etablissement_id !== etablissementId) {
+    if (!existing) {
       return {
         success: false,
         error: "Client non trouve",
@@ -357,13 +365,14 @@ export async function updateClient(id: string, data: ClientFormData) {
  */
 export async function deleteClient(id: string) {
   try {
-    const etablissementId = await getEtablissementId();
-    const supabase = await getSupabaseClient();
+    const user = await getCurrentUser();
+    if (!user || !user.etablissementId) return { success: false, error: "Vous devez être connecté" };
+    const supabase = await createAuthenticatedClient({ userId: user.userId, etablissementId: user.etablissementId, role: user.role });
 
-    // Verifier que le client existe
+    // Verifier que le client existe (RLS filtre par établissement)
     const existing = await db.getClientById(supabase, id);
 
-    if (!existing || existing.etablissement_id !== etablissementId) {
+    if (!existing) {
       return {
         success: false,
         error: "Client non trouve",
@@ -396,8 +405,10 @@ export async function deleteClient(id: string) {
  */
 export async function rechargerComptePrepaye(data: RechargeCompteData) {
   try {
-    const etablissementId = await getEtablissementId();
-    const supabase = await getSupabaseClient();
+    const user = await getCurrentUser();
+    if (!user || !user.etablissementId) return { success: false, error: "Vous devez être connecté" };
+    const etablissementId = user.etablissementId;
+    const supabase = await createAuthenticatedClient({ userId: user.userId, etablissementId, role: user.role });
 
     // Validation Zod
     const validated = rechargeCompteSchema.safeParse(data);
@@ -410,10 +421,10 @@ export async function rechargerComptePrepaye(data: RechargeCompteData) {
 
     const { clientId, montant, reference, notes } = validated.data;
 
-    // Verifier que le client existe
+    // Verifier que le client existe (RLS filtre par établissement)
     const client = await db.getClientById(supabase, clientId);
 
-    if (!client || client.etablissement_id !== etablissementId) {
+    if (!client) {
       return {
         success: false,
         error: "Client non trouve",
@@ -450,8 +461,10 @@ export async function rechargerComptePrepaye(data: RechargeCompteData) {
  * Recupere l'historique du compte prepaye (simule via les ventes payees par COMPTE_CLIENT)
  */
 export async function getHistoriqueComptePrepaye(clientId: string) {
-  const etablissementId = await getEtablissementId();
-  const supabase = await getSupabaseClient();
+  const user = await getCurrentUser();
+  if (!user || !user.etablissementId) return [];
+  const etablissementId = user.etablissementId;
+  const supabase = await createAuthenticatedClient({ userId: user.userId, etablissementId, role: user.role });
 
   // Recuperer les ventes payees par compte client
   const ventes = await db.getVentes(supabase, etablissementId, {
@@ -497,8 +510,10 @@ function calcPointsFideliteSync(montant: number): number {
  * Recupere l'historique des points de fidelite d'un client
  */
 export async function getHistoriqueFidelite(clientId: string) {
-  const etablissementId = await getEtablissementId();
-  const supabase = await getSupabaseClient();
+  const user = await getCurrentUser();
+  if (!user || !user.etablissementId) return [];
+  const etablissementId = user.etablissementId;
+  const supabase = await createAuthenticatedClient({ userId: user.userId, etablissementId, role: user.role });
 
   // Recuperer les ventes payees du client
   const ventes = await db.getVentes(supabase, etablissementId, {
@@ -528,7 +543,9 @@ export async function ajouterPointsFidelite(clientId: string, montantVente: numb
   if (points <= 0) return { success: true, pointsAjoutes: 0 };
 
   try {
-    const supabase = await getSupabaseClient();
+    const user = await getCurrentUser();
+    if (!user || !user.etablissementId) return { success: false, error: "Non authentifié" };
+    const supabase = await createAuthenticatedClient({ userId: user.userId, etablissementId: user.etablissementId, role: user.role });
     await db.updateClientPoints(supabase, clientId, points);
 
     return { success: true, pointsAjoutes: points };
@@ -549,8 +566,10 @@ export async function getHistoriqueAchats(
   clientId: string,
   options?: { page?: number; limit?: number }
 ) {
-  const etablissementId = await getEtablissementId();
-  const supabase = await getSupabaseClient();
+  const user = await getCurrentUser();
+  if (!user || !user.etablissementId) return { ventes: [], pagination: { page: 1, limit: 20, total: 0, totalPages: 0 } };
+  const etablissementId = user.etablissementId;
+  const supabase = await createAuthenticatedClient({ userId: user.userId, etablissementId, role: user.role });
   const page = options?.page || 1;
   const limit = options?.limit || 20;
 
@@ -587,8 +606,10 @@ export async function getHistoriqueAchats(
  * Recupere les statistiques des achats d'un client
  */
 export async function getStatistiquesClient(clientId: string) {
-  const etablissementId = await getEtablissementId();
-  const supabase = await getSupabaseClient();
+  const user = await getCurrentUser();
+  if (!user || !user.etablissementId) return { totalDepense: 0, nombreAchats: 0, panierMoyen: 0, produitsPreference: [] };
+  const etablissementId = user.etablissementId;
+  const supabase = await createAuthenticatedClient({ userId: user.userId, etablissementId, role: user.role });
 
   // Récupérer les ventes du client
   const ventes = await db.getVentes(supabase, etablissementId, {
@@ -620,8 +641,10 @@ export async function searchClients(query: string) {
     return [];
   }
 
-  const etablissementId = await getEtablissementId();
-  const supabase = await getSupabaseClient();
+  const user = await getCurrentUser();
+  if (!user || !user.etablissementId) return [];
+  const etablissementId = user.etablissementId;
+  const supabase = await createAuthenticatedClient({ userId: user.userId, etablissementId, role: user.role });
 
   const clients = await db.getClients(supabase, etablissementId, {
     actif: true,

@@ -202,8 +202,7 @@ export function CaisseProductGrid({ categories, produits }: CaisseProductGridPro
         }}
       >
         {/* Bouton gauche */}
-        {canScrollLeft && (
-          <button
+        {canScrollLeft ? <button
             onClick={() => scrollCategories("left")}
             style={{
               position: "absolute",
@@ -223,8 +222,7 @@ export function CaisseProductGrid({ categories, produits }: CaisseProductGridPro
             }}
           >
             <ChevronLeft size={18} style={{ color: "var(--gray-11)" }} />
-          </button>
-        )}
+          </button> : null}
 
         {/* Container des catégories */}
         <div
@@ -264,8 +262,7 @@ export function CaisseProductGrid({ categories, produits }: CaisseProductGridPro
         </div>
 
         {/* Bouton droite */}
-        {canScrollRight && (
-          <button
+        {canScrollRight ? <button
             onClick={() => scrollCategories("right")}
             style={{
               position: "absolute",
@@ -285,8 +282,7 @@ export function CaisseProductGrid({ categories, produits }: CaisseProductGridPro
             }}
           >
             <ChevronRight size={18} style={{ color: "var(--gray-11)" }} />
-          </button>
-        )}
+          </button> : null}
       </div>
 
       {/* Grille de produits */}
@@ -398,8 +394,7 @@ export function CaisseProductGrid({ categories, produits }: CaisseProductGridPro
                   </span>
 
                   {/* Badge rupture */}
-                  {rupture && (
-                    <span
+                  {rupture ? <span
                       style={{
                         marginTop: 4,
                         fontSize: 10,
@@ -411,12 +406,10 @@ export function CaisseProductGrid({ categories, produits }: CaisseProductGridPro
                       }}
                     >
                       Rupture
-                    </span>
-                  )}
+                    </span> : null}
 
                   {/* Badge supplements disponibles */}
-                  {!rupture && prod.supplements && prod.supplements.length > 0 && (
-                    <Badge
+                  {!rupture && prod.supplements && prod.supplements.length > 0 ? <Badge
                       color="blue"
                       variant="soft"
                       size="1"
@@ -424,8 +417,7 @@ export function CaisseProductGrid({ categories, produits }: CaisseProductGridPro
                     >
                       <PlusIcon size={10} style={{ marginRight: 2 }} />
                       Options
-                    </Badge>
-                  )}
+                    </Badge> : null}
                 </button>
               );
             })}
@@ -434,8 +426,7 @@ export function CaisseProductGrid({ categories, produits }: CaisseProductGridPro
       </div>
 
       {/* Dialog de selection des supplements */}
-      {selectedProduct && (
-        <SupplementSelector
+      {selectedProduct ? <SupplementSelector
           open={supplementDialogOpen}
           onOpenChange={setSupplementDialogOpen}
           produit={{
@@ -446,8 +437,7 @@ export function CaisseProductGrid({ categories, produits }: CaisseProductGridPro
             supplements: selectedProduct.supplements || [],
           }}
           onConfirm={handleConfirmSupplements}
-        />
-      )}
+        /> : null}
     </div>
   );
 }

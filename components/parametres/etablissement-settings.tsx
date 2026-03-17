@@ -60,7 +60,7 @@ export function EtablissementSettings({ initialData }: EtablissementSettingsProp
     register,
     handleSubmit,
     formState: { errors, isDirty },
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+   
   } = useForm<EtablissementFormData>({
     resolver: zodResolver(etablissementSchema) as any,
     defaultValues: {
@@ -120,11 +120,9 @@ export function EtablissementSettings({ initialData }: EtablissementSettingsProp
                 placeholder="Ex: Restaurant Le Coeur de Libreville"
                 size="3"
               />
-              {errors.nom && (
-                <Text size="1" color="red" mt="1">
+              {errors.nom ? <Text size="1" color="red" mt="1">
                   {errors.nom.message}
-                </Text>
-              )}
+                </Text> : null}
             </Box>
 
             <Box>
@@ -169,11 +167,9 @@ export function EtablissementSettings({ initialData }: EtablissementSettingsProp
                   placeholder="contact@example.com"
                   size="3"
                 />
-                {errors.email && (
-                  <Text size="1" color="red" mt="1">
+                {errors.email ? <Text size="1" color="red" mt="1">
                     {errors.email.message}
-                  </Text>
-                )}
+                  </Text> : null}
               </Box>
             </Flex>
           </Flex>
@@ -189,7 +185,7 @@ export function EtablissementSettings({ initialData }: EtablissementSettingsProp
               </Text>
             </Flex>
 
-            <Callout.Root color="orange" size="1">
+            <Callout.Root color="violet" size="1">
               <Callout.Icon>
                 <AlertCircle size={16} />
               </Callout.Icon>
@@ -208,11 +204,9 @@ export function EtablissementSettings({ initialData }: EtablissementSettingsProp
                   placeholder="Ex: 123456789A"
                   size="3"
                 />
-                {errors.nif && (
-                  <Text size="1" color="red" mt="1">
+                {errors.nif ? <Text size="1" color="red" mt="1">
                     {errors.nif.message}
-                  </Text>
-                )}
+                  </Text> : null}
               </Box>
 
               <Box style={{ flex: "1 1 200px" }}>
@@ -224,11 +218,9 @@ export function EtablissementSettings({ initialData }: EtablissementSettingsProp
                   placeholder="Ex: GA-LBV-01-2024-B12-00001"
                   size="3"
                 />
-                {errors.rccm && (
-                  <Text size="1" color="red" mt="1">
+                {errors.rccm ? <Text size="1" color="red" mt="1">
                     {errors.rccm.message}
-                  </Text>
-                )}
+                  </Text> : null}
               </Box>
             </Flex>
           </Flex>

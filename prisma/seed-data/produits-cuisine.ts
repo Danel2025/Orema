@@ -4,7 +4,7 @@
  * Prix en FCFA (XAF)
  */
 
-import { ProduitData } from './produits-boissons';
+import type { ProduitData } from './produits-boissons';
 
 // =============================================================================
 // ENTRÉES

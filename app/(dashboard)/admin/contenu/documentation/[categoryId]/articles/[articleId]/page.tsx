@@ -215,17 +215,15 @@ export default function EditArticlePage({
               <Flex align="center" gap="2">
                 <Heading size="5">Modifier l'article</Heading>
                 <Badge
-                  color={statusColor as "green" | "gray" | "orange"}
+                  color={statusColor as "green" | "gray" | "violet"}
                   variant="soft"
                   size="1"
                 >
                   {contentStatusLabels[watchedValues.status]}
                 </Badge>
-                {isDirty && (
-                  <Badge color="orange" variant="soft" size="1">
+                {isDirty ? <Badge color="violet" variant="soft" size="1">
                     Non enregistré
-                  </Badge>
-                )}
+                  </Badge> : null}
               </Flex>
               <Text size="2" color="gray">
                 {category.title}
@@ -269,11 +267,9 @@ export default function EditArticlePage({
                       placeholder="Ex: Comment créer une commande"
                       {...register("title")}
                     />
-                    {errors.title && (
-                      <Text size="1" color="red" mt="1">
+                    {errors.title ? <Text size="1" color="red" mt="1">
                         {errors.title.message}
-                      </Text>
-                    )}
+                      </Text> : null}
                   </Box>
 
                   <Box>
@@ -289,11 +285,9 @@ export default function EditArticlePage({
                         <Text size="1" color="gray">/docs/{category.slug}/</Text>
                       </TextField.Slot>
                     </TextField.Root>
-                    {errors.slug && (
-                      <Text size="1" color="red" mt="1">
+                    {errors.slug ? <Text size="1" color="red" mt="1">
                         {errors.slug.message}
-                      </Text>
-                    )}
+                      </Text> : null}
                   </Box>
 
                   <Box>

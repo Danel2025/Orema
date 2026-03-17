@@ -36,7 +36,7 @@ const POINTS_PAR_FCFA = 1000;
 
 // Niveaux de fidelite
 const LOYALTY_LEVELS = [
-  { name: "Bronze", minPoints: 0, color: "orange" as const, icon: Star },
+  { name: "Bronze", minPoints: 0, color: "violet" as const, icon: Star },
   { name: "Argent", minPoints: 50, color: "gray" as const, icon: Star },
   { name: "Or", minPoints: 100, color: "amber" as const, icon: Trophy },
   { name: "Platine", minPoints: 200, color: "blue" as const, icon: Gift },
@@ -122,8 +122,7 @@ export function LoyaltyPoints({
         </Card>
 
         {/* Progression vers le niveau suivant */}
-        {nextLevel && (
-          <Flex direction="column" gap="2">
+        {nextLevel ? <Flex direction="column" gap="2">
             <Flex justify="between" align="center">
               <Text size="2" color="gray">
                 Prochain niveau: {nextLevel.name}
@@ -133,8 +132,7 @@ export function LoyaltyPoints({
               </Text>
             </Flex>
             <Progress value={progressPercent} color={currentLevel.color} />
-          </Flex>
-        )}
+          </Flex> : null}
 
         {/* Statistiques */}
         <Flex gap="4">

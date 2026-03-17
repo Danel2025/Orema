@@ -54,7 +54,7 @@ export function FiscalSettings({ initialData }: FiscalSettingsProps) {
     handleSubmit,
     formState: { errors, isDirty },
     watch,
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+   
   } = useForm<FiscalFormData>({
     resolver: zodResolver(fiscalSchema) as any,
     defaultValues: {
@@ -141,11 +141,9 @@ export function FiscalSettings({ initialData }: FiscalSettingsProps) {
                     <Percent size={16} />
                   </TextField.Slot>
                 </TextField.Root>
-                {errors.tauxTvaStandard && (
-                  <Text size="1" color="red" mt="1">
+                {errors.tauxTvaStandard ? <Text size="1" color="red" mt="1">
                     {errors.tauxTvaStandard.message}
-                  </Text>
-                )}
+                  </Text> : null}
                 <Text size="1" color="gray" mt="1">
                   Applique a la majorite des produits et services
                 </Text>
@@ -167,11 +165,9 @@ export function FiscalSettings({ initialData }: FiscalSettingsProps) {
                     <Percent size={16} />
                   </TextField.Slot>
                 </TextField.Root>
-                {errors.tauxTvaReduit && (
-                  <Text size="1" color="red" mt="1">
+                {errors.tauxTvaReduit ? <Text size="1" color="red" mt="1">
                     {errors.tauxTvaReduit.message}
-                  </Text>
-                )}
+                  </Text> : null}
                 <Text size="1" color="gray" mt="1">
                   Pour les produits de premiere necessite
                 </Text>
@@ -273,12 +269,10 @@ export function FiscalSettings({ initialData }: FiscalSettingsProps) {
                   <Text size="1">Sous-total HT</Text>
                   <Text size="1">10 000 FCFA</Text>
                 </Flex>
-                {afficherTva && (
-                  <Flex justify="between">
+                {afficherTva ? <Flex justify="between">
                     <Text size="1">TVA ({tauxStandard}%)</Text>
                     <Text size="1">{Math.round(10000 * tauxStandard / 100)} FCFA</Text>
-                  </Flex>
-                )}
+                  </Flex> : null}
                 <Box
                   style={{
                     borderTop: "1px dashed var(--gray-6)",

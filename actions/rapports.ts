@@ -5,9 +5,10 @@
  * Migré de Prisma vers Supabase - Version optimisée
  */
 
-import { createServiceClient } from "@/lib/db";
-import { getEtablissementId } from "@/lib/etablissement";
+import { createAuthenticatedClient } from "@/lib/db";
+import { getCurrentUser } from "@/lib/auth";
 import type { ModePaiement, TypeVente } from "@/lib/db";
+import { sanitizeSearchTerm } from "@/lib/utils/sanitize";
 
 // ============================================================================
 // TYPES
@@ -176,11 +177,26 @@ function sumTotalFinal(items: Array<{ total_final: number }>): number {
 // ============================================================================
 
 /**
+ * Crée un client authentifié pour les actions rapports.
+ * Lève une erreur si l'utilisateur n'est pas connecté ou n'a pas d'établissement.
+ */
+async function getAuthClient() {
+  const user = await getCurrentUser();
+  if (!user) throw new Error("Non authentifié");
+  if (!user.etablissementId) throw new Error("Aucun établissement associé");
+  const supabase = await createAuthenticatedClient({
+    userId: user.userId,
+    etablissementId: user.etablissementId,
+    role: user.role,
+  });
+  return { supabase, user: { ...user, etablissementId: user.etablissementId as string } };
+}
+
+/**
  * Récupère les KPIs principaux
  */
 export async function getKPIs(): Promise<KPIs> {
-  const etablissementId = await getEtablissementId();
-  const supabase = createServiceClient();
+  const { supabase } = await getAuthClient();
   const now = new Date();
 
   // Calculer toutes les plages de dates
@@ -194,11 +210,11 @@ export async function getKPIs(): Promise<KPIs> {
   };
 
   // Fonction pour récupérer les ventes d'une période (simple)
+  // RLS filtre automatiquement par etablissement_id
   const fetchVentesSimple = async (range: DateRange) => {
     const { data } = await supabase
       .from("ventes")
       .select("total_final")
-      .eq("etablissement_id", etablissementId)
       .eq("statut", "PAYEE")
       .gte("created_at", range.from.toISOString())
       .lte("created_at", range.to.toISOString());
@@ -210,7 +226,6 @@ export async function getKPIs(): Promise<KPIs> {
     const { data } = await supabase
       .from("ventes")
       .select("total_final, lignes_vente(quantite, prix_unitaire, produits(prix_achat))")
-      .eq("etablissement_id", etablissementId)
       .eq("statut", "PAYEE")
       .gte("created_at", range.from.toISOString())
       .lte("created_at", range.to.toISOString());
@@ -282,13 +297,11 @@ export async function getCAByPeriod(
   to: Date,
   groupBy: "jour" | "semaine" | "mois"
 ): Promise<CAByPeriodItem[]> {
-  const etablissementId = await getEtablissementId();
-  const supabase = createServiceClient();
+  const { supabase } = await getAuthClient();
 
   const { data: ventes } = await supabase
     .from("ventes")
     .select("total_final, created_at")
-    .eq("etablissement_id", etablissementId)
     .eq("statut", "PAYEE")
     .gte("created_at", from.toISOString())
     .lte("created_at", to.toISOString())
@@ -346,8 +359,7 @@ export async function getCAByPeriod(
  * Récupère les top produits
  */
 export async function getTopProducts(periode: PeriodeType, limit: number = 10): Promise<TopProduct[]> {
-  const etablissementId = await getEtablissementId();
-  const supabase = createServiceClient();
+  const { supabase } = await getAuthClient();
   const dateRange = getDateRangeForPeriode(periode);
 
   const { data: lignes } = await supabase
@@ -355,9 +367,8 @@ export async function getTopProducts(periode: PeriodeType, limit: number = 10): 
     .select(`
       quantite, total,
       produits!inner(id, nom, categories(nom)),
-      ventes!inner(etablissement_id, statut, created_at)
+      ventes!inner(statut, created_at)
     `)
-    .eq("ventes.etablissement_id", etablissementId)
     .eq("ventes.statut", "PAYEE")
     .gte("ventes.created_at", dateRange.from.toISOString())
     .lte("ventes.created_at", dateRange.to.toISOString());
@@ -393,14 +404,12 @@ export async function getTopProducts(periode: PeriodeType, limit: number = 10): 
  * Récupère les heures de pointe
  */
 export async function getPeakHours(date?: Date): Promise<PeakHourData[]> {
-  const etablissementId = await getEtablissementId();
-  const supabase = createServiceClient();
+  const { supabase } = await getAuthClient();
   const dateRange = getDateRangeForPeriode("jour", date || new Date());
 
   const { data: ventes } = await supabase
     .from("ventes")
     .select("total_final, created_at")
-    .eq("etablissement_id", etablissementId)
     .eq("statut", "PAYEE")
     .gte("created_at", dateRange.from.toISOString())
     .lte("created_at", dateRange.to.toISOString());
@@ -427,17 +436,15 @@ export async function getPeakHours(date?: Date): Promise<PeakHourData[]> {
  * Récupère les ventes par mode de paiement
  */
 export async function getSalesByPaymentMode(periode: PeriodeType): Promise<PaymentModeData[]> {
-  const etablissementId = await getEtablissementId();
-  const supabase = createServiceClient();
+  const { supabase } = await getAuthClient();
   const dateRange = getDateRangeForPeriode(periode);
 
   const { data: paiements } = await supabase
     .from("paiements")
     .select(`
       mode_paiement, montant,
-      ventes!inner(etablissement_id, statut, created_at)
+      ventes!inner(statut, created_at)
     `)
-    .eq("ventes.etablissement_id", etablissementId)
     .eq("ventes.statut", "PAYEE")
     .gte("ventes.created_at", dateRange.from.toISOString())
     .lte("ventes.created_at", dateRange.to.toISOString());
@@ -471,14 +478,12 @@ export async function getSalesByPaymentMode(periode: PeriodeType): Promise<Payme
  * Récupère les ventes par type
  */
 export async function getSalesByType(periode: PeriodeType): Promise<SalesByTypeData[]> {
-  const etablissementId = await getEtablissementId();
-  const supabase = createServiceClient();
+  const { supabase } = await getAuthClient();
   const dateRange = getDateRangeForPeriode(periode);
 
   const { data: ventes } = await supabase
     .from("ventes")
     .select("type, total_final")
-    .eq("etablissement_id", etablissementId)
     .eq("statut", "PAYEE")
     .gte("created_at", dateRange.from.toISOString())
     .lte("created_at", dateRange.to.toISOString());
@@ -511,14 +516,12 @@ export async function getSalesByType(periode: PeriodeType): Promise<SalesByTypeD
  * Récupère les ventes par employé
  */
 export async function getSalesByEmployee(periode: PeriodeType): Promise<SalesByEmployeeData[]> {
-  const etablissementId = await getEtablissementId();
-  const supabase = createServiceClient();
+  const { supabase } = await getAuthClient();
   const dateRange = getDateRangeForPeriode(periode);
 
   const { data: ventes } = await supabase
     .from("ventes")
     .select("total_final, utilisateurs(id, nom, prenom)")
-    .eq("etablissement_id", etablissementId)
     .eq("statut", "PAYEE")
     .gte("created_at", dateRange.from.toISOString())
     .lte("created_at", dateRange.to.toISOString());
@@ -555,8 +558,7 @@ export async function getSalesByEmployee(periode: PeriodeType): Promise<SalesByE
  * Récupère les sessions clôturées pour le rapport Z
  */
 export async function getClosedSessions(limit: number = 10) {
-  const etablissementId = await getEtablissementId();
-  const supabase = createServiceClient();
+  const { supabase } = await getAuthClient();
 
   const { data: sessions } = await supabase
     .from("sessions_caisse")
@@ -566,7 +568,6 @@ export async function getClosedSessions(limit: number = 10) {
       nombre_ventes, nombre_annulations, especes_comptees, ecart, notes_cloture,
       utilisateurs(nom, prenom)
     `)
-    .eq("etablissement_id", etablissementId)
     .not("date_cloture", "is", null)
     .order("date_cloture", { ascending: false })
     .limit(limit);
@@ -660,8 +661,7 @@ export async function getHistoriqueFactures(
   page: number = 1,
   pageSize: number = 20
 ): Promise<HistoriqueFacturesResult> {
-  const etablissementId = await getEtablissementId();
-  const supabase = createServiceClient();
+  const { supabase } = await getAuthClient();
 
   const offset = (page - 1) * pageSize;
 
@@ -678,7 +678,6 @@ export async function getHistoriqueFactures(
     `,
       { count: "exact" }
     )
-    .eq("etablissement_id", etablissementId)
     .order("created_at", { ascending: false });
 
   // Appliquer les filtres
@@ -702,7 +701,10 @@ export async function getHistoriqueFactures(
   }
 
   if (filters.numeroTicket) {
-    query = query.ilike("numero_ticket", `%${filters.numeroTicket}%`);
+    const cleanTicket = sanitizeSearchTerm(filters.numeroTicket);
+    if (cleanTicket) {
+      query = query.ilike("numero_ticket", `%${cleanTicket}%`);
+    }
   }
 
   if (filters.clientId) {
@@ -751,10 +753,296 @@ export async function getHistoriqueFactures(
 /**
  * Recupere le detail complet d'une facture
  */
-export async function getFactureDetail(venteId: string): Promise<FactureDetail | null> {
-  const etablissementId = await getEtablissementId();
-  const supabase = createServiceClient();
+// ============================================================================
+// RAPPORT Z - TYPES ET ACTION
+// ============================================================================
 
+export interface RapportZComplet {
+  etablissement: {
+    nom: string;
+    adresse: string | null;
+    telephone: string | null;
+    email: string | null;
+    nif: string | null;
+    rccm: string | null;
+  };
+  session: {
+    id: string;
+    dateOuverture: string;
+    dateCloture: string;
+    caissierNom: string;
+  };
+  ventes: {
+    totalVentes: number;
+    nombreVentes: number;
+    nombreAnnulations: number;
+    articlesVendus: number;
+    panierMoyen: number;
+  };
+  paiements: {
+    especes: number;
+    cartes: number;
+    mobileMoney: number;
+    cheques: number;
+    virements: number;
+    compteClient: number;
+    autres: number;
+    total: number;
+  };
+  tva: {
+    totalHT: number;
+    totalTVA: number;
+    totalTTC: number;
+  };
+  caisse: {
+    fondCaisse: number;
+    especesAttendues: number;
+    especesComptees: number;
+    ecart: number;
+  };
+  ventesParType: Record<string, { count: number; total: number }>;
+  topProduits: Array<{ nom: string; quantite: number; total: number }>;
+  notesCloture: string | null;
+}
+
+/**
+ * Genere un Rapport Z complet pour une session de caisse cloturee
+ * Collecte toutes les donnees necessaires: ventes, paiements, TVA, ecarts
+ */
+export async function genererRapportZAction(
+  sessionId: string
+): Promise<{ success: boolean; data?: RapportZComplet; error?: string }> {
+  try {
+    const { supabase, user } = await getAuthClient();
+
+    // 1. Recuperer la session avec l'utilisateur
+    // RLS filtre automatiquement par etablissement_id
+    const { data: session, error: sessionError } = await supabase
+      .from("sessions_caisse")
+      .select("*, utilisateurs(nom, prenom)")
+      .eq("id", sessionId)
+      .single();
+
+    if (sessionError || !session) {
+      return { success: false, error: "Session introuvable" };
+    }
+
+    if (!session.date_cloture) {
+      return { success: false, error: "Cette session n'est pas encore cloturee" };
+    }
+
+    // 2. Recuperer l'etablissement
+    // RLS filtre par etablissement_id, on utilise user.etablissementId pour la requête single
+    const { data: etab } = await supabase
+      .from("etablissements")
+      .select("nom, adresse, telephone, email, nif, rccm")
+      .eq("id", user.etablissementId)
+      .single();
+
+    // 3. Recuperer toutes les ventes de cette session avec detail
+    const { data: ventes } = await supabase
+      .from("ventes")
+      .select(`
+        statut, type, total_final, sous_total, total_tva,
+        paiements(mode_paiement, montant),
+        lignes_vente(quantite, total, produit_id, produits(nom))
+      `)
+      .eq("session_caisse_id", sessionId);
+
+    const allVentes = (ventes || []) as Array<{
+      statut: string;
+      type: string;
+      total_final: string | number;
+      sous_total: string | number;
+      total_tva: string | number;
+      paiements: Array<{ mode_paiement: string; montant: string | number }>;
+      lignes_vente: Array<{
+        quantite: number;
+        total: string | number;
+        produit_id: string;
+        produits: { nom: string };
+      }>;
+    }>;
+
+    const ventesPayees = allVentes.filter((v) => v.statut === "PAYEE");
+    const ventesAnnulees = allVentes.filter((v) => v.statut === "ANNULEE");
+
+    // 4. Calculer les totaux
+    let totalVentes = 0;
+    let totalHT = 0;
+    let totalTVA = 0;
+    let articlesVendus = 0;
+
+    // Paiements detailles
+    let especes = 0;
+    let cartes = 0;
+    let mobileMoney = 0;
+    let cheques = 0;
+    let virements = 0;
+    let compteClient = 0;
+    let autres = 0;
+
+    const ventesParType: Record<string, { count: number; total: number }> = {
+      DIRECT: { count: 0, total: 0 },
+      TABLE: { count: 0, total: 0 },
+      LIVRAISON: { count: 0, total: 0 },
+      EMPORTER: { count: 0, total: 0 },
+    };
+
+    const produitsVendus: Record<
+      string,
+      { nom: string; quantite: number; total: number }
+    > = {};
+
+    for (const v of ventesPayees) {
+      const total = Number(v.total_final);
+      totalVentes += total;
+      totalHT += Number(v.sous_total);
+      totalTVA += Number(v.total_tva);
+
+      // Ventilation par type
+      if (ventesParType[v.type]) {
+        ventesParType[v.type].count++;
+        ventesParType[v.type].total += total;
+      }
+
+      // Ventilation des paiements detaillee
+      for (const p of v.paiements) {
+        const montant = Number(p.montant);
+        switch (p.mode_paiement) {
+          case "ESPECES":
+            especes += montant;
+            break;
+          case "CARTE_BANCAIRE":
+            cartes += montant;
+            break;
+          case "AIRTEL_MONEY":
+          case "MOOV_MONEY":
+            mobileMoney += montant;
+            break;
+          case "CHEQUE":
+            cheques += montant;
+            break;
+          case "VIREMENT":
+            virements += montant;
+            break;
+          case "COMPTE_CLIENT":
+            compteClient += montant;
+            break;
+          default:
+            autres += montant;
+        }
+      }
+
+      // Articles et top produits
+      for (const l of v.lignes_vente) {
+        articlesVendus += l.quantite;
+        const pid = l.produit_id;
+        if (!produitsVendus[pid]) {
+          produitsVendus[pid] = {
+            nom: l.produits?.nom || "Inconnu",
+            quantite: 0,
+            total: 0,
+          };
+        }
+        produitsVendus[pid].quantite += l.quantite;
+        produitsVendus[pid].total += Number(l.total);
+      }
+    }
+
+    // 5. Calculs caisse
+    const fondCaisse = Number(session.fond_caisse);
+    const especesComptees = session.especes_comptees
+      ? Number(session.especes_comptees)
+      : 0;
+    const especesAttendues = fondCaisse + especes;
+    const ecart = session.ecart
+      ? Number(session.ecart)
+      : especesComptees - especesAttendues;
+
+    // 6. Caissier
+    const utilisateur = session.utilisateurs as {
+      nom: string;
+      prenom: string | null;
+    };
+    const caissierNom = utilisateur
+      ? `${utilisateur.prenom || ""} ${utilisateur.nom}`.trim()
+      : "Inconnu";
+
+    const totalPaiements =
+      especes + cartes + mobileMoney + cheques + virements + compteClient + autres;
+
+    const rapportZ: RapportZComplet = {
+      etablissement: {
+        nom: etab?.nom || "Etablissement",
+        adresse: etab?.adresse || null,
+        telephone: etab?.telephone || null,
+        email: etab?.email || null,
+        nif: etab?.nif || null,
+        rccm: etab?.rccm || null,
+      },
+      session: {
+        id: session.id,
+        dateOuverture: session.date_ouverture,
+        dateCloture: session.date_cloture!,
+        caissierNom,
+      },
+      ventes: {
+        totalVentes,
+        nombreVentes: ventesPayees.length,
+        nombreAnnulations: ventesAnnulees.length,
+        articlesVendus,
+        panierMoyen:
+          ventesPayees.length > 0
+            ? Math.round(totalVentes / ventesPayees.length)
+            : 0,
+      },
+      paiements: {
+        especes,
+        cartes,
+        mobileMoney,
+        cheques,
+        virements,
+        compteClient,
+        autres,
+        total: totalPaiements,
+      },
+      tva: {
+        totalHT,
+        totalTVA,
+        totalTTC: totalVentes,
+      },
+      caisse: {
+        fondCaisse,
+        especesAttendues,
+        especesComptees,
+        ecart,
+      },
+      ventesParType,
+      topProduits: Object.values(produitsVendus)
+        .sort((a, b) => b.quantite - a.quantite)
+        .slice(0, 10),
+      notesCloture: session.notes_cloture || null,
+    };
+
+    return { success: true, data: rapportZ };
+  } catch (error) {
+    console.error("[genererRapportZAction] Erreur:", error);
+    return {
+      success: false,
+      error: "Impossible de generer le rapport Z",
+    };
+  }
+}
+
+// ============================================================================
+// HISTORIQUE DES FACTURES
+// ============================================================================
+
+export async function getFactureDetail(venteId: string): Promise<FactureDetail | null> {
+  const { supabase } = await getAuthClient();
+
+  // RLS filtre automatiquement par etablissement_id
   const { data, error } = await supabase
     .from("ventes")
     .select(
@@ -775,7 +1063,6 @@ export async function getFactureDetail(venteId: string): Promise<FactureDetail |
     `
     )
     .eq("id", venteId)
-    .eq("etablissement_id", etablissementId)
     .single();
 
   if (error) {

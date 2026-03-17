@@ -52,9 +52,9 @@ export function SalesByEmployee({ initialData }: SalesByEmployeeProps) {
   };
 
   // Couleur selon le rang
-  const getAvatarColor = (index: number): "orange" | "blue" | "green" | "purple" | "gray" => {
-    const colors: ("orange" | "blue" | "green" | "purple" | "gray")[] = [
-      "orange",
+  const getAvatarColor = (index: number): "violet" | "blue" | "green" | "purple" | "gray" => {
+    const colors: ("violet" | "blue" | "green" | "purple" | "gray")[] = [
+      "violet",
       "blue",
       "green",
       "purple",
@@ -125,12 +125,11 @@ export function SalesByEmployee({ initialData }: SalesByEmployeeProps) {
       ) : (
         <Flex direction="column" gap="4">
           {/* Meilleur employe */}
-          {bestEmployee && (
-            <Box
+          {bestEmployee ? <Box
               style={{
                 padding: 16,
                 borderRadius: 8,
-                background: "linear-gradient(135deg, var(--accent-a3), var(--amber-a3))",
+                background: "linear-gradient(135deg, var(--accent-a3), var(--purple-a3))",
                 border: "1px solid var(--accent-a6)",
               }}
             >
@@ -151,7 +150,7 @@ export function SalesByEmployee({ initialData }: SalesByEmployeeProps) {
                         position: "absolute",
                         bottom: -4,
                         right: -4,
-                        backgroundColor: "var(--amber-9)",
+                        backgroundColor: "var(--purple-9)",
                         borderRadius: "50%",
                         width: 20,
                         height: 20,
@@ -188,8 +187,7 @@ export function SalesByEmployee({ initialData }: SalesByEmployeeProps) {
                   </Text>
                 </Box>
               </Flex>
-            </Box>
-          )}
+            </Box> : null}
 
           {/* Tableau des employes */}
           <Table.Root>

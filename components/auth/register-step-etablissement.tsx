@@ -71,14 +71,12 @@ export function RegisterStepEtablissement({
               <StoreIcon size={16} />
             </TextField.Slot>
           </TextField.Root>
-          {errors.nom && (
-            <Flex gap="1" align="center" mt="1">
+          {errors.nom ? <Flex gap="1" align="center" mt="1">
               <AlertCircleIcon size={14} color="var(--red-9)" />
               <Text size="1" color="red">
                 {errors.nom.message}
               </Text>
-            </Flex>
-          )}
+            </Flex> : null}
         </Box>
 
         {/* Téléphone */}
@@ -99,14 +97,12 @@ export function RegisterStepEtablissement({
               <PhoneIcon size={16} />
             </TextField.Slot>
           </TextField.Root>
-          {errors.telephone && (
-            <Flex gap="1" align="center" mt="1">
+          {errors.telephone ? <Flex gap="1" align="center" mt="1">
               <AlertCircleIcon size={14} color="var(--red-9)" />
               <Text size="1" color="red">
                 {errors.telephone.message}
               </Text>
-            </Flex>
-          )}
+            </Flex> : null}
         </Box>
 
         {/* Adresse */}
@@ -123,14 +119,12 @@ export function RegisterStepEtablissement({
             disabled={isLoading}
             style={{ minHeight: '80px' }}
           />
-          {errors.adresse && (
-            <Flex gap="1" align="center" mt="1">
+          {errors.adresse ? <Flex gap="1" align="center" mt="1">
               <AlertCircleIcon size={14} color="var(--red-9)" />
               <Text size="1" color="red">
                 {errors.adresse.message}
               </Text>
-            </Flex>
-          )}
+            </Flex> : null}
         </Box>
 
         {/* Email établissement */}
@@ -151,14 +145,12 @@ export function RegisterStepEtablissement({
               <MailIcon size={16} />
             </TextField.Slot>
           </TextField.Root>
-          {errors.email && (
-            <Flex gap="1" align="center" mt="1">
+          {errors.email ? <Flex gap="1" align="center" mt="1">
               <AlertCircleIcon size={14} color="var(--red-9)" />
               <Text size="1" color="red">
                 {errors.email.message}
               </Text>
-            </Flex>
-          )}
+            </Flex> : null}
           <Text size="1" color="gray" mt="1">
             Laissez vide pour utiliser votre email personnel
           </Text>
@@ -184,14 +176,12 @@ export function RegisterStepEtablissement({
                 <FileTextIcon size={16} />
               </TextField.Slot>
             </TextField.Root>
-            {errors.nif && (
-              <Flex gap="1" align="center" mt="1">
+            {errors.nif ? <Flex gap="1" align="center" mt="1">
                 <AlertCircleIcon size={14} color="var(--red-9)" />
                 <Text size="1" color="red">
                   {errors.nif.message}
                 </Text>
-              </Flex>
-            )}
+              </Flex> : null}
           </Box>
 
           {/* RCCM */}
@@ -212,14 +202,12 @@ export function RegisterStepEtablissement({
                 <FileTextIcon size={16} />
               </TextField.Slot>
             </TextField.Root>
-            {errors.rccm && (
-              <Flex gap="1" align="center" mt="1">
+            {errors.rccm ? <Flex gap="1" align="center" mt="1">
                 <AlertCircleIcon size={14} color="var(--red-9)" />
                 <Text size="1" color="red">
                   {errors.rccm.message}
                 </Text>
-              </Flex>
-            )}
+              </Flex> : null}
           </Box>
         </Flex>
 

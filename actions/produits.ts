@@ -6,9 +6,9 @@
  */
 
 import { revalidatePath } from "next/cache";
-import { createServiceClient, db } from "@/lib/db";
+import { createAuthenticatedClient, db } from "@/lib/db";
 import type { TauxTva } from "@/lib/db";
-import { getEtablissementId } from "@/lib/etablissement";
+import { getCurrentUser } from "@/lib/auth";
 import { produitSchema, produitCsvSchema, type ProduitFormData, type ProduitCsvData } from "@/schemas/produit.schema";
 
 // Mapping des taux TVA vers l'enum
@@ -52,11 +52,10 @@ export interface PaginatedResult<T> {
 export async function getProduitsPaginated(
   options: PaginationOptions = {}
 ) {
-  const etablissementId = await getEtablissementId();
-  // SECURITY: Service client used here (bypasses RLS).
-  // Reason: Read-only product listing scoped by etablissementId from session.
-  // TODO: Migrate to authenticated client after adding proper RLS policies for produits table.
-  const supabase = createServiceClient();
+  const user = await getCurrentUser();
+  if (!user || !user.etablissementId) return { data: [], pagination: { page: 1, limit: 20, total: 0, totalPages: 0, hasNext: false, hasPrev: false } };
+  const etablissementId = user.etablissementId;
+  const supabase = await createAuthenticatedClient({ userId: user.userId, etablissementId, role: user.role });
 
   const {
     page = 1,
@@ -132,11 +131,10 @@ export async function getProduits(options?: {
   categorieId?: string;
   search?: string;
 }) {
-  const etablissementId = await getEtablissementId();
-  // SECURITY: Service client used here (bypasses RLS).
-  // Reason: Read-only product listing scoped by etablissementId from session.
-  // TODO: Migrate to authenticated client after adding proper RLS policies for produits table.
-  const supabase = createServiceClient();
+  const user = await getCurrentUser();
+  if (!user || !user.etablissementId) return [];
+  const etablissementId = user.etablissementId;
+  const supabase = await createAuthenticatedClient({ userId: user.userId, etablissementId, role: user.role });
 
   const produits = await db.getProduits(supabase, etablissementId, {
     actif: options?.includeInactive ? undefined : true,
@@ -174,15 +172,13 @@ export async function getProduits(options?: {
  * Récupère un produit par son ID
  */
 export async function getProduitById(id: string) {
-  const etablissementId = await getEtablissementId();
-  // SECURITY: Service client used here (bypasses RLS).
-  // Reason: Read-only single product fetch, ownership verified via etablissementId check below.
-  // TODO: Migrate to authenticated client after adding proper RLS policies for produits table.
-  const supabase = createServiceClient();
+  const user = await getCurrentUser();
+  if (!user || !user.etablissementId) return null;
+  const supabase = await createAuthenticatedClient({ userId: user.userId, etablissementId: user.etablissementId, role: user.role });
 
   const produit = await db.getProduitById(supabase, id);
 
-  if (!produit || produit.etablissement_id !== etablissementId) {
+  if (!produit) {
     return null;
   }
 
@@ -216,12 +212,10 @@ export async function getProduitById(id: string) {
  */
 export async function createProduit(data: ProduitFormData) {
   try {
-    const etablissementId = await getEtablissementId();
-    // SECURITY: Service client used here (bypasses RLS).
-    // Reason: Write operation (INSERT) requires service role to create product rows.
-    // getEtablissementId() validates the user session before proceeding.
-    // TODO: Migrate to authenticated client after adding proper RLS policies for produits table.
-    const supabase = createServiceClient();
+    const user = await getCurrentUser();
+    if (!user || !user.etablissementId) return { success: false, error: "Vous devez être connecté" };
+    const etablissementId = user.etablissementId;
+    const supabase = await createAuthenticatedClient({ userId: user.userId, etablissementId, role: user.role });
 
     // Validation
     const validationResult = produitSchema.safeParse(data);
@@ -306,12 +300,10 @@ export async function createProduit(data: ProduitFormData) {
  */
 export async function updateProduit(id: string, data: ProduitFormData) {
   try {
-    const etablissementId = await getEtablissementId();
-    // SECURITY: Service client used here (bypasses RLS).
-    // Reason: Write operation (UPDATE) requires service role. Ownership verified via
-    // etablissementId check on the existing product before mutation.
-    // TODO: Migrate to authenticated client after adding proper RLS policies for produits table.
-    const supabase = createServiceClient();
+    const user = await getCurrentUser();
+    if (!user || !user.etablissementId) return { success: false, error: "Vous devez être connecté" };
+    const etablissementId = user.etablissementId;
+    const supabase = await createAuthenticatedClient({ userId: user.userId, etablissementId, role: user.role });
 
     // Validation
     const validationResult = produitSchema.safeParse(data);
@@ -324,10 +316,10 @@ export async function updateProduit(id: string, data: ProduitFormData) {
     }
     const validatedData = validationResult.data;
 
-    // Vérifier que le produit existe et appartient à l'établissement
+    // Vérifier que le produit existe (RLS filtre par établissement)
     const existing = await db.getProduitById(supabase, id);
 
-    if (!existing || existing.etablissement_id !== etablissementId) {
+    if (!existing) {
       return {
         success: false,
         error: "Produit non trouvé",
@@ -395,17 +387,14 @@ export async function updateProduit(id: string, data: ProduitFormData) {
  */
 export async function deleteProduit(id: string) {
   try {
-    const etablissementId = await getEtablissementId();
-    // SECURITY: Service client used here (bypasses RLS).
-    // Reason: Soft-delete operation requires service role. Ownership verified via
-    // etablissementId check before deletion.
-    // TODO: Migrate to authenticated client after adding proper RLS policies for produits table.
-    const supabase = createServiceClient();
+    const user = await getCurrentUser();
+    if (!user || !user.etablissementId) return { success: false, error: "Vous devez être connecté" };
+    const supabase = await createAuthenticatedClient({ userId: user.userId, etablissementId: user.etablissementId, role: user.role });
 
-    // Vérifier que le produit existe et appartient à l'établissement
+    // Vérifier que le produit existe (RLS filtre par établissement)
     const produit = await db.getProduitById(supabase, id);
 
-    if (!produit || produit.etablissement_id !== etablissementId) {
+    if (!produit) {
       return {
         success: false,
         error: "Produit non trouvé",
@@ -434,16 +423,13 @@ export async function deleteProduit(id: string) {
  */
 export async function toggleProduitActif(id: string) {
   try {
-    const etablissementId = await getEtablissementId();
-    // SECURITY: Service client used here (bypasses RLS).
-    // Reason: Toggle actif status requires service role. Ownership verified via
-    // etablissementId check before mutation.
-    // TODO: Migrate to authenticated client after adding proper RLS policies for produits table.
-    const supabase = createServiceClient();
+    const user = await getCurrentUser();
+    if (!user || !user.etablissementId) return { success: false, error: "Vous devez être connecté" };
+    const supabase = await createAuthenticatedClient({ userId: user.userId, etablissementId: user.etablissementId, role: user.role });
 
     const produit = await db.getProduitById(supabase, id);
 
-    if (!produit || produit.etablissement_id !== etablissementId) {
+    if (!produit) {
       return {
         success: false,
         error: "Produit non trouvé",
@@ -482,16 +468,13 @@ export async function updateStock(
   motif?: string
 ) {
   try {
-    const etablissementId = await getEtablissementId();
-    // SECURITY: Service client used here (bypasses RLS).
-    // Reason: Stock mutation requires service role for both produits and mouvements_stock tables.
-    // Ownership verified via etablissementId check and gerer_stock flag validation.
-    // TODO: Migrate to authenticated client after adding proper RLS policies for produits/mouvements_stock tables.
-    const supabase = createServiceClient();
+    const user = await getCurrentUser();
+    if (!user || !user.etablissementId) return { success: false, error: "Vous devez être connecté" };
+    const supabase = await createAuthenticatedClient({ userId: user.userId, etablissementId: user.etablissementId, role: user.role });
 
     const produit = await db.getProduitById(supabase, id);
 
-    if (!produit || produit.etablissement_id !== etablissementId || !produit.gerer_stock) {
+    if (!produit || !produit.gerer_stock) {
       return {
         success: false,
         error: "Produit non trouvé ou stock non géré",
@@ -554,11 +537,10 @@ export async function updateStock(
  * Exporte tous les produits au format CSV
  */
 export async function exportProduitsCSV() {
-  const etablissementId = await getEtablissementId();
-  // SECURITY: Service client used here (bypasses RLS).
-  // Reason: Read-only bulk export of all products for CSV generation, scoped by etablissementId.
-  // TODO: Migrate to authenticated client after adding proper RLS policies for produits/categories tables.
-  const supabase = createServiceClient();
+  const user = await getCurrentUser();
+  if (!user || !user.etablissementId) return { success: false, error: "Vous devez être connecté" };
+  const etablissementId = user.etablissementId;
+  const supabase = await createAuthenticatedClient({ userId: user.userId, etablissementId, role: user.role });
 
   const produits = await db.getProduits(supabase, etablissementId);
   const categories = await db.getCategories(supabase, etablissementId);
@@ -636,11 +618,10 @@ function escapeCsvField(field: string): string {
  * Génère un template CSV vide pour l'import
  */
 export async function getCSVTemplate() {
-  const etablissementId = await getEtablissementId();
-  // SECURITY: Service client used here (bypasses RLS).
-  // Reason: Read-only categories fetch to build CSV template, scoped by etablissementId.
-  // TODO: Migrate to authenticated client after adding proper RLS policies for categories table.
-  const supabase = createServiceClient();
+  const user = await getCurrentUser();
+  if (!user || !user.etablissementId) return { success: false, error: "Vous devez être connecté" };
+  const etablissementId = user.etablissementId;
+  const supabase = await createAuthenticatedClient({ userId: user.userId, etablissementId, role: user.role });
 
   // Récupérer les catégories pour référence
   const categories = await db.getCategories(supabase, etablissementId, { actif: true });
@@ -706,11 +687,10 @@ export async function getCSVTemplate() {
  * Parse et valide un fichier CSV d'import
  */
 export async function parseCSVImport(csvContent: string) {
-  const etablissementId = await getEtablissementId();
-  // SECURITY: Service client used here (bypasses RLS).
-  // Reason: Read-only categories fetch for CSV validation, scoped by etablissementId.
-  // TODO: Migrate to authenticated client after adding proper RLS policies for categories table.
-  const supabase = createServiceClient();
+  const user = await getCurrentUser();
+  if (!user || !user.etablissementId) return { success: false, error: "Vous devez être connecté" };
+  const etablissementId = user.etablissementId;
+  const supabase = await createAuthenticatedClient({ userId: user.userId, etablissementId, role: user.role });
 
   // Récupérer les catégories existantes
   const categories = await db.getCategories(supabase, etablissementId);
@@ -834,12 +814,10 @@ function parseCSVLine(line: string): string[] {
  */
 export async function importProduitsCSV(produitsData: ProduitCsvData[]) {
   try {
-    const etablissementId = await getEtablissementId();
-    // SECURITY: Service client used here (bypasses RLS).
-    // Reason: Bulk write operation (INSERT/UPDATE) for CSV import requires service role.
-    // getEtablissementId() validates the user session. Each product is scoped to the etablissement.
-    // TODO: Migrate to authenticated client after adding proper RLS policies for produits/categories tables.
-    const supabase = createServiceClient();
+    const user = await getCurrentUser();
+    if (!user || !user.etablissementId) return { success: false, error: "Vous devez être connecté" };
+    const etablissementId = user.etablissementId;
+    const supabase = await createAuthenticatedClient({ userId: user.userId, etablissementId, role: user.role });
 
     // Récupérer les catégories
     const categories = await db.getCategories(supabase, etablissementId);

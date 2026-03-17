@@ -11,6 +11,7 @@
 import { useState, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
+import Image from 'next/image'
 import { toast } from 'sonner'
 import { Box, Flex, Text } from '@radix-ui/themes'
 import { ThemeToggle } from '@/components/layout/theme-toggle'
@@ -286,7 +287,7 @@ function RegisterPageContent() {
           align-items: center;
           justify-content: center;
           margin: 0 auto 1.5rem;
-          box-shadow: 0 4px 20px rgba(234, 88, 12, 0.3);
+          box-shadow: 0 4px 20px rgba(124, 58, 237, 0.3);
         }
         @media (min-width: 1024px) {
           .form-logo-mobile {
@@ -328,9 +329,9 @@ function RegisterPageContent() {
           transition: all 0.3s ease;
         }
         .step-number.active {
-          background: linear-gradient(135deg, #ea580c 0%, #c2410c 100%);
+          background: linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%);
           color: white;
-          box-shadow: 0 4px 15px rgba(234, 88, 12, 0.3);
+          box-shadow: 0 4px 15px rgba(124, 58, 237, 0.3);
         }
         .step-number.completed {
           background: #059669;
@@ -426,7 +427,7 @@ function RegisterPageContent() {
           {/* Hero Content */}
           <div className="hero-content">
             <div className="hero-logo">
-              <span style={{ color: 'white', fontSize: '1.75rem', fontWeight: 700 }}>O</span>
+              <Image src="/images/logos/ic-lg.webp" alt="Oréma N+" width={56} height={56} style={{ objectFit: "contain" }} />
             </div>
             <h1 className="hero-title">Lancez votre activité</h1>
             <p className="hero-subtitle">
@@ -485,7 +486,7 @@ function RegisterPageContent() {
           <div className="register-form-container">
             <div className="form-header">
               <div className="form-logo-mobile">
-                <span style={{ color: 'white', fontSize: '1.5rem', fontWeight: 700 }}>O</span>
+                <Image src="/images/logos/ic-lg.webp" alt="Oréma N+" width={36} height={36} style={{ objectFit: "contain" }} />
               </div>
               <h2 className="form-title">Créer un compte</h2>
               <p className="form-subtitle">

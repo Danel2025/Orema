@@ -55,12 +55,11 @@ export function MarkdownEditor({
   return (
     <Box>
       {/* Header */}
-      {label && (
-        <Flex align="center" justify="between" mb="2">
+      {label ? <Flex align="center" justify="between" mb="2">
           <Flex align="center" gap="2">
             <Text size="2" weight="medium">
               {label}
-              {required && <Text color="red"> *</Text>}
+              {required ? <Text color="red"> *</Text> : null}
             </Text>
             <Badge size="1" variant="soft" color="gray">
               Markdown
@@ -92,8 +91,7 @@ export function MarkdownEditor({
               </Flex>
             </SegmentedControl.Item>
           </SegmentedControl.Root>
-        </Flex>
-      )}
+        </Flex> : null}
 
       {/* Editor */}
       <Box
@@ -144,11 +142,9 @@ export function MarkdownEditor({
           </Text>
         </Flex>
 
-        {error && (
-          <Text size="1" color="red">
+        {error ? <Text size="1" color="red">
             {error}
-          </Text>
-        )}
+          </Text> : null}
       </Flex>
 
       {/* Markdown Help */}

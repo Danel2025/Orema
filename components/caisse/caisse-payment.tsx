@@ -148,7 +148,7 @@ const PAYMENT_METHODS: {
     label: "Compte client",
     shortLabel: "Compte",
     icon: <Wallet size={22} />,
-    color: "orange",
+    color: "violet",
   },
   {
     id: "MIXTE",
@@ -396,7 +396,7 @@ export function CaissePayment({ onClose, onPaymentComplete, venteEnAttente }: Ca
               {venteEnAttente ? (
                 <>
                   #{venteEnAttente.numeroTicket}
-                  {venteEnAttente.table && ` - Table ${venteEnAttente.table.numero}`}
+                  {venteEnAttente.table ? ` - Table ${venteEnAttente.table.numero}` : null}
                 </>
               ) : (
                 `${items.length} article${items.length > 1 ? "s" : ""}`
@@ -579,7 +579,7 @@ export function CaissePayment({ onClose, onPaymentComplete, venteEnAttente }: Ca
                             borderRadius: 8,
                             border: "none",
                             backgroundColor: key === "C" ? "var(--red-a4)" : key === "⌫" ? "var(--amber-a4)" : "var(--gray-a4)",
-                            color: key === "C" ? "var(--red-11)" : key === "⌫" ? "var(--amber-11)" : "var(--gray-12)",
+                            color: key === "C" ? "var(--red-11)" : key === "⌫" ? "var(--purple-11)" : "var(--gray-12)",
                             cursor: "pointer",
                           }}
                         >
@@ -679,8 +679,7 @@ export function CaissePayment({ onClose, onPaymentComplete, venteEnAttente }: Ca
                   </div>
 
                   {/* Numéro de téléphone (Mobile Money) */}
-                  {currentMethod?.needsPhone && (
-                    <div style={{ marginBottom: 16 }}>
+                  {currentMethod?.needsPhone ? <div style={{ marginBottom: 16 }}>
                       <label style={{ display: "block", fontSize: 13, fontWeight: 500, color: "var(--gray-11)", marginBottom: 8 }}>
                         <Phone size={14} style={{ display: "inline", marginRight: 6, verticalAlign: "middle" }} />
                         Numéro de téléphone
@@ -701,12 +700,10 @@ export function CaissePayment({ onClose, onPaymentComplete, venteEnAttente }: Ca
                           outline: "none",
                         }}
                       />
-                    </div>
-                  )}
+                    </div> : null}
 
                   {/* Référence */}
-                  {currentMethod?.needsReference && (
-                    <div>
+                  {currentMethod?.needsReference ? <div>
                       <label style={{ display: "block", fontSize: 13, fontWeight: 500, color: "var(--gray-11)", marginBottom: 8 }}>
                         <Hash size={14} style={{ display: "inline", marginRight: 6, verticalAlign: "middle" }} />
                         {currentMethod.referencePlaceholder}
@@ -728,8 +725,7 @@ export function CaissePayment({ onClose, onPaymentComplete, venteEnAttente }: Ca
                         }}
                         autoFocus
                       />
-                    </div>
-                  )}
+                    </div> : null}
                 </div>
               )}
 
@@ -769,14 +765,14 @@ export function CaissePayment({ onClose, onPaymentComplete, venteEnAttente }: Ca
                   ) : (
                     <div
                       style={{
-                        backgroundColor: "var(--amber-a3)",
+                        backgroundColor: "var(--purple-a3)",
                         borderRadius: 12,
                         padding: "24px",
                         textAlign: "center",
                       }}
                     >
-                      <AlertCircle size={32} style={{ color: "var(--amber-11)", marginBottom: 12 }} />
-                      <div style={{ fontSize: 15, fontWeight: 600, color: "var(--amber-11)", marginBottom: 8 }}>
+                      <AlertCircle size={32} style={{ color: "var(--purple-11)", marginBottom: 12 }} />
+                      <div style={{ fontSize: 15, fontWeight: 600, color: "var(--purple-11)", marginBottom: 8 }}>
                         Aucun client sélectionné
                       </div>
                       <div style={{ fontSize: 13, color: "var(--amber-10)" }}>
@@ -858,11 +854,9 @@ export function CaissePayment({ onClose, onPaymentComplete, venteEnAttente }: Ca
                                   <div style={{ fontSize: 13, fontWeight: 600, color: `var(--${method?.color}-11)` }}>
                                     {method?.label}
                                   </div>
-                                  {p.reference && (
-                                    <div style={{ fontSize: 11, color: `var(--${method?.color}-10)` }}>
+                                  {p.reference ? <div style={{ fontSize: 11, color: `var(--${method?.color}-10)` }}>
                                       Réf: {p.reference}
-                                    </div>
-                                  )}
+                                    </div> : null}
                                 </div>
                               </div>
                               <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
@@ -1005,8 +999,7 @@ export function CaissePayment({ onClose, onPaymentComplete, venteEnAttente }: Ca
                           </div>
 
                           {/* Référence si nécessaire */}
-                          {PAYMENT_METHODS.find((m) => m.id === mixteSelectedMethod)?.needsReference && (
-                            <div style={{ marginBottom: 12 }}>
+                          {PAYMENT_METHODS.find((m) => m.id === mixteSelectedMethod)?.needsReference ? <div style={{ marginBottom: 12 }}>
                               <label style={{ display: "block", fontSize: 13, fontWeight: 500, color: "var(--gray-11)", marginBottom: 8 }}>
                                 Référence
                               </label>
@@ -1026,8 +1019,7 @@ export function CaissePayment({ onClose, onPaymentComplete, venteEnAttente }: Ca
                                   outline: "none",
                                 }}
                               />
-                            </div>
-                          )}
+                            </div> : null}
 
                           <button
                             onClick={handleAddPartialPayment}

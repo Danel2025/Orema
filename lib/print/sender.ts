@@ -49,6 +49,18 @@ export async function sendToPrinter(
     case TYPE_CONNEXION.BLUETOOTH:
       return sendToBluetoothPrinter(printer, buffer);
 
+    case TYPE_CONNEXION.SYSTEME:
+      // L'impression systeme est geree cote client via window.print()
+      // Le serveur ne peut pas utiliser window.print(), il faut passer
+      // par le client (voir lib/print/system-print.ts)
+      return {
+        success: false,
+        error:
+          "L'impression systeme doit etre lancee depuis le navigateur. " +
+          "Utilisez printViaSystem() cote client.",
+        printerId: printer.id,
+      };
+
     default:
       return {
         success: false,

@@ -1,27 +1,50 @@
 /**
  * API Route pour scanner le réseau et détecter les imprimantes
  *
- * Scanne les adresses IP du réseau local sur le port 9100
- * (port standard des imprimantes ESC/POS)
+ * Scanne les adresses IP du réseau local sur plusieurs ports courants
+ * pour imprimantes thermiques et réseau.
  */
 
+import type { NextRequest} from "next/server";
 import { NextResponse } from "next/server";
 import * as os from "os";
 import { getSession } from "@/lib/auth/session";
 
-const PRINTER_PORT = 9100;
-const SCAN_TIMEOUT = 500; // 500ms par IP
+/**
+ * Ports courants pour imprimantes réseau :
+ * - 9100 : Raw/JetDirect (ESC/POS, la majorite des imprimantes thermiques)
+ * - 515  : LPD/LPR (Line Printer Daemon)
+ * - 631  : IPP (Internet Printing Protocol / CUPS)
+ * - 80   : HTTP (imprimantes avec interface web, Star Cloud, etc.)
+ * - 443  : HTTPS (imprimantes avec interface web securisee)
+ * - 8008 : HTTP alternatif (certaines imprimantes Star, Epson)
+ * - 8043 : HTTPS alternatif
+ */
+const DEFAULT_PRINTER_PORTS = [9100, 515, 631];
+const EXTENDED_PRINTER_PORTS = [9100, 515, 631, 80, 8008];
+const SCAN_TIMEOUT = 500; // 500ms par IP/port
 const MAX_PARALLEL_SCANS = 50; // Limiter les connexions parallèles
+
+interface DetectedPrinter {
+  ip: string;
+  port: number;
+  /** Label lisible du protocole */
+  protocol: string;
+}
 
 interface ScanResult {
   success: boolean;
+  /** Liste simple d'IPs (retro-compatible) */
   printers?: string[];
+  /** Liste detaillee avec port et protocole */
+  detectedPrinters?: DetectedPrinter[];
   error?: string;
   scannedCount?: number;
   duration?: number;
+  portsScanned?: number[];
 }
 
-export async function POST(): Promise<NextResponse<ScanResult>> {
+export async function POST(request: NextRequest): Promise<NextResponse<ScanResult>> {
   const startTime = Date.now();
 
   try {
@@ -34,6 +57,25 @@ export async function POST(): Promise<NextResponse<ScanResult>> {
     const allowedRoles = ["ADMIN", "MANAGER", "SUPER_ADMIN"];
     if (!allowedRoles.includes(session.role)) {
       return NextResponse.json({ success: false, error: "Acces non autorise" }, { status: 403 });
+    }
+
+    // Lire les options du body (optionnel)
+    let portsToScan = DEFAULT_PRINTER_PORTS;
+    let extendedScan = false;
+    try {
+      const body = await request.json();
+      if (body?.ports && Array.isArray(body.ports)) {
+        // Ports custom fournis par le client
+        portsToScan = body.ports
+          .filter((p: unknown) => typeof p === "number" && p > 0 && p <= 65535)
+          .slice(0, 10); // Max 10 ports pour limiter le temps
+      }
+      if (body?.extended) {
+        portsToScan = EXTENDED_PRINTER_PORTS;
+        extendedScan = true;
+      }
+    } catch {
+      // Pas de body ou body invalide → utiliser les ports par defaut
     }
 
     // Obtenir les interfaces réseau
@@ -54,23 +96,37 @@ export async function POST(): Promise<NextResponse<ScanResult>> {
       ipsToScan.push(`${baseIP}.${i}`);
     }
 
-    // Scanner les IPs en parallèle (par lots)
-    const foundPrinters: string[] = [];
+    // Scanner les IPs sur tous les ports en parallèle (par lots)
+    const detectedPrinters: DetectedPrinter[] = [];
+    const foundIPs = new Set<string>();
     let scannedCount = 0;
 
-    for (let i = 0; i < ipsToScan.length; i += MAX_PARALLEL_SCANS) {
-      const batch = ipsToScan.slice(i, i + MAX_PARALLEL_SCANS);
+    // Generer toutes les combinaisons IP:port
+    const scanTasks: { ip: string; port: number }[] = [];
+    for (const ip of ipsToScan) {
+      for (const port of portsToScan) {
+        scanTasks.push({ ip, port });
+      }
+    }
+
+    for (let i = 0; i < scanTasks.length; i += MAX_PARALLEL_SCANS) {
+      const batch = scanTasks.slice(i, i + MAX_PARALLEL_SCANS);
       const results = await Promise.all(
-        batch.map(async (ip) => {
-          const isOpen = await testPort(ip, PRINTER_PORT, SCAN_TIMEOUT);
+        batch.map(async ({ ip, port }) => {
+          const isOpen = await testPort(ip, port, SCAN_TIMEOUT);
           scannedCount++;
-          return { ip, isOpen };
+          return { ip, port, isOpen };
         })
       );
 
       for (const result of results) {
         if (result.isOpen) {
-          foundPrinters.push(result.ip);
+          foundIPs.add(result.ip);
+          detectedPrinters.push({
+            ip: result.ip,
+            port: result.port,
+            protocol: getProtocolLabel(result.port),
+          });
         }
       }
     }
@@ -79,9 +135,13 @@ export async function POST(): Promise<NextResponse<ScanResult>> {
 
     return NextResponse.json({
       success: true,
-      printers: foundPrinters,
+      // Retro-compatible : liste d'IPs uniques
+      printers: Array.from(foundIPs),
+      // Nouveau : details complets
+      detectedPrinters,
       scannedCount,
       duration,
+      portsScanned: portsToScan,
     });
   } catch (error) {
     console.error("[API Scan] Erreur:", error);
@@ -89,6 +149,22 @@ export async function POST(): Promise<NextResponse<ScanResult>> {
       success: false,
       error: error instanceof Error ? error.message : "Erreur lors du scan",
     }, { status: 500 });
+  }
+}
+
+/**
+ * Retourne un label lisible pour un port d'impression
+ */
+function getProtocolLabel(port: number): string {
+  switch (port) {
+    case 9100: return "RAW/JetDirect (ESC/POS)";
+    case 515: return "LPD/LPR";
+    case 631: return "IPP (CUPS)";
+    case 80: return "HTTP";
+    case 443: return "HTTPS";
+    case 8008: return "HTTP (alt)";
+    case 8043: return "HTTPS (alt)";
+    default: return `Port ${port}`;
   }
 }
 

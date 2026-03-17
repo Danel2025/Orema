@@ -138,7 +138,7 @@ export default function ClientsPage() {
       {/* Header */}
       <Flex direction="column" gap="1">
         <Flex align="center" gap="2">
-          <Users size={28} className="text-orange-500" />
+          <Users size={28} className="text-violet-500" />
           <Heading size="7">Clients</Heading>
         </Flex>
         <Text size="3" color="gray">

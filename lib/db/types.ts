@@ -177,6 +177,7 @@ export const TYPE_CONNEXION = {
   RESEAU: 'RESEAU',
   SERIE: 'SERIE',
   BLUETOOTH: 'BLUETOOTH',
+  SYSTEME: 'SYSTEME',
 } as const
 
 export const FORME_TABLE = {

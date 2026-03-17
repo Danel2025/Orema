@@ -65,32 +65,24 @@ export function AccessDenied({ reason, pathname }: AccessDeniedProps) {
           </Flex>
 
           {/* Details */}
-          {(reason || pathname || roleInfo) && (
-            <Callout.Root color="amber" size="1" style={{ width: '100%' }}>
+          {(reason || pathname || roleInfo) ? <Callout.Root color="amber" size="1" style={{ width: '100%' }}>
               <Callout.Icon>
                 <AlertTriangle size={16} />
               </Callout.Icon>
               <Callout.Text>
                 <Flex direction="column" gap="1">
-                  {roleInfo && (
-                    <Text size="1">
+                  {roleInfo ? <Text size="1">
                       <strong>Votre role :</strong> {roleInfo.displayName}
-                    </Text>
-                  )}
-                  {pathname && (
-                    <Text size="1">
+                    </Text> : null}
+                  {pathname ? <Text size="1">
                       <strong>Page demandee :</strong> {pathname}
-                    </Text>
-                  )}
-                  {reason && (
-                    <Text size="1">
+                    </Text> : null}
+                  {reason ? <Text size="1">
                       <strong>Raison :</strong> {reason}
-                    </Text>
-                  )}
+                    </Text> : null}
                 </Flex>
               </Callout.Text>
-            </Callout.Root>
-          )}
+            </Callout.Root> : null}
 
           {/* Actions */}
           <Flex gap="3" mt="2">

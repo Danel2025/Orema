@@ -29,11 +29,11 @@ const PUBLIC_ROUTES = [
   '/privacy',
   '/terms',
   '/partners',
-  '/careers',
 ]
 
 /** Prefixes de routes publiques (match par startsWith) */
 const PUBLIC_PREFIXES = [
+  '/login/',
   '/docs/',
   '/blog/',
   '/_next/',

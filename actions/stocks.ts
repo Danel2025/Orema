@@ -6,9 +6,9 @@
  */
 
 import { revalidatePath } from "next/cache";
-import { createServiceClient, db } from "@/lib/db";
+import { createAuthenticatedClient, db } from "@/lib/db";
 import type { TypeMouvement } from "@/lib/db";
-import { getEtablissementId } from "@/lib/etablissement";
+import { getCurrentUser } from "@/lib/auth";
 import {
   createMovementSchema,
   type CreateMovementInput,
@@ -20,6 +20,21 @@ import {
   type TypeMouvementType,
 } from "@/schemas/stock.schema";
 import { sanitizeSearchTerm } from "@/lib/utils/sanitize";
+
+/**
+ * Crée un client authentifié pour les actions stocks.
+ */
+async function getAuthClient() {
+  const user = await getCurrentUser();
+  if (!user) throw new Error("Non authentifié");
+  if (!user.etablissementId) throw new Error("Aucun établissement associé");
+  const supabase = await createAuthenticatedClient({
+    userId: user.userId,
+    etablissementId: user.etablissementId,
+    role: user.role,
+  });
+  return { supabase, user: { ...user, etablissementId: user.etablissementId as string } };
+}
 
 /**
  * Calcule le statut de stock d'un produit
@@ -46,14 +61,12 @@ export async function getStockStatus(options?: {
   search?: string;
 }): Promise<{ success: true; data: ProduitAvecStatutStock[] } | { success: false; error: string }> {
   try {
-    const etablissementId = await getEtablissementId();
-    const supabase = createServiceClient();
+    const { supabase } = await getAuthClient();
 
-    // Construire la requête
+    // Construire la requête - RLS filtre automatiquement par etablissement_id
     let query = supabase
       .from("produits")
       .select("*, categories(id, nom, couleur)")
-      .eq("etablissement_id", etablissementId)
       .eq("gerer_stock", true)
       .eq("actif", true);
 
@@ -110,8 +123,7 @@ export async function createMovement(
   input: CreateMovementInput
 ): Promise<{ success: true; data: { stockAvant: number; stockApres: number } } | { success: false; error: string }> {
   try {
-    const etablissementId = await getEtablissementId();
-    const supabase = createServiceClient();
+    const { supabase } = await getAuthClient();
 
     // Validation
     const validationResult = createMovementSchema.safeParse(input);
@@ -124,10 +136,10 @@ export async function createMovement(
     }
     const validatedData = validationResult.data;
 
-    // Vérifier que le produit existe et appartient à l'établissement
+    // Vérifier que le produit existe (RLS filtre par etablissement)
     const produit = await db.getProduitById(supabase, validatedData.produitId);
 
-    if (!produit || produit.etablissement_id !== etablissementId || !produit.gerer_stock) {
+    if (!produit || !produit.gerer_stock) {
       return {
         success: false,
         error: "Produit non trouvé ou gestion de stock non activée",
@@ -202,14 +214,12 @@ export async function getMovementHistory(options?: {
   limit?: number;
 }): Promise<{ success: true; data: MouvementStockAvecProduit[] } | { success: false; error: string }> {
   try {
-    const etablissementId = await getEtablissementId();
-    const supabase = createServiceClient();
+    const { supabase } = await getAuthClient();
 
-    // Construire la requête
+    // Construire la requête - RLS filtre automatiquement par etablissement_id
     let query = supabase
       .from("mouvements_stock")
-      .select("*, produits!inner(id, nom, unite, etablissement_id)")
-      .eq("produits.etablissement_id", etablissementId)
+      .select("*, produits!inner(id, nom, unite)")
       .order("created_at", { ascending: false })
       .limit(options?.limit || 100);
 
@@ -264,14 +274,13 @@ export async function getMovementHistory(options?: {
  */
 export async function getStockAlerts(): Promise<{ success: true; data: AlerteStock[] } | { success: false; error: string }> {
   try {
-    const etablissementId = await getEtablissementId();
-    const supabase = createServiceClient();
+    const { supabase } = await getAuthClient();
 
     // Récupérer les produits en rupture ou avec stock <= stockMin
+    // RLS filtre automatiquement par etablissement_id
     const { data: produits, error } = await supabase
       .from("produits")
       .select("*, categories(id, nom, couleur)")
-      .eq("etablissement_id", etablissementId)
       .eq("gerer_stock", true)
       .eq("actif", true)
       .order("stock_actuel", { ascending: true });
@@ -309,13 +318,12 @@ export async function getStockAlerts(): Promise<{ success: true; data: AlerteSto
  */
 export async function getStockValuation(): Promise<{ success: true; data: ValorisationStock } | { success: false; error: string }> {
   try {
-    const etablissementId = await getEtablissementId();
-    const supabase = createServiceClient();
+    const { supabase } = await getAuthClient();
 
+    // RLS filtre automatiquement par etablissement_id
     const { data: produits, error } = await supabase
       .from("produits")
       .select("*, categories(id, nom, couleur)")
-      .eq("etablissement_id", etablissementId)
       .eq("gerer_stock", true)
       .eq("actif", true)
       .gt("stock_actuel", 0);
@@ -397,13 +405,12 @@ export async function getInventoryProducts(categorieId?: string): Promise<
   | { success: false; error: string }
 > {
   try {
-    const etablissementId = await getEtablissementId();
-    const supabase = createServiceClient();
+    const { supabase } = await getAuthClient();
 
+    // RLS filtre automatiquement par etablissement_id
     let query = supabase
       .from("produits")
       .select("id, nom, stock_actuel, unite, categories(id, nom, couleur)")
-      .eq("etablissement_id", etablissementId)
       .eq("gerer_stock", true)
       .eq("actif", true)
       .order("nom");
@@ -451,17 +458,17 @@ export async function submitInventory(
   | { success: false; error: string }
 > {
   try {
-    const etablissementId = await getEtablissementId();
-    const supabase = createServiceClient();
+    const { supabase } = await getAuthClient();
 
     const details: { produitNom: string; stockAvant: number; stockApres: number; ecart: number }[] = [];
     let ecartTotal = 0;
 
     // Traiter chaque ligne d'inventaire
     for (const ligne of lignes) {
+      // RLS filtre par etablissement_id
       const produit = await db.getProduitById(supabase, ligne.produitId);
 
-      if (!produit || produit.etablissement_id !== etablissementId || !produit.gerer_stock) {
+      if (!produit || !produit.gerer_stock) {
         continue;
       }
 
@@ -518,14 +525,13 @@ export async function getStockCategories(): Promise<
   | { success: false; error: string }
 > {
   try {
-    const etablissementId = await getEtablissementId();
-    const supabase = createServiceClient();
+    const { supabase } = await getAuthClient();
 
     // Récupérer les catégories qui ont des produits avec gestion de stock
+    // RLS filtre automatiquement par etablissement_id
     const { data: produits, error } = await supabase
       .from("produits")
       .select("categorie_id")
-      .eq("etablissement_id", etablissementId)
       .eq("gerer_stock", true)
       .eq("actif", true);
 

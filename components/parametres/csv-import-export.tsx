@@ -196,8 +196,7 @@ function ImportSection() {
       </Card>
 
       {/* Resultat de l'import */}
-      {importResult && (
-        <Card>
+      {importResult ? <Card>
           <Flex direction="column" gap="3">
             <Flex align="center" gap="2">
               {importResult.success ? (
@@ -243,8 +242,7 @@ function ImportSection() {
               </Box>
             )}
           </Flex>
-        </Card>
-      )}
+        </Card> : null}
 
       {/* Aide sur le format */}
       <Card>

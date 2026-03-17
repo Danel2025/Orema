@@ -57,11 +57,9 @@ export function IconPicker({
 
   return (
     <Box>
-      {label && (
-        <Text size="2" weight="medium" mb="2" style={{ display: "block" }}>
+      {label ? <Text size="2" weight="medium" mb="2" style={{ display: "block" }}>
           {label}
-        </Text>
-      )}
+        </Text> : null}
 
       <Popover.Root open={open} onOpenChange={setOpen}>
         <Popover.Trigger>
@@ -79,7 +77,7 @@ export function IconPicker({
               transition: "all 0.15s ease",
             }}
             onMouseEnter={(e) => {
-              e.currentTarget.style.borderColor = "var(--orange-7)";
+              e.currentTarget.style.borderColor = "var(--violet-7)";
             }}
             onMouseLeave={(e) => {
               e.currentTarget.style.borderColor = error ? "var(--red-8)" : "var(--gray-a5)";
@@ -89,11 +87,11 @@ export function IconPicker({
               <Box
                 p="2"
                 style={{
-                  background: "var(--orange-a3)",
+                  background: "var(--violet-a3)",
                   borderRadius: 6,
                 }}
               >
-                <CurrentIcon size={16} style={{ color: "var(--orange-9)" }} />
+                <CurrentIcon size={16} style={{ color: "var(--violet-9)" }} />
               </Box>
               <Text size="2">{currentIconLabel}</Text>
             </Flex>
@@ -137,9 +135,9 @@ export function IconPicker({
                       style={{
                         borderRadius: 8,
                         cursor: "pointer",
-                        background: isSelected ? "var(--orange-a3)" : "transparent",
+                        background: isSelected ? "var(--violet-a3)" : "transparent",
                         border: isSelected
-                          ? "1px solid var(--orange-a6)"
+                          ? "1px solid var(--violet-a6)"
                           : "1px solid transparent",
                         transition: "all 0.15s ease",
                         position: "relative",
@@ -162,13 +160,13 @@ export function IconPicker({
                       <IconComponent
                         size={20}
                         style={{
-                          color: isSelected ? "var(--orange-9)" : "var(--gray-11)",
+                          color: isSelected ? "var(--violet-9)" : "var(--gray-11)",
                         }}
                       />
                       <Text
                         size="1"
                         style={{
-                          color: isSelected ? "var(--orange-11)" : "var(--gray-11)",
+                          color: isSelected ? "var(--violet-11)" : "var(--gray-11)",
                           textAlign: "center",
                           fontSize: 10,
                           lineHeight: 1.2,
@@ -176,17 +174,15 @@ export function IconPicker({
                       >
                         {icon.label}
                       </Text>
-                      {isSelected && (
-                        <Box
+                      {isSelected ? <Box
                           style={{
                             position: "absolute",
                             top: 4,
                             right: 4,
                           }}
                         >
-                          <Check size={10} style={{ color: "var(--orange-9)" }} />
-                        </Box>
-                      )}
+                          <Check size={10} style={{ color: "var(--violet-9)" }} />
+                        </Box> : null}
                     </Flex>
                   );
                 })}
@@ -208,11 +204,9 @@ export function IconPicker({
         </Popover.Content>
       </Popover.Root>
 
-      {error && (
-        <Text size="1" color="red" mt="1">
+      {error ? <Text size="1" color="red" mt="1">
           {error}
-        </Text>
-      )}
+        </Text> : null}
     </Box>
   );
 }

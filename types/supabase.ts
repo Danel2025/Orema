@@ -1929,6 +1929,98 @@ export type Database = {
           },
         ]
       }
+      livraisons: {
+        Row: {
+          id: string
+          vente_id: string
+          statut: string
+          adresse: string
+          telephone: string
+          livreur_id: string | null
+          livreur_nom: string | null
+          estimation_minutes: number | null
+          notes: string | null
+          coordonnees: Json | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          vente_id: string
+          statut?: string
+          adresse: string
+          telephone: string
+          livreur_id?: string | null
+          livreur_nom?: string | null
+          estimation_minutes?: number | null
+          notes?: string | null
+          coordonnees?: Json | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          vente_id?: string
+          statut?: string
+          adresse?: string
+          telephone?: string
+          livreur_id?: string | null
+          livreur_nom?: string | null
+          estimation_minutes?: number | null
+          notes?: string | null
+          coordonnees?: Json | null
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "livraisons_vente_id_fkey"
+            columns: ["vente_id"]
+            isOneToOne: false
+            referencedRelation: "ventes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "livraisons_livreur_id_fkey"
+            columns: ["livreur_id"]
+            isOneToOne: false
+            referencedRelation: "utilisateurs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      historique_livraison: {
+        Row: {
+          id: string
+          livraison_id: string
+          statut: string
+          note: string | null
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          livraison_id: string
+          statut: string
+          note?: string | null
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          livraison_id?: string
+          statut?: string
+          note?: string | null
+          created_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "historique_livraison_livraison_id_fkey"
+            columns: ["livraison_id"]
+            isOneToOne: false
+            referencedRelation: "livraisons"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never

@@ -60,11 +60,9 @@ function ColorPicker({ label, description, value, onChange, error }: ColorPicker
         <Text size="1" color="gray">
           {description}
         </Text>
-        {error && (
-          <Text size="1" color="red">
+        {error ? <Text size="1" color="red">
             {error}
-          </Text>
-        )}
+          </Text> : null}
       </Flex>
       <Flex align="center" gap="2">
         <Box
@@ -349,8 +347,7 @@ export function PlanSalleSettings({ initialData }: PlanSalleSettingsProps) {
               )}
             />
 
-            {grilleActivee && (
-              <Controller
+            {grilleActivee ? <Controller
                 name="tailleGrille"
                 control={control}
                 render={({ field }) => (
@@ -376,8 +373,7 @@ export function PlanSalleSettings({ initialData }: PlanSalleSettingsProps) {
                     </Text>
                   </Box>
                 )}
-              />
-            )}
+              /> : null}
           </Flex>
         </Card>
 

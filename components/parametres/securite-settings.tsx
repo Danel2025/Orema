@@ -164,11 +164,9 @@ export function SecuriteSettings({ initialData }: SecuriteSettingsProps) {
                   size="3"
                   placeholder="5"
                 />
-                {errors.tentativesLoginMax && (
-                  <Text size="1" color="red" mt="1">
+                {errors.tentativesLoginMax ? <Text size="1" color="red" mt="1">
                     {errors.tentativesLoginMax.message}
-                  </Text>
-                )}
+                  </Text> : null}
                 <Text size="1" color="gray" mt="1">
                   Nombre d'echecs avant blocage
                 </Text>
@@ -186,11 +184,9 @@ export function SecuriteSettings({ initialData }: SecuriteSettingsProps) {
                   size="3"
                   placeholder="15"
                 />
-                {errors.dureeBlocage && (
-                  <Text size="1" color="red" mt="1">
+                {errors.dureeBlocage ? <Text size="1" color="red" mt="1">
                     {errors.dureeBlocage.message}
-                  </Text>
-                )}
+                  </Text> : null}
                 <Text size="1" color="gray" mt="1">
                   Temps de blocage apres trop de tentatives
                 </Text>
@@ -221,11 +217,9 @@ export function SecuriteSettings({ initialData }: SecuriteSettingsProps) {
                 size="3"
                 placeholder="30"
               />
-              {errors.sessionTimeout && (
-                <Text size="1" color="red" mt="1">
+              {errors.sessionTimeout ? <Text size="1" color="red" mt="1">
                   {errors.sessionTimeout.message}
-                </Text>
-              )}
+                </Text> : null}
               <Text size="1" color="gray" mt="1">
                 Deconnexion automatique apres inactivite
               </Text>
@@ -265,8 +259,7 @@ export function SecuriteSettings({ initialData }: SecuriteSettingsProps) {
               )}
             />
 
-            {auditActif && (
-              <>
+            {auditActif ? <>
                 <Box
                   style={{
                     borderTop: "1px solid var(--gray-5)",
@@ -301,11 +294,9 @@ export function SecuriteSettings({ initialData }: SecuriteSettingsProps) {
                       </Flex>
                     )}
                   />
-                  {errors.actionsALogger && (
-                    <Text size="1" color="red" mt="2">
+                  {errors.actionsALogger ? <Text size="1" color="red" mt="2">
                       {errors.actionsALogger.message}
-                    </Text>
-                  )}
+                    </Text> : null}
                 </Box>
 
                 <Callout.Root color="blue" size="1">
@@ -316,8 +307,7 @@ export function SecuriteSettings({ initialData }: SecuriteSettingsProps) {
                     Le journal d'audit est accessible depuis Rapports &gt; Journal d'audit
                   </Callout.Text>
                 </Callout.Root>
-              </>
-            )}
+              </> : null}
           </Flex>
         </Card>
 

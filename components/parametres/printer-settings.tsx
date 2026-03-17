@@ -5,7 +5,7 @@
  * Avec test de connexion et affichage des catégories associées
  */
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
@@ -22,6 +22,7 @@ import {
   Badge,
   IconButton,
   Callout,
+  Tooltip,
 } from "@radix-ui/themes";
 import {
   Printer,
@@ -41,8 +42,14 @@ import {
   Zap,
   Search,
   Tag,
+  Unplug,
+  Link2,
+  MonitorSmartphone,
 } from "lucide-react";
 import { toast } from "sonner";
+import { useWebPrinter } from "@/hooks/useWebPrinter";
+import type { WebSerialPortInfo } from "@/lib/print/web-serial";
+import type { WebBluetoothDeviceInfo } from "@/lib/print/web-bluetooth";
 
 import {
   createImprimante,
@@ -68,7 +75,7 @@ interface Imprimante {
   id: string;
   nom: string;
   type: "TICKET" | "CUISINE" | "BAR";
-  typeConnexion: "USB" | "RESEAU" | "SERIE" | "BLUETOOTH";
+  typeConnexion: "USB" | "RESEAU" | "SERIE" | "BLUETOOTH" | "SYSTEME";
   adresseIp?: string | null;
   port?: number | null;
   pathUsb?: string | null;
@@ -92,22 +99,24 @@ const getConnexionIcon = (type: string) => {
       return <Bluetooth size={14} />;
     case "SERIE":
       return <Cable size={14} />;
+    case "SYSTEME":
+      return <MonitorSmartphone size={14} />;
     default:
       return null;
   }
 };
 
 // Couleur du badge selon le type d'imprimante
-const getTypeBadgeColor = (type: string): "orange" | "blue" | "purple" => {
+const getTypeBadgeColor = (type: string): "violet" | "blue" | "purple" => {
   switch (type) {
     case "TICKET":
-      return "orange";
+      return "violet";
     case "CUISINE":
       return "blue";
     case "BAR":
       return "purple";
     default:
-      return "orange";
+      return "violet";
   }
 };
 
@@ -123,7 +132,121 @@ export function PrinterSettings({ initialData }: PrinterSettingsProps) {
   const [connectionMessage, setConnectionMessage] = useState<string>("");
   const [isScanning, setIsScanning] = useState(false);
   const [scanResults, setScanResults] = useState<string[]>([]);
+  const [scanDetails, setScanDetails] = useState<{ ip: string; port: number; protocol: string }[]>([]);
   const [showScanDialog, setShowScanDialog] = useState(false);
+
+  // --- Web Printer (USB/Bluetooth via navigateur) ---
+  const webPrinter = useWebPrinter();
+  const [showPairDialog, setShowPairDialog] = useState(false);
+  const [pairingPrinterId, setPairingPrinterId] = useState<string | null>(null);
+  const [pendingSerialPort, setPendingSerialPort] = useState<WebSerialPortInfo | null>(null);
+  const [pendingBTDevice, setPendingBTDevice] = useState<WebBluetoothDeviceInfo | null>(null);
+  const [isPairing, setIsPairing] = useState(false);
+  const [serialBaudRate, setSerialBaudRate] = useState(9600);
+
+  // Detecter une imprimante USB via Web Serial API
+  const handleDetectUSB = async (printerId: string) => {
+    try {
+      const port = await webPrinter.requestUSBPrinter(false);
+      if (port) {
+        setPairingPrinterId(printerId);
+        setPendingSerialPort(port);
+        setPendingBTDevice(null);
+        setShowPairDialog(true);
+      }
+    } catch (error) {
+      toast.error(
+        error instanceof Error ? error.message : "Erreur detection USB"
+      );
+    }
+  };
+
+  // Detecter une imprimante Bluetooth via Web Bluetooth API
+  const handleDetectBluetooth = async (printerId: string) => {
+    try {
+      const device = await webPrinter.requestBTDevice();
+      if (device) {
+        setPairingPrinterId(printerId);
+        setPendingBTDevice(device);
+        setPendingSerialPort(null);
+        setShowPairDialog(true);
+      }
+    } catch (error) {
+      toast.error(
+        error instanceof Error ? error.message : "Erreur detection Bluetooth"
+      );
+    }
+  };
+
+  // Confirmer l'appairage
+  const handleConfirmPairing = async () => {
+    if (!pairingPrinterId) return;
+    setIsPairing(true);
+
+    try {
+      if (pendingSerialPort) {
+        await webPrinter.pairUSBPrinter(pairingPrinterId, pendingSerialPort, {
+          baudRate: serialBaudRate,
+        });
+        toast.success(`Imprimante USB appairee : ${pendingSerialPort.label}`);
+      } else if (pendingBTDevice) {
+        await webPrinter.pairBTPrinter(pairingPrinterId, pendingBTDevice);
+        toast.success(`Imprimante Bluetooth appairee : ${pendingBTDevice.name}`);
+      }
+      setShowPairDialog(false);
+    } catch (error) {
+      toast.error(
+        error instanceof Error ? error.message : "Erreur d'appairage"
+      );
+    } finally {
+      setIsPairing(false);
+    }
+  };
+
+  // Tester la connexion via Web APIs
+  const handleWebTest = async (printerId: string) => {
+    setIsTesting(printerId);
+    try {
+      const result = await webPrinter.test(printerId);
+      if (result.success) {
+        toast.success(result.message || "Connexion reussie");
+      } else {
+        toast.error(result.error || "Test echoue");
+      }
+    } catch {
+      toast.error("Erreur lors du test");
+    } finally {
+      setIsTesting(null);
+    }
+  };
+
+  // Connecter/deconnecter via Web APIs
+  const handleWebConnect = async (printerId: string) => {
+    const managed = webPrinter.managedPrinters.find(
+      (p) => p.printerId === printerId
+    );
+    if (managed?.connected) {
+      await webPrinter.disconnect(printerId);
+      toast.info("Imprimante deconnectee");
+    } else {
+      const result = await webPrinter.connect(printerId);
+      if (result.success) {
+        toast.success(result.message || "Connecte");
+      } else {
+        toast.error(result.error || "Connexion echouee");
+      }
+    }
+  };
+
+  // Dissocier une imprimante web
+  const handleUnpair = (printerId: string) => {
+    webPrinter.unpairPrinter(printerId);
+    toast.info("Association supprimee");
+  };
+
+  // Helper : trouver l'imprimante web associee
+  const getManagedPrinter = (printerId: string) =>
+    webPrinter.managedPrinters.find((p) => p.printerId === printerId);
 
   const {
     register,
@@ -133,7 +256,7 @@ export function PrinterSettings({ initialData }: PrinterSettingsProps) {
     watch,
     setValue,
     getValues,
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+   
   } = useForm<ImprimanteFormData>({
     resolver: zodResolver(imprimanteSchema) as any,
     defaultValues: {
@@ -220,44 +343,49 @@ export function PrinterSettings({ initialData }: PrinterSettingsProps) {
     }
   };
 
-  // Scanner le réseau pour trouver des imprimantes
-  const handleScanNetwork = async () => {
+  // Scanner le réseau pour trouver des imprimantes (multi-ports)
+  const handleScanNetwork = async (extended: boolean = false) => {
     setIsScanning(true);
     setScanResults([]);
+    setScanDetails([]);
     setShowScanDialog(true);
 
     try {
       const response = await fetch("/api/print/scan", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ extended }),
       });
 
       const result = await response.json();
 
-      if (result.success && result.printers) {
-        setScanResults(result.printers);
-        if (result.printers.length === 0) {
-          toast.info("Aucune imprimante détectée sur le réseau");
+      if (result.success) {
+        setScanResults(result.printers || []);
+        setScanDetails(result.detectedPrinters || []);
+        const count = result.detectedPrinters?.length || result.printers?.length || 0;
+        if (count === 0) {
+          toast.info("Aucune imprimante detectee sur le reseau");
         } else {
-          toast.success(`${result.printers.length} imprimante(s) détectée(s)`);
+          toast.success(`${count} imprimante(s) detectee(s)`);
         }
       } else {
         toast.error(result.error || "Erreur lors du scan");
       }
-    } catch (error) {
-      toast.error("Erreur lors du scan réseau");
+    } catch {
+      toast.error("Erreur lors du scan reseau");
     } finally {
       setIsScanning(false);
     }
   };
 
-  // Utiliser une IP détectée
-  const handleUseDetectedIP = (ip: string) => {
+  // Utiliser une IP/port detectee
+  const handleUseDetectedIP = (ip: string, port: number = 9100) => {
     setValue("adresseIp", ip);
+    setValue("port", port);
     setValue("typeConnexion", "RESEAU");
     setShowScanDialog(false);
     setIsDialogOpen(true);
-    toast.success(`IP ${ip} sélectionnée`);
+    toast.success(`${ip}:${port} selectionnee`);
   };
 
   const onSubmit = async (data: ImprimanteFormData) => {
@@ -277,7 +405,7 @@ export function PrinterSettings({ initialData }: PrinterSettingsProps) {
           id: rawData.id as string,
           nom: rawData.nom as string,
           type: rawData.type as "TICKET" | "CUISINE" | "BAR",
-          typeConnexion: rawData.type_connexion as "USB" | "RESEAU" | "SERIE" | "BLUETOOTH",
+          typeConnexion: rawData.type_connexion as "USB" | "RESEAU" | "SERIE" | "BLUETOOTH" | "SYSTEME",
           adresseIp: rawData.adresse_ip as string | null,
           port: rawData.port as number | null,
           pathUsb: rawData.path_usb as string | null,
@@ -389,15 +517,69 @@ export function PrinterSettings({ initialData }: PrinterSettingsProps) {
             {imprimantes.length} imprimante{imprimantes.length > 1 ? "s" : ""} configurée{imprimantes.length > 1 ? "s" : ""}
           </Text>
         </Flex>
-        <Flex gap="2">
-          <Button size="3" variant="soft" onClick={handleScanNetwork} disabled={isScanning}>
+        <Flex gap="2" wrap="wrap">
+          <Button size="3" variant="soft" onClick={() => handleScanNetwork()} disabled={isScanning}>
             {isScanning ? (
               <Loader2 size={16} className="animate-spin" />
             ) : (
-              <Search size={16} />
+              <Wifi size={16} />
             )}
-            Détecter
+            Reseau
           </Button>
+          {webPrinter.capabilities.webSerial ? <Tooltip content="Detecter une imprimante USB connectee a cet ordinateur">
+              <Button
+                size="3"
+                variant="soft"
+                color="blue"
+                onClick={async () => {
+                  try {
+                    const port = await webPrinter.requestUSBPrinter(false);
+                    if (port) {
+                      setPendingSerialPort(port);
+                      setPendingBTDevice(null);
+                      setPairingPrinterId(null);
+                      setShowPairDialog(true);
+                    }
+                  } catch (error) {
+                    toast.error(
+                      error instanceof Error
+                        ? error.message
+                        : "Erreur detection USB"
+                    );
+                  }
+                }}
+              >
+                <Usb size={16} />
+                USB
+              </Button>
+            </Tooltip> : null}
+          {webPrinter.capabilities.webBluetooth ? <Tooltip content="Detecter une imprimante Bluetooth a proximite">
+              <Button
+                size="3"
+                variant="soft"
+                color="violet"
+                onClick={async () => {
+                  try {
+                    const device = await webPrinter.requestBTDevice();
+                    if (device) {
+                      setPendingBTDevice(device);
+                      setPendingSerialPort(null);
+                      setPairingPrinterId(null);
+                      setShowPairDialog(true);
+                    }
+                  } catch (error) {
+                    toast.error(
+                      error instanceof Error
+                        ? error.message
+                        : "Erreur detection Bluetooth"
+                    );
+                  }
+                }}
+              >
+                <Bluetooth size={16} />
+                Bluetooth
+              </Button>
+            </Tooltip> : null}
           <Button size="3" onClick={openCreateDialog}>
             <Plus size={16} />
             Ajouter
@@ -423,9 +605,9 @@ export function PrinterSettings({ initialData }: PrinterSettingsProps) {
               Ajoutez votre première imprimante pour commencer à imprimer vos tickets
             </Text>
             <Flex gap="2">
-              <Button size="2" variant="soft" onClick={handleScanNetwork}>
+              <Button size="2" variant="soft" onClick={() => handleScanNetwork()}>
                 <Search size={14} />
-                Détecter automatiquement
+                Detecter automatiquement
               </Button>
               <Button size="2" onClick={openCreateDialog}>
                 <Plus size={14} />
@@ -473,6 +655,8 @@ export function PrinterSettings({ initialData }: PrinterSettingsProps) {
                           ? `${printer.adresseIp}:${printer.port}`
                           : printer.typeConnexion === "USB"
                           ? printer.pathUsb
+                          : printer.typeConnexion === "SYSTEME"
+                          ? "Via systeme"
                           : printer.typeConnexion}
                       </Text>
                     </Flex>
@@ -508,7 +692,89 @@ export function PrinterSettings({ initialData }: PrinterSettingsProps) {
                     />
                   </Table.Cell>
                   <Table.Cell>
-                    <Flex gap="2">
+                    <Flex gap="2" wrap="wrap">
+                      {/* Boutons Web USB/BT : appairage ou connexion */}
+                      {(() => {
+                        const managed = getManagedPrinter(printer.id);
+                        if (managed) {
+                          return (
+                            <>
+                              <Tooltip content={managed.connected ? "Deconnecter" : "Connecter"}>
+                                <IconButton
+                                  size="1"
+                                  variant="soft"
+                                  color={managed.connected ? "green" : "orange"}
+                                  onClick={() => handleWebConnect(printer.id)}
+                                  title={managed.connected ? "Connecte - Cliquer pour deconnecter" : "Deconnecte - Cliquer pour connecter"}
+                                >
+                                  {managed.connected ? <Link2 size={14} /> : <Unplug size={14} />}
+                                </IconButton>
+                              </Tooltip>
+                              <Tooltip content="Tester via Web">
+                                <IconButton
+                                  size="1"
+                                  variant="soft"
+                                  color="cyan"
+                                  onClick={() => handleWebTest(printer.id)}
+                                  disabled={isTesting === printer.id}
+                                >
+                                  {isTesting === printer.id ? (
+                                    <Loader2 size={14} className="animate-spin" />
+                                  ) : (
+                                    <Zap size={14} />
+                                  )}
+                                </IconButton>
+                              </Tooltip>
+                              <Tooltip content="Dissocier le peripherique">
+                                <IconButton
+                                  size="1"
+                                  variant="ghost"
+                                  color="gray"
+                                  onClick={() => handleUnpair(printer.id)}
+                                >
+                                  <X size={14} />
+                                </IconButton>
+                              </Tooltip>
+                            </>
+                          );
+                        }
+                        // Pas encore appairee : proposer l'appairage USB/BT
+                        if (
+                          (printer.typeConnexion === "USB" && webPrinter.capabilities.webSerial) ||
+                          (printer.typeConnexion === "SERIE" && webPrinter.capabilities.webSerial)
+                        ) {
+                          return (
+                            <Tooltip content="Appairer via USB (Web Serial)">
+                              <IconButton
+                                size="1"
+                                variant="soft"
+                                color="blue"
+                                onClick={() => handleDetectUSB(printer.id)}
+                              >
+                                <Usb size={14} />
+                              </IconButton>
+                            </Tooltip>
+                          );
+                        }
+                        if (
+                          printer.typeConnexion === "BLUETOOTH" &&
+                          webPrinter.capabilities.webBluetooth
+                        ) {
+                          return (
+                            <Tooltip content="Appairer via Bluetooth">
+                              <IconButton
+                                size="1"
+                                variant="soft"
+                                color="violet"
+                                onClick={() => handleDetectBluetooth(printer.id)}
+                              >
+                                <Bluetooth size={14} />
+                              </IconButton>
+                            </Tooltip>
+                          );
+                        }
+                        return null;
+                      })()}
                       <IconButton
                         size="1"
                         variant="soft"
@@ -554,8 +820,8 @@ export function PrinterSettings({ initialData }: PrinterSettingsProps) {
         </Card>
       )}
 
-      {/* Information */}
-      <Callout.Root color="orange" size="1">
+      {/* Information categories */}
+      <Callout.Root color="violet" size="1">
         <Callout.Icon>
           <Tag size={16} />
         </Callout.Icon>
@@ -564,6 +830,73 @@ export function PrinterSettings({ initialData }: PrinterSettingsProps) {
           <strong> Produits → Catégories</strong> et sélectionnez l'imprimante souhaitée.
         </Callout.Text>
       </Callout.Root>
+
+      {/* Informations sur les capacites du navigateur */}
+      <Card size="1">
+        <Flex direction="column" gap="2">
+          <Flex align="center" gap="2">
+            <MonitorSmartphone size={16} />
+            <Text size="2" weight="medium">
+              Capacites du navigateur
+            </Text>
+          </Flex>
+          <Flex gap="3" wrap="wrap">
+            <Badge
+              size="1"
+              color={webPrinter.capabilities.webSerial ? "green" : "gray"}
+              variant={webPrinter.capabilities.webSerial ? "soft" : "outline"}
+            >
+              <Usb size={12} />
+              USB (Web Serial){" "}
+              {webPrinter.capabilities.webSerial ? "OK" : "Non supporte"}
+            </Badge>
+            <Badge
+              size="1"
+              color={webPrinter.capabilities.webBluetooth ? "green" : "gray"}
+              variant={webPrinter.capabilities.webBluetooth ? "soft" : "outline"}
+            >
+              <Bluetooth size={12} />
+              Bluetooth{" "}
+              {webPrinter.capabilities.webBluetooth ? "OK" : "Non supporte"}
+            </Badge>
+            <Badge size="1" color="green" variant="soft">
+              <Wifi size={12} />
+              Reseau OK
+            </Badge>
+          </Flex>
+          {!webPrinter.capabilities.webSerial && !webPrinter.capabilities.webBluetooth && (
+            <Text size="1" color="gray">
+              Pour l'impression USB/Bluetooth directe, utilisez Chrome 89+ ou Edge 89+.
+              Activez les flags chrome://flags/#enable-experimental-web-platform-features si necessaire.
+            </Text>
+          )}
+          {webPrinter.managedPrinters.length > 0 && (
+            <Flex direction="column" gap="1" mt="1">
+              <Text size="1" weight="medium" color="gray">
+                Peripheriques appairies ({webPrinter.managedPrinters.length})
+              </Text>
+              {webPrinter.managedPrinters.map((mp) => (
+                <Flex key={mp.printerId} align="center" gap="2">
+                  <Box
+                    style={{
+                      width: 8,
+                      height: 8,
+                      borderRadius: "50%",
+                      backgroundColor: mp.connected
+                        ? "var(--green-9)"
+                        : "var(--gray-8)",
+                    }}
+                  />
+                  <Text size="1">
+                    {mp.label} ({mp.connectionType === "web-serial" ? "USB" : "Bluetooth"})
+                    {mp.connected ? " - Connecte" : " - Deconnecte"}
+                  </Text>
+                </Flex>
+              ))}
+            </Flex>
+          )}
+        </Flex>
+      </Card>
 
       {/* Dialog de création/édition */}
       <Dialog.Root open={isDialogOpen} onOpenChange={setIsDialogOpen}>
@@ -589,11 +922,9 @@ export function PrinterSettings({ initialData }: PrinterSettingsProps) {
                   placeholder="Ex: Imprimante Caisse 1"
                   size="3"
                 />
-                {errors.nom && (
-                  <Text size="1" color="red" mt="1">
+                {errors.nom ? <Text size="1" color="red" mt="1">
                     {errors.nom.message}
-                  </Text>
-                )}
+                  </Text> : null}
               </Box>
 
               {/* Type et Connexion */}
@@ -626,7 +957,7 @@ export function PrinterSettings({ initialData }: PrinterSettingsProps) {
                   <Select.Root
                     defaultValue={editingPrinter?.typeConnexion || "RESEAU"}
                     onValueChange={(value) => {
-                      setValue("typeConnexion", value as "USB" | "RESEAU" | "SERIE" | "BLUETOOTH");
+                      setValue("typeConnexion", value as "USB" | "RESEAU" | "SERIE" | "BLUETOOTH" | "SYSTEME");
                       setConnectionStatus("idle");
                       setConnectionMessage("");
                     }}
@@ -655,11 +986,9 @@ export function PrinterSettings({ initialData }: PrinterSettingsProps) {
                       placeholder="192.168.1.100"
                       size="3"
                     />
-                    {errors.adresseIp && (
-                      <Text size="1" color="red" mt="1">
+                    {errors.adresseIp ? <Text size="1" color="red" mt="1">
                         {errors.adresseIp.message}
-                      </Text>
-                    )}
+                      </Text> : null}
                   </Box>
                   <Box style={{ flex: 1 }}>
                     <Text as="label" size="2" weight="medium" mb="1">
@@ -685,25 +1014,63 @@ export function PrinterSettings({ initialData }: PrinterSettingsProps) {
                     placeholder="/dev/usb/lp0 ou COM3"
                     size="3"
                   />
-                  {errors.pathUsb && (
-                    <Text size="1" color="red" mt="1">
+                  {errors.pathUsb ? <Text size="1" color="red" mt="1">
                       {errors.pathUsb.message}
-                    </Text>
-                  )}
+                    </Text> : null}
                   <Text size="1" color="gray" mt="1">
                     Sous Linux: /dev/usb/lp0 | Sous Windows: COM3, COM4, etc.
                   </Text>
                 </Box>
               )}
 
-              {(typeConnexion === "SERIE" || typeConnexion === "BLUETOOTH") && (
-                <Callout.Root color="yellow" size="1">
+              {typeConnexion === "SERIE" && (
+                <Callout.Root
+                  color={webPrinter.capabilities.webSerial ? "blue" : "yellow"}
+                  size="1"
+                >
                   <Callout.Icon>
-                    <AlertCircle size={16} />
+                    {webPrinter.capabilities.webSerial ? (
+                      <CheckCircle2 size={16} />
+                    ) : (
+                      <AlertCircle size={16} />
+                    )}
                   </Callout.Icon>
                   <Callout.Text>
-                    La connexion {typeConnexion === "SERIE" ? "série" : "Bluetooth"} n'est pas encore
-                    supportée. Utilisez une connexion réseau ou USB.
+                    {webPrinter.capabilities.webSerial
+                      ? "La connexion serie est supportee via Web Serial API. Apres sauvegarde, utilisez le bouton USB dans les actions pour appairer le peripherique."
+                      : "La connexion serie necessite Chrome 89+. Utilisez une connexion reseau comme alternative."}
+                  </Callout.Text>
+                </Callout.Root>
+              )}
+              {typeConnexion === "BLUETOOTH" && (
+                <Callout.Root
+                  color={webPrinter.capabilities.webBluetooth ? "blue" : "yellow"}
+                  size="1"
+                >
+                  <Callout.Icon>
+                    {webPrinter.capabilities.webBluetooth ? (
+                      <CheckCircle2 size={16} />
+                    ) : (
+                      <AlertCircle size={16} />
+                    )}
+                  </Callout.Icon>
+                  <Callout.Text>
+                    {webPrinter.capabilities.webBluetooth
+                      ? "La connexion Bluetooth est supportee via Web Bluetooth API. Apres sauvegarde, utilisez le bouton Bluetooth dans les actions pour appairer le peripherique."
+                      : "La connexion Bluetooth necessite Chrome 56+ avec le Bluetooth active sur l'appareil."}
+                  </Callout.Text>
+                </Callout.Root>
+              )}
+
+              {typeConnexion === "SYSTEME" && (
+                <Callout.Root color="green" size="1">
+                  <Callout.Icon>
+                    <CheckCircle2 size={16} />
+                  </Callout.Icon>
+                  <Callout.Text>
+                    Utilise les imprimantes deja installees sur cet ordinateur.
+                    Lors de l'impression, le dialogue systeme s'ouvrira pour choisir l'imprimante.
+                    Aucune configuration supplementaire necessaire.
                   </Callout.Text>
                 </Callout.Root>
               )}
@@ -787,6 +1154,129 @@ export function PrinterSettings({ initialData }: PrinterSettingsProps) {
         </Dialog.Content>
       </Dialog.Root>
 
+      {/* Dialog d'appairage USB/Bluetooth */}
+      <Dialog.Root open={showPairDialog} onOpenChange={setShowPairDialog}>
+        <Dialog.Content maxWidth="450px">
+          <Dialog.Title>
+            <Flex align="center" gap="2">
+              {pendingSerialPort ? <Usb size={20} /> : <Bluetooth size={20} />}
+              Appairer un peripherique
+            </Flex>
+          </Dialog.Title>
+          <Dialog.Description size="2" mb="4">
+            {pendingSerialPort
+              ? `Peripherique USB detecte : ${pendingSerialPort.label}`
+              : pendingBTDevice
+              ? `Peripherique Bluetooth detecte : ${pendingBTDevice.name}`
+              : "Aucun peripherique detecte"}
+          </Dialog.Description>
+
+          <Flex direction="column" gap="4">
+            {/* Info du peripherique */}
+            <Card size="1">
+              <Flex direction="column" gap="2">
+                <Flex align="center" gap="2">
+                  {pendingSerialPort ? (
+                    <>
+                      <Usb size={16} style={{ color: "var(--blue-9)" }} />
+                      <Text size="2" weight="medium">
+                        {pendingSerialPort.label}
+                      </Text>
+                    </>
+                  ) : pendingBTDevice ? (
+                    <>
+                      <Bluetooth size={16} style={{ color: "var(--violet-9)" }} />
+                      <Text size="2" weight="medium">
+                        {pendingBTDevice.name}
+                      </Text>
+                    </>
+                  ) : null}
+                </Flex>
+                {pendingSerialPort?.info.usbVendorId ? <Text size="1" color="gray">
+                    Vendor ID: 0x{pendingSerialPort.info.usbVendorId.toString(16).padStart(4, "0")}
+                    {pendingSerialPort.info.usbProductId ? ` | Product ID: 0x${pendingSerialPort.info.usbProductId.toString(16).padStart(4, "0")}` : null}
+                  </Text> : null}
+              </Flex>
+            </Card>
+
+            {/* Baud rate pour serie */}
+            {pendingSerialPort ? <Box>
+                <Text as="label" size="2" weight="medium" mb="1">
+                  Vitesse (Baud Rate)
+                </Text>
+                <Select.Root
+                  defaultValue={String(serialBaudRate)}
+                  onValueChange={(v) => setSerialBaudRate(Number(v))}
+                >
+                  <Select.Trigger />
+                  <Select.Content>
+                    <Select.Item value="9600">9600 (standard)</Select.Item>
+                    <Select.Item value="19200">19200</Select.Item>
+                    <Select.Item value="38400">38400</Select.Item>
+                    <Select.Item value="57600">57600</Select.Item>
+                    <Select.Item value="115200">115200</Select.Item>
+                  </Select.Content>
+                </Select.Root>
+                <Text size="1" color="gray" mt="1">
+                  La plupart des imprimantes thermiques utilisent 9600 ou 115200
+                </Text>
+              </Box> : null}
+
+            {/* Selecteur d'imprimante a associer */}
+            {!pairingPrinterId && imprimantes.length > 0 && (
+              <Box>
+                <Text as="label" size="2" weight="medium" mb="1">
+                  Associer a l'imprimante
+                </Text>
+                <Select.Root
+                  onValueChange={(v) => setPairingPrinterId(v)}
+                >
+                  <Select.Trigger placeholder="Choisir une imprimante..." />
+                  <Select.Content>
+                    {imprimantes.map((imp) => (
+                      <Select.Item key={imp.id} value={imp.id}>
+                        {imp.nom} ({imp.type})
+                      </Select.Item>
+                    ))}
+                  </Select.Content>
+                </Select.Root>
+              </Box>
+            )}
+
+            {pairingPrinterId ? <Callout.Root color="blue" size="1">
+                <Callout.Icon>
+                  <Link2 size={16} />
+                </Callout.Icon>
+                <Callout.Text>
+                  Sera associe a :{" "}
+                  <strong>
+                    {imprimantes.find((i) => i.id === pairingPrinterId)?.nom || pairingPrinterId}
+                  </strong>
+                </Callout.Text>
+              </Callout.Root> : null}
+          </Flex>
+
+          <Flex gap="3" mt="5" justify="end">
+            <Dialog.Close>
+              <Button variant="soft" color="gray" type="button">
+                Annuler
+              </Button>
+            </Dialog.Close>
+            <Button
+              onClick={handleConfirmPairing}
+              disabled={isPairing || !pairingPrinterId}
+            >
+              {isPairing ? (
+                <Loader2 size={16} className="animate-spin" />
+              ) : (
+                <Link2 size={16} />
+              )}
+              Appairer
+            </Button>
+          </Flex>
+        </Dialog.Content>
+      </Dialog.Root>
+
       {/* Dialog de scan réseau */}
       <Dialog.Root open={showScanDialog} onOpenChange={setShowScanDialog}>
         <Dialog.Content maxWidth="450px">
@@ -804,46 +1294,106 @@ export function PrinterSettings({ initialData }: PrinterSettingsProps) {
             {isScanning ? (
               <Flex direction="column" align="center" justify="center" py="6" gap="3">
                 <Loader2 size={32} className="animate-spin" style={{ color: "var(--accent-9)" }} />
-                <Text size="2" color="gray">Scan en cours...</Text>
+                <Text size="2" color="gray">Scan en cours (ports 9100, 515, 631)...</Text>
                 <Text size="1" color="gray">Cela peut prendre quelques secondes</Text>
               </Flex>
-            ) : scanResults.length === 0 ? (
+            ) : scanDetails.length === 0 && scanResults.length === 0 ? (
               <Flex direction="column" align="center" justify="center" py="6" gap="3">
                 <Printer size={32} style={{ color: "var(--gray-8)" }} />
-                <Text size="2" color="gray">Aucune imprimante détectée</Text>
-                <Text size="1" color="gray">Vérifiez que l'imprimante est allumée et connectée au réseau</Text>
-                <Button size="2" variant="soft" onClick={handleScanNetwork}>
-                  <Search size={14} />
-                  Relancer le scan
-                </Button>
+                <Text size="2" color="gray">Aucune imprimante detectee</Text>
+                <Text size="1" color="gray">Verifiez que l'imprimante est allumee et connectee au reseau</Text>
+                <Flex gap="2" wrap="wrap">
+                  <Button size="2" variant="soft" onClick={() => handleScanNetwork(false)}>
+                    <Search size={14} />
+                    Relancer
+                  </Button>
+                  <Button size="2" variant="soft" color="blue" onClick={() => handleScanNetwork(true)}>
+                    <Search size={14} />
+                    Scan etendu (+ ports 80, 8008)
+                  </Button>
+                </Flex>
               </Flex>
             ) : (
               <Flex direction="column" gap="2">
                 <Text size="2" weight="medium" mb="2">
-                  {scanResults.length} imprimante{scanResults.length > 1 ? "s" : ""} trouvée{scanResults.length > 1 ? "s" : ""}
+                  {scanDetails.length || scanResults.length} point(s) d'impression trouve(s)
                 </Text>
-                {scanResults.map((ip) => (
-                  <Flex
-                    key={ip}
-                    align="center"
-                    justify="between"
-                    p="3"
-                    style={{
-                      backgroundColor: "var(--gray-a2)",
-                      borderRadius: 8,
-                      border: "1px solid var(--gray-a6)",
-                    }}
+                {/* Affichage detaille si disponible */}
+                {scanDetails.length > 0
+                  ? scanDetails.map((det, idx) => (
+                      <Flex
+                        key={`${det.ip}:${det.port}-${idx}`}
+                        align="center"
+                        justify="between"
+                        p="3"
+                        style={{
+                          backgroundColor: "var(--gray-a2)",
+                          borderRadius: 8,
+                          border: "1px solid var(--gray-a6)",
+                        }}
+                      >
+                        <Flex direction="column" gap="1">
+                          <Flex align="center" gap="2">
+                            <Wifi size={16} style={{ color: "var(--green-9)" }} />
+                            <Text size="2" weight="medium">
+                              {det.ip}:{det.port}
+                            </Text>
+                          </Flex>
+                          <Text size="1" color="gray">
+                            {det.protocol}
+                          </Text>
+                        </Flex>
+                        <Button
+                          size="1"
+                          variant="soft"
+                          onClick={() => handleUseDetectedIP(det.ip, det.port)}
+                        >
+                          <Plus size={12} />
+                          Utiliser
+                        </Button>
+                      </Flex>
+                    ))
+                  : scanResults.map((ip) => (
+                      <Flex
+                        key={ip}
+                        align="center"
+                        justify="between"
+                        p="3"
+                        style={{
+                          backgroundColor: "var(--gray-a2)",
+                          borderRadius: 8,
+                          border: "1px solid var(--gray-a6)",
+                        }}
+                      >
+                        <Flex align="center" gap="2">
+                          <Wifi size={16} style={{ color: "var(--green-9)" }} />
+                          <Text size="2" weight="medium">
+                            {ip}
+                          </Text>
+                        </Flex>
+                        <Button
+                          size="1"
+                          variant="soft"
+                          onClick={() => handleUseDetectedIP(ip)}
+                        >
+                          <Plus size={12} />
+                          Utiliser
+                        </Button>
+                      </Flex>
+                    ))}
+                {/* Bouton scan etendu */}
+                <Flex justify="center" mt="2">
+                  <Button
+                    size="1"
+                    variant="ghost"
+                    color="gray"
+                    onClick={() => handleScanNetwork(true)}
+                    disabled={isScanning}
                   >
-                    <Flex align="center" gap="2">
-                      <Wifi size={16} style={{ color: "var(--green-9)" }} />
-                      <Text size="2" weight="medium">{ip}:9100</Text>
-                    </Flex>
-                    <Button size="1" variant="soft" onClick={() => handleUseDetectedIP(ip)}>
-                      <Plus size={12} />
-                      Utiliser
-                    </Button>
-                  </Flex>
-                ))}
+                    <Search size={12} />
+                    Scanner d'autres ports (80, 8008)
+                  </Button>
+                </Flex>
               </Flex>
             )}
           </Box>

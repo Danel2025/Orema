@@ -139,13 +139,13 @@ const faqs = [
     category: "mobile",
     question: "Y a-t-il une application mobile ?",
     answer:
-      "Nous proposons une application mobile (iOS et Android) pour les managers et propriétaires. Elle permet de consulter les statistiques, recevoir des alertes et suivre l'activité en temps réel, même à distance.",
+      "L'application mobile est en cours de développement. Elle permettra aux managers et propriétaires de consulter les statistiques et suivre l'activité en temps réel. En attendant, vous pouvez accéder à Oréma N+ depuis le navigateur de votre smartphone ou tablette.",
   },
   {
     category: "mobile",
     question: "Comment prendre les commandes à table avec un smartphone ?",
     answer:
-      "Utilisez notre application serveur sur smartphone pour prendre les commandes directement à table. La commande est envoyée instantanément à la cuisine et associée à la table. Gain de temps et moins d'erreurs !",
+      "Oréma N+ est accessible depuis le navigateur de tout smartphone. Vos serveurs peuvent prendre les commandes directement à table via l'interface web. La commande est envoyée instantanément à la cuisine et associée à la table.",
   },
 ];
 
@@ -163,8 +163,27 @@ export default function FAQPage() {
     return matchesSearch && matchesCategory;
   });
 
+  const faqJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    mainEntity: faqs.map((faq) => ({
+      "@type": "Question",
+      name: faq.question,
+      acceptedAnswer: {
+        "@type": "Answer",
+        text: faq.answer,
+      },
+    })),
+  };
+
   return (
     <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify(faqJsonLd).replace(/</g, "\\u003c"),
+        }}
+      />
       <PageHeader
         title="Questions fréquentes"
         subtitle="Trouvez rapidement les réponses à vos questions sur Oréma N+."
@@ -180,6 +199,7 @@ export default function FAQPage() {
             <Box position="relative">
               <Search
                 size={18}
+                aria-hidden="true"
                 style={{
                   position: "absolute",
                   left: 16,
@@ -193,6 +213,7 @@ export default function FAQPage() {
               <TextField.Root
                 size="3"
                 placeholder="Rechercher une question..."
+                aria-label="Rechercher une question"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 style={{
@@ -213,13 +234,14 @@ export default function FAQPage() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2, duration: 0.6 }}
         >
-          <Flex gap="2" wrap="wrap" justify="center" mb="8">
+          <Flex gap="2" wrap="wrap" justify="center" mb="8" role="group" aria-label="Filtrer par categorie">
             {categories.map((category, index) => (
               <motion.button
                 key={category.id}
                 initial={{ opacity: 0, scale: 0.9 }}
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ delay: 0.3 + index * 0.05, duration: 0.3 }}
+                aria-pressed={activeCategory === category.id}
                 onClick={() => setActiveCategory(category.id)}
                 style={{
                   display: "inline-flex",
@@ -230,7 +252,7 @@ export default function FAQPage() {
                   border: "none",
                   background:
                     activeCategory === category.id
-                      ? "linear-gradient(135deg, var(--orange-9) 0%, var(--amber-9) 100%)"
+                      ? "linear-gradient(135deg, var(--violet-9) 0%, var(--purple-9) 100%)"
                       : "var(--gray-a3)",
                   color:
                     activeCategory === category.id ? "white" : "var(--gray-11)",
@@ -267,11 +289,55 @@ export default function FAQPage() {
                 style={{ color: "var(--gray-8)", marginBottom: 16 }}
               />
               <Heading size="4" mb="2" color="gray">
-                Aucun résultat
+                Aucun resultat
               </Heading>
-              <Text size="3" color="gray">
-                Aucune question ne correspond à votre recherche &quot;{searchQuery}&quot;
+              <Text
+                size="3"
+                color="gray"
+                style={{ display: "block", marginBottom: 16 }}
+              >
+                Aucune question ne correspond a{" "}
+                {searchQuery
+                  ? <>votre recherche &quot;{searchQuery}&quot;</>
+                  : <>cette categorie</>
+                }
               </Text>
+              <Flex gap="2" justify="center" wrap="wrap">
+                {searchQuery ? <button
+                    onClick={() => setSearchQuery("")}
+                    style={{
+                      padding: "10px 20px",
+                      borderRadius: 9999,
+                      border: "1px solid var(--gray-a6)",
+                      background: "transparent",
+                      color: "var(--gray-11)",
+                      fontSize: 14,
+                      fontWeight: 500,
+                      cursor: "pointer",
+                      transition: "all 0.2s ease",
+                    }}
+                  >
+                    Effacer la recherche
+                  </button> : null}
+                {activeCategory !== "all" && (
+                  <button
+                    onClick={() => setActiveCategory("all")}
+                    style={{
+                      padding: "10px 20px",
+                      borderRadius: 9999,
+                      border: "1px solid var(--gray-a6)",
+                      background: "transparent",
+                      color: "var(--gray-11)",
+                      fontSize: 14,
+                      fontWeight: 500,
+                      cursor: "pointer",
+                      transition: "all 0.2s ease",
+                    }}
+                  >
+                    Toutes les categories
+                  </button>
+                )}
+              </Flex>
             </Box>
           ) : (
             <Flex direction="column" gap="3">
@@ -291,6 +357,8 @@ export default function FAQPage() {
                     }}
                   >
                     <button
+                      aria-expanded={openIndex === index}
+                      aria-controls={`faq-answer-${index}`}
                       onClick={() =>
                         setOpenIndex(openIndex === index ? null : index)
                       }
@@ -318,6 +386,7 @@ export default function FAQPage() {
                         <ChevronDown
                           size={20}
                           style={{ color: "var(--gray-10)" }}
+                          aria-hidden="true"
                         />
                       </motion.div>
                     </button>
@@ -325,6 +394,9 @@ export default function FAQPage() {
                     <AnimatePresence>
                       {openIndex === index && (
                         <motion.div
+                          id={`faq-answer-${index}`}
+                          role="region"
+                          aria-labelledby={`faq-question-${index}`}
                           initial={{ height: 0, opacity: 0 }}
                           animate={{ height: "auto", opacity: 1 }}
                           exit={{ height: 0, opacity: 0 }}
@@ -367,9 +439,9 @@ export default function FAQPage() {
         >
           <Grid columns={{ initial: "1", sm: "3" }} gap="4" mt="9" mb="9">
             {[
-              { icon: Users, value: "500+", label: "Clients satisfaits" },
-              { icon: MessageCircle, value: "< 2h", label: "Temps de réponse moyen" },
-              { icon: BarChart3, value: "98%", label: "Taux de résolution" },
+              { icon: Users, value: "6j/7", label: "Support disponible" },
+              { icon: MessageCircle, value: "< 24h", label: "Délai de réponse" },
+              { icon: BarChart3, value: "Dédié", label: "Accompagnement" },
             ].map((stat, index) => (
               <motion.div
                 key={stat.label}
@@ -389,7 +461,7 @@ export default function FAQPage() {
                   <stat.icon
                     size={24}
                     style={{
-                      color: "var(--orange-9)",
+                      color: "var(--violet-9)",
                       marginBottom: 8,
                     }}
                   />
@@ -419,7 +491,7 @@ export default function FAQPage() {
             p="8"
             style={{
               background:
-                "linear-gradient(135deg, var(--orange-9) 0%, var(--amber-9) 100%)",
+                "linear-gradient(135deg, var(--violet-9) 0%, var(--purple-9) 100%)",
               borderRadius: 24,
               textAlign: "center",
             }}
@@ -450,7 +522,7 @@ export default function FAQPage() {
                 style={{
                   textDecoration: "none",
                   background: "white",
-                  color: "var(--orange-9)",
+                  color: "var(--violet-9)",
                   padding: "12px 24px",
                   borderRadius: 9999,
                   fontWeight: 600,

@@ -269,8 +269,7 @@ export function UserMenu() {
           </div>
 
           {/* Établissement */}
-          {user.etablissementNom && (
-            <div
+          {user.etablissementNom ? <div
               style={{
                 display: "flex",
                 alignItems: "center",
@@ -282,8 +281,7 @@ export function UserMenu() {
             >
               <Building2 size={12} />
               {user.etablissementNom}
-            </div>
-          )}
+            </div> : null}
         </div>
 
         {/* Options du menu */}

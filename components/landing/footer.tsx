@@ -11,6 +11,7 @@ import {
 } from "@radix-ui/themes";
 import { MapPin, Phone, Mail, Facebook, Instagram, Linkedin } from "lucide-react";
 import Link from "next/link";
+import Image from "next/image";
 
 const footerLinks = {
   product: {
@@ -35,7 +36,6 @@ const footerLinks = {
     title: "Entreprise",
     links: [
       { label: "À propos", href: "/about" },
-      { label: "Carrières", href: "/careers" },
       { label: "Partenaires", href: "/partners" },
       { label: "Contact", href: "#contact" },
     ],
@@ -76,23 +76,13 @@ export function Footer() {
             <Flex direction="column" gap="4" className="lg:col-span-2">
               {/* Logo */}
               <Flex align="center" gap="3">
-                <Box
-                  style={{
-                    width: 44,
-                    height: 44,
-                    background:
-                      "linear-gradient(135deg, var(--orange-9) 0%, var(--amber-9) 100%)",
-                    color: "white",
-                    fontSize: 14,
-                    fontWeight: 700,
-                    borderRadius: 12,
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                  }}
-                >
-                  O+
-                </Box>
+                <Image
+                  src="/images/logos/ic-lg.webp"
+                  alt="Oréma N+"
+                  width={44}
+                  height={44}
+                  style={{ objectFit: "contain" }}
+                />
                 <Heading size="5">Oréma N+</Heading>
               </Flex>
 
@@ -104,19 +94,19 @@ export function Footer() {
               {/* Contact info */}
               <Flex direction="column" gap="2">
                 <Flex align="center" gap="2">
-                  <MapPin size={14} style={{ color: "var(--gray-10)" }} />
+                  <MapPin size={14} style={{ color: "var(--gray-10)" }} aria-hidden="true" />
                   <Text size="2" color="gray">
                     Libreville, Gabon
                   </Text>
                 </Flex>
                 <Flex align="center" gap="2">
-                  <Phone size={14} style={{ color: "var(--gray-10)" }} />
+                  <Phone size={14} style={{ color: "var(--gray-10)" }} aria-hidden="true" />
                   <Text size="2" color="gray">
                     +241 77 00 00 00
                   </Text>
                 </Flex>
                 <Flex align="center" gap="2">
-                  <Mail size={14} style={{ color: "var(--gray-10)" }} />
+                  <Mail size={14} style={{ color: "var(--gray-10)" }} aria-hidden="true" />
                   <Text size="2" color="gray">
                     contact@orema-nplus.ga
                   </Text>
@@ -153,6 +143,7 @@ export function Footer() {
                     <social.icon
                       size={16}
                       style={{ color: "var(--gray-11)" }}
+                      aria-hidden="true"
                     />
                   </a>
                 ))}
@@ -182,7 +173,7 @@ export function Footer() {
                       }}
                       onMouseEnter={(e) => {
                         e.currentTarget.style.backgroundColor = "var(--gray-a3)";
-                        e.currentTarget.style.color = "var(--orange-9)";
+                        e.currentTarget.style.color = "var(--violet-9)";
                       }}
                       onMouseLeave={(e) => {
                         e.currentTarget.style.backgroundColor = "transparent";

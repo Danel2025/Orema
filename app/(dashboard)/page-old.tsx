@@ -9,7 +9,7 @@ export default function DashboardPage() {
       unit: "FCFA",
       icon: ShoppingCart,
       trend: "+0%",
-      color: "orange" as const,
+      color: "violet" as const,
     },
     {
       title: "Produits en stock",

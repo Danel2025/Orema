@@ -65,7 +65,7 @@ export function EmployeeFormModal({
     reset,
     setValue,
     formState: { errors },
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+   
   } = useForm<FormData>({
     resolver: zodResolver(isEditing ? updateEmployeSchema : createEmployeSchema) as any,
     defaultValues: isEditing
@@ -172,11 +172,9 @@ export function EmployeeFormModal({
                   {...register('nom')}
                   placeholder="Nom de famille"
                 />
-                {errors.nom && (
-                  <Text size="1" color="red">
+                {errors.nom ? <Text size="1" color="red">
                     {errors.nom.message}
-                  </Text>
-                )}
+                  </Text> : null}
               </Flex>
 
               <Flex direction="column" gap="1" style={{ flex: 1 }}>
@@ -187,11 +185,9 @@ export function EmployeeFormModal({
                   {...register('prenom')}
                   placeholder="Prenom"
                 />
-                {errors.prenom && (
-                  <Text size="1" color="red">
+                {errors.prenom ? <Text size="1" color="red">
                     {errors.prenom.message}
-                  </Text>
-                )}
+                  </Text> : null}
               </Flex>
             </Flex>
 
@@ -205,11 +201,9 @@ export function EmployeeFormModal({
                 type="email"
                 placeholder="email@exemple.com"
               />
-              {errors.email && (
-                <Text size="1" color="red">
+              {errors.email ? <Text size="1" color="red">
                   {errors.email.message}
-                </Text>
-              )}
+                </Text> : null}
             </Flex>
 
             {/* Role */}
@@ -236,11 +230,9 @@ export function EmployeeFormModal({
                   </Select.Root>
                 )}
               />
-              {errors.role && (
-                <Text size="1" color="red">
+              {errors.role ? <Text size="1" color="red">
                   {errors.role.message}
-                </Text>
-              )}
+                </Text> : null}
             </Flex>
 
             {/* Mot de passe (creation uniquement) */}
@@ -273,11 +265,9 @@ export function EmployeeFormModal({
                     </button>
                   </TextField.Slot>
                 </TextField.Root>
-                {(errors as Record<string, { message?: string }>).password && (
-                  <Text size="1" color="red">
+                {(errors as Record<string, { message?: string }>).password ? <Text size="1" color="red">
                     {(errors as Record<string, { message?: string }>).password?.message}
-                  </Text>
-                )}
+                  </Text> : null}
                 <Text size="1" color="gray">
                   Majuscule, minuscule et chiffre requis
                 </Text>
@@ -325,11 +315,9 @@ export function EmployeeFormModal({
                     </button>
                   </TextField.Slot>
                 </TextField.Root>
-                {(errors as Record<string, { message?: string }>).pinCode && (
-                  <Text size="1" color="red">
+                {(errors as Record<string, { message?: string }>).pinCode ? <Text size="1" color="red">
                     {(errors as Record<string, { message?: string }>).pinCode?.message}
-                  </Text>
-                )}
+                  </Text> : null}
                 <Text size="1" color="gray">
                   Pour connexion rapide a la caisse
                 </Text>

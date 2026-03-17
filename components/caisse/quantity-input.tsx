@@ -115,11 +115,9 @@ export function QuantityInput({ onConfirm, compact = false }: QuantityInputProps
         >
           {displayValue || "1"}
         </Text>
-        {pendingQuantity && (
-          <IconButton size="1" variant="ghost" color="gray" onClick={handleClear}>
+        {pendingQuantity ? <IconButton size="1" variant="ghost" color="gray" onClick={handleClear}>
             <X size={14} />
-          </IconButton>
-        )}
+          </IconButton> : null}
       </Flex>
     );
   }

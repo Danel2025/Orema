@@ -130,8 +130,7 @@ export function DiscountModal({
         </Dialog.Description>
 
         {/* Scope: Ligne ou Panier (uniquement si un item est selectionne) */}
-        {selectedItem && (
-          <Box mb="4">
+        {selectedItem ? <Box mb="4">
             <Text as="label" size="2" weight="medium" mb="2" style={{ display: "block" }}>
               Appliquer sur
             </Text>
@@ -142,8 +141,7 @@ export function DiscountModal({
               <SegmentedControl.Item value="ligne">Cette ligne</SegmentedControl.Item>
               <SegmentedControl.Item value="panier">Tout le panier</SegmentedControl.Item>
             </SegmentedControl.Root>
-          </Box>
-        )}
+          </Box> : null}
 
         {/* Type de remise */}
         <Box mb="4">
@@ -196,8 +194,7 @@ export function DiscountModal({
         </Box>
 
         {/* Apercu */}
-        {preview && (
-          <Box
+        {preview ? <Box
             p="3"
             mb="4"
             style={{
@@ -260,21 +257,18 @@ export function DiscountModal({
                 </Flex>
               </Box>
             </Flex>
-          </Box>
-        )}
+          </Box> : null}
 
         {/* Actions */}
         <Flex gap="3" mt="4" justify="end">
-          {selectedItem?.remiseLigne && (
-            <Button
+          {selectedItem?.remiseLigne ? <Button
               variant="soft"
               color="red"
               onClick={handleClearLineRemise}
               style={{ marginRight: "auto" }}
             >
               Supprimer remise
-            </Button>
-          )}
+            </Button> : null}
           <Dialog.Close>
             <Button variant="soft" color="gray">
               Annuler

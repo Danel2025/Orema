@@ -270,24 +270,20 @@ export function PinLockScreen({ children }: PinLockScreenProps) {
           </Flex>
 
           {/* Message d'erreur */}
-          {error && (
-            <Flex gap="2" align="center">
+          {error ? <Flex gap="2" align="center">
               <AlertCircle size={14} color="var(--red-9)" />
               <Text size="2" color="red">
                 {error}
               </Text>
-            </Flex>
-          )}
+            </Flex> : null}
 
           {/* Indicateur de vérification */}
-          {isVerifying && (
-            <Flex gap="2" align="center">
+          {isVerifying ? <Flex gap="2" align="center">
               <Spinner size="1" />
               <Text size="2" color="gray">
                 Vérification...
               </Text>
-            </Flex>
-          )}
+            </Flex> : null}
         </Flex>
 
         {/* Bouton de déconnexion */}

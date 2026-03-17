@@ -2,8 +2,39 @@
 @import "tailwindcss";
 
 /* ============================================================================
+   Skip to content - Accessibility
+   ============================================================================ */
+
+.skip-to-content {
+  position: absolute;
+  left: -9999px;
+  top: auto;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  z-index: 9999;
+  text-decoration: none;
+}
+
+.skip-to-content:focus {
+  position: fixed;
+  top: 8px;
+  left: 8px;
+  width: auto;
+  height: auto;
+  overflow: visible;
+  padding: 12px 24px;
+  background: var(--violet-9);
+  color: white;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 14px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+/* ============================================================================
    Variables de couleurs - Oréma N+ POS
-   Basé sur Radix UI Colors avec accent Orange et gris Slate
+   Basé sur Radix UI Colors avec accent Violet et gris Slate
    ============================================================================ */
 
 :root {
@@ -235,6 +266,26 @@ body:has(.scroll-page) {
 
 .animate-slide-up {
   animation: slideUp 300ms ease-out;
+}
+
+/* Animation spin pour les icônes de chargement/sync */
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Animation pulse pour les badges de notification */
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.7;
+  }
 }
 
 /* Animation pulse lente pour les éléments décoratifs */

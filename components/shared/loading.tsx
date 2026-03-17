@@ -21,7 +21,7 @@ export function Loading({ size = "md", text, className }: LoadingProps) {
   return (
     <div className={cn("flex flex-col items-center justify-center gap-2", className)}>
       <Loader2 className={cn("animate-spin text-accent", sizeClasses[size])} />
-      {text && <p className="text-sm text-gray-600 dark:text-gray-400">{text}</p>}
+      {text ? <p className="text-sm text-gray-600 dark:text-gray-400">{text}</p> : null}
     </div>
   );
 }
@@ -31,7 +31,7 @@ export function Loading({ size = "md", text, className }: LoadingProps) {
  */
 export function SkeletonCard() {
   return (
-    <div className="skeleton h-32 w-full rounded-lg" aria-label="Chargement..."></div>
+    <div className="skeleton h-32 w-full rounded-lg" aria-label="Chargement..." />
   );
 }
 
@@ -41,9 +41,9 @@ export function SkeletonCard() {
 export function SkeletonRow() {
   return (
     <div className="flex gap-4">
-      <div className="skeleton h-4 flex-1 rounded"></div>
-      <div className="skeleton h-4 w-24 rounded"></div>
-      <div className="skeleton h-4 w-16 rounded"></div>
+      <div className="skeleton h-4 flex-1 rounded" />
+      <div className="skeleton h-4 w-24 rounded" />
+      <div className="skeleton h-4 w-16 rounded" />
     </div>
   );
 }

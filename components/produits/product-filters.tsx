@@ -162,8 +162,7 @@ export function ProductFilters({
               color: "var(--gray-12)",
             }}
           />
-          {localSearch && (
-            <button
+          {localSearch ? <button
               onClick={() => {
                 setLocalSearch("");
                 onFiltersChange({ ...filters, search: "" });
@@ -177,8 +176,7 @@ export function ProductFilters({
               }}
             >
               <X size={16} />
-            </button>
-          )}
+            </button> : null}
         </div>
 
         {/* Filtre catégorie */}
@@ -243,16 +241,14 @@ export function ProductFilters({
         >
           <SlidersHorizontal size={16} />
           Filtres
-          {hasActiveFilters && (
-            <span
+          {hasActiveFilters ? <span
               style={{
                 width: 6,
                 height: 6,
                 borderRadius: "50%",
                 backgroundColor: "var(--accent-9)",
               }}
-            />
-          )}
+            /> : null}
         </button>
 
         {/* Compteur */}
@@ -274,8 +270,7 @@ export function ProductFilters({
       </div>
 
       {/* Filtres avancés */}
-      {showAdvanced && (
-        <div
+      {showAdvanced ? <div
           style={{
             marginTop: 16,
             padding: 16,
@@ -423,11 +418,9 @@ export function ProductFilters({
                     }}
                   >
                     {option.label}
-                    {isActive && (
-                      <span style={{ fontSize: 10 }}>
+                    {isActive ? <span style={{ fontSize: 10 }}>
                         {filters.sortDirection === "asc" ? "↑" : "↓"}
-                      </span>
-                    )}
+                      </span> : null}
                   </button>
                 );
               })}
@@ -435,8 +428,7 @@ export function ProductFilters({
           </div>
 
           {/* Bouton réinitialiser */}
-          {hasActiveFilters && (
-            <div style={{ borderTop: "1px solid var(--gray-a6)", paddingTop: 12 }}>
+          {hasActiveFilters ? <div style={{ borderTop: "1px solid var(--gray-a6)", paddingTop: 12 }}>
               <button
                 onClick={handleClearFilters}
                 style={{
@@ -456,14 +448,11 @@ export function ProductFilters({
                 <X size={14} />
                 Reinitialiser les filtres
               </button>
-            </div>
-          )}
-        </div>
-      )}
+            </div> : null}
+        </div> : null}
 
       {/* Filtres actifs (badges) */}
-      {hasActiveFilters && !showAdvanced && (
-        <div
+      {hasActiveFilters && !showAdvanced ? <div
           style={{
             display: "flex",
             alignItems: "center",
@@ -476,22 +465,18 @@ export function ProductFilters({
             Filtres actifs:
           </span>
 
-          {filters.search && (
-            <FilterBadge
+          {filters.search ? <FilterBadge
               label={`Recherche: "${filters.search}"`}
               onRemove={() => {
                 setLocalSearch("");
                 onFiltersChange({ ...filters, search: "" });
               }}
-            />
-          )}
+            /> : null}
 
-          {filters.categorieId && (
-            <FilterBadge
+          {filters.categorieId ? <FilterBadge
               label={`Categorie: ${categories.find((c) => c.id === filters.categorieId)?.nom || ""}`}
               onRemove={() => onFiltersChange({ ...filters, categorieId: "" })}
-            />
-          )}
+            /> : null}
 
           {filters.stockFilter !== "all" && (
             <FilterBadge
@@ -500,14 +485,11 @@ export function ProductFilters({
             />
           )}
 
-          {filters.showInactive && (
-            <FilterBadge
+          {filters.showInactive ? <FilterBadge
               label="Produits inactifs"
               onRemove={() => onFiltersChange({ ...filters, showInactive: false })}
-            />
-          )}
-        </div>
-      )}
+            /> : null}
+        </div> : null}
     </div>
   );
 }

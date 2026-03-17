@@ -72,14 +72,12 @@ export function RegisterStepUser({
               <UserIcon size={16} />
             </TextField.Slot>
           </TextField.Root>
-          {errors.prenom && (
-            <Flex gap="1" align="center" mt="1">
+          {errors.prenom ? <Flex gap="1" align="center" mt="1">
               <AlertCircleIcon size={14} color="var(--red-9)" />
               <Text size="1" color="red">
                 {errors.prenom.message}
               </Text>
-            </Flex>
-          )}
+            </Flex> : null}
         </Box>
 
         {/* Nom */}
@@ -101,14 +99,12 @@ export function RegisterStepUser({
               <UserIcon size={16} />
             </TextField.Slot>
           </TextField.Root>
-          {errors.nom && (
-            <Flex gap="1" align="center" mt="1">
+          {errors.nom ? <Flex gap="1" align="center" mt="1">
               <AlertCircleIcon size={14} color="var(--red-9)" />
               <Text size="1" color="red">
                 {errors.nom.message}
               </Text>
-            </Flex>
-          )}
+            </Flex> : null}
         </Box>
 
         {/* Email */}
@@ -130,14 +126,12 @@ export function RegisterStepUser({
               <MailIcon size={16} />
             </TextField.Slot>
           </TextField.Root>
-          {errors.email && (
-            <Flex gap="1" align="center" mt="1">
+          {errors.email ? <Flex gap="1" align="center" mt="1">
               <AlertCircleIcon size={14} color="var(--red-9)" />
               <Text size="1" color="red">
                 {errors.email.message}
               </Text>
-            </Flex>
-          )}
+            </Flex> : null}
         </Box>
 
         {/* Mot de passe */}
@@ -178,14 +172,12 @@ export function RegisterStepUser({
               </button>
             </TextField.Slot>
           </TextField.Root>
-          {errors.password && (
-            <Flex gap="1" align="center" mt="1">
+          {errors.password ? <Flex gap="1" align="center" mt="1">
               <AlertCircleIcon size={14} color="var(--red-9)" />
               <Text size="1" color="red">
                 {errors.password.message}
               </Text>
-            </Flex>
-          )}
+            </Flex> : null}
           <Text size="1" color="gray" mt="1">
             Majuscule, minuscule et chiffre requis
           </Text>
@@ -229,14 +221,12 @@ export function RegisterStepUser({
               </button>
             </TextField.Slot>
           </TextField.Root>
-          {errors.confirmPassword && (
-            <Flex gap="1" align="center" mt="1">
+          {errors.confirmPassword ? <Flex gap="1" align="center" mt="1">
               <AlertCircleIcon size={14} color="var(--red-9)" />
               <Text size="1" color="red">
                 {errors.confirmPassword.message}
               </Text>
-            </Flex>
-          )}
+            </Flex> : null}
         </Box>
 
         {/* Bouton suivant */}

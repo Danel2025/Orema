@@ -202,13 +202,11 @@ export function TableDetailsPanel({
                 {STATUT_TABLE_LABELS[value]}
               </Button>
             ))}
-            {isPending && <Spinner size="1" />}
+            {isPending ? <Spinner size="1" /> : null}
           </Flex>
-          {readOnly && (
-            <Text size="1" color="gray" mt="2">
+          {readOnly ? <Text size="1" color="gray" mt="2">
               Mode lecture seule
-            </Text>
-          )}
+            </Text> : null}
         </Box>
 
         <Separator size="4" mb="4" />

@@ -6,16 +6,18 @@
  */
 
 import { revalidatePath } from "next/cache";
-import { createServiceClient, db } from "@/lib/db";
-import { getEtablissementId } from "@/lib/etablissement";
+import { createAuthenticatedClient, db } from "@/lib/db";
+import { getCurrentUser } from "@/lib/auth";
 import { categorieSchema, type CategorieFormData } from "@/schemas/categorie.schema";
 
 /**
  * Récupère toutes les catégories de l'établissement
  */
 export async function getCategories(options?: { includeInactive?: boolean }) {
-  const etablissementId = await getEtablissementId();
-  const supabase = createServiceClient();
+  const user = await getCurrentUser();
+  if (!user || !user.etablissementId) return [];
+  const etablissementId = user.etablissementId;
+  const supabase = await createAuthenticatedClient({ userId: user.userId, etablissementId, role: user.role });
 
   const categories = await db.getCategories(supabase, etablissementId, {
     actif: options?.includeInactive ? undefined : true,
@@ -41,12 +43,14 @@ export async function getCategories(options?: { includeInactive?: boolean }) {
  * Récupère une catégorie par son ID
  */
 export async function getCategorieById(id: string) {
-  const etablissementId = await getEtablissementId();
-  const supabase = createServiceClient();
+  const user = await getCurrentUser();
+  if (!user || !user.etablissementId) return null;
+  const etablissementId = user.etablissementId;
+  const supabase = await createAuthenticatedClient({ userId: user.userId, etablissementId, role: user.role });
 
   const categorie = await db.getCategorieById(supabase, id);
 
-  if (!categorie || categorie.etablissement_id !== etablissementId) {
+  if (!categorie) {
     return null;
   }
 
@@ -66,8 +70,10 @@ export async function getCategorieById(id: string) {
  */
 export async function createCategorie(data: CategorieFormData) {
   try {
-    const etablissementId = await getEtablissementId();
-    const supabase = createServiceClient();
+    const user = await getCurrentUser();
+    if (!user || !user.etablissementId) return { success: false, error: "Vous devez être connecté" };
+    const etablissementId = user.etablissementId;
+    const supabase = await createAuthenticatedClient({ userId: user.userId, etablissementId, role: user.role });
 
     // Validation
     const validationResult = categorieSchema.safeParse(data);
@@ -131,16 +137,18 @@ export async function createCategorie(data: CategorieFormData) {
  */
 export async function updateCategorie(id: string, data: CategorieFormData) {
   try {
-    const etablissementId = await getEtablissementId();
-    const supabase = createServiceClient();
+    const user = await getCurrentUser();
+    if (!user || !user.etablissementId) return { success: false, error: "Vous devez être connecté" };
+    const etablissementId = user.etablissementId;
+    const supabase = await createAuthenticatedClient({ userId: user.userId, etablissementId, role: user.role });
 
     // Validation
     const validatedData = categorieSchema.parse(data);
 
-    // Vérifier que la catégorie existe et appartient à l'établissement
+    // Vérifier que la catégorie existe (RLS filtre par établissement)
     const existing = await db.getCategorieById(supabase, id);
 
-    if (!existing || existing.etablissement_id !== etablissementId) {
+    if (!existing) {
       return {
         success: false,
         error: "Catégorie non trouvée",
@@ -192,13 +200,15 @@ export async function updateCategorie(id: string, data: CategorieFormData) {
  */
 export async function deleteCategorie(id: string) {
   try {
-    const etablissementId = await getEtablissementId();
-    const supabase = createServiceClient();
+    const user = await getCurrentUser();
+    if (!user || !user.etablissementId) return { success: false, error: "Vous devez être connecté" };
+    const etablissementId = user.etablissementId;
+    const supabase = await createAuthenticatedClient({ userId: user.userId, etablissementId, role: user.role });
 
-    // Vérifier que la catégorie existe et appartient à l'établissement
+    // Vérifier que la catégorie existe (RLS filtre par établissement)
     const categorie = await db.getCategorieById(supabase, id);
 
-    if (!categorie || categorie.etablissement_id !== etablissementId) {
+    if (!categorie) {
       return {
         success: false,
         error: "Catégorie non trouvée",
@@ -239,8 +249,10 @@ export async function deleteCategorie(id: string) {
  */
 export async function reorderCategories(orderedIds: string[]) {
   try {
-    const etablissementId = await getEtablissementId();
-    const supabase = createServiceClient();
+    const user = await getCurrentUser();
+    if (!user || !user.etablissementId) return { success: false, error: "Vous devez être connecté" };
+    const etablissementId = user.etablissementId;
+    const supabase = await createAuthenticatedClient({ userId: user.userId, etablissementId, role: user.role });
 
     // Vérifier que toutes les catégories appartiennent à l'établissement
     const categories = await db.getCategories(supabase, etablissementId);
@@ -273,12 +285,13 @@ export async function reorderCategories(orderedIds: string[]) {
  */
 export async function toggleCategorieActif(id: string) {
   try {
-    const etablissementId = await getEtablissementId();
-    const supabase = createServiceClient();
+    const user = await getCurrentUser();
+    if (!user || !user.etablissementId) return { success: false, error: "Vous devez être connecté" };
+    const supabase = await createAuthenticatedClient({ userId: user.userId, etablissementId: user.etablissementId, role: user.role });
 
     const categorie = await db.getCategorieById(supabase, id);
 
-    if (!categorie || categorie.etablissement_id !== etablissementId) {
+    if (!categorie) {
       return {
         success: false,
         error: "Catégorie non trouvée",
@@ -308,8 +321,10 @@ export async function toggleCategorieActif(id: string) {
  * Récupère les imprimantes disponibles
  */
 export async function getImprimantes() {
-  const etablissementId = await getEtablissementId();
-  const supabase = createServiceClient();
+  const user = await getCurrentUser();
+  if (!user || !user.etablissementId) return [];
+  const etablissementId = user.etablissementId;
+  const supabase = await createAuthenticatedClient({ userId: user.userId, etablissementId, role: user.role });
 
   const imprimantes = await db.getImprimantes(supabase, etablissementId, {
     actif: true,

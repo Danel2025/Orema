@@ -200,8 +200,7 @@ export function ZoneElement({
       </div>
 
       {/* Actions (edit mode) */}
-      {isSelected && isEditMode && (
-        <div
+      {isSelected && isEditMode ? <div
           style={{
             position: "absolute",
             top: 8,
@@ -210,8 +209,7 @@ export function ZoneElement({
             gap: 4,
           }}
         >
-          {onEdit && (
-            <button
+          {onEdit ? <button
               data-action-btn
               onClick={(e) => {
                 e.stopPropagation();
@@ -233,10 +231,8 @@ export function ZoneElement({
               title="Modifier"
             >
               <Pencil size={12} />
-            </button>
-          )}
-          {onDelete && (
-            <button
+            </button> : null}
+          {onDelete ? <button
               data-action-btn
               onClick={(e) => {
                 e.stopPropagation();
@@ -258,14 +254,11 @@ export function ZoneElement({
               title="Supprimer"
             >
               <X size={12} />
-            </button>
-          )}
-        </div>
-      )}
+            </button> : null}
+        </div> : null}
 
       {/* Resize handles (edit mode, selected) */}
-      {isSelected && isEditMode && onResizeStart && (
-        <>
+      {isSelected && isEditMode && onResizeStart ? <>
           {RESIZE_HANDLES.map((handle) => (
             <div
               key={handle.position}
@@ -277,8 +270,7 @@ export function ZoneElement({
               }}
             />
           ))}
-        </>
-      )}
+        </> : null}
     </div>
   );
 }

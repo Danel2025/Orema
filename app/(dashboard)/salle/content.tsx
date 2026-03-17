@@ -228,7 +228,7 @@ export function SalleContent({
         </Box>
 
         <Flex gap="2">
-          {canEdit && <ZoneManager zones={zones} onRefresh={handleRefresh} />}
+          {canEdit ? <ZoneManager zones={zones} onRefresh={handleRefresh} /> : null}
           <Button variant="soft" color="gray" onClick={handleRefresh}>
             <RefreshCw size={14} />
             Actualiser

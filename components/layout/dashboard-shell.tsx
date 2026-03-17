@@ -22,7 +22,7 @@ export function DashboardShell({ children }: DashboardShellProps) {
   return (
     <div style={{ display: "flex", height: "100%", minHeight: 0 }}>
       {/* Sidebar - Visible uniquement pour les admins */}
-      {showSidebar && <Sidebar />}
+      {showSidebar ? <Sidebar /> : null}
 
       {/* Main wrapper - Pleine largeur pour non-admins, décalé pour admins */}
       <div

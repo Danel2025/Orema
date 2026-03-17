@@ -304,11 +304,9 @@ export function BackupSettings({ initialBackups = [], initialStats = {} }: Backu
                   size="3"
                 />
               </Box>
-              {errors.nom && (
-                <Text size="1" color="red" mt="1">
+              {errors.nom ? <Text size="1" color="red" mt="1">
                   {errors.nom.message}
-                </Text>
-              )}
+                </Text> : null}
             </Box>
 
             {/* Type de sauvegarde */}
@@ -392,11 +390,9 @@ export function BackupSettings({ initialBackups = [], initialStats = {} }: Backu
                     </Flex>
                   )}
                 />
-                {errors.categories && (
-                  <Text size="1" color="red" mt="2">
+                {errors.categories ? <Text size="1" color="red" mt="2">
                     {errors.categories.message}
-                  </Text>
-                )}
+                  </Text> : null}
               </Box>
             )}
 
@@ -417,21 +413,19 @@ export function BackupSettings({ initialBackups = [], initialStats = {} }: Backu
                     Total a sauvegarder:
                   </Text>
                 </Flex>
-                <Text size="3" weight="bold" color="orange">
+                <Text size="3" weight="bold" color="violet">
                   {getTotalSelectedRecords().toLocaleString()} enregistrements
                 </Text>
               </Flex>
             </Box>
 
             {/* Barre de progression */}
-            {isCreating && (
-              <Box>
+            {isCreating ? <Box>
                 <Progress value={progress} size="2" />
                 <Text size="1" color="gray" mt="1">
                   Creation de la sauvegarde en cours...
                 </Text>
-              </Box>
-            )}
+              </Box> : null}
 
             {/* Bouton de creation */}
             <Flex justify="end">

@@ -1,6 +1,5 @@
 "use client";
 
-import type { JSX } from "react";
 import {
   Box,
   Container,
@@ -12,11 +11,13 @@ import {
   Badge,
   Skeleton,
 } from "@radix-ui/themes";
+import { MarkdownRenderer } from "@/components/public/markdown-renderer";
 import { motion } from "motion/react";
+import type {
+  LucideIcon} from "lucide-react";
 import {
   ChevronRight,
   ChevronLeft,
-  Clock,
   Calendar,
   User,
   Tag,
@@ -24,7 +25,6 @@ import {
   Twitter,
   Facebook,
   Linkedin,
-  LucideIcon,
   Globe,
   Lightbulb,
   Zap,
@@ -144,7 +144,7 @@ export default function BlogPostPage() {
       <Box style={{ background: "var(--gray-1)" }}>
         <Box
           style={{
-            background: "var(--orange-a2)",
+            background: "var(--violet-a2)",
             paddingTop: 120,
             paddingBottom: 40,
           }}
@@ -173,207 +173,43 @@ export default function BlogPostPage() {
   const prevPost = currentIndex > 0 ? allPosts[currentIndex - 1] : null;
   const nextPost = currentIndex < allPosts.length - 1 ? allPosts[currentIndex + 1] : null;
 
-  // Simple markdown-like rendering
-  const renderContent = (content: string) => {
-    const lines = content.trim().split("\n");
-    const elements: JSX.Element[] = [];
-    let inCodeBlock = false;
-    let codeContent: string[] = [];
-
-    lines.forEach((line, index) => {
-      if (line.startsWith("```")) {
-        if (inCodeBlock) {
-          elements.push(
-            <Box
-              key={`code-${index}`}
-              my="4"
-              p="4"
-              style={{
-                background: "var(--gray-a3)",
-                borderRadius: 12,
-                overflow: "auto",
-                fontFamily: "var(--font-google-sans-code), monospace",
-                fontSize: 13,
-                lineHeight: 1.6,
-              }}
-            >
-              <pre style={{ margin: 0 }}>
-                <code>{codeContent.join("\n")}</code>
-              </pre>
-            </Box>
-          );
-          codeContent = [];
-          inCodeBlock = false;
-        } else {
-          inCodeBlock = true;
+  const blogPostingJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "BlogPosting",
+    headline: post.title,
+    description: post.excerpt || "",
+    datePublished: post.published_at || undefined,
+    author: post.author
+      ? {
+          "@type": "Person",
+          name: post.author.name,
         }
-        return;
-      }
-
-      if (inCodeBlock) {
-        codeContent.push(line);
-        return;
-      }
-
-      if (line.startsWith("## ")) {
-        elements.push(
-          <Heading key={index} size="5" mt="6" mb="3">
-            {line.slice(3)}
-          </Heading>
-        );
-        return;
-      }
-      if (line.startsWith("### ")) {
-        elements.push(
-          <Heading key={index} size="4" mt="5" mb="2">
-            {line.slice(4)}
-          </Heading>
-        );
-        return;
-      }
-      if (line.startsWith("#### ")) {
-        elements.push(
-          <Heading key={index} size="3" mt="4" mb="2">
-            {line.slice(5)}
-          </Heading>
-        );
-        return;
-      }
-
-      if (line.startsWith("> ")) {
-        elements.push(
-          <Box
-            key={index}
-            my="4"
-            p="4"
-            style={{
-              background: `var(--${post.color || "orange"}-a2)`,
-              borderLeft: `4px solid var(--${post.color || "orange"}-9)`,
-              borderRadius: "0 8px 8px 0",
-            }}
-          >
-            <Text size="3" style={{ color: `var(--${post.color || "orange"}-11)`, fontStyle: "italic" }}>
-              {line.slice(2)}
-            </Text>
-          </Box>
-        );
-        return;
-      }
-
-      if (line.startsWith("- ") || line.startsWith("* ")) {
-        elements.push(
-          <Flex key={index} gap="2" my="1" ml="4">
-            <Text style={{ color: "var(--gray-10)" }}>•</Text>
-            <Text size="3" style={{ color: "var(--gray-11)", lineHeight: 1.7 }}>
-              {renderInlineFormatting(line.slice(2))}
-            </Text>
-          </Flex>
-        );
-        return;
-      }
-
-      if (line.startsWith("|") && line.endsWith("|")) {
-        elements.push(
-          <Text
-            key={index}
-            size="2"
-            style={{
-              fontFamily: "var(--font-google-sans-code), monospace",
-              color: "var(--gray-11)",
-              display: "block",
-              whiteSpace: "pre",
-            }}
-          >
-            {line}
-          </Text>
-        );
-        return;
-      }
-
-      if (line.startsWith("---")) {
-        elements.push(<Separator key={index} size="4" my="6" />);
-        return;
-      }
-
-      if (line.trim() === "") {
-        elements.push(<Box key={index} style={{ height: 12 }} />);
-        return;
-      }
-
-      elements.push(
-        <Text
-          key={index}
-          size="3"
-          style={{ color: "var(--gray-11)", lineHeight: 1.8, display: "block" }}
-        >
-          {renderInlineFormatting(line)}
-        </Text>
-      );
-    });
-
-    return elements;
-  };
-
-  const renderInlineFormatting = (text: string) => {
-    const parts = text.split(/(\*\*[^*]+\*\*)/g);
-    return parts.map((part, i) => {
-      if (part.startsWith("**") && part.endsWith("**")) {
-        return (
-          <strong key={i} style={{ fontWeight: 600, color: "var(--gray-12)" }}>
-            {part.slice(2, -2)}
-          </strong>
-        );
-      }
-      const codeParts = part.split(/(`[^`]+`)/g);
-      return codeParts.map((codePart, j) => {
-        if (codePart.startsWith("`") && codePart.endsWith("`")) {
-          return (
-            <code
-              key={`${i}-${j}`}
-              style={{
-                background: "var(--gray-a4)",
-                padding: "2px 6px",
-                borderRadius: 4,
-                fontFamily: "var(--font-google-sans-code), monospace",
-                fontSize: "0.9em",
-              }}
-            >
-              {codePart.slice(1, -1)}
-            </code>
-          );
-        }
-        // Handle links [text](/url)
-        const linkRegex = /\[([^\]]+)\]\(([^)]+)\)/g;
-        const linkParts = codePart.split(linkRegex);
-        if (linkParts.length > 1) {
-          const result: (string | JSX.Element)[] = [];
-          for (let k = 0; k < linkParts.length; k += 3) {
-            if (linkParts[k]) result.push(linkParts[k]);
-            if (linkParts[k + 1] && linkParts[k + 2]) {
-              result.push(
-                <Link
-                  key={`${i}-${j}-${k}`}
-                  href={linkParts[k + 2]}
-                  style={{ color: `var(--${post.color || "orange"}-9)`, textDecoration: "none" }}
-                >
-                  {linkParts[k + 1]}
-                </Link>
-              );
-            }
-          }
-          return result;
-        }
-        return codePart;
-      });
-    });
+      : undefined,
+    publisher: {
+      "@type": "Organization",
+      name: "Oréma N+",
+      url: "https://orema-nplus.ga",
+    },
+    mainEntityOfPage: {
+      "@type": "WebPage",
+      "@id": `https://orema-nplus.ga/blog/${slug}`,
+    },
+    keywords: post.tags.map((tag) => tag.name).join(", "),
+    inLanguage: "fr",
   };
 
   return (
     <Box style={{ background: "var(--gray-1)" }}>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify(blogPostingJsonLd).replace(/</g, "\\u003c"),
+        }}
+      />
       {/* Hero */}
       <Box
         style={{
-          background: `linear-gradient(180deg, var(--${post.color || "orange"}-a2) 0%, var(--gray-1) 100%)`,
+          background: `linear-gradient(180deg, var(--${post.color || "violet"}-a2) 0%, var(--gray-1) 100%)`,
           paddingTop: 120,
           paddingBottom: 40,
         }}
@@ -385,22 +221,24 @@ export default function BlogPostPage() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.1, duration: 0.4 }}
           >
-            <Flex align="center" gap="2" mb="6">
-              <Link
-                href="/blog"
-                style={{
-                  textDecoration: "none",
-                  color: "var(--gray-11)",
-                  fontSize: 14,
-                }}
-              >
-                Blog
-              </Link>
-              <ChevronRight size={14} style={{ color: "var(--gray-8)" }} />
-              <Text size="2" style={{ color: `var(--${post.color || "orange"}-9)` }}>
-                {post.title.length > 30 ? `${post.title.slice(0, 30)}...` : post.title}
-              </Text>
-            </Flex>
+            <nav aria-label="Fil d'Ariane">
+              <Flex align="center" gap="2" mb="6">
+                <Link
+                  href="/blog"
+                  style={{
+                    textDecoration: "none",
+                    color: "var(--gray-11)",
+                    fontSize: 14,
+                  }}
+                >
+                  Blog
+                </Link>
+                <ChevronRight size={14} style={{ color: "var(--gray-8)" }} aria-hidden="true" />
+                <Text size="2" style={{ color: `var(--${post.color || "violet"}-9)` }} aria-current="page">
+                  {post.title.length > 30 ? `${post.title.slice(0, 30)}...` : post.title}
+                </Text>
+              </Flex>
+            </nav>
           </motion.div>
 
           <motion.div
@@ -431,13 +269,13 @@ export default function BlogPostPage() {
                     width: 36,
                     height: 36,
                     borderRadius: "50%",
-                    background: `var(--${post.color || "orange"}-a4)`,
+                    background: `var(--${post.color || "violet"}-a4)`,
                     display: "flex",
                     alignItems: "center",
                     justifyContent: "center",
                   }}
                 >
-                  <User size={16} style={{ color: `var(--${post.color || "orange"}-9)` }} />
+                  <User size={16} style={{ color: `var(--${post.color || "violet"}-9)` }} />
                 </Box>
                 <Box>
                   <Text size="2" weight="medium" style={{ display: "block" }}>
@@ -457,14 +295,16 @@ export default function BlogPostPage() {
             </Flex>
 
             {/* Share buttons */}
-            <Flex gap="2">
+            <Flex gap="2" role="group" aria-label="Partager cet article">
               <button
+                aria-label="Partager sur Twitter"
                 onClick={() => {
                   window.open(
                     `https://twitter.com/intent/tweet?url=${encodeURIComponent(
                       window.location.href
                     )}&text=${encodeURIComponent(post.title)}`,
-                    "_blank"
+                    "_blank",
+                    "noopener,noreferrer"
                   );
                 }}
                 style={{
@@ -479,15 +319,17 @@ export default function BlogPostPage() {
                   cursor: "pointer",
                 }}
               >
-                <Twitter size={16} style={{ color: "var(--gray-11)" }} />
+                <Twitter size={16} style={{ color: "var(--gray-11)" }} aria-hidden="true" />
               </button>
               <button
+                aria-label="Partager sur Facebook"
                 onClick={() => {
                   window.open(
                     `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(
                       window.location.href
                     )}`,
-                    "_blank"
+                    "_blank",
+                    "noopener,noreferrer"
                   );
                 }}
                 style={{
@@ -502,15 +344,17 @@ export default function BlogPostPage() {
                   cursor: "pointer",
                 }}
               >
-                <Facebook size={16} style={{ color: "var(--gray-11)" }} />
+                <Facebook size={16} style={{ color: "var(--gray-11)" }} aria-hidden="true" />
               </button>
               <button
+                aria-label="Partager sur LinkedIn"
                 onClick={() => {
                   window.open(
                     `https://www.linkedin.com/shareArticle?mini=true&url=${encodeURIComponent(
                       window.location.href
                     )}&title=${encodeURIComponent(post.title)}`,
-                    "_blank"
+                    "_blank",
+                    "noopener,noreferrer"
                   );
                 }}
                 style={{
@@ -525,11 +369,12 @@ export default function BlogPostPage() {
                   cursor: "pointer",
                 }}
               >
-                <Linkedin size={16} style={{ color: "var(--gray-11)" }} />
+                <Linkedin size={16} style={{ color: "var(--gray-11)" }} aria-hidden="true" />
               </button>
               <button
+                aria-label="Copier le lien de l'article"
                 onClick={() => {
-                  navigator.clipboard.writeText(window.location.href);
+                  navigator.clipboard?.writeText(window.location.href);
                 }}
                 style={{
                   display: "inline-flex",
@@ -545,7 +390,7 @@ export default function BlogPostPage() {
                   color: "var(--gray-11)",
                 }}
               >
-                <Share2 size={14} />
+                <Share2 size={14} aria-hidden="true" />
                 Copier le lien
               </button>
             </Flex>
@@ -555,6 +400,7 @@ export default function BlogPostPage() {
 
       <Container size="3" py="9">
         {/* Article content */}
+        <article aria-label={post.title}>
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -568,7 +414,7 @@ export default function BlogPostPage() {
               border: "1px solid var(--gray-a4)",
             }}
           >
-            {renderContent(post.content)}
+            <MarkdownRenderer content={post.content} accentColor={post.color || "violet"} />
           </Box>
         </motion.div>
 
@@ -582,9 +428,9 @@ export default function BlogPostPage() {
             mt="8"
             p="6"
             style={{
-              background: `var(--${post.color || "orange"}-a2)`,
+              background: `var(--${post.color || "violet"}-a2)`,
               borderRadius: 16,
-              border: `1px solid var(--${post.color || "orange"}-a4)`,
+              border: `1px solid var(--${post.color || "violet"}-a4)`,
             }}
           >
             <Flex gap="4" align="center">
@@ -593,13 +439,13 @@ export default function BlogPostPage() {
                   width: 64,
                   height: 64,
                   borderRadius: "50%",
-                  background: `var(--${post.color || "orange"}-a4)`,
+                  background: `var(--${post.color || "violet"}-a4)`,
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
                   fontSize: 24,
                   fontWeight: 700,
-                  color: `var(--${post.color || "orange"}-9)`,
+                  color: `var(--${post.color || "violet"}-9)`,
                 }}
               >
                 {post.author?.name.charAt(0)}
@@ -618,6 +464,8 @@ export default function BlogPostPage() {
             </Flex>
           </Box>
         </motion.div>
+
+        </article>
 
         <Separator size="4" my="8" />
 
@@ -682,8 +530,7 @@ export default function BlogPostPage() {
           transition={{ delay: 0.7, duration: 0.5 }}
         >
           <Grid columns={{ initial: "1", sm: "2" }} gap="4">
-            {prevPost && (
-              <Link
+            {prevPost ? <Link
                 href={`/blog/${prevPost.slug}`}
                 style={{ textDecoration: "none" }}
               >
@@ -714,10 +561,8 @@ export default function BlogPostPage() {
                     </Box>
                   </Flex>
                 </Box>
-              </Link>
-            )}
-            {nextPost && (
-              <Link
+              </Link> : null}
+            {nextPost ? <Link
                 href={`/blog/${nextPost.slug}`}
                 style={{
                   textDecoration: "none",
@@ -751,8 +596,7 @@ export default function BlogPostPage() {
                     <ChevronRight size={20} style={{ color: "var(--gray-10)" }} />
                   </Flex>
                 </Box>
-              </Link>
-            )}
+              </Link> : null}
           </Grid>
         </motion.div>
 

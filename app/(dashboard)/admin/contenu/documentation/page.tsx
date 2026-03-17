@@ -178,7 +178,7 @@ export default function DocumentationPage() {
             { label: "Catégories", value: stats.total, color: "blue" },
             { label: "Publiées", value: stats.published, color: "green" },
             { label: "Brouillons", value: stats.draft, color: "gray" },
-            { label: "Articles total", value: stats.articles, color: "orange" },
+            { label: "Articles total", value: stats.articles, color: "violet" },
           ].map((stat) => (
             <Box
               key={stat.label}
@@ -292,7 +292,7 @@ export default function DocumentationPage() {
                       </Flex>
 
                       <Badge
-                        color={statusColor as "green" | "gray" | "orange"}
+                        color={statusColor as "green" | "gray" | "violet"}
                         variant="soft"
                         size="1"
                       >
@@ -303,8 +303,7 @@ export default function DocumentationPage() {
 
                   {/* Content */}
                   <Box p="4">
-                    {category.description && (
-                      <Text
+                    {category.description ? <Text
                         size="2"
                         color="gray"
                         mb="3"
@@ -314,8 +313,7 @@ export default function DocumentationPage() {
                         }}
                       >
                         {category.description}
-                      </Text>
-                    )}
+                      </Text> : null}
 
                     <Flex align="center" gap="4" mb="4">
                       <Flex align="center" gap="1">
@@ -341,7 +339,7 @@ export default function DocumentationPage() {
                       >
                         <Button
                           variant="soft"
-                          color={category.color as "blue" | "orange" | "green"}
+                          color={category.color as "blue" | "violet" | "green"}
                           style={{ width: "100%", cursor: "pointer" }}
                         >
                           <Eye size={14} />

@@ -232,8 +232,7 @@ export function PageAccessModal({
               </Text>
             </Flex>
 
-            {useCustomAccess && (
-              <>
+            {useCustomAccess ? <>
                 <Separator size="4" mb="4" />
 
                 {/* Actions rapides */}
@@ -329,8 +328,7 @@ export function PageAccessModal({
                     {selectedRoutes.length} / {AVAILABLE_PAGES.length} pages
                   </Badge>
                 </Flex>
-              </>
-            )}
+              </> : null}
           </>
         )}
 

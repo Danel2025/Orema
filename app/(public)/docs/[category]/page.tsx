@@ -15,9 +15,11 @@ import {
   ChevronLeft,
   Clock,
   BookOpen,
+  FileQuestion,
+  ArrowLeft,
 } from "lucide-react";
 import Link from "next/link";
-import { useParams, notFound } from "next/navigation";
+import { useParams } from "next/navigation";
 import { getCategoryBySlug, docsCategories } from "@/lib/docs-data";
 
 export default function DocsCategoryPage() {
@@ -26,7 +28,59 @@ export default function DocsCategoryPage() {
   const category = getCategoryBySlug(categorySlug);
 
   if (!category) {
-    notFound();
+    return (
+      <>
+        <PageHeader
+          title="Categorie introuvable"
+          subtitle="La categorie que vous recherchez n'existe pas ou a ete deplacee."
+          badge="Documentation"
+        />
+        <Container size="3" py="9">
+          <Box
+            p="9"
+            style={{
+              background: "var(--gray-a2)",
+              borderRadius: 20,
+              textAlign: "center",
+            }}
+          >
+            <FileQuestion
+              size={56}
+              style={{ color: "var(--gray-8)", marginBottom: 20 }}
+            />
+            <Heading size="5" mb="3" color="gray">
+              Categorie introuvable
+            </Heading>
+            <Text
+              size="3"
+              color="gray"
+              style={{ display: "block", maxWidth: 400, margin: "0 auto 24px" }}
+            >
+              La categorie &quot;{categorySlug}&quot; n&apos;existe pas. Verifiez l&apos;URL ou retournez a la documentation.
+            </Text>
+            <Link
+              href="/docs"
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                gap: 8,
+                padding: "12px 24px",
+                borderRadius: 9999,
+                background:
+                  "linear-gradient(135deg, var(--violet-9) 0%, var(--purple-9) 100%)",
+                color: "white",
+                fontSize: 14,
+                fontWeight: 600,
+                textDecoration: "none",
+              }}
+            >
+              <ArrowLeft size={16} />
+              Retour a la documentation
+            </Link>
+          </Box>
+        </Container>
+      </>
+    );
   }
 
   const CategoryIcon = category.icon;
@@ -69,22 +123,24 @@ export default function DocsCategoryPage() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.1, duration: 0.4 }}
         >
-          <Flex align="center" gap="2" mb="6">
-            <Link
-              href="/docs"
-              style={{
-                textDecoration: "none",
-                color: "var(--gray-11)",
-                fontSize: 14,
-              }}
-            >
-              Documentation
-            </Link>
-            <ChevronRight size={14} style={{ color: "var(--gray-8)" }} />
-            <Text size="2" style={{ color: `var(--${category.color}-9)` }}>
-              {category.title}
-            </Text>
-          </Flex>
+          <nav aria-label="Fil d'Ariane">
+            <Flex align="center" gap="2" mb="6">
+              <Link
+                href="/docs"
+                style={{
+                  textDecoration: "none",
+                  color: "var(--gray-11)",
+                  fontSize: 14,
+                }}
+              >
+                Documentation
+              </Link>
+              <ChevronRight size={14} style={{ color: "var(--gray-8)" }} aria-hidden="true" />
+              <Text size="2" style={{ color: `var(--${category.color}-9)` }} aria-current="page">
+                {category.title}
+              </Text>
+            </Flex>
+          </nav>
         </motion.div>
 
         {/* Articles list */}
@@ -96,10 +152,31 @@ export default function DocsCategoryPage() {
           <Flex align="center" gap="2" mb="5">
             <BookOpen size={20} style={{ color: "var(--gray-10)" }} />
             <Heading size="5">
-              {category.articles.length} articles dans cette catégorie
+              {category.articles.length} article{category.articles.length !== 1 ? "s" : ""} dans cette categorie
             </Heading>
           </Flex>
 
+          {category.articles.length === 0 ? (
+            <Box
+              p="8"
+              style={{
+                background: "var(--gray-a2)",
+                borderRadius: 16,
+                textAlign: "center",
+              }}
+            >
+              <BookOpen
+                size={48}
+                style={{ color: "var(--gray-8)", marginBottom: 16 }}
+              />
+              <Heading size="4" mb="2" color="gray">
+                Aucun article disponible
+              </Heading>
+              <Text size="3" color="gray">
+                Les articles de cette categorie sont en cours de redaction.
+              </Text>
+            </Box>
+          ) : (
           <Flex direction="column" gap="3">
             {category.articles.map((article, index) => (
               <motion.div
@@ -160,6 +237,7 @@ export default function DocsCategoryPage() {
               </motion.div>
             ))}
           </Flex>
+          )}
         </motion.div>
 
         {/* Category navigation */}
@@ -169,8 +247,7 @@ export default function DocsCategoryPage() {
           transition={{ delay: 0.6, duration: 0.5 }}
         >
           <Grid columns={{ initial: "1", sm: "2" }} gap="4" mt="9">
-            {prevCategory && (
-              <Link
+            {prevCategory ? <Link
                 href={`/docs/${prevCategory.slug}`}
                 style={{ textDecoration: "none" }}
               >
@@ -204,10 +281,8 @@ export default function DocsCategoryPage() {
                     </Box>
                   </Flex>
                 </Box>
-              </Link>
-            )}
-            {nextCategory && (
-              <Link
+              </Link> : null}
+            {nextCategory ? <Link
                 href={`/docs/${nextCategory.slug}`}
                 style={{
                   textDecoration: "none",
@@ -244,8 +319,7 @@ export default function DocsCategoryPage() {
                     />
                   </Flex>
                 </Box>
-              </Link>
-            )}
+              </Link> : null}
           </Grid>
         </motion.div>
 

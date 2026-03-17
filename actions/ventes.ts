@@ -16,7 +16,6 @@ import {
   type TypeMouvement,
 } from "@/lib/db";
 import { getCurrentUser } from "@/lib/auth";
-import { getEtablissementId } from "@/lib/etablissement";
 
 // Note: On utilise createAuthenticatedClient qui définit le contexte RLS
 // via set_rls_context(). Cela permet aux politiques RLS de fonctionner
@@ -269,10 +268,10 @@ function serializeVente(vente: Record<string, unknown>): SerializedVente {
  * Note: Les serveurs ne peuvent pas encaisser, seulement prendre des commandes
  */
 export async function createVente(input: CreateVenteInput) {
-  const etablissementId = await getEtablissementId();
   const user = await getCurrentUser();
   if (!user) return { success: false, error: "Vous devez être connecté" };
   if (!user.etablissementId) return { success: false, error: "Aucun établissement associé" };
+  const etablissementId = user.etablissementId;
 
   // Les serveurs ne peuvent pas encaisser
   if (user.role === "SERVEUR") {
@@ -382,10 +381,10 @@ export async function createVente(input: CreateVenteInput) {
  * Crée une vente en attente (TABLE, LIVRAISON, EMPORTER)
  */
 export async function createVenteEnAttente(input: CreateVenteEnAttenteInput) {
-  const etablissementId = await getEtablissementId();
   const user = await getCurrentUser();
   if (!user) return { success: false, error: "Vous devez être connecté" };
   if (!user.etablissementId) return { success: false, error: "Aucun établissement associé" };
+  const etablissementId = user.etablissementId;
 
   if (input.typeVente === "DIRECT") {
     return { success: false, error: "La mise en attente n'est pas disponible pour les ventes directes" };
@@ -406,7 +405,6 @@ export async function createVenteEnAttente(input: CreateVenteEnAttenteInput) {
     const { data: existing } = await supabase
       .from("ventes")
       .select("id, numero_ticket")
-      .eq("etablissement_id", etablissementId)
       .eq("table_id", input.tableId)
       .eq("statut", "EN_COURS")
       .single();
@@ -512,7 +510,6 @@ export async function payerVenteEnAttente(input: {
   paiements?: PaiementInput[];
   sessionCaisseId: string;
 }) {
-  const etablissementId = await getEtablissementId();
   const user = await getCurrentUser();
   if (!user) return { success: false, error: "Vous devez être connecté" };
   if (!user.etablissementId) return { success: false, error: "Aucun établissement associé" };
@@ -532,7 +529,6 @@ export async function payerVenteEnAttente(input: {
     .from("ventes")
     .select("id, numero_ticket, total_final, table_id")
     .eq("id", input.venteId)
-    .eq("etablissement_id", etablissementId)
     .eq("statut", "EN_COURS")
     .single();
 
@@ -583,7 +579,6 @@ export async function payerVenteEnAttente(input: {
  * Ajoute des articles à une vente en attente
  */
 export async function addToVenteEnAttente(venteId: string, lignes: LigneVenteInput[]) {
-  const etablissementId = await getEtablissementId();
   const user = await getCurrentUser();
   if (!user) return { success: false, error: "Vous devez être connecté" };
   if (!user.etablissementId) return { success: false, error: "Aucun établissement associé" };
@@ -598,7 +593,6 @@ export async function addToVenteEnAttente(venteId: string, lignes: LigneVenteInp
     .from("ventes")
     .select("*")
     .eq("id", venteId)
-    .eq("etablissement_id", etablissementId)
     .eq("statut", "EN_COURS")
     .single();
 
@@ -673,7 +667,6 @@ export async function addToVenteEnAttente(venteId: string, lignes: LigneVenteInp
  * Annule une vente en attente et restitue le stock
  */
 export async function annulerVenteEnAttente(venteId: string) {
-  const etablissementId = await getEtablissementId();
   const user = await getCurrentUser();
   if (!user) return { success: false, error: "Vous devez être connecté" };
   if (!user.etablissementId) return { success: false, error: "Aucun établissement associé" };
@@ -688,7 +681,6 @@ export async function annulerVenteEnAttente(venteId: string) {
     .from("ventes")
     .select("id, numero_ticket, table_id")
     .eq("id", venteId)
-    .eq("etablissement_id", etablissementId)
     .eq("statut", "EN_COURS")
     .single();
 
@@ -739,10 +731,10 @@ export async function createVenteEnCompte(input: CreateVenteEnAttenteInput & { c
     return { success: false, error: "Un client doit être sélectionné pour la mise en compte" };
   }
 
-  const etablissementId = await getEtablissementId();
   const user = await getCurrentUser();
   if (!user) return { success: false, error: "Vous devez être connecté" };
   if (!user.etablissementId) return { success: false, error: "Aucun établissement associé" };
+  const etablissementId = user.etablissementId;
 
   // Les serveurs ne peuvent pas encaisser ni mettre en compte
   if (user.role === "SERVEUR") {
@@ -760,7 +752,6 @@ export async function createVenteEnCompte(input: CreateVenteEnAttenteInput & { c
     .from("clients")
     .select("id, nom, prenom, credit_autorise, solde_credit, limit_credit")
     .eq("id", input.clientId)
-    .eq("etablissement_id", etablissementId)
     .eq("actif", true)
     .single();
 
@@ -866,7 +857,6 @@ export async function createVenteEnCompte(input: CreateVenteEnAttenteInput & { c
  * Récupère les ventes du jour
  */
 export async function getVentesJour() {
-  const etablissementId = await getEtablissementId();
   const user = await getCurrentUser();
   if (!user || !user.etablissementId) return [];
 
@@ -887,7 +877,6 @@ export async function getVentesJour() {
       paiements(*),
       clients(nom, prenom)
     `)
-    .eq("etablissement_id", etablissementId)
     .gte("created_at", today.toISOString())
     .order("created_at", { ascending: false });
 
@@ -909,7 +898,6 @@ export async function getVentesJour() {
  * Stats du jour
  */
 export async function getStatsJour() {
-  const etablissementId = await getEtablissementId();
   const user = await getCurrentUser();
   if (!user || !user.etablissementId) return { totalVentes: 0, chiffreAffaires: 0, articlesVendus: 0, panierMoyen: 0 };
 
@@ -925,7 +913,6 @@ export async function getStatsJour() {
   const { data } = await supabase
     .from("ventes")
     .select("total_final, lignes_vente(quantite)")
-    .eq("etablissement_id", etablissementId)
     .eq("statut", "PAYEE")
     .gte("created_at", today.toISOString());
 
@@ -949,7 +936,6 @@ export async function getStatsJour() {
  * Liste des ventes en attente
  */
 export async function getVentesEnAttente() {
-  const etablissementId = await getEtablissementId();
   const user = await getCurrentUser();
   if (!user || !user.etablissementId) return [];
 
@@ -968,7 +954,6 @@ export async function getVentesEnAttente() {
       clients(id, nom, prenom, telephone),
       utilisateurs(nom, prenom)
     `)
-    .eq("etablissement_id", etablissementId)
     .eq("statut", "EN_COURS")
     .order("created_at", { ascending: true });
 
@@ -1000,7 +985,6 @@ export async function getVentesEnAttente() {
  * Vente en attente d'une table
  */
 export async function getVenteEnAttenteByTable(tableId: string) {
-  const etablissementId = await getEtablissementId();
   const user = await getCurrentUser();
   if (!user || !user.etablissementId) return null;
 
@@ -1019,7 +1003,6 @@ export async function getVenteEnAttenteByTable(tableId: string) {
       clients(id, nom, prenom),
       utilisateurs(nom, prenom)
     `)
-    .eq("etablissement_id", etablissementId)
     .eq("table_id", tableId)
     .eq("statut", "EN_COURS")
     .single();
@@ -1054,7 +1037,6 @@ export async function getVenteEnAttenteByTable(tableId: string) {
  * Compte les ventes en attente
  */
 export async function getVentesEnAttenteCount() {
-  const etablissementId = await getEtablissementId();
   const user = await getCurrentUser();
   if (!user || !user.etablissementId) return 0;
 
@@ -1067,7 +1049,6 @@ export async function getVentesEnAttenteCount() {
   const { count } = await supabase
     .from("ventes")
     .select("*", { count: "exact", head: true })
-    .eq("etablissement_id", etablissementId)
     .eq("statut", "EN_COURS");
 
   return count ?? 0;

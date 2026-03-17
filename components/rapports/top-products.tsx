@@ -54,7 +54,7 @@ export function TopProducts({ initialData }: TopProductsProps) {
   const getMedalBg = (medal: "gold" | "gray" | "bronze" | null): string => {
     switch (medal) {
       case "gold":
-        return "var(--amber-9)";
+        return "var(--purple-9)";
       case "gray":
         return "var(--gray-9)";
       case "bronze":
@@ -69,7 +69,7 @@ export function TopProducts({ initialData }: TopProductsProps) {
       <Card size="3">
         <Flex justify="between" align="center" mb="4">
           <Flex align="center" gap="2">
-            <Trophy size={20} style={{ color: "var(--amber-9)" }} />
+            <Trophy size={20} style={{ color: "var(--purple-9)" }} />
             <Text size="4" weight="bold">
               Top produits
             </Text>
@@ -98,7 +98,7 @@ export function TopProducts({ initialData }: TopProductsProps) {
         gap="3"
       >
         <Flex align="center" gap="2">
-          <Trophy size={20} style={{ color: "var(--amber-9)" }} />
+          <Trophy size={20} style={{ color: "var(--purple-9)" }} />
           <Text size="4" weight="bold">
             Top produits
           </Text>

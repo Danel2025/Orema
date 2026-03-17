@@ -196,11 +196,9 @@ export function ImageUpload({ value, onChange, disabled }: ImageUploadProps) {
         </div>
       )}
 
-      {error && (
-        <p style={{ fontSize: 13, color: "var(--red-11)", margin: 0 }}>
+      {error ? <p style={{ fontSize: 13, color: "var(--red-11)", margin: 0 }}>
           {error}
-        </p>
-      )}
+        </p> : null}
     </div>
   );
 }

@@ -223,11 +223,9 @@ function ZoneItem({
         <Text size="2" weight="medium" style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
           {zone.nom}
         </Text>
-        {zone.description && (
-          <Text size="1" color="gray" style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+        {zone.description ? <Text size="1" color="gray" style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
             {zone.description}
-          </Text>
-        )}
+          </Text> : null}
       </Flex>
 
       {/* Badge nombre de tables */}
@@ -459,11 +457,9 @@ function ZoneFormDialog({
                   {nom || "Nom de la zone"}
                 </Text>
               </Flex>
-              {description && (
-                <Text size="1" color="gray" mt="1">
+              {description ? <Text size="1" color="gray" mt="1">
                   {description}
-                </Text>
-              )}
+                </Text> : null}
             </Box>
           </Flex>
 

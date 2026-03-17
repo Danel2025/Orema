@@ -131,8 +131,7 @@ export function PinManagement({
 
         <Flex direction="column" gap="4">
           {/* Affichage du PIN genere */}
-          {generatedPin && (
-            <Callout.Root color="green">
+          {generatedPin ? <Callout.Root color="green">
               <Callout.Icon>
                 <Check size={16} />
               </Callout.Icon>
@@ -167,8 +166,7 @@ export function PinManagement({
                   </Text>
                 </Flex>
               </Callout.Text>
-            </Callout.Root>
-          )}
+            </Callout.Root> : null}
 
           {/* Formulaire de saisie du PIN */}
           {!generatedPin && (
@@ -200,14 +198,12 @@ export function PinManagement({
                     fontSize: 24,
                   }}
                 />
-                {error && (
-                  <Flex align="center" gap="1">
+                {error ? <Flex align="center" gap="1">
                     <AlertCircle size={12} style={{ color: 'var(--red-9)' }} />
                     <Text size="1" color="red">
                       {error}
                     </Text>
-                  </Flex>
-                )}
+                  </Flex> : null}
               </Flex>
 
               <Callout.Root color="amber" size="1">

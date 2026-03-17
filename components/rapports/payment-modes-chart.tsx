@@ -22,7 +22,7 @@ const PAYMENT_COLORS: Record<string, string> = {
   CARTE_BANCAIRE: "var(--blue-9)",
   AIRTEL_MONEY: "var(--red-9)",
   MOOV_MONEY: "var(--cyan-9)",
-  CHEQUE: "var(--amber-9)",
+  CHEQUE: "var(--purple-9)",
   VIREMENT: "var(--purple-9)",
   COMPTE_CLIENT: "var(--accent-9)",
   MIXTE: "var(--gray-9)",

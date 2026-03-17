@@ -128,11 +128,9 @@ export function CaisseVentesSettings({ initialData }: CaisseVentesSettingsProps)
                 </RadioCards.Root>
               )}
             />
-            {errors.modeVenteDefaut && (
-              <Text size="1" color="red">
+            {errors.modeVenteDefaut ? <Text size="1" color="red">
                 {errors.modeVenteDefaut.message}
-              </Text>
-            )}
+              </Text> : null}
           </Flex>
         </Card>
 
@@ -158,11 +156,9 @@ export function CaisseVentesSettings({ initialData }: CaisseVentesSettingsProps)
                   size="3"
                   placeholder="0"
                 />
-                {errors.montantMinimumVente && (
-                  <Text size="1" color="red" mt="1">
+                {errors.montantMinimumVente ? <Text size="1" color="red" mt="1">
                     {errors.montantMinimumVente.message}
-                  </Text>
-                )}
+                  </Text> : null}
                 <Text size="1" color="gray" mt="1">
                   0 = pas de minimum
                 </Text>
@@ -184,11 +180,9 @@ export function CaisseVentesSettings({ initialData }: CaisseVentesSettingsProps)
                     <Percent size={16} />
                   </TextField.Slot>
                 </TextField.Root>
-                {errors.remiseMaxAutorisee && (
-                  <Text size="1" color="red" mt="1">
+                {errors.remiseMaxAutorisee ? <Text size="1" color="red" mt="1">
                     {errors.remiseMaxAutorisee.message}
-                  </Text>
-                )}
+                  </Text> : null}
                 <Text size="1" color="gray" mt="1">
                   Limite les remises que peuvent appliquer les caissiers
                 </Text>
@@ -314,11 +308,9 @@ export function CaisseVentesSettings({ initialData }: CaisseVentesSettingsProps)
                 </Flex>
               )}
             />
-            {errors.modesPaiementActifs && (
-              <Text size="1" color="red">
+            {errors.modesPaiementActifs ? <Text size="1" color="red">
                 {errors.modesPaiementActifs.message}
-              </Text>
-            )}
+              </Text> : null}
           </Flex>
         </Card>
 

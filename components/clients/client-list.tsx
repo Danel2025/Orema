@@ -139,8 +139,7 @@ export function ClientList({
           </Flex>
 
           <Flex align="center" gap="3">
-            {onToggleInactive && (
-              <Flex align="center" gap="2">
+            {onToggleInactive ? <Flex align="center" gap="2">
                 <Checkbox
                   checked={showInactive}
                   onCheckedChange={(checked) => onToggleInactive(!!checked)}
@@ -148,8 +147,7 @@ export function ClientList({
                 <Text size="2" color="gray">
                   Afficher inactifs
                 </Text>
-              </Flex>
-            )}
+              </Flex> : null}
             <Button onClick={onAdd}>
               <Plus size={16} />
               Nouveau client
@@ -191,29 +189,23 @@ export function ClientList({
                         <Text size="2" weight="medium">
                           {getClientName(client)}
                         </Text>
-                        {client.adresse && (
-                          <Text size="1" color="gray">
+                        {client.adresse ? <Text size="1" color="gray">
                             {client.adresse}
-                          </Text>
-                        )}
+                          </Text> : null}
                       </Flex>
                     </Table.Cell>
 
                     {/* Contact */}
                     <Table.Cell>
                       <Flex direction="column" gap="1">
-                        {client.telephone && (
-                          <Flex align="center" gap="1">
+                        {client.telephone ? <Flex align="center" gap="1">
                             <Phone size={12} className="text-gray-500" />
                             <Text size="1">{client.telephone}</Text>
-                          </Flex>
-                        )}
-                        {client.email && (
-                          <Flex align="center" gap="1">
+                          </Flex> : null}
+                        {client.email ? <Flex align="center" gap="1">
                             <Mail size={12} className="text-gray-500" />
                             <Text size="1">{client.email}</Text>
-                          </Flex>
-                        )}
+                          </Flex> : null}
                         {!client.telephone && !client.email && (
                           <Text size="1" color="gray">
                             -
@@ -373,14 +365,14 @@ export function ClientList({
           <AlertDialog.Description size="2">
             {clientToDelete?._count?.ventes ? (
               <>
-                Le client <strong>{clientToDelete && getClientName(clientToDelete)}</strong>{" "}
+                Le client <strong>{clientToDelete ? getClientName(clientToDelete) : null}</strong>{" "}
                 a {clientToDelete._count.ventes} achat(s) enregistre(s). Il sera
                 desactive mais son historique sera conserve.
               </>
             ) : (
               <>
                 Etes-vous sur de vouloir supprimer le client{" "}
-                <strong>{clientToDelete && getClientName(clientToDelete)}</strong> ?
+                <strong>{clientToDelete ? getClientName(clientToDelete) : null}</strong> ?
                 Cette action est irreversible.
               </>
             )}

@@ -52,7 +52,7 @@ En cas de suspicion d'utilisation frauduleuse, l'utilisateur doit en informer im
     title: "6. Données et propriété intellectuelle",
     content: `L'utilisateur conserve la propriété de toutes les données qu'il saisit dans le Service. Il accorde à Oréma N+ une licence limitée d'utilisation de ces données aux seules fins de fourniture du Service.
 
-Tous les éléments du Service (marques, logos, textes, graphiques, logiciels) sont la propriété exclusive d'Oréma N+ et sont protégés par les lois relatives à la propriété intellectuelle.`,
+Tous les éléments du Service (marques, logos, textes, graphiques, logiciels) sont la propriété exclusive d'Oréma N+ et sont protégés par l'Accord de Bangui (OAPI) et les conventions internationales relatives à la propriété intellectuelle.`,
   },
   {
     id: "tarification",
@@ -80,7 +80,7 @@ Oréma N+ peut résilier l'accès d'un utilisateur en cas de violation des prés
   {
     id: "droit",
     title: "10. Droit applicable",
-    content: `Les présentes CGU sont soumises au droit gabonais. Tout litige relatif à l'interprétation ou l'exécution des présentes sera soumis aux tribunaux compétents de Libreville, Gabon.
+    content: `Les présentes CGU sont soumises au droit gabonais et aux dispositions de l'Acte Uniforme OHADA applicables. Tout litige relatif à l'interprétation ou l'exécution des présentes sera soumis aux tribunaux compétents de Libreville, Gabon.
 
 Préalablement à toute action judiciaire, les parties s'engagent à rechercher une solution amiable.`,
   },
@@ -140,41 +140,43 @@ export default function TermsPage() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.3, duration: 0.5 }}
         >
-          <Box
-            mb="8"
-            p="5"
-            style={{
-              background: "var(--orange-a2)",
-              borderRadius: 12,
-              border: "1px solid var(--orange-a4)",
-            }}
-          >
-            <Text size="3" weight="bold" mb="3" style={{ display: "block" }}>
-              Sommaire
-            </Text>
-            <Flex direction="column" gap="2">
-              {sections.map((section) => (
-                <a
-                  key={section.id}
-                  href={`#${section.id}`}
-                  style={{
-                    textDecoration: "none",
-                    color: "var(--gray-11)",
-                    fontSize: 14,
-                    transition: "color 0.2s",
-                  }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.color = "var(--orange-9)";
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.color = "var(--gray-11)";
-                  }}
-                >
-                  {section.title}
-                </a>
-              ))}
-            </Flex>
-          </Box>
+          <nav aria-label="Sommaire des CGU">
+            <Box
+              mb="8"
+              p="5"
+              style={{
+                background: "var(--violet-a2)",
+                borderRadius: 12,
+                border: "1px solid var(--violet-a4)",
+              }}
+            >
+              <Text size="3" weight="bold" mb="3" style={{ display: "block" }}>
+                Sommaire
+              </Text>
+              <Flex direction="column" gap="2">
+                {sections.map((section) => (
+                  <a
+                    key={section.id}
+                    href={`#${section.id}`}
+                    style={{
+                      textDecoration: "none",
+                      color: "var(--gray-11)",
+                      fontSize: 14,
+                      transition: "color 0.2s",
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.color = "var(--violet-9)";
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.color = "var(--gray-11)";
+                    }}
+                  >
+                    {section.title}
+                  </a>
+                ))}
+              </Flex>
+            </Box>
+          </nav>
         </motion.div>
 
         {/* Content sections */}
@@ -227,7 +229,7 @@ export default function TermsPage() {
               Pour toute question concernant ces CGU, contactez-nous à{" "}
               <a
                 href="mailto:legal@orema-nplus.ga"
-                style={{ color: "var(--orange-9)", textDecoration: "none" }}
+                style={{ color: "var(--violet-9)", textDecoration: "none" }}
               >
                 legal@orema-nplus.ga
               </a>

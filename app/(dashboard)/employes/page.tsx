@@ -300,12 +300,10 @@ export default function EmployesPage() {
             <LayoutGrid size={16} />
             Pages par rôle
           </Button>
-          {canCreate && (
-            <Button onClick={handleCreateEmployee}>
+          {canCreate ? <Button onClick={handleCreateEmployee}>
               <Plus size={16} />
               Nouvel employe
-            </Button>
-          )}
+            </Button> : null}
         </Flex>
       </Flex>
 
@@ -501,8 +499,7 @@ export default function EmployesPage() {
 
                       <DropdownMenu.Content>
                         {/* Actions de modification - seulement si permissions */}
-                        {canModify && canManage(employee.role as RoleType) && (
-                          <>
+                        {canModify && canManage(employee.role as RoleType) ? <>
                             <DropdownMenu.Item
                               onClick={() => handleEditEmployee(employee)}
                             >
@@ -510,14 +507,12 @@ export default function EmployesPage() {
                               Modifier
                             </DropdownMenu.Item>
 
-                            {canResetPin && (
-                              <DropdownMenu.Item
+                            {canResetPin ? <DropdownMenu.Item
                                 onClick={() => handleManagePin(employee)}
                               >
                                 <Key size={14} />
                                 {employee.hasPin ? 'Modifier PIN' : 'Definir PIN'}
-                              </DropdownMenu.Item>
-                            )}
+                              </DropdownMenu.Item> : null}
 
                             <DropdownMenu.Item
                               onClick={() => handleResetPassword(employee)}
@@ -537,8 +532,7 @@ export default function EmployesPage() {
                             )}
 
                             <DropdownMenu.Separator />
-                          </>
-                        )}
+                          </> : null}
 
                         {/* Actions de consultation - toujours visibles */}
                         <DropdownMenu.Item
@@ -556,15 +550,13 @@ export default function EmployesPage() {
                         </DropdownMenu.Item>
 
                         {/* Action de suppression - seulement si permissions */}
-                        {canDelete && canManage(employee.role as RoleType) && (
-                          <DropdownMenu.Item
+                        {canDelete && canManage(employee.role as RoleType) ? <DropdownMenu.Item
                             color="red"
                             onClick={() => confirmDelete(employee)}
                           >
                             <Trash2 size={14} />
                             Supprimer
-                          </DropdownMenu.Item>
-                        )}
+                          </DropdownMenu.Item> : null}
                       </DropdownMenu.Content>
                     </DropdownMenu.Root>
                   </Table.Cell>
@@ -583,14 +575,12 @@ export default function EmployesPage() {
         onSuccess={loadEmployees}
       />
 
-      {pinEmployee && (
-        <PinManagement
+      {pinEmployee ? <PinManagement
           open={pinModalOpen}
           onOpenChange={setPinModalOpen}
           employee={pinEmployee}
           onSuccess={loadEmployees}
-        />
-      )}
+        /> : null}
 
       <RolePermissionsModal
         open={permissionsModalOpen}
@@ -598,13 +588,11 @@ export default function EmployesPage() {
         selectedRole={permissionsRole}
       />
 
-      {statsEmployee && (
-        <EmployeeStats
+      {statsEmployee ? <EmployeeStats
           open={statsModalOpen}
           onOpenChange={setStatsModalOpen}
           employee={statsEmployee}
-        />
-      )}
+        /> : null}
 
       {/* Page Access Modal (individuel) */}
       <PageAccessModal
@@ -623,13 +611,11 @@ export default function EmployesPage() {
       />
 
       {/* Reset Password Modal */}
-      {resetPasswordEmployee && (
-        <ResetPasswordModal
+      {resetPasswordEmployee ? <ResetPasswordModal
           open={resetPasswordModalOpen}
           onOpenChange={setResetPasswordModalOpen}
           employee={resetPasswordEmployee}
-        />
-      )}
+        /> : null}
 
       {/* Delete Confirmation Dialog */}
       <AlertDialog.Root open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>

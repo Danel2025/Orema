@@ -24,13 +24,11 @@ export default function Error({
         <Text size="3" color="gray" align="center">
           Nous nous excusons pour la gene occasionnee.
         </Text>
-        {error.digest && (
-          <Text size="1" color="gray">
+        {error.digest ? <Text size="1" color="gray">
             Ref: {error.digest}
-          </Text>
-        )}
+          </Text> : null}
         <Flex gap="3">
-          <Button onClick={reset} variant="solid" color="orange">
+          <Button onClick={reset} variant="solid" color="violet">
             Reessayer
           </Button>
           <Button

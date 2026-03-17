@@ -29,6 +29,7 @@ import {
   Printer,
   type LucideIcon,
 } from "lucide-react";
+import { useState } from "react";
 
 // Map des icônes disponibles
 const iconMap: Record<string, LucideIcon> = {
@@ -49,7 +50,6 @@ const iconMap: Record<string, LucideIcon> = {
   ShoppingBag,
   Package,
 };
-import { useState } from "react";
 
 interface CategoryCardProps {
   id: string;
@@ -156,8 +156,7 @@ export function CategoryCard({
             <MoreVertical size={18} />
           </button>
 
-          {showMenu && (
-            <>
+          {showMenu ? <>
               {/* Overlay pour fermer le menu */}
               <div
                 style={{
@@ -229,7 +228,7 @@ export function CategoryCard({
                     backgroundColor: "transparent",
                     cursor: "pointer",
                     fontSize: 14,
-                    color: actif ? "var(--amber-11)" : "var(--green-11)",
+                    color: actif ? "var(--purple-11)" : "var(--green-11)",
                     textAlign: "left",
                   }}
                   onMouseEnter={(e) => {
@@ -281,8 +280,7 @@ export function CategoryCard({
                   Supprimer
                 </button>
               </div>
-            </>
-          )}
+            </> : null}
         </div>
       </div>
 
@@ -330,8 +328,7 @@ export function CategoryCard({
         <span>
           {_count.produits} produit{_count.produits > 1 ? "s" : ""}
         </span>
-        {imprimante && (
-          <span
+        {imprimante ? <span
             style={{
               display: "flex",
               alignItems: "center",
@@ -340,8 +337,7 @@ export function CategoryCard({
           >
             <Printer size={14} />
             {imprimante.nom}
-          </span>
-        )}
+          </span> : null}
       </div>
 
       {/* Indicateur de couleur */}

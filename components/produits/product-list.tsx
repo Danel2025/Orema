@@ -576,38 +576,31 @@ export function ProductList() {
       )}
 
       {/* Modal de création */}
-      {showForm && (
-        <ProductForm
+      {showForm ? <ProductForm
           categories={categories}
           onSubmit={handleCreate}
           onCancel={() => setShowForm(false)}
           isLoading={isSubmitting}
-        />
-      )}
+        /> : null}
 
       {/* Modal d'édition */}
-      {editingProduct && (
-        <ProductForm
+      {editingProduct ? <ProductForm
           initialData={editingProduct}
           categories={categories}
           onSubmit={handleUpdate}
           onCancel={() => setEditingProduct(null)}
           isLoading={isSubmitting}
-        />
-      )}
+        /> : null}
 
       {/* Modal de gestion des suppléments */}
-      {supplementsProduct && (
-        <SupplementsManager
+      {supplementsProduct ? <SupplementsManager
           produitId={supplementsProduct.id}
           produitNom={supplementsProduct.nom}
           onClose={() => setSupplementsProduct(null)}
-        />
-      )}
+        /> : null}
 
       {/* Modal de confirmation de suppression */}
-      {deleteConfirm && (
-        <div
+      {deleteConfirm ? <div
           style={{
             position: "fixed",
             inset: 0,
@@ -699,8 +692,7 @@ export function ProductList() {
               </button>
             </div>
           </div>
-        </div>
-      )}
+        </div> : null}
     </div>
   );
 }

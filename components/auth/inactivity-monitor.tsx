@@ -213,8 +213,8 @@ export function InactivityMonitor({
           <div className="bg-white dark:bg-slate-800 rounded-xl p-6 shadow-2xl">
             {/* Icon d'avertissement */}
             <div className="flex justify-center mb-4">
-              <div className="w-16 h-16 bg-orange-100 dark:bg-orange-900/30 rounded-full flex items-center justify-center">
-                <AlertTriangle className="w-8 h-8 text-orange-500" />
+              <div className="w-16 h-16 bg-violet-100 dark:bg-violet-900/30 rounded-full flex items-center justify-center">
+                <AlertTriangle className="w-8 h-8 text-violet-500" />
               </div>
             </div>
 
@@ -230,8 +230,8 @@ export function InactivityMonitor({
 
             {/* Compte a rebours */}
             <div className="flex justify-center items-center gap-2 mb-6">
-              <Clock className="w-5 h-5 text-orange-500" />
-              <span className="text-3xl font-mono font-bold text-orange-500">
+              <Clock className="w-5 h-5 text-violet-500" />
+              <span className="text-3xl font-mono font-bold text-violet-500">
                 {formattedTime}
               </span>
             </div>
@@ -246,7 +246,7 @@ export function InactivityMonitor({
               </button>
               <button
                 onClick={extendSession}
-                className="flex-1 px-4 py-2.5 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition-colors font-medium"
+                className="flex-1 px-4 py-2.5 bg-violet-500 text-white rounded-lg hover:bg-violet-600 transition-colors font-medium"
               >
                 Rester connecte
               </button>

@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { Box, Container, Flex, Text } from "@radix-ui/themes";
 import { ArrowRight, Menu, X } from "lucide-react";
 import Link from "next/link";
+import Image from "next/image";
 import { motion, AnimatePresence } from "motion/react";
 
 const navLinks = [
@@ -38,6 +39,7 @@ export function Navbar() {
         }}
       >
         <motion.nav
+          aria-label="Navigation principale"
           initial={{ y: -100, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
           transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
@@ -71,22 +73,13 @@ export function Navbar() {
                   whileTap={{ scale: 0.98 }}
                 >
                   <Flex align="center" gap="3">
-                    <Box
-                      style={{
-                        width: 40,
-                        height: 40,
-                        background: "linear-gradient(135deg, var(--orange-9) 0%, var(--amber-9) 100%)",
-                        color: "white",
-                        fontSize: 14,
-                        fontWeight: 700,
-                        borderRadius: 12,
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                      }}
-                    >
-                      O+
-                    </Box>
+                    <Image
+                      src="/images/logos/ic-lg.webp"
+                      alt="Oréma N+"
+                      width={40}
+                      height={40}
+                      style={{ objectFit: "contain" }}
+                    />
                     <Text size="5" weight="bold" style={{ color: "var(--gray-12)" }}>
                       Oréma N+
                     </Text>
@@ -175,7 +168,7 @@ export function Navbar() {
                       whileTap={{ scale: 0.98 }}
                       className="flex cursor-pointer items-center gap-2 rounded-full"
                       style={{
-                        background: "linear-gradient(135deg, var(--orange-9) 0%, var(--amber-9) 100%)",
+                        background: "linear-gradient(135deg, var(--violet-9) 0%, var(--purple-9) 100%)",
                         color: "white",
                         padding: "10px 20px",
                       }}
@@ -199,7 +192,8 @@ export function Navbar() {
                   <button
                     onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
                     className="flex h-10 w-10 items-center justify-center rounded-lg transition-colors hover:bg-[var(--gray-a3)]"
-                    aria-label="Menu"
+                    aria-label={isMobileMenuOpen ? "Fermer le menu" : "Ouvrir le menu"}
+                    aria-expanded={isMobileMenuOpen}
                   >
                     <AnimatePresence mode="wait">
                       {isMobileMenuOpen ? (
@@ -210,7 +204,7 @@ export function Navbar() {
                           exit={{ rotate: 90, opacity: 0 }}
                           transition={{ duration: 0.2 }}
                         >
-                          <X size={20} style={{ color: "var(--gray-11)" }} />
+                          <X size={20} style={{ color: "var(--gray-11)" }} aria-hidden="true" />
                         </motion.div>
                       ) : (
                         <motion.div
@@ -220,7 +214,7 @@ export function Navbar() {
                           exit={{ rotate: -90, opacity: 0 }}
                           transition={{ duration: 0.2 }}
                         >
-                          <Menu size={20} style={{ color: "var(--gray-11)" }} />
+                          <Menu size={20} style={{ color: "var(--gray-11)" }} aria-hidden="true" />
                         </motion.div>
                       )}
                     </AnimatePresence>
@@ -234,8 +228,7 @@ export function Navbar() {
 
       {/* Mobile Menu Overlay */}
       <AnimatePresence>
-        {isMobileMenuOpen && (
-          <>
+        {isMobileMenuOpen ? <>
             {/* Backdrop */}
             <motion.div
               initial={{ opacity: 0 }}
@@ -314,7 +307,7 @@ export function Navbar() {
                     <Box
                       className="mt-2 flex items-center justify-center gap-2 rounded-xl font-medium"
                       style={{
-                        background: "linear-gradient(135deg, var(--orange-9) 0%, var(--amber-9) 100%)",
+                        background: "linear-gradient(135deg, var(--violet-9) 0%, var(--purple-9) 100%)",
                         color: "white",
                         padding: "14px 20px",
                       }}
@@ -326,8 +319,7 @@ export function Navbar() {
                 </motion.div>
               </Flex>
             </motion.div>
-          </>
-        )}
+          </> : null}
       </AnimatePresence>
     </>
   );

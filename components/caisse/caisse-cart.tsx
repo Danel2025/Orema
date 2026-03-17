@@ -234,8 +234,7 @@ export function CaisseCart({
                       {formatCurrency(item.prixUnitaire + (item.totalSupplements || 0))} x {item.quantite}
                     </span>
                     {/* Afficher les supplements si presents */}
-                    {item.supplements && item.supplements.length > 0 && (
-                      <div
+                    {item.supplements && item.supplements.length > 0 ? <div
                         style={{
                           display: "flex",
                           flexDirection: "column",
@@ -256,11 +255,9 @@ export function CaisseCart({
                             + {sup.nom}: {formatCurrency(sup.prix)}
                           </span>
                         ))}
-                      </div>
-                    )}
+                      </div> : null}
                     {/* Afficher la remise par ligne si presente */}
-                    {item.remiseLigne && (
-                      <span
+                    {item.remiseLigne ? <span
                         style={{
                           display: "block",
                           fontSize: 11,
@@ -272,11 +269,9 @@ export function CaisseCart({
                           ? `${item.remiseLigne.valeur}%`
                           : formatCurrency(item.remiseLigne.valeur)}
                         {item.montantRemiseLigne ? ` (-${formatCurrency(item.montantRemiseLigne)})` : ""}
-                      </span>
-                    )}
+                      </span> : null}
                     {/* Afficher les notes si presentes */}
-                    {item.notes && (
-                      <span
+                    {item.notes ? <span
                         style={{
                           display: "block",
                           fontSize: 11,
@@ -286,8 +281,7 @@ export function CaisseCart({
                         }}
                       >
                         Note: {item.notes}
-                      </span>
-                    )}
+                      </span> : null}
                   </div>
                   <span
                     style={{
@@ -578,12 +572,10 @@ export function CaisseCart({
           {/* Boutons d'action */}
           <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
             {/* Boutons d'impression */}
-            {etablissement && (
-              <CartPrintActions
+            {etablissement ? <CartPrintActions
                 etablissement={etablissement}
                 serveurNom={serveurNom}
-              />
-            )}
+              /> : null}
 
             {/* Bouton Diviser l'addition */}
             <button
@@ -617,9 +609,9 @@ export function CaisseCart({
                   padding: "10px 16px",
                   fontSize: 14,
                   fontWeight: 500,
-                  color: hasVenteEnAttenteTable ? "var(--blue-11)" : "var(--amber-11)",
-                  backgroundColor: hasVenteEnAttenteTable ? "var(--blue-a3)" : "var(--amber-a3)",
-                  border: `1px solid ${hasVenteEnAttenteTable ? "var(--blue-a6)" : "var(--amber-a6)"}`,
+                  color: hasVenteEnAttenteTable ? "var(--blue-11)" : "var(--purple-11)",
+                  backgroundColor: hasVenteEnAttenteTable ? "var(--blue-a3)" : "var(--purple-a3)",
+                  border: `1px solid ${hasVenteEnAttenteTable ? "var(--blue-a6)" : "var(--purple-a6)"}`,
                   borderRadius: 8,
                   cursor: "pointer",
                   display: "flex",
@@ -643,8 +635,7 @@ export function CaisseCart({
             )}
 
             {/* Bouton Mettre en compte - désactivé pour les serveurs */}
-            {client && client.creditAutorise && (
-              <Tooltip content={
+            {client && client.creditAutorise ? <Tooltip content={
                 isServeur
                   ? "Les serveurs ne peuvent pas mettre en compte"
                   : canMettreEnCompte()
@@ -674,8 +665,7 @@ export function CaisseCart({
                   <CreditCard size={16} />
                   Mettre en compte
                 </button>
-              </Tooltip>
-            )}
+              </Tooltip> : null}
 
             {/* Bouton paiement */}
             <Tooltip content={isServeur ? "Les serveurs ne peuvent pas encaisser" : undefined}>

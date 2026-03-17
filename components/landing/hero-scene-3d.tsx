@@ -9,7 +9,7 @@ import * as THREE from "three";
 function Pyramid({
   position,
   scale = 1,
-  color = "#f97316",
+  color = "#7c3aed",
   speed = 1,
 }: {
   position: [number, number, number];
@@ -47,7 +47,7 @@ function Pyramid({
 function Diamond({
   position,
   scale = 1,
-  color = "#fbbf24",
+  color = "#8b5cf6",
   speed = 1,
 }: {
   position: [number, number, number];
@@ -84,7 +84,7 @@ function Diamond({
 function GlowingSphere({
   position,
   scale = 1,
-  color = "#ea580c",
+  color = "#6d28d9",
   speed = 1,
 }: {
   position: [number, number, number];
@@ -211,7 +211,7 @@ function FloatingParticle({
   return (
     <mesh ref={meshRef} position={position}>
       <sphereGeometry args={[scale, 8, 8]} />
-      <meshBasicMaterial color="#f97316" transparent opacity={0.6} />
+      <meshBasicMaterial color="#7c3aed" transparent opacity={0.6} />
     </mesh>
   );
 }
@@ -245,26 +245,26 @@ function Scene() {
       {/* Lumières */}
       <ambientLight intensity={0.4} />
       <directionalLight position={[5, 5, 5]} intensity={0.8} color="#fff5eb" />
-      <pointLight position={[-5, 3, 0]} intensity={0.5} color="#f97316" />
-      <pointLight position={[5, -2, 2]} intensity={0.3} color="#fbbf24" />
+      <pointLight position={[-5, 3, 0]} intensity={0.5} color="#7c3aed" />
+      <pointLight position={[5, -2, 2]} intensity={0.3} color="#8b5cf6" />
 
       {/* Formes géométriques - côté gauche */}
-      <Pyramid position={[-4, 1, -2]} scale={1.2} color="#f97316" speed={0.8} />
-      <Diamond position={[-3, -1.5, -1]} scale={0.9} color="#fbbf24" speed={1.2} />
-      <Ring position={[-5, 0, -3]} scale={1} color="#ea580c" speed={0.6} />
+      <Pyramid position={[-4, 1, -2]} scale={1.2} color="#7c3aed" speed={0.8} />
+      <Diamond position={[-3, -1.5, -1]} scale={0.9} color="#8b5cf6" speed={1.2} />
+      <Ring position={[-5, 0, -3]} scale={1} color="#6d28d9" speed={0.6} />
 
       {/* Formes géométriques - côté droit */}
-      <Pyramid position={[4, -1, -2]} scale={1} color="#ea580c" speed={1} />
+      <Pyramid position={[4, -1, -2]} scale={1} color="#6d28d9" speed={1} />
       <Diamond position={[3.5, 1.5, -1.5]} scale={1.1} color="#d97706" speed={0.9} />
-      <GlowingSphere position={[5, 0.5, -2]} scale={1.3} color="#f97316" speed={0.7} />
+      <GlowingSphere position={[5, 0.5, -2]} scale={1.3} color="#7c3aed" speed={0.7} />
 
       {/* Formes centrales (plus petites, en arrière-plan) */}
-      <Pyramid position={[0, 2.5, -4]} scale={0.6} color="#fbbf24" speed={1.1} />
-      <Diamond position={[-1, -2, -3]} scale={0.5} color="#f97316" speed={1.3} />
-      <Ring position={[1.5, -2.5, -3.5]} scale={0.7} color="#fbbf24" speed={0.8} />
+      <Pyramid position={[0, 2.5, -4]} scale={0.6} color="#8b5cf6" speed={1.1} />
+      <Diamond position={[-1, -2, -3]} scale={0.5} color="#7c3aed" speed={1.3} />
+      <Ring position={[1.5, -2.5, -3.5]} scale={0.7} color="#8b5cf6" speed={0.8} />
 
       {/* Formes supplémentaires pour profondeur */}
-      <GlowingSphere position={[-2, 2, -5]} scale={0.8} color="#ea580c" speed={0.5} />
+      <GlowingSphere position={[-2, 2, -5]} scale={0.8} color="#6d28d9" speed={0.5} />
       <Pyramid position={[2, 3, -6]} scale={0.5} color="#d97706" speed={0.9} />
 
       {/* Particules */}
@@ -283,7 +283,7 @@ function CSSFallback() {
         style={{
           width: 400,
           height: 400,
-          background: "linear-gradient(135deg, #f97316, #fbbf24)",
+          background: "linear-gradient(135deg, #7c3aed, #8b5cf6)",
           top: "10%",
           right: "-5%",
           animation: "float 8s ease-in-out infinite",
@@ -294,7 +294,7 @@ function CSSFallback() {
         style={{
           width: 300,
           height: 300,
-          background: "linear-gradient(135deg, #ea580c, #f97316)",
+          background: "linear-gradient(135deg, #6d28d9, #7c3aed)",
           bottom: "20%",
           left: "-5%",
           animation: "float 10s ease-in-out infinite reverse",
@@ -305,7 +305,7 @@ function CSSFallback() {
         style={{
           width: 200,
           height: 200,
-          background: "#fbbf24",
+          background: "#8b5cf6",
           top: "40%",
           left: "30%",
           animation: "float 6s ease-in-out infinite",

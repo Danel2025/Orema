@@ -181,7 +181,7 @@ export default function PrivacyPage() {
             <Flex align="center" gap="2">
               <Shield size={18} style={{ color: "var(--green-10)" }} />
               <Text size="2" color="gray">
-                Conforme RGPD & législation gabonaise
+                Conforme à la Loi n°001/2011 (protection des données personnelles)
               </Text>
             </Flex>
           </Flex>
@@ -198,20 +198,20 @@ export default function PrivacyPage() {
             p="6"
             style={{
               background:
-                "linear-gradient(135deg, var(--orange-a2) 0%, var(--amber-a2) 100%)",
+                "linear-gradient(135deg, var(--violet-a2) 0%, var(--purple-a2) 100%)",
               borderRadius: 16,
-              border: "1px solid var(--orange-a4)",
+              border: "1px solid var(--violet-a4)",
             }}
           >
             <Flex align="center" gap="3" mb="4">
               <Box
                 p="3"
                 style={{
-                  background: "var(--orange-a4)",
+                  background: "var(--violet-a4)",
                   borderRadius: 12,
                 }}
               >
-                <Shield size={24} style={{ color: "var(--orange-9)" }} />
+                <Shield size={24} style={{ color: "var(--violet-9)" }} />
               </Box>
               <Heading size="4">Notre engagement</Heading>
             </Flex>
@@ -254,11 +254,11 @@ export default function PrivacyPage() {
                     <Box
                       p="2"
                       style={{
-                        background: "var(--orange-a3)",
+                        background: "var(--violet-a3)",
                         borderRadius: 8,
                       }}
                     >
-                      <type.icon size={20} style={{ color: "var(--orange-9)" }} />
+                      <type.icon size={20} style={{ color: "var(--violet-9)" }} />
                     </Box>
                     <Text size="3" weight="bold">
                       {type.title}
@@ -361,7 +361,7 @@ export default function PrivacyPage() {
             }}
           >
             <Flex align="center" gap="3" mb="3">
-              <Mail size={20} style={{ color: "var(--orange-9)" }} />
+              <Mail size={20} style={{ color: "var(--violet-9)" }} />
               <Heading size="4">Délégué à la Protection des Données</Heading>
             </Flex>
             <Text size="3" color="gray" mb="4" style={{ display: "block" }}>
@@ -373,12 +373,12 @@ export default function PrivacyPage() {
                 Email :{" "}
                 <a
                   href="mailto:dpo@orema-nplus.ga"
-                  style={{ color: "var(--orange-9)", textDecoration: "none" }}
+                  style={{ color: "var(--violet-9)", textDecoration: "none" }}
                 >
                   dpo@orema-nplus.ga
                 </a>
               </Text>
-              <Text size="3">Adresse : BP 1234, Libreville, Gabon</Text>
+              <Text size="3">Adresse : Boulevard Triomphal Omar Bongo, Immeuble Les Arcades, 3e étage, Libreville, Gabon</Text>
             </Flex>
           </Box>
         </motion.div>

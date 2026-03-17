@@ -223,12 +223,10 @@ export function StocksContent() {
 
         {/* Onglet Valorisation */}
         <Tabs.Content value="valorisation">
-          {valorisation && (
-            <Grid columns={{ initial: "1", md: "2" }} gap="4">
+          {valorisation ? <Grid columns={{ initial: "1", md: "2" }} gap="4">
               <StockValuation valorisation={valorisation} />
               <StockAlerts alertes={alertes} onCreateMovement={handleCreateMovement} />
-            </Grid>
-          )}
+            </Grid> : null}
         </Tabs.Content>
       </Tabs.Root>
 

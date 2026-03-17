@@ -48,7 +48,7 @@ interface PrintButtonProps {
   /** Variante du bouton */
   variant?: "solid" | "soft" | "outline" | "ghost" | "surface";
   /** Couleur du bouton */
-  color?: "orange" | "gray" | "blue" | "green";
+  color?: "violet" | "gray" | "blue" | "green";
   /** Taille du bouton */
   size?: "1" | "2" | "3" | "4";
   /** Desactiver le bouton */
@@ -87,7 +87,7 @@ export function PrintButton({
   sessionId,
   compact = false,
   variant = "soft",
-  color = "orange",
+  color = "violet",
   size = "2",
   disabled = false,
   onPrintSuccess,
@@ -306,7 +306,7 @@ export function PrintButton({
 export function PrintTicketButton({
   venteId,
   variant = "soft",
-  color = "orange",
+  color = "violet",
   size = "2",
   disabled = false,
   onPrintSuccess,
@@ -443,7 +443,7 @@ export function TestPrintButton({
 }: {
   printerId?: string;
   variant?: "solid" | "soft" | "outline" | "ghost" | "surface";
-  color?: "orange" | "gray" | "blue" | "green";
+  color?: "violet" | "gray" | "blue" | "green";
   size?: "1" | "2" | "3" | "4";
   disabled?: boolean;
 }) {

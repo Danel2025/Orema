@@ -16,29 +16,27 @@ import { FadeIn, StaggerContainer, StaggerItem } from "./motion-wrapper";
 
 const plans = [
   {
-    name: "Starter",
-    description: "Pour les petits commerces",
-    price: "15 000",
-    period: "/mois",
+    name: "Essentiel",
+    description: "Gratuit pour démarrer",
+    price: "Gratuit",
+    period: "",
     features: [
-      "1 point de vente",
-      "2 utilisateurs",
+      "1 utilisateur",
       "Ventes et encaissements",
       "Rapport journalier (Z)",
-      "Support par email",
       "Mode hors-ligne",
+      "Support par email",
     ],
-    cta: "Commencer",
+    cta: "Commencer gratuitement",
     popular: false,
   },
   {
     name: "Pro",
     description: "Pour restaurants et bars",
-    price: "45 000",
+    price: "9 900",
     period: "/mois",
     features: [
-      "1 point de vente",
-      "10 utilisateurs",
+      "5 utilisateurs",
       "Gestion des tables",
       "Multi-imprimantes",
       "Stocks & inventaire",
@@ -50,19 +48,16 @@ const plans = [
     popular: true,
   },
   {
-    name: "Enterprise",
+    name: "Business",
     description: "Pour chaînes et franchises",
-    price: "Sur mesure",
-    period: "",
+    price: "19 900",
+    period: "/mois",
     features: [
       "Multi-établissements",
       "Utilisateurs illimités",
-      "API & intégrations",
-      "Dashboard centralisé",
-      "Formation sur site",
-      "Account manager dédié",
-      "SLA garanti 99.9%",
-      "Personnalisations",
+      "Rapports avancés",
+      "Formation incluse",
+      "Support dédié",
     ],
     cta: "Nous contacter",
     popular: false,
@@ -114,15 +109,14 @@ export function Pricing() {
                   style={{ height: "100%", position: "relative" }}
                 >
                   {/* Popular badge - outside card */}
-                  {plan.popular && (
-                    <div
+                  {plan.popular ? <div
                       style={{
                         position: "absolute",
                         top: -14,
                         left: "50%",
                         transform: "translateX(-50%)",
                         zIndex: 10,
-                        background: "linear-gradient(135deg, #f97316 0%, #f59e0b 100%)",
+                        background: "var(--violet-9)",
                         color: "white",
                         padding: "8px 20px",
                         borderRadius: 20,
@@ -132,19 +126,18 @@ export function Pricing() {
                         alignItems: "center",
                         gap: 6,
                         whiteSpace: "nowrap",
-                        boxShadow: "0 4px 12px rgba(249, 115, 22, 0.3)",
+                        boxShadow: "0 4px 12px rgba(139, 92, 246, 0.3)",
                       }}
                     >
                       <Zap size={12} fill="white" />
                       Plus populaire
-                    </div>
-                  )}
+                    </div> : null}
                   <Card
                     size="3"
                     style={{
                       height: "100%",
-                      border: plan.popular ? "2px solid var(--orange-8)" : undefined,
-                      boxShadow: plan.popular ? "0 20px 40px -10px rgba(249, 115, 22, 0.2)" : undefined,
+                      border: plan.popular ? "2px solid var(--violet-8)" : undefined,
+                      boxShadow: plan.popular ? "0 20px 40px -10px rgba(139, 92, 246, 0.2)" : undefined,
                     }}
                   >
 
@@ -164,22 +157,15 @@ export function Pricing() {
                           weight="bold"
                           style={
                             plan.popular
-                              ? {
-                                  background: "linear-gradient(135deg, var(--orange-9) 0%, var(--amber-9) 100%)",
-                                  WebkitBackgroundClip: "text",
-                                  WebkitTextFillColor: "transparent",
-                                  backgroundClip: "text",
-                                }
+                              ? { color: "var(--violet-9)" }
                               : { color: "var(--gray-12)" }
                           }
                         >
                           {plan.price}
                         </Text>
-                        {plan.period && (
-                          <Text size="2" color="gray">
+                        {plan.period ? <Text size="2" color="gray">
                             FCFA{plan.period}
-                          </Text>
-                        )}
+                          </Text> : null}
                       </Flex>
 
                       {/* Features */}
@@ -191,7 +177,7 @@ export function Pricing() {
                                 width: 20,
                                 height: 20,
                                 borderRadius: "50%",
-                                background: plan.popular ? "var(--orange-a4)" : "var(--green-a4)",
+                                background: plan.popular ? "var(--violet-a4)" : "var(--green-a4)",
                                 display: "flex",
                                 alignItems: "center",
                                 justifyContent: "center",
@@ -201,7 +187,7 @@ export function Pricing() {
                               <Check
                                 size={12}
                                 style={{
-                                  color: plan.popular ? "var(--orange-9)" : "var(--green-9)",
+                                  color: plan.popular ? "var(--violet-9)" : "var(--green-9)",
                                 }}
                               />
                             </Box>
@@ -212,8 +198,8 @@ export function Pricing() {
 
                       {/* CTA */}
                       <Link
-                        href={plan.name === "Enterprise" ? "#contact" : "/register"}
-                        target={plan.name === "Enterprise" ? undefined : "_blank"}
+                        href={plan.name === "Business" ? "#contact" : "/register"}
+                        target={plan.name === "Business" ? undefined : "_blank"}
                         style={{ textDecoration: "none" }}
                       >
                         <motion.div
@@ -228,10 +214,10 @@ export function Pricing() {
                             fontSize: 14,
                             cursor: "pointer",
                             background: plan.popular
-                              ? "linear-gradient(135deg, var(--orange-9) 0%, var(--amber-9) 100%)"
+                              ? "var(--violet-9)"
                               : "transparent",
-                            color: plan.popular ? "white" : "var(--orange-9)",
-                            border: plan.popular ? "none" : "1px solid var(--orange-8)",
+                            color: plan.popular ? "white" : "var(--violet-9)",
+                            border: plan.popular ? "none" : "1px solid var(--violet-8)",
                           }}
                         >
                           {plan.cta}
@@ -253,7 +239,7 @@ export function Pricing() {
             align="center"
             style={{ display: "block", marginTop: 32 }}
           >
-            Tous les prix sont en FCFA HT. Installation et formation incluses.
+            Tous les prix sont en FCFA HT.
           </Text>
         </FadeIn>
       </Container>

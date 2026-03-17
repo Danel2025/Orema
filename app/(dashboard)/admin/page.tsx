@@ -82,7 +82,7 @@ export default function AdminPage() {
       href: "/admin/contenu/blog/nouveau",
       label: "Nouvel article blog",
       icon: Newspaper,
-      color: "orange",
+      color: "violet",
     },
   ];
 
@@ -120,7 +120,7 @@ export default function AdminPage() {
     {
       title: "Blog",
       icon: Newspaper,
-      color: "orange",
+      color: "violet",
       href: "/admin/contenu/blog",
       stats: [
         {
@@ -183,9 +183,9 @@ export default function AdminPage() {
           <Box
             p="3"
             style={{
-              background: "linear-gradient(135deg, var(--orange-9) 0%, var(--amber-9) 100%)",
+              background: "linear-gradient(135deg, var(--violet-9) 0%, var(--purple-9) 100%)",
               borderRadius: 12,
-              boxShadow: "0 4px 16px var(--orange-a4)",
+              boxShadow: "0 4px 16px var(--violet-a4)",
             }}
           >
             <Sparkles size={24} style={{ color: "white" }} />
@@ -404,13 +404,13 @@ export default function AdminPage() {
         <Box
           p="5"
           style={{
-            background: "linear-gradient(135deg, var(--orange-a2) 0%, var(--amber-a2) 100%)",
+            background: "linear-gradient(135deg, var(--violet-a2) 0%, var(--purple-a2) 100%)",
             borderRadius: 16,
-            border: "1px solid var(--orange-a4)",
+            border: "1px solid var(--violet-a4)",
           }}
         >
           <Flex align="center" gap="3" mb="3">
-            <TrendingUp size={20} style={{ color: "var(--orange-9)" }} />
+            <TrendingUp size={20} style={{ color: "var(--violet-9)" }} />
             <Heading size="3">Conseils</Heading>
           </Flex>
           <Grid columns={{ initial: "1", md: "2" }} gap="4">

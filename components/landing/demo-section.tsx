@@ -72,8 +72,8 @@ export function DemoSection() {
       <Box
         className="pointer-events-none absolute inset-0 opacity-30"
         style={{
-          backgroundImage: `radial-gradient(circle at 20% 50%, var(--orange-a3), transparent 50%),
-                            radial-gradient(circle at 80% 50%, var(--amber-a3), transparent 50%)`,
+          backgroundImage: `radial-gradient(circle at 20% 50%, var(--violet-a3), transparent 50%),
+                            radial-gradient(circle at 80% 50%, var(--purple-a3), transparent 50%)`,
         }}
       />
 
@@ -90,17 +90,17 @@ export function DemoSection() {
                 <Box
                   className="w-fit rounded-full"
                   style={{
-                    background: "var(--orange-a3)",
-                    border: "1px solid var(--orange-a5)",
+                    background: "var(--violet-a3)",
+                    border: "1px solid var(--violet-a5)",
                     padding: "8px 18px",
                   }}
                 >
                   <Flex align="center" gap="2">
-                    <Play size={14} style={{ color: "var(--orange-9)", flexShrink: 0 }} />
+                    <Play size={14} style={{ color: "var(--violet-9)", flexShrink: 0 }} />
                     <Text
                       size="2"
                       weight="medium"
-                      style={{ color: "var(--orange-11)" }}
+                      style={{ color: "var(--violet-11)" }}
                     >
                       Démo interactive
                     </Text>
@@ -287,7 +287,7 @@ export function DemoSection() {
                           style={{
                             width: index === currentSlide ? 24 : 8,
                             background: index === currentSlide
-                              ? "var(--orange-9)"
+                              ? "var(--violet-9)"
                               : "rgba(255,255,255,0.7)",
                           }}
                         />
@@ -301,7 +301,7 @@ export function DemoSection() {
                   className="pointer-events-none absolute -inset-4 -z-10 rounded-3xl opacity-30 blur-3xl"
                   style={{
                     background:
-                      "linear-gradient(135deg, var(--orange-6) 0%, var(--amber-6) 100%)",
+                      "linear-gradient(135deg, var(--violet-6) 0%, var(--purple-6) 100%)",
                   }}
                 />
               </motion.div>

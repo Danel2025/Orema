@@ -1,6 +1,5 @@
 "use client";
 
-import type { JSX } from "react";
 import {
   Box,
   Container,
@@ -11,7 +10,10 @@ import {
   Separator,
   Skeleton,
 } from "@radix-ui/themes";
+import { MarkdownRenderer } from "@/components/public/markdown-renderer";
 import { motion } from "motion/react";
+import type {
+  LucideIcon} from "lucide-react";
 import {
   ChevronRight,
   ChevronLeft,
@@ -21,7 +23,6 @@ import {
   Printer,
   ThumbsUp,
   ThumbsDown,
-  LucideIcon,
   ShoppingCart,
   Utensils,
   Package,
@@ -135,184 +136,6 @@ export default function DocsArticlePage() {
       ? relatedArticles[currentIndex + 1]
       : null;
 
-  // Simple markdown-like rendering
-  const renderContent = (content: string) => {
-    const lines = content.trim().split("\n");
-    const elements: JSX.Element[] = [];
-    let inCodeBlock = false;
-    let codeContent: string[] = [];
-
-    lines.forEach((line, index) => {
-      // Code block start/end
-      if (line.startsWith("```")) {
-        if (inCodeBlock) {
-          elements.push(
-            <Box
-              key={`code-${index}`}
-              my="4"
-              p="4"
-              style={{
-                background: "var(--gray-a3)",
-                borderRadius: 12,
-                overflow: "auto",
-                fontFamily: "var(--font-google-sans-code), monospace",
-                fontSize: 13,
-                lineHeight: 1.6,
-              }}
-            >
-              <pre style={{ margin: 0 }}>
-                <code>{codeContent.join("\n")}</code>
-              </pre>
-            </Box>
-          );
-          codeContent = [];
-          inCodeBlock = false;
-        } else {
-          inCodeBlock = true;
-        }
-        return;
-      }
-
-      if (inCodeBlock) {
-        codeContent.push(line);
-        return;
-      }
-
-      // Headers
-      if (line.startsWith("## ")) {
-        elements.push(
-          <Heading key={index} size="5" mt="6" mb="3">
-            {line.slice(3)}
-          </Heading>
-        );
-        return;
-      }
-      if (line.startsWith("### ")) {
-        elements.push(
-          <Heading key={index} size="4" mt="5" mb="2">
-            {line.slice(4)}
-          </Heading>
-        );
-        return;
-      }
-      if (line.startsWith("#### ")) {
-        elements.push(
-          <Heading key={index} size="3" mt="4" mb="2">
-            {line.slice(5)}
-          </Heading>
-        );
-        return;
-      }
-
-      // Blockquote
-      if (line.startsWith("> ")) {
-        elements.push(
-          <Box
-            key={index}
-            my="4"
-            p="4"
-            style={{
-              background: "var(--amber-a2)",
-              borderLeft: "4px solid var(--amber-9)",
-              borderRadius: "0 8px 8px 0",
-            }}
-          >
-            <Text size="3" style={{ color: "var(--amber-11)" }}>
-              {line.slice(2)}
-            </Text>
-          </Box>
-        );
-        return;
-      }
-
-      // List items
-      if (line.startsWith("- ") || line.startsWith("* ")) {
-        elements.push(
-          <Flex key={index} gap="2" my="1" ml="4">
-            <Text style={{ color: "var(--gray-10)" }}>•</Text>
-            <Text size="3" style={{ color: "var(--gray-11)", lineHeight: 1.7 }}>
-              {renderInlineFormatting(line.slice(2))}
-            </Text>
-          </Flex>
-        );
-        return;
-      }
-
-      // Table (simple detection)
-      if (line.startsWith("|") && line.endsWith("|")) {
-        elements.push(
-          <Text
-            key={index}
-            size="2"
-            style={{
-              fontFamily: "var(--font-google-sans-code), monospace",
-              color: "var(--gray-11)",
-              display: "block",
-              whiteSpace: "pre",
-            }}
-          >
-            {line}
-          </Text>
-        );
-        return;
-      }
-
-      // Empty line
-      if (line.trim() === "") {
-        elements.push(<Box key={index} style={{ height: 12 }} />);
-        return;
-      }
-
-      // Regular paragraph
-      elements.push(
-        <Text
-          key={index}
-          size="3"
-          style={{ color: "var(--gray-11)", lineHeight: 1.8, display: "block" }}
-        >
-          {renderInlineFormatting(line)}
-        </Text>
-      );
-    });
-
-    return elements;
-  };
-
-  // Render inline formatting (bold, code, links)
-  const renderInlineFormatting = (text: string) => {
-    const parts = text.split(/(\*\*[^*]+\*\*)/g);
-    return parts.map((part, i) => {
-      if (part.startsWith("**") && part.endsWith("**")) {
-        return (
-          <strong key={i} style={{ fontWeight: 600, color: "var(--gray-12)" }}>
-            {part.slice(2, -2)}
-          </strong>
-        );
-      }
-      // Inline code
-      const codeParts = part.split(/(`[^`]+`)/g);
-      return codeParts.map((codePart, j) => {
-        if (codePart.startsWith("`") && codePart.endsWith("`")) {
-          return (
-            <code
-              key={`${i}-${j}`}
-              style={{
-                background: "var(--gray-a4)",
-                padding: "2px 6px",
-                borderRadius: 4,
-                fontFamily: "var(--font-google-sans-code), monospace",
-                fontSize: "0.9em",
-              }}
-            >
-              {codePart.slice(1, -1)}
-            </code>
-          );
-        }
-        return codePart;
-      });
-    });
-  };
-
   return (
     <Box style={{ background: "var(--gray-1)" }}>
       <Container size="3" py="9" style={{ paddingTop: 120 }}>
@@ -322,33 +145,35 @@ export default function DocsArticlePage() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.1, duration: 0.4 }}
         >
-          <Flex align="center" gap="2" mb="6" wrap="wrap">
-            <Link
-              href="/docs"
-              style={{
-                textDecoration: "none",
-                color: "var(--gray-11)",
-                fontSize: 14,
-              }}
-            >
-              Documentation
-            </Link>
-            <ChevronRight size={14} style={{ color: "var(--gray-8)" }} />
-            <Link
-              href={`/docs/${categorySlug}`}
-              style={{
-                textDecoration: "none",
-                color: "var(--gray-11)",
-                fontSize: 14,
-              }}
-            >
-              {category.title}
-            </Link>
-            <ChevronRight size={14} style={{ color: "var(--gray-8)" }} />
-            <Text size="2" style={{ color: `var(--${category.color}-9)` }}>
-              {article.title}
-            </Text>
-          </Flex>
+          <nav aria-label="Fil d'Ariane">
+            <Flex align="center" gap="2" mb="6" wrap="wrap">
+              <Link
+                href="/docs"
+                style={{
+                  textDecoration: "none",
+                  color: "var(--gray-11)",
+                  fontSize: 14,
+                }}
+              >
+                Documentation
+              </Link>
+              <ChevronRight size={14} style={{ color: "var(--gray-8)" }} aria-hidden="true" />
+              <Link
+                href={`/docs/${categorySlug}`}
+                style={{
+                  textDecoration: "none",
+                  color: "var(--gray-11)",
+                  fontSize: 14,
+                }}
+              >
+                {category.title}
+              </Link>
+              <ChevronRight size={14} style={{ color: "var(--gray-8)" }} aria-hidden="true" />
+              <Text size="2" style={{ color: `var(--${category.color}-9)` }} aria-current="page">
+                {article.title}
+              </Text>
+            </Flex>
+          </nav>
         </motion.div>
 
         {/* Article header */}
@@ -391,8 +216,9 @@ export default function DocsArticlePage() {
           </Text>
 
           {/* Actions */}
-          <Flex gap="2" mb="8">
+          <Flex gap="2" mb="8" role="group" aria-label="Actions sur l'article">
             <button
+              aria-label="Imprimer cet article"
               onClick={() => window.print()}
               style={{
                 display: "inline-flex",
@@ -407,12 +233,13 @@ export default function DocsArticlePage() {
                 cursor: "pointer",
               }}
             >
-              <Printer size={14} />
+              <Printer size={14} aria-hidden="true" />
               Imprimer
             </button>
             <button
+              aria-label="Copier le lien de l'article"
               onClick={() => {
-                navigator.clipboard.writeText(window.location.href);
+                navigator.clipboard?.writeText(window.location.href);
               }}
               style={{
                 display: "inline-flex",
@@ -427,13 +254,14 @@ export default function DocsArticlePage() {
                 cursor: "pointer",
               }}
             >
-              <Share2 size={14} />
+              <Share2 size={14} aria-hidden="true" />
               Partager
             </button>
           </Flex>
         </motion.div>
 
         {/* Article content */}
+        <article aria-label={article.title}>
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -447,9 +275,10 @@ export default function DocsArticlePage() {
               border: "1px solid var(--gray-a4)",
             }}
           >
-            {renderContent(article.content)}
+            <MarkdownRenderer content={article.content} accentColor={category.color} />
           </Box>
         </motion.div>
+        </article>
 
         {/* Feedback */}
         <motion.div
@@ -469,8 +298,10 @@ export default function DocsArticlePage() {
             <Text size="3" weight="medium" mb="4" style={{ display: "block" }}>
               Cet article vous a-t-il été utile ?
             </Text>
-            <Flex gap="3" justify="center">
+            <Flex gap="3" justify="center" role="group" aria-label="Cet article vous a-t-il été utile ?">
               <button
+                aria-label="Oui, cet article m'a été utile"
+                aria-pressed={feedbackGiven === "up"}
                 onClick={() => setFeedbackGiven("up")}
                 style={{
                   display: "inline-flex",
@@ -490,10 +321,12 @@ export default function DocsArticlePage() {
                   transition: "all 0.2s",
                 }}
               >
-                <ThumbsUp size={16} />
+                <ThumbsUp size={16} aria-hidden="true" />
                 Oui
               </button>
               <button
+                aria-label="Non, cet article ne m'a pas été utile"
+                aria-pressed={feedbackGiven === "down"}
                 onClick={() => setFeedbackGiven("down")}
                 style={{
                   display: "inline-flex",
@@ -513,15 +346,13 @@ export default function DocsArticlePage() {
                   transition: "all 0.2s",
                 }}
               >
-                <ThumbsDown size={16} />
+                <ThumbsDown size={16} aria-hidden="true" />
                 Non
               </button>
             </Flex>
-            {feedbackGiven && (
-              <Text size="2" color="gray" mt="3" style={{ display: "block" }}>
+            {feedbackGiven ? <Text size="2" color="gray" mt="3" style={{ display: "block" }}>
                 Merci pour votre retour !
-              </Text>
-            )}
+              </Text> : null}
           </Box>
         </motion.div>
 
@@ -534,8 +365,7 @@ export default function DocsArticlePage() {
           transition={{ delay: 0.6, duration: 0.5 }}
         >
           <Grid columns={{ initial: "1", sm: "2" }} gap="4">
-            {prevArticle && (
-              <Link
+            {prevArticle ? <Link
                 href={`/docs/${categorySlug}/${prevArticle.slug}`}
                 style={{ textDecoration: "none" }}
               >
@@ -569,10 +399,8 @@ export default function DocsArticlePage() {
                     </Box>
                   </Flex>
                 </Box>
-              </Link>
-            )}
-            {nextArticle && (
-              <Link
+              </Link> : null}
+            {nextArticle ? <Link
                 href={`/docs/${categorySlug}/${nextArticle.slug}`}
                 style={{
                   textDecoration: "none",
@@ -609,8 +437,7 @@ export default function DocsArticlePage() {
                     />
                   </Flex>
                 </Box>
-              </Link>
-            )}
+              </Link> : null}
           </Grid>
         </motion.div>
 

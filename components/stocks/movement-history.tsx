@@ -46,7 +46,7 @@ const typeConfig: Record<
   {
     label: string;
     icon: React.ReactNode;
-    color: "green" | "red" | "blue" | "orange";
+    color: "green" | "red" | "blue" | "violet";
   }
 > = {
   ENTREE: {
@@ -67,7 +67,7 @@ const typeConfig: Record<
   PERTE: {
     label: "Perte",
     icon: <Trash2 size={14} />,
-    color: "orange",
+    color: "violet",
   },
 };
 

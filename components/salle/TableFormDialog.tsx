@@ -12,7 +12,8 @@ import {
   Box,
 } from "@radix-ui/themes";
 import { Plus, Check } from "lucide-react";
-import { useForm, Controller, SubmitHandler } from "react-hook-form";
+import type { SubmitHandler } from "react-hook-form";
+import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
 import { z } from "zod";
@@ -205,11 +206,9 @@ export function TableFormDialog({
                 {...register("numero")}
                 placeholder="Ex: T1, Table 1, VIP..."
               />
-              {errors.numero && (
-                <Text size="1" color="red" mt="1">
+              {errors.numero ? <Text size="1" color="red" mt="1">
                   {errors.numero.message}
-                </Text>
-              )}
+                </Text> : null}
             </div>
 
             {/* Capacité */}
@@ -224,11 +223,9 @@ export function TableFormDialog({
                 min={1}
                 max={50}
               />
-              {errors.capacite && (
-                <Text size="1" color="red" mt="1">
+              {errors.capacite ? <Text size="1" color="red" mt="1">
                   {errors.capacite.message}
-                </Text>
-              )}
+                </Text> : null}
             </div>
 
             {/* Forme */}
@@ -361,11 +358,9 @@ export function TableFormDialog({
                   </Popover.Content>
                 </Popover.Root>
               </Flex>
-              {errors.zoneId && (
-                <Text size="1" color="red" mt="1">
+              {errors.zoneId ? <Text size="1" color="red" mt="1">
                   {errors.zoneId.message}
-                </Text>
-              )}
+                </Text> : null}
             </div>
           </Flex>
 

@@ -131,11 +131,9 @@ export default function NouvelleCategoriePage() {
                     {...register("title")}
                     onChange={handleTitleChange}
                   />
-                  {errors.title && (
-                    <Text size="1" color="red" mt="1">
+                  {errors.title ? <Text size="1" color="red" mt="1">
                       {errors.title.message}
-                    </Text>
-                  )}
+                    </Text> : null}
                 </Box>
 
                 {/* Slug */}
@@ -152,11 +150,9 @@ export default function NouvelleCategoriePage() {
                       <Text size="1" color="gray">/docs/</Text>
                     </TextField.Slot>
                   </TextField.Root>
-                  {errors.slug && (
-                    <Text size="1" color="red" mt="1">
+                  {errors.slug ? <Text size="1" color="red" mt="1">
                       {errors.slug.message}
-                    </Text>
-                  )}
+                    </Text> : null}
                   <Text size="1" color="gray" mt="1">
                     URL finale: /docs/{watchedValues.slug || "..."}
                   </Text>
@@ -173,11 +169,9 @@ export default function NouvelleCategoriePage() {
                     rows={3}
                     {...register("description")}
                   />
-                  {errors.description && (
-                    <Text size="1" color="red" mt="1">
+                  {errors.description ? <Text size="1" color="red" mt="1">
                       {errors.description.message}
-                    </Text>
-                  )}
+                    </Text> : null}
                 </Box>
 
                 {/* Icon & Color */}
@@ -318,7 +312,7 @@ export default function NouvelleCategoriePage() {
               {/* Tips */}
               <Card size="2">
                 <Flex align="center" gap="2" mb="2">
-                  <Sparkles size={14} style={{ color: "var(--orange-9)" }} />
+                  <Sparkles size={14} style={{ color: "var(--violet-9)" }} />
                   <Text size="2" weight="medium">
                     Conseils
                   </Text>

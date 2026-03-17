@@ -1,16 +1,14 @@
 /**
  * Edge Function: Webhook Mobile Money
  *
- * Réception des callbacks de paiement Airtel Money et Moov Money.
- * Cette fonction est appelée par les providers de paiement mobile
+ * Reception des callbacks de paiement Airtel Money et Moov Money.
+ * Cette fonction est appelee par les providers de paiement mobile
  * pour confirmer les transactions.
  *
  * @endpoint POST /functions/v1/webhook-mobile-money
  */
 
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-import { hmac } from "https://deno.land/x/hmac@v2.0.1/mod.ts";
 
 // Types
 interface AirtelMoneyPayload {
@@ -20,13 +18,13 @@ interface AirtelMoneyPayload {
     status_code: string;
     airtel_money_id: string;
   };
-  reference: string; // Notre référence interne
+  reference: string; // Notre reference interne
   status: "SUCCESS" | "FAILED" | "PENDING";
 }
 
 interface MoovMoneyPayload {
   transactionId: string;
-  externalReference: string; // Notre référence interne
+  externalReference: string; // Notre reference interne
   status: "SUCCESSFUL" | "FAILED" | "PENDING";
   amount: number;
   currency: string;
@@ -38,20 +36,92 @@ const supabase = createClient(
   Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
 );
 
-serve(async (req: Request) => {
-  // Vérifier la méthode
+// ---------------------------------------------------------------------------
+// Timing-safe string comparison using crypto.subtle.timingSafeEqual
+// or manual constant-time fallback
+// ---------------------------------------------------------------------------
+
+async function timingSafeCompare(a: string, b: string): Promise<boolean> {
+  const encoder = new TextEncoder();
+  const aBuf = encoder.encode(a);
+  const bBuf = encoder.encode(b);
+
+  // If lengths differ, the signatures don't match.
+  // We still run through the comparison to avoid leaking length info via timing.
+  if (aBuf.byteLength !== bBuf.byteLength) {
+    // Compare bBuf against itself to burn the same amount of time
+    const dummy = new Uint8Array(bBuf.byteLength);
+    constantTimeEqual(dummy, bBuf);
+    return false;
+  }
+
+  // Try crypto.subtle.timingSafeEqual (available in newer Deno versions)
+  if (
+    typeof crypto !== "undefined" &&
+    crypto.subtle &&
+    typeof (crypto.subtle as Record<string, unknown>).timingSafeEqual ===
+      "function"
+  ) {
+    return (crypto.subtle as unknown as { timingSafeEqual(a: ArrayBuffer, b: ArrayBuffer): boolean })
+      .timingSafeEqual(aBuf.buffer, bBuf.buffer);
+  }
+
+  // Manual constant-time comparison fallback
+  return constantTimeEqual(aBuf, bBuf);
+}
+
+function constantTimeEqual(a: Uint8Array, b: Uint8Array): boolean {
+  if (a.byteLength !== b.byteLength) return false;
+  let result = 0;
+  for (let i = 0; i < a.byteLength; i++) {
+    result |= a[i] ^ b[i];
+  }
+  return result === 0;
+}
+
+// ---------------------------------------------------------------------------
+// HMAC SHA-256 via Web Crypto (no third-party import needed)
+// ---------------------------------------------------------------------------
+
+async function computeHmacSha256Hex(
+  secret: string,
+  message: string
+): Promise<string> {
+  const encoder = new TextEncoder();
+  const key = await crypto.subtle.importKey(
+    "raw",
+    encoder.encode(secret),
+    { name: "HMAC", hash: "SHA-256" },
+    false,
+    ["sign"]
+  );
+  const signature = await crypto.subtle.sign(
+    "HMAC",
+    key,
+    encoder.encode(message)
+  );
+  return Array.from(new Uint8Array(signature))
+    .map((b) => b.toString(16).padStart(2, "0"))
+    .join("");
+}
+
+// ---------------------------------------------------------------------------
+// Main handler
+// ---------------------------------------------------------------------------
+
+Deno.serve(async (req: Request) => {
+  // Verifier la methode
   if (req.method !== "POST") {
     return new Response("Method not allowed", { status: 405 });
   }
 
   try {
     const body = await req.text();
-    const contentType = req.headers.get("content-type") || "";
 
-    // Déterminer le provider selon les headers
+    // Determiner le provider selon les headers
     const provider = detectProvider(req.headers);
 
-    // Vérifier la signature du webhook
+    // Verifier la signature du webhook
     const isValid = await verifyWebhookSignature(req.headers, body, provider);
     if (!isValid) {
       console.error(`[Webhook] Signature invalide pour ${provider}`);
@@ -78,12 +148,12 @@ serve(async (req: Request) => {
       });
     }
 
-    // Broadcast pour notification temps réel
+    // Broadcast pour notification temps reel
     if (result.paiementId) {
       await broadcastPaiementConfirme(result.paiementId, result.reference);
     }
 
-    console.log(`[Webhook] Paiement confirmé: ${result.reference}`);
+    console.log(`[Webhook] Paiement confirme: ${result.reference}`);
     return new Response(JSON.stringify({ success: true }), {
       status: 200,
       headers: { "Content-Type": "application/json" },
@@ -98,10 +168,10 @@ serve(async (req: Request) => {
 });
 
 /**
- * Détecte le provider de paiement selon les headers
+ * Detecte le provider de paiement selon les headers
  */
 function detectProvider(headers: Headers): "airtel" | "moov" | "unknown" {
-  // Airtel Money utilise un header spécifique
+  // Airtel Money utilise un header specifique
   if (headers.get("X-Airtel-Signature")) {
     return "airtel";
   }
@@ -118,7 +188,8 @@ function detectProvider(headers: Headers): "airtel" | "moov" | "unknown" {
 }
 
 /**
- * Vérifie la signature du webhook
+ * Verifie la signature du webhook.
+ * TOUJOURS exiger la signature - pas de bypass en dev.
  */
 async function verifyWebhookSignature(
   headers: Headers,
@@ -133,9 +204,11 @@ async function verifyWebhookSignature(
         : null;
 
   if (!secret) {
-    console.warn(`[Webhook] Secret non configuré pour ${provider}`);
-    // En dev, on peut accepter sans signature
-    return Deno.env.get("DENO_ENV") === "development";
+    console.error(
+      `[Webhook] REJET: Secret non configure pour ${provider}. ` +
+        `Configurez la variable d'environnement ${provider === "airtel" ? "AIRTEL_WEBHOOK_SECRET" : "MOOV_WEBHOOK_SECRET"}.`
+    );
+    return false;
   }
 
   const signature =
@@ -145,10 +218,11 @@ async function verifyWebhookSignature(
 
   if (!signature) return false;
 
-  // Calculer le HMAC SHA256
-  const expectedSignature = hmac("sha256", secret, body, "utf8", "hex");
+  // Calculer le HMAC SHA256 via Web Crypto
+  const expectedSignature = await computeHmacSha256Hex(secret, body);
 
-  return signature === expectedSignature;
+  // Comparaison timing-safe pour eviter les attaques par timing
+  return timingSafeCompare(signature, expectedSignature);
 }
 
 /**
@@ -170,7 +244,7 @@ async function handleAirtelCallback(payload: AirtelMoneyPayload): Promise<{
         ? "ECHOUE"
         : "EN_ATTENTE";
 
-  // Mettre à jour le paiement en base
+  // Mettre a jour le paiement en base
   const { data, error } = await supabase
     .from("paiements")
     .update({
@@ -218,7 +292,7 @@ async function handleMoovCallback(payload: MoovMoneyPayload): Promise<{
         ? "ECHOUE"
         : "EN_ATTENTE";
 
-  // Mettre à jour le paiement en base
+  // Mettre a jour le paiement en base
   const { data, error } = await supabase
     .from("paiements")
     .update({
@@ -248,14 +322,14 @@ async function handleMoovCallback(payload: MoovMoneyPayload): Promise<{
 }
 
 /**
- * Broadcast l'événement de confirmation de paiement
+ * Broadcast l'evenement de confirmation de paiement
  */
 async function broadcastPaiementConfirme(
   paiementId: string,
-  reference: string
+  reference?: string
 ): Promise<void> {
   try {
-    // Récupérer les infos du paiement pour le broadcast
+    // Recuperer les infos du paiement pour le broadcast
     const { data: paiement } = await supabase
       .from("paiements")
       .select("venteId, vente:ventes(etablissementId)")
@@ -276,6 +350,6 @@ async function broadcastPaiementConfirme(
     }
   } catch (error) {
     console.error("[Broadcast] Erreur:", error);
-    // Ne pas faire échouer le webhook pour une erreur de broadcast
+    // Ne pas faire echouer le webhook pour une erreur de broadcast
   }
 }

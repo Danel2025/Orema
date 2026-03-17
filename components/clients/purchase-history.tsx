@@ -77,8 +77,8 @@ const TYPE_VENTE_LABELS: Record<string, string> = {
   EMPORTER: "A emporter",
 };
 
-const TYPE_VENTE_COLORS: Record<string, "orange" | "blue" | "green" | "purple"> = {
-  DIRECT: "orange",
+const TYPE_VENTE_COLORS: Record<string, "violet" | "blue" | "green" | "purple"> = {
+  DIRECT: "violet",
   TABLE: "blue",
   LIVRAISON: "green",
   EMPORTER: "purple",
@@ -110,8 +110,7 @@ export function PurchaseHistory({
         </Flex>
 
         {/* Statistiques */}
-        {stats && (
-          <Flex gap="3" wrap="wrap">
+        {stats ? <Flex gap="3" wrap="wrap">
             <Card variant="surface" style={{ flex: 1, minWidth: 120 }}>
               <Flex direction="column" align="center" gap="1">
                 <Text
@@ -154,12 +153,10 @@ export function PurchaseHistory({
                 </Text>
               </Flex>
             </Card>
-          </Flex>
-        )}
+          </Flex> : null}
 
         {/* Produits preferes */}
-        {stats && stats.produitsPreference.length > 0 && (
-          <>
+        {stats && stats.produitsPreference.length > 0 ? <>
             <Separator size="4" />
             <Flex direction="column" gap="2">
               <Flex align="center" gap="2">
@@ -174,7 +171,7 @@ export function PurchaseHistory({
                     key={p.produitId}
                     size="2"
                     variant="soft"
-                    color={index === 0 ? "orange" : "gray"}
+                    color={index === 0 ? "violet" : "gray"}
                   >
                     <Package size={12} />
                     {p.nom} ({p.quantiteTotale}x)
@@ -182,8 +179,7 @@ export function PurchaseHistory({
                 ))}
               </Flex>
             </Flex>
-          </>
-        )}
+          </> : null}
 
         <Separator size="4" />
 
@@ -304,8 +300,7 @@ export function PurchaseHistory({
       >
         <Dialog.Content maxWidth="450px">
           <Dialog.Title>Detail du ticket</Dialog.Title>
-          {selectedVente && (
-            <>
+          {selectedVente ? <>
               <Dialog.Description size="2" color="gray" mb="4">
                 Ticket #{selectedVente.numeroTicket} du{" "}
                 {formatDate(selectedVente.createdAt, "datetime")}
@@ -367,8 +362,7 @@ export function PurchaseHistory({
                   </Text>
                 </Flex>
               </Flex>
-            </>
-          )}
+            </> : null}
 
           <Flex gap="3" mt="5" justify="end">
             <Dialog.Close>

@@ -265,7 +265,7 @@ export function getRoleDisplayName(role: Role): string {
 export function getRoleColor(role: Role): string {
   const colors: Record<Role, string> = {
     SUPER_ADMIN: 'red',
-    ADMIN: 'orange',
+    ADMIN: 'violet',
     MANAGER: 'blue',
     CAISSIER: 'green',
     SERVEUR: 'gray',

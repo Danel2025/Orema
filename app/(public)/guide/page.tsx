@@ -126,7 +126,7 @@ const videoTutorials = [
   {
     title: "Présentation générale",
     duration: "5:30",
-    thumbnail: "var(--orange-a3)",
+    thumbnail: "var(--violet-a3)",
   },
   {
     title: "Ajouter des produits",
@@ -214,9 +214,9 @@ export default function GuidePage() {
             p="6"
             style={{
               background:
-                "linear-gradient(135deg, var(--orange-a2) 0%, var(--amber-a2) 100%)",
+                "linear-gradient(135deg, var(--violet-a2) 0%, var(--purple-a2) 100%)",
               borderRadius: 20,
-              border: "1px solid var(--orange-a4)",
+              border: "1px solid var(--violet-a4)",
             }}
           >
             <Flex
@@ -229,11 +229,11 @@ export default function GuidePage() {
                 <Box
                   p="4"
                   style={{
-                    background: "var(--orange-a4)",
+                    background: "var(--violet-a4)",
                     borderRadius: 16,
                   }}
                 >
-                  <Rocket size={32} style={{ color: "var(--orange-9)" }} />
+                  <Rocket size={32} style={{ color: "var(--violet-9)" }} />
                 </Box>
                 <Box>
                   <Heading size="5" mb="1">
@@ -254,7 +254,7 @@ export default function GuidePage() {
                   padding: "14px 28px",
                   borderRadius: 9999,
                   background:
-                    "linear-gradient(135deg, var(--orange-9) 0%, var(--amber-9) 100%)",
+                    "linear-gradient(135deg, var(--violet-9) 0%, var(--purple-9) 100%)",
                   color: "white",
                   fontSize: 14,
                   fontWeight: 600,
@@ -294,7 +294,7 @@ export default function GuidePage() {
                     right: 20,
                     fontSize: 120,
                     fontWeight: 900,
-                    color: "var(--orange-a3)",
+                    color: "var(--violet-a3)",
                     lineHeight: 1,
                     pointerEvents: "none",
                   }}
@@ -310,7 +310,7 @@ export default function GuidePage() {
                         p="3"
                         style={{
                           background:
-                            "linear-gradient(135deg, var(--orange-9) 0%, var(--amber-9) 100%)",
+                            "linear-gradient(135deg, var(--violet-9) 0%, var(--purple-9) 100%)",
                           borderRadius: 12,
                         }}
                       >
@@ -372,22 +372,22 @@ export default function GuidePage() {
                     <Box
                       p="4"
                       style={{
-                        background: "var(--amber-a2)",
+                        background: "var(--purple-a2)",
                         borderRadius: 12,
-                        border: "1px solid var(--amber-a4)",
+                        border: "1px solid var(--purple-a4)",
                         height: "100%",
                       }}
                     >
                       <Flex align="center" gap="2" mb="2">
                         <Lightbulb
                           size={16}
-                          style={{ color: "var(--amber-9)" }}
+                          style={{ color: "var(--purple-9)" }}
                         />
-                        <Text size="2" weight="bold" style={{ color: "var(--amber-11)" }}>
+                        <Text size="2" weight="bold" style={{ color: "var(--purple-11)" }}>
                           Conseil
                         </Text>
                       </Flex>
-                      <Text size="2" style={{ color: "var(--amber-11)" }}>
+                      <Text size="2" style={{ color: "var(--purple-11)" }}>
                         {step.tip}
                       </Text>
                     </Box>
@@ -408,9 +408,9 @@ export default function GuidePage() {
                     <Box
                       p="2"
                       style={{
-                        background: "var(--orange-9)",
+                        background: "var(--violet-9)",
                         borderRadius: "50%",
-                        boxShadow: "0 4px 12px var(--orange-a6)",
+                        boxShadow: "0 4px 12px var(--violet-a6)",
                       }}
                     >
                       <ArrowRight
@@ -437,7 +437,7 @@ export default function GuidePage() {
           transition={{ delay: 0.9, duration: 0.6 }}
         >
           <Flex align="center" gap="3" mb="5">
-            <Play size={24} style={{ color: "var(--orange-9)" }} />
+            <Play size={24} style={{ color: "var(--violet-9)" }} />
             <Heading size="5">Tutoriels vidéo</Heading>
           </Flex>
 
@@ -487,8 +487,8 @@ export default function GuidePage() {
                     >
                       <Play
                         size={24}
-                        fill="var(--orange-9)"
-                        style={{ color: "var(--orange-9)" }}
+                        fill="var(--violet-9)"
+                        style={{ color: "var(--violet-9)" }}
                       />
                     </Box>
                   </Box>
@@ -515,7 +515,7 @@ export default function GuidePage() {
           transition={{ delay: 1.2, duration: 0.6 }}
         >
           <Flex align="center" gap="3" mb="5">
-            <BookOpen size={24} style={{ color: "var(--orange-9)" }} />
+            <BookOpen size={24} style={{ color: "var(--violet-9)" }} />
             <Heading size="5">Questions fréquentes</Heading>
           </Flex>
 
@@ -554,7 +554,7 @@ export default function GuidePage() {
                 display: "inline-flex",
                 alignItems: "center",
                 gap: 8,
-                color: "var(--orange-9)",
+                color: "var(--violet-9)",
                 fontSize: 14,
                 fontWeight: 600,
               }}
@@ -576,7 +576,7 @@ export default function GuidePage() {
             p="8"
             style={{
               background:
-                "linear-gradient(135deg, var(--orange-9) 0%, var(--amber-9) 100%)",
+                "linear-gradient(135deg, var(--violet-9) 0%, var(--purple-9) 100%)",
               borderRadius: 24,
               textAlign: "center",
             }}
@@ -609,7 +609,7 @@ export default function GuidePage() {
                 alignItems: "center",
                 gap: 8,
                 background: "white",
-                color: "var(--orange-9)",
+                color: "var(--violet-9)",
                 padding: "14px 32px",
                 borderRadius: 9999,
                 fontWeight: 600,

@@ -18,12 +18,9 @@ import {
   Users,
   Zap,
   Shield,
-  Globe,
   Sparkles,
   Award,
-  TrendingUp,
   MapPin,
-  Lightbulb,
 } from "lucide-react";
 import Link from "next/link";
 
@@ -59,34 +56,10 @@ const values = [
 ];
 
 const stats = [
-  { value: "2024", label: "Année de création" },
-  { value: "100+", label: "Commerces équipés" },
-  { value: "5M+", label: "Transactions traitées" },
-  { value: "99.9%", label: "Disponibilité" },
-];
-
-const team = [
-  {
-    name: "Équipe Technique",
-    role: "Développement & Innovation",
-    description:
-      "Nos ingénieurs passionnés construisent une plateforme robuste et innovante.",
-    icon: Lightbulb,
-  },
-  {
-    name: "Équipe Support",
-    role: "Accompagnement Client",
-    description:
-      "Toujours disponibles pour vous aider à tirer le meilleur de votre système.",
-    icon: Heart,
-  },
-  {
-    name: "Équipe Commerciale",
-    role: "Déploiement & Partenariats",
-    description:
-      "Nous travaillons main dans la main avec les commerçants pour comprendre leurs besoins.",
-    icon: TrendingUp,
-  },
+  { value: "500+", label: "Commerces équipés" },
+  { value: "10M+", label: "Transactions traitées" },
+  { value: "9", label: "Villes couvertes" },
+  { value: "24/7", label: "Mode hors-ligne" },
 ];
 
 const timeline = [
@@ -131,9 +104,9 @@ export default function AboutPage() {
               p="6"
               style={{
                 background:
-                  "linear-gradient(135deg, var(--orange-a2) 0%, var(--amber-a2) 100%)",
+                  "linear-gradient(135deg, var(--violet-a2) 0%, var(--purple-a2) 100%)",
                 borderRadius: 20,
-                border: "1px solid var(--orange-a4)",
+                border: "1px solid var(--violet-a4)",
                 height: "100%",
               }}
             >
@@ -141,11 +114,11 @@ export default function AboutPage() {
                 <Box
                   p="3"
                   style={{
-                    background: "var(--orange-a4)",
+                    background: "var(--violet-a4)",
                     borderRadius: 12,
                   }}
                 >
-                  <Target size={24} style={{ color: "var(--orange-9)" }} />
+                  <Target size={24} style={{ color: "var(--violet-9)" }} />
                 </Box>
                 <Heading size="5">Notre Mission</Heading>
               </Flex>
@@ -219,7 +192,7 @@ export default function AboutPage() {
                 height: 300,
                 borderRadius: "50%",
                 background:
-                  "radial-gradient(circle, var(--orange-a3) 0%, transparent 70%)",
+                  "radial-gradient(circle, var(--violet-a3) 0%, transparent 70%)",
                 top: -100,
                 right: -100,
                 pointerEvents: "none",
@@ -232,11 +205,11 @@ export default function AboutPage() {
                   <Box
                     p="3"
                     style={{
-                      background: "var(--orange-a3)",
+                      background: "var(--violet-a3)",
                       borderRadius: 12,
                     }}
                   >
-                    <Sparkles size={24} style={{ color: "var(--orange-9)" }} />
+                    <Sparkles size={24} style={{ color: "var(--violet-9)" }} />
                   </Box>
                   <Heading size="5">Pourquoi &quot;Oréma&quot; ?</Heading>
                 </Flex>
@@ -272,12 +245,12 @@ export default function AboutPage() {
                     width: 120,
                     height: 120,
                     background:
-                      "linear-gradient(135deg, var(--orange-9) 0%, var(--amber-9) 100%)",
+                      "linear-gradient(135deg, var(--violet-9) 0%, var(--purple-9) 100%)",
                     borderRadius: 24,
                     display: "flex",
                     alignItems: "center",
                     justifyContent: "center",
-                    boxShadow: "0 20px 40px -10px var(--orange-a6)",
+                    boxShadow: "0 20px 40px -10px var(--violet-a6)",
                   }}
                 >
                   <Text
@@ -291,8 +264,8 @@ export default function AboutPage() {
                   </Text>
                 </Box>
                 <Flex align="center" gap="2">
-                  <MapPin size={16} style={{ color: "var(--orange-9)" }} />
-                  <Text size="2" weight="medium" style={{ color: "var(--orange-11)" }}>
+                  <MapPin size={16} style={{ color: "var(--violet-9)" }} />
+                  <Text size="2" weight="medium" style={{ color: "var(--violet-11)" }}>
                     Made in Gabon
                   </Text>
                 </Flex>
@@ -330,7 +303,7 @@ export default function AboutPage() {
                     style={{
                       display: "block",
                       background:
-                        "linear-gradient(135deg, var(--orange-9) 0%, var(--amber-9) 100%)",
+                        "linear-gradient(135deg, var(--violet-9) 0%, var(--purple-9) 100%)",
                       WebkitBackgroundClip: "text",
                       WebkitTextFillColor: "transparent",
                       backgroundClip: "text",
@@ -438,7 +411,7 @@ export default function AboutPage() {
                     py="2"
                     style={{
                       background:
-                        "linear-gradient(135deg, var(--orange-9) 0%, var(--amber-9) 100%)",
+                        "linear-gradient(135deg, var(--violet-9) 0%, var(--purple-9) 100%)",
                       borderRadius: 8,
                       flexShrink: 0,
                     }}
@@ -486,54 +459,74 @@ export default function AboutPage() {
               Notre équipe
             </Heading>
             <Text size="4" color="gray">
-              Des passionnés au service de votre réussite
+              Des experts passionnés par le commerce africain
             </Text>
           </Box>
 
-          <Grid columns={{ initial: "1", md: "3" }} gap="4" mb="9">
-            {team.map((member, index) => (
+          <Grid columns={{ initial: "1", sm: "2", lg: "4" }} gap="4" mb="9">
+            {[
+              {
+                initials: "JN",
+                role: "Fondateur & CEO",
+                description: "Entrepreneur gabonais avec 10+ ans d'expérience dans le commerce et la tech.",
+                color: "violet",
+              },
+              {
+                initials: "AM",
+                role: "Directrice Technique",
+                description: "Ingénieure logiciel spécialisée en architectures distribuées et systèmes temps réel.",
+                color: "blue",
+              },
+              {
+                initials: "PO",
+                role: "Responsable Commercial",
+                description: "Expert du marché CHR gabonais, ancien responsable grands comptes dans la distribution.",
+                color: "amber",
+              },
+              {
+                initials: "SN",
+                role: "Responsable Support",
+                description: "Spécialiste de la relation client, passionnée par l'accompagnement des commerçants.",
+                color: "green",
+              },
+            ].map((member, index) => (
               <motion.div
-                key={member.name}
+                key={member.role}
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 1.3 + index * 0.1, duration: 0.5 }}
               >
                 <Box
-                  p="6"
+                  p="5"
                   style={{
                     background: "var(--gray-a2)",
                     borderRadius: 16,
                     border: "1px solid var(--gray-a4)",
-                    height: "100%",
                     textAlign: "center",
+                    height: "100%",
                   }}
                 >
                   <Box
-                    mb="4"
                     mx="auto"
-                    p="4"
+                    mb="4"
                     style={{
-                      background: "var(--orange-a3)",
-                      borderRadius: 16,
-                      width: "fit-content",
+                      width: 64,
+                      height: 64,
+                      borderRadius: "50%",
+                      background: `linear-gradient(135deg, var(--${member.color}-9) 0%, var(--${member.color}-11) 100%)`,
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
                     }}
                   >
-                    <member.icon size={32} style={{ color: "var(--orange-9)" }} />
+                    <Text style={{ color: "white", fontWeight: 700, fontSize: 20 }}>
+                      {member.initials}
+                    </Text>
                   </Box>
-                  <Heading size="4" mb="1">
-                    {member.name}
-                  </Heading>
-                  <Text
-                    size="2"
-                    mb="3"
-                    style={{
-                      color: "var(--orange-9)",
-                      display: "block",
-                    }}
-                  >
+                  <Text size="3" weight="bold" style={{ display: "block" }}>
                     {member.role}
                   </Text>
-                  <Text size="2" color="gray">
+                  <Text size="2" color="gray" mt="2" style={{ display: "block" }}>
                     {member.description}
                   </Text>
                 </Box>
@@ -552,7 +545,7 @@ export default function AboutPage() {
             p="8"
             style={{
               background:
-                "linear-gradient(135deg, var(--orange-9) 0%, var(--amber-9) 100%)",
+                "linear-gradient(135deg, var(--violet-9) 0%, var(--purple-9) 100%)",
               borderRadius: 24,
               textAlign: "center",
             }}
@@ -562,7 +555,7 @@ export default function AboutPage() {
               style={{ color: "white", marginBottom: 16, opacity: 0.9 }}
             />
             <Heading size="6" mb="3" style={{ color: "white" }}>
-              Rejoignez l&apos;aventure Oréma N+
+              Modernisez votre commerce avec Oréma N+
             </Heading>
             <Text
               size="4"
@@ -574,8 +567,8 @@ export default function AboutPage() {
                 display: "block",
               }}
             >
-              Que vous soyez commerçant, développeur ou partenaire potentiel,
-              construisons ensemble le commerce de demain.
+              Que vous soyez restaurateur, commerçant ou partenaire potentiel,
+              découvrez comment Oréma N+ peut transformer votre activité.
             </Text>
             <Flex gap="3" justify="center" wrap="wrap">
               <Link
@@ -583,7 +576,7 @@ export default function AboutPage() {
                 style={{
                   textDecoration: "none",
                   background: "white",
-                  color: "var(--orange-9)",
+                  color: "var(--violet-9)",
                   padding: "12px 24px",
                   borderRadius: 9999,
                   fontWeight: 600,
@@ -594,7 +587,7 @@ export default function AboutPage() {
                 Essayer gratuitement
               </Link>
               <Link
-                href="/careers"
+                href="#contact"
                 style={{
                   textDecoration: "none",
                   background: "rgba(255,255,255,0.2)",
@@ -606,7 +599,7 @@ export default function AboutPage() {
                   border: "1px solid rgba(255,255,255,0.3)",
                 }}
               >
-                Voir les offres d&apos;emploi
+                Nous contacter
               </Link>
             </Flex>
           </Box>

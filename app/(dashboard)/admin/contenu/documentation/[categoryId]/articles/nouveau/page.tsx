@@ -200,11 +200,9 @@ export default function NouvelArticlePage({
                       {...register("title")}
                       onChange={handleTitleChange}
                     />
-                    {errors.title && (
-                      <Text size="1" color="red" mt="1">
+                    {errors.title ? <Text size="1" color="red" mt="1">
                         {errors.title.message}
-                      </Text>
-                    )}
+                      </Text> : null}
                   </Box>
 
                   <Box>
@@ -220,11 +218,9 @@ export default function NouvelArticlePage({
                         <Text size="1" color="gray">/docs/{category.slug}/</Text>
                       </TextField.Slot>
                     </TextField.Root>
-                    {errors.slug && (
-                      <Text size="1" color="red" mt="1">
+                    {errors.slug ? <Text size="1" color="red" mt="1">
                         {errors.slug.message}
-                      </Text>
-                    )}
+                      </Text> : null}
                   </Box>
 
                   <Box>

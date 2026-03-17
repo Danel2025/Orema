@@ -7,7 +7,7 @@
  */
 
 import { unstable_cache } from "next/cache";
-import { createServiceClient, db } from "@/lib/db";
+import { createServiceClient, createAuthenticatedClient } from "@/lib/db";
 import { getCurrentUser } from "@/lib/auth";
 import { getEtablissementId, getEtablissement } from "@/lib/etablissement";
 
@@ -16,8 +16,16 @@ import { getEtablissementId, getEtablissement } from "@/lib/etablissement";
  * Regroupe catégories et produits en une seule requête
  */
 export async function getCaisseData() {
-  const etablissementId = await getEtablissementId();
-  const supabase = createServiceClient();
+  const user = await getCurrentUser();
+  if (!user || !user.etablissementId) {
+    return { categories: [], produits: [] };
+  }
+
+  const supabase = await createAuthenticatedClient({
+    userId: user.userId,
+    etablissementId: user.etablissementId,
+    role: user.role,
+  });
 
   // Utiliser Promise.all pour paralléliser les requêtes
   const [categoriesResult, produitsResult] = await Promise.all([
@@ -25,7 +33,6 @@ export async function getCaisseData() {
     supabase
       .from("categories")
       .select("id, nom, couleur, icone, ordre")
-      .eq("etablissement_id", etablissementId)
       .eq("actif", true)
       .order("ordre", { ascending: true }),
 
@@ -37,7 +44,6 @@ export async function getCaisseData() {
         categorie_id, actif, disponible_direct, disponible_table,
         disponible_livraison, disponible_emporter, code_barre
       `)
-      .eq("etablissement_id", etablissementId)
       .eq("actif", true)
       .order("nom", { ascending: true }),
   ]);
@@ -188,8 +194,16 @@ export async function getCaisseInitialData() {
  * Stats du jour - légères
  */
 export async function getCaisseStats() {
-  const etablissementId = await getEtablissementId();
-  const supabase = createServiceClient();
+  const user = await getCurrentUser();
+  if (!user || !user.etablissementId) {
+    return { totalVentes: 0, chiffreAffaires: 0, pendingCount: 0 };
+  }
+
+  const supabase = await createAuthenticatedClient({
+    userId: user.userId,
+    etablissementId: user.etablissementId,
+    role: user.role,
+  });
 
   const today = new Date();
   today.setHours(0, 0, 0, 0);
@@ -200,7 +214,6 @@ export async function getCaisseStats() {
     supabase
       .from("ventes")
       .select("total_final")
-      .eq("etablissement_id", etablissementId)
       .eq("statut", "PAYEE")
       .gte("created_at", todayISO),
 
@@ -208,7 +221,6 @@ export async function getCaisseStats() {
     supabase
       .from("ventes")
       .select("id", { count: "exact", head: true })
-      .eq("etablissement_id", etablissementId)
       .eq("statut", "EN_COURS"),
   ]);
 
@@ -232,15 +244,17 @@ export async function getCaisseStats() {
  */
 export async function getCaisseSession() {
   const user = await getCurrentUser();
-  if (!user) return null;
+  if (!user || !user.etablissementId) return null;
 
-  const etablissementId = await getEtablissementId();
-  const supabase = createServiceClient();
+  const supabase = await createAuthenticatedClient({
+    userId: user.userId,
+    etablissementId: user.etablissementId,
+    role: user.role,
+  });
 
   const { data: session } = await supabase
     .from("sessions_caisse")
     .select("id, date_ouverture, fond_caisse, utilisateur_id")
-    .eq("etablissement_id", etablissementId)
     .eq("utilisateur_id", user.userId)
     .is("date_cloture", null)
     .order("date_ouverture", { ascending: false })

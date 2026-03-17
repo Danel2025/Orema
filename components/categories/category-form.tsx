@@ -28,6 +28,12 @@ import {
   ShoppingBag,
   type LucideIcon,
 } from "lucide-react";
+import {
+  categorieSchema,
+  categorieColors,
+  categorieIcons,
+  type CategorieFormData,
+} from "@/schemas/categorie.schema";
 
 // Map des icônes disponibles
 const iconMap: Record<string, LucideIcon> = {
@@ -48,12 +54,6 @@ const iconMap: Record<string, LucideIcon> = {
   ShoppingBag,
   Package,
 };
-import {
-  categorieSchema,
-  categorieColors,
-  categorieIcons,
-  type CategorieFormData,
-} from "@/schemas/categorie.schema";
 
 interface Imprimante {
   id: string;
@@ -209,11 +209,9 @@ export function CategoryForm({
                   outline: "none",
                 }}
               />
-              {errors.nom && (
-                <p style={{ fontSize: 13, color: "var(--red-11)", marginTop: 4 }}>
+              {errors.nom ? <p style={{ fontSize: 13, color: "var(--red-11)", marginTop: 4 }}>
                   {errors.nom.message}
-                </p>
-              )}
+                </p> : null}
             </div>
 
             {/* Couleur */}
@@ -308,12 +306,10 @@ export function CategoryForm({
                       }}
                       title={icon.label}
                     >
-                      {IconComponent && (
-                        <IconComponent
+                      {IconComponent ? <IconComponent
                           size={24}
                           style={{ color: isSelected ? selectedColor : "var(--gray-11)" }}
-                        />
-                      )}
+                        /> : null}
                       <span
                         style={{
                           fontSize: 10,
@@ -447,7 +443,7 @@ export function CategoryForm({
                 opacity: isLoading ? 0.7 : 1,
               }}
             >
-              {isLoading && <Loader2 size={16} className="animate-spin" />}
+              {isLoading ? <Loader2 size={16} className="animate-spin" /> : null}
               {isEditing ? "Enregistrer" : "Créer la catégorie"}
             </button>
           </div>

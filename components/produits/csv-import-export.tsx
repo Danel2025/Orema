@@ -219,8 +219,7 @@ export function CSVImportExport({ onImportComplete }: CSVImportExportProps) {
       </div>
 
       {/* Modal d'import */}
-      {showImportModal && (
-        <div
+      {showImportModal ? <div
           style={{
             position: "fixed",
             inset: 0,
@@ -401,8 +400,7 @@ export function CSVImportExport({ onImportComplete }: CSVImportExportProps) {
               )}
 
               {/* Step: Preview */}
-              {importStep === "preview" && parseResult && (
-                <div>
+              {importStep === "preview" && parseResult ? <div>
                   {/* Résumé */}
                   <div
                     style={{
@@ -662,8 +660,7 @@ export function CSVImportExport({ onImportComplete }: CSVImportExportProps) {
                       </div>
                     </div>
                   )}
-                </div>
-              )}
+                </div> : null}
 
               {/* Step: Importing */}
               {importStep === "importing" && (
@@ -694,8 +691,7 @@ export function CSVImportExport({ onImportComplete }: CSVImportExportProps) {
               )}
 
               {/* Step: Done */}
-              {importStep === "done" && importResult && (
-                <div style={{ textAlign: "center" }}>
+              {importStep === "done" && importResult ? <div style={{ textAlign: "center" }}>
                   <CheckCircle2
                     size={64}
                     style={{ color: "var(--green-9)", marginBottom: 16 }}
@@ -840,8 +836,7 @@ export function CSVImportExport({ onImportComplete }: CSVImportExportProps) {
                       ))}
                     </div>
                   )}
-                </div>
-              )}
+                </div> : null}
             </div>
 
             {/* Footer */}
@@ -916,8 +911,7 @@ export function CSVImportExport({ onImportComplete }: CSVImportExportProps) {
               )}
             </div>
           </div>
-        </div>
-      )}
+        </div> : null}
     </>
   );
 }

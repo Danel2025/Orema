@@ -132,7 +132,7 @@ export default function AdminEtablissementsPage() {
             <Box
               p="3"
               style={{
-                background: "linear-gradient(135deg, var(--red-9) 0%, var(--orange-9) 100%)",
+                background: "linear-gradient(135deg, var(--red-9) 0%, var(--violet-9) 100%)",
                 borderRadius: 12,
                 boxShadow: "0 4px 16px var(--red-a4)",
               }}
@@ -239,8 +239,8 @@ export default function AdminEtablissementsPage() {
             }}
           >
             <Flex align="center" gap="3">
-              <Box p="2" style={{ background: "var(--orange-a3)", borderRadius: 8 }}>
-                <Package size={18} style={{ color: "var(--orange-9)" }} />
+              <Box p="2" style={{ background: "var(--violet-a3)", borderRadius: 8 }}>
+                <Package size={18} style={{ color: "var(--violet-9)" }} />
               </Box>
               <Box>
                 <Text size="1" color="gray">Produits total</Text>
@@ -350,7 +350,7 @@ export default function AdminEtablissementsPage() {
                       <Badge color="blue" variant="soft">{etab.nbUtilisateurs}</Badge>
                     </Table.Cell>
                     <Table.Cell align="center">
-                      <Badge color="orange" variant="soft">{etab.nbProduits}</Badge>
+                      <Badge color="violet" variant="soft">{etab.nbProduits}</Badge>
                     </Table.Cell>
                     <Table.Cell align="center">
                       <Badge color="green" variant="soft">{etab.nbVentes}</Badge>

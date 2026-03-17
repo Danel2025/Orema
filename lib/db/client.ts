@@ -4,12 +4,12 @@
  */
 
 // Réexport des clients Supabase existants
-export { createClient, createServiceClient } from '@/lib/supabase/server'
-export { createClient as createBrowserClient } from '@/lib/supabase/client'
-
 // Type pour le client Supabase
 import type { SupabaseClient } from '@supabase/supabase-js'
 import type { Database } from '@/types/supabase'
+
+export { createClient, createServiceClient } from '@/lib/supabase/server'
+export { createClient as createBrowserClient } from '@/lib/supabase/client'
 
 export type DbClient = SupabaseClient<Database>
 

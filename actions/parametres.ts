@@ -215,7 +215,7 @@ export async function createImprimante(data: ImprimanteFormData): Promise<Action
       .insert({
         nom: validation.data.nom,
         type: validation.data.type,
-        type_connexion: validation.data.typeConnexion,
+        type_connexion: validation.data.typeConnexion as "USB" | "RESEAU" | "SERIE" | "BLUETOOTH",
         adresse_ip: validation.data.adresseIp,
         port: validation.data.port,
         path_usb: validation.data.pathUsb,
@@ -257,7 +257,7 @@ export async function updateImprimante(id: string, data: ImprimanteFormData): Pr
       .update({
         nom: validation.data.nom,
         type: validation.data.type,
-        type_connexion: validation.data.typeConnexion,
+        type_connexion: validation.data.typeConnexion as "USB" | "RESEAU" | "SERIE" | "BLUETOOTH",
         adresse_ip: validation.data.adresseIp,
         port: validation.data.port,
         path_usb: validation.data.pathUsb,

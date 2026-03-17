@@ -179,7 +179,7 @@ export function SupplementSelector({
                       </Text>
                     </Flex>
                     <Badge
-                      color={isSelected ? "orange" : "gray"}
+                      color={isSelected ? "violet" : "gray"}
                       variant="soft"
                       size="2"
                     >

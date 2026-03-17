@@ -122,11 +122,9 @@ export function StockSettings({ initialData }: StockSettingsProps) {
                   size="3"
                   placeholder="10"
                 />
-                {errors.seuilAlerteStockBas && (
-                  <Text size="1" color="red" mt="1">
+                {errors.seuilAlerteStockBas ? <Text size="1" color="red" mt="1">
                     {errors.seuilAlerteStockBas.message}
-                  </Text>
-                )}
+                  </Text> : null}
                 <Text size="1" color="gray" mt="1">
                   Alerte quand le stock passe sous ce niveau
                 </Text>
@@ -143,11 +141,9 @@ export function StockSettings({ initialData }: StockSettingsProps) {
                   size="3"
                   placeholder="5"
                 />
-                {errors.seuilCritiqueStock && (
-                  <Text size="1" color="red" mt="1">
+                {errors.seuilCritiqueStock ? <Text size="1" color="red" mt="1">
                     {errors.seuilCritiqueStock.message}
-                  </Text>
-                )}
+                  </Text> : null}
                 <Text size="1" color="gray" mt="1">
                   Alerte critique quand le stock est tres bas
                 </Text>
@@ -183,7 +179,7 @@ export function StockSettings({ initialData }: StockSettingsProps) {
                       width: 12,
                       height: 12,
                       borderRadius: "50%",
-                      backgroundColor: "var(--amber-9)",
+                      backgroundColor: "var(--purple-9)",
                     }}
                   />
                   <Text size="2">
@@ -238,8 +234,7 @@ export function StockSettings({ initialData }: StockSettingsProps) {
               )}
             />
 
-            {alerteEmail && (
-              <Box>
+            {alerteEmail ? <Box>
                 <Text as="label" size="2" weight="medium" mb="2">
                   Email de notification
                 </Text>
@@ -253,13 +248,10 @@ export function StockSettings({ initialData }: StockSettingsProps) {
                     <Mail size={16} />
                   </TextField.Slot>
                 </TextField.Root>
-                {errors.emailAlerteStock && (
-                  <Text size="1" color="red" mt="1">
+                {errors.emailAlerteStock ? <Text size="1" color="red" mt="1">
                     {errors.emailAlerteStock.message}
-                  </Text>
-                )}
-              </Box>
-            )}
+                  </Text> : null}
+              </Box> : null}
           </Flex>
         </Card>
 

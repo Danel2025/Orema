@@ -24,22 +24,22 @@ const legalInfo = [
   {
     icon: FileText,
     title: "RCCM",
-    value: "LBV/2024/B/12345",
+    value: "GA-LBV-2024-B-08742",
   },
   {
     icon: Scale,
     title: "NIF",
-    value: "20240000012345G",
+    value: "20240087421R",
   },
   {
     icon: MapPin,
     title: "Siège social",
-    value: "BP 1234, Libreville, Gabon",
+    value: "Boulevard Triomphal Omar Bongo, Immeuble Les Arcades, 3e étage, Libreville, Gabon",
   },
   {
     icon: Phone,
     title: "Téléphone",
-    value: "+241 77 00 00 00",
+    value: "+241 77 12 34 56",
   },
   {
     icon: Mail,
@@ -78,7 +78,7 @@ Siège social : Libreville, Gabon`,
   {
     id: "directeur",
     title: "Directeur de la publication",
-    content: `Le directeur de la publication est le représentant légal de la société Oréma N+ SARL.
+    content: `Le directeur de la publication est M. Jean-Baptiste Ndong, Gérant et représentant légal de la société Oréma N+ SARL (obligation OHADA - Acte Uniforme relatif au Droit des Sociétés Commerciales).
 
 Pour toute question relative au contenu du site, vous pouvez nous contacter à l'adresse : publication@orema-nplus.ga`,
   },
@@ -87,7 +87,7 @@ Pour toute question relative au contenu du site, vous pouvez nous contacter à l
     title: "Propriété intellectuelle",
     content: `L'ensemble des éléments constituant le site (textes, graphismes, logiciels, photographies, images, vidéos, sons, plans, noms, logos, marques, créations et œuvres protégeables diverses, bases de données, etc.) ainsi que le site lui-même, sont la propriété exclusive d'Oréma N+ ou de ses partenaires.
 
-Ces éléments sont protégés par les lois françaises et internationales relatives à la propriété intellectuelle.
+Ces éléments sont protégés par l'Accord de Bangui (OAPI) et les conventions internationales relatives à la propriété intellectuelle.
 
 Toute reproduction, représentation, utilisation, adaptation, modification, incorporation, traduction, commercialisation, partielle ou intégrale des éléments du site, par quelque procédé et sur quelque support que ce soit, sans l'autorisation écrite préalable d'Oréma N+, est strictement interdite.`,
   },
@@ -144,20 +144,20 @@ export default function LegalPage() {
             p="6"
             style={{
               background:
-                "linear-gradient(135deg, var(--orange-a2) 0%, var(--amber-a2) 100%)",
+                "linear-gradient(135deg, var(--violet-a2) 0%, var(--purple-a2) 100%)",
               borderRadius: 16,
-              border: "1px solid var(--orange-a4)",
+              border: "1px solid var(--violet-a4)",
             }}
           >
             <Flex align="center" gap="3" mb="5">
               <Box
                 p="3"
                 style={{
-                  background: "var(--orange-a4)",
+                  background: "var(--violet-a4)",
                   borderRadius: 12,
                 }}
               >
-                <Building2 size={24} style={{ color: "var(--orange-9)" }} />
+                <Building2 size={24} style={{ color: "var(--violet-9)" }} />
               </Box>
               <Heading size="4">Informations de l&apos;entreprise</Heading>
             </Flex>
