@@ -2,14 +2,14 @@
 
 import { Box, Container, Flex, Text } from "@radix-ui/themes";
 import Image from "next/image";
-import { CreditCard, Banknote, Building2 } from "lucide-react";
+import { CreditCard, Money, Bank } from "@phosphor-icons/react";
 
 const paymentMethods = [
   { type: "image", src: "/images/logo-airtel-money.png", alt: "Airtel Money" },
   { type: "image", src: "/images/logo-moov-money.png", alt: "Moov Money" },
   { type: "icon", icon: CreditCard, label: "Carte", color: "var(--blue-9)" },
-  { type: "icon", icon: Banknote, label: "Espèces", color: "var(--green-9)" },
-  { type: "icon", icon: Building2, label: "Virement", color: "var(--purple-9)" },
+  { type: "icon", icon: Money, label: "Espèces", color: "var(--green-9)" },
+  { type: "icon", icon: Bank, label: "Virement", color: "var(--amber-9)" },
 ];
 
 export function PaymentMarquee() {
@@ -48,7 +48,7 @@ export function PaymentMarquee() {
                   />
                 ) : method.icon ? (
                   <Flex align="center" gap="2">
-                    <method.icon size={18} style={{ color: method.color }} />
+                    <method.icon size={18} weight="duotone" style={{ color: method.color }} />
                     <Text size="2" color="gray">{method.label}</Text>
                   </Flex>
                 ) : null}

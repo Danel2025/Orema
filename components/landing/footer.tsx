@@ -9,7 +9,7 @@ import {
   Text,
   Separator,
 } from "@radix-ui/themes";
-import { MapPin, Phone, Mail, Facebook, Instagram, Linkedin } from "lucide-react";
+import { MapPin, Phone, EnvelopeSimple, FacebookLogo, InstagramLogo, LinkedinLogo } from "@phosphor-icons/react";
 import Link from "next/link";
 import Image from "next/image";
 
@@ -51,9 +51,9 @@ const footerLinks = {
 };
 
 const socialLinks = [
-  { icon: Facebook, href: "#", label: "Facebook" },
-  { icon: Instagram, href: "#", label: "Instagram" },
-  { icon: Linkedin, href: "#", label: "LinkedIn" },
+  { icon: FacebookLogo, href: "#", label: "Facebook" },
+  { icon: InstagramLogo, href: "#", label: "Instagram" },
+  { icon: LinkedinLogo, href: "#", label: "LinkedIn" },
 ];
 
 export function Footer() {
@@ -106,7 +106,7 @@ export function Footer() {
                   </Text>
                 </Flex>
                 <Flex align="center" gap="2">
-                  <Mail size={14} style={{ color: "var(--gray-10)" }} aria-hidden="true" />
+                  <EnvelopeSimple size={14} style={{ color: "var(--gray-10)" }} aria-hidden="true" />
                   <Text size="2" color="gray">
                     contact@orema-nplus.ga
                   </Text>
@@ -142,6 +142,7 @@ export function Footer() {
                   >
                     <social.icon
                       size={16}
+                      weight="fill"
                       style={{ color: "var(--gray-11)" }}
                       aria-hidden="true"
                     />
@@ -173,7 +174,7 @@ export function Footer() {
                       }}
                       onMouseEnter={(e) => {
                         e.currentTarget.style.backgroundColor = "var(--gray-a3)";
-                        e.currentTarget.style.color = "var(--violet-9)";
+                        e.currentTarget.style.color = "var(--accent-9)";
                       }}
                       onMouseLeave={(e) => {
                         e.currentTarget.style.backgroundColor = "transparent";

@@ -11,29 +11,29 @@ import {
 } from "@radix-ui/themes";
 import { motion } from "motion/react";
 import { FadeIn, StaggerContainer, StaggerItem, ScaleOnHover } from "./motion-wrapper";
-import { MapPin, WifiOff, Banknote, Smartphone } from "lucide-react";
+import { MapPin, WifiSlash, Money, DeviceMobile } from "@phosphor-icons/react";
 
 const advantages = [
   {
     icon: MapPin,
     label: "100% Gabonais",
     description: "Concu a Libreville pour les commerces locaux",
-    color: "violet",
+    color: "accent",
   },
   {
-    icon: WifiOff,
+    icon: WifiSlash,
     label: "Mode hors-ligne",
     description: "Fonctionne meme sans internet",
     color: "blue",
   },
   {
-    icon: Banknote,
+    icon: Money,
     label: "FCFA natif",
     description: "Pense pour le Franc CFA, pas d'euros",
     color: "green",
   },
   {
-    icon: Smartphone,
+    icon: DeviceMobile,
     label: "Mobile Money",
     description: "Airtel Money & Moov Money integres",
     color: "amber",
@@ -50,15 +50,15 @@ export function Stats() {
             <Box
               className="rounded-full"
               style={{
-                background: "var(--purple-a3)",
-                border: "1px solid var(--purple-a5)",
+                background: "var(--accent-a3)",
+                border: "1px solid var(--accent-a5)",
                 padding: "8px 18px",
               }}
             >
               <Text
                 size="2"
                 weight="medium"
-                style={{ color: "var(--purple-11)" }}
+                style={{ color: "var(--accent-11)" }}
               >
                 Pourquoi Orema N+ ?
               </Text>
@@ -99,6 +99,7 @@ export function Stats() {
                         >
                           <advantage.icon
                             size={22}
+                            weight="duotone"
                             style={{ color: `var(--${advantage.color}-9)` }}
                           />
                         </Flex>

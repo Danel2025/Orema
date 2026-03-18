@@ -7,7 +7,7 @@ import {
   Heading,
   Text,
 } from "@radix-ui/themes";
-import { ArrowRight, Rocket } from "lucide-react";
+import { ArrowRight, RocketLaunch } from "@phosphor-icons/react";
 import Link from "next/link";
 import { motion } from "motion/react";
 import { FadeIn } from "./motion-wrapper";
@@ -30,7 +30,7 @@ export function Testimonials() {
               padding: 48,
               borderRadius: 24,
               background:
-                "linear-gradient(135deg, var(--violet-9) 0%, var(--purple-9) 100%)",
+                "var(--accent-9)",
             }}
           >
             {/* Pattern overlay */}
@@ -62,7 +62,7 @@ export function Testimonials() {
                     background: "rgba(255,255,255,0.2)",
                   }}
                 >
-                  <Rocket size={28} style={{ color: "white" }} />
+                  <RocketLaunch size={28} weight="fill" style={{ color: "white" }} />
                 </Flex>
               </motion.div>
 
@@ -91,7 +91,7 @@ export function Testimonials() {
                       alignItems: "center",
                       gap: 8,
                       background: "white",
-                      color: "var(--violet-9)",
+                      color: "var(--accent-9)",
                       padding: "14px 28px",
                       borderRadius: 9999,
                       fontWeight: 600,

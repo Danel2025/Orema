@@ -1,18 +1,11 @@
 "use client";
 
 import { Box, Flex, Heading, Text, Button, Container } from "@radix-ui/themes";
-import { ArrowRight, Play, CheckCircle } from "lucide-react";
+import { ArrowRight, Play, CheckCircle } from "@phosphor-icons/react";
 import Link from "next/link";
 import Image from "next/image";
 import { motion } from "motion/react";
-import dynamic from "next/dynamic";
 import { FadeIn, StaggerContainer, StaggerItem } from "./motion-wrapper";
-
-// Import dynamique pour éviter les problèmes SSR avec Three.js
-const HeroScene3D = dynamic(
-  () => import("./hero-scene-3d").then((mod) => mod.HeroScene3D),
-  { ssr: false }
-);
 
 export function Hero() {
   return (
@@ -30,7 +23,7 @@ export function Hero() {
         transition={{ duration: 1.5 }}
         style={{
           background:
-            "radial-gradient(ellipse 80% 50% at 50% -20%, var(--violet-4), transparent)",
+            "radial-gradient(ellipse 80% 50% at 50% -20%, var(--accent-4), transparent)",
         }}
       />
 
@@ -41,7 +34,7 @@ export function Hero() {
         animate={{ scale: 1, opacity: 0.15 }}
         transition={{ duration: 2, ease: "easeOut" }}
         style={{
-          background: "var(--violet-6)",
+          background: "var(--accent-6)",
         }}
       />
       <motion.div
@@ -50,7 +43,7 @@ export function Hero() {
         animate={{ scale: 1, opacity: 0.1 }}
         transition={{ duration: 2, delay: 0.3, ease: "easeOut" }}
         style={{
-          background: "var(--purple-6)",
+          background: "var(--accent-6)",
         }}
       />
 
@@ -58,12 +51,9 @@ export function Hero() {
       <Box
         className="pointer-events-none absolute inset-0 opacity-[0.015]"
         style={{
-          backgroundImage: `url("data:image/svg+xml,%3Csvg width='80' height='80' viewBox='0 0 80 80' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%237c3aed' fill-opacity='1'%3E%3Cpath d='M40 40L20 20h40L40 40zm0 0L20 60h40L40 40z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`,
+          backgroundImage: `url("data:image/svg+xml,%3Csvg width='80' height='80' viewBox='0 0 80 80' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%236e56cf' fill-opacity='1'%3E%3Cpath d='M40 40L20 20h40L40 40zm0 0L20 60h40L40 40z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`,
         }}
       />
-
-      {/* Scène 3D interactive */}
-      <HeroScene3D />
 
       {/* Hero Content */}
       <Container size="4" className="relative z-10">
@@ -85,8 +75,8 @@ export function Hero() {
               <Box
                 className="rounded-full"
                 style={{
-                  background: "var(--violet-a3)",
-                  border: "1px solid var(--violet-a6)",
+                  background: "var(--accent-a3)",
+                  border: "1px solid var(--accent-a6)",
                   padding: "10px 20px",
                 }}
               >
@@ -100,9 +90,9 @@ export function Hero() {
                   <Text
                     size="2"
                     weight="medium"
-                    style={{ color: "var(--violet-11)" }}
+                    style={{ color: "var(--accent-11)" }}
                   >
-                    🎉 Nouveau : Support Mobile Money Airtel & Moov
+                    Nouveau : Support Mobile Money Airtel & Moov
                   </Text>
                 </Flex>
               </Box>
@@ -119,7 +109,7 @@ export function Hero() {
               Le{" "}
               <motion.span
                 style={{
-                  color: "var(--violet-9)",
+                  color: "var(--accent-9)",
                   display: "inline-block",
                 }}
               >
@@ -152,8 +142,8 @@ export function Hero() {
                 <Button
                   size="4"
                   style={{
-                    background: "var(--violet-9)",
-                    boxShadow: "0 10px 30px rgba(139, 92, 246, 0.3)",
+                    background: "var(--accent-9)",
+                    boxShadow: "0 10px 30px var(--accent-a5)",
                   }}
                   asChild
                 >
@@ -183,7 +173,7 @@ export function Hero() {
               {[
                 { label: "Mode hors-ligne", color: "var(--green-9)" },
                 { label: "Support 24/7", color: "var(--blue-9)" },
-                { label: "Données sécurisées", color: "var(--purple-9)" },
+                { label: "Données sécurisées", color: "var(--amber-9)" },
               ].map((badge, i) => (
                 <StaggerItem key={i}>
                   <motion.div
@@ -195,7 +185,7 @@ export function Hero() {
                       padding: "8px 14px",
                     }}
                   >
-                    <CheckCircle size={14} style={{ color: badge.color, flexShrink: 0 }} />
+                    <CheckCircle size={14} weight="fill" style={{ color: badge.color, flexShrink: 0 }} />
                     <Text size="2" color="gray">
                       {badge.label}
                     </Text>
@@ -278,7 +268,7 @@ export function Hero() {
               className="pointer-events-none absolute -inset-8 -z-10 rounded-3xl opacity-25 blur-3xl"
               style={{
                 background:
-                  "radial-gradient(ellipse at center, var(--violet-6), transparent 70%)",
+                  "radial-gradient(ellipse at center, var(--accent-6), transparent 70%)",
               }}
             />
           </FadeIn>

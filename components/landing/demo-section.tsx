@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { Box, Container, Flex, Heading, Text, Button } from "@radix-ui/themes";
-import { Play, Monitor, Smartphone, Tablet, ChevronLeft, ChevronRight } from "lucide-react";
+import { Play, Monitor, DeviceMobile, DeviceTablet, CaretLeft, CaretRight } from "@phosphor-icons/react";
 import { motion, AnimatePresence } from "motion/react";
 import Image from "next/image";
 import { FadeIn } from "./motion-wrapper";
@@ -72,8 +72,8 @@ export function DemoSection() {
       <Box
         className="pointer-events-none absolute inset-0 opacity-30"
         style={{
-          backgroundImage: `radial-gradient(circle at 20% 50%, var(--violet-a3), transparent 50%),
-                            radial-gradient(circle at 80% 50%, var(--purple-a3), transparent 50%)`,
+          backgroundImage: `radial-gradient(circle at 20% 50%, var(--accent-a3), transparent 50%),
+                            radial-gradient(circle at 80% 50%, var(--accent-a3), transparent 50%)`,
         }}
       />
 
@@ -90,17 +90,17 @@ export function DemoSection() {
                 <Box
                   className="w-fit rounded-full"
                   style={{
-                    background: "var(--violet-a3)",
-                    border: "1px solid var(--violet-a5)",
+                    background: "var(--accent-a3)",
+                    border: "1px solid var(--accent-a5)",
                     padding: "8px 18px",
                   }}
                 >
                   <Flex align="center" gap="2">
-                    <Play size={14} style={{ color: "var(--violet-9)", flexShrink: 0 }} />
+                    <Play size={14} weight="fill" style={{ color: "var(--accent-9)", flexShrink: 0 }} />
                     <Text
                       size="2"
                       weight="medium"
-                      style={{ color: "var(--violet-11)" }}
+                      style={{ color: "var(--accent-11)" }}
                     >
                       Démo interactive
                     </Text>
@@ -121,8 +121,8 @@ export function DemoSection() {
                 <Flex gap="4" mt="2">
                   {[
                     { icon: Monitor, label: "Desktop" },
-                    { icon: Tablet, label: "Tablette" },
-                    { icon: Smartphone, label: "Mobile" },
+                    { icon: DeviceTablet, label: "Tablette" },
+                    { icon: DeviceMobile, label: "Mobile" },
                   ].map((device, i) => (
                     <motion.div
                       key={i}
@@ -243,7 +243,7 @@ export function DemoSection() {
                         boxShadow: "0 2px 10px rgba(0,0,0,0.1)",
                       }}
                     >
-                      <ChevronLeft size={20} style={{ color: "var(--gray-12)" }} />
+                      <CaretLeft size={20} weight="bold" style={{ color: "var(--gray-12)" }} />
                     </button>
                     <button
                       onClick={nextSlide}
@@ -253,7 +253,7 @@ export function DemoSection() {
                         boxShadow: "0 2px 10px rgba(0,0,0,0.1)",
                       }}
                     >
-                      <ChevronRight size={20} style={{ color: "var(--gray-12)" }} />
+                      <CaretRight size={20} weight="bold" style={{ color: "var(--gray-12)" }} />
                     </button>
 
                     {/* Current slide label */}
@@ -287,7 +287,7 @@ export function DemoSection() {
                           style={{
                             width: index === currentSlide ? 24 : 8,
                             background: index === currentSlide
-                              ? "var(--violet-9)"
+                              ? "var(--accent-9)"
                               : "rgba(255,255,255,0.7)",
                           }}
                         />
@@ -301,7 +301,7 @@ export function DemoSection() {
                   className="pointer-events-none absolute -inset-4 -z-10 rounded-3xl opacity-30 blur-3xl"
                   style={{
                     background:
-                      "linear-gradient(135deg, var(--violet-6) 0%, var(--purple-6) 100%)",
+                      "var(--accent-6)",
                   }}
                 />
               </motion.div>

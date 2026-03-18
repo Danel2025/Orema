@@ -9,28 +9,28 @@ import {
   Text,
 } from "@radix-ui/themes";
 import {
-  Download,
-  Settings,
+  DownloadSimple,
+  GearSix,
   ShoppingCart,
-  TrendingUp,
+  TrendUp,
   ArrowRight,
-  Zap,
-} from "lucide-react";
+  Lightning,
+} from "@phosphor-icons/react";
 import { motion } from "motion/react";
 import { FadeIn, StaggerContainer, StaggerItem } from "./motion-wrapper";
 
 const steps = [
   {
     number: "01",
-    icon: Download,
+    icon: DownloadSimple,
     title: "Inscrivez-vous",
     description:
       "Créez votre compte en 2 minutes. Aucune carte bancaire requise pour l'essai gratuit.",
-    color: "violet",
+    color: "accent",
   },
   {
     number: "02",
-    icon: Settings,
+    icon: GearSix,
     title: "Configurez",
     description:
       "Ajoutez vos produits, configurez vos catégories et connectez votre imprimante.",
@@ -46,19 +46,19 @@ const steps = [
   },
   {
     number: "04",
-    icon: TrendingUp,
+    icon: TrendUp,
     title: "Analysez",
     description:
       "Suivez vos ventes en temps réel et prenez les meilleures décisions.",
-    color: "purple",
+    color: "amber",
   },
 ];
 
 const colorStyles = {
-  violet: {
-    bg: "var(--violet-9)",
-    glow: "rgba(139, 92, 246, 0.3)",
-    light: "var(--violet-a3)",
+  accent: {
+    bg: "var(--accent-9)",
+    glow: "var(--accent-a5)",
+    light: "var(--accent-a3)",
   },
   blue: {
     bg: "var(--blue-9)",
@@ -70,10 +70,10 @@ const colorStyles = {
     glow: "rgba(34, 197, 94, 0.3)",
     light: "var(--green-a3)",
   },
-  purple: {
-    bg: "var(--purple-9)",
-    glow: "rgba(147, 51, 234, 0.3)",
-    light: "var(--purple-a3)",
+  amber: {
+    bg: "var(--amber-9)",
+    glow: "rgba(245, 158, 11, 0.3)",
+    light: "var(--amber-a3)",
   },
 };
 
@@ -179,7 +179,7 @@ export function HowItWorks() {
                             boxShadow: `0 10px 30px ${colors.glow}`,
                           }}
                         >
-                          <Icon size={32} color="white" strokeWidth={1.5} />
+                          <Icon size={32} color="white" weight="bold" />
                         </Flex>
 
                         {/* Number badge */}
@@ -243,7 +243,7 @@ export function HowItWorks() {
                   className="rounded-full"
                   style={{ width: 36, height: 36, background: "var(--green-9)" }}
                 >
-                  <Zap size={20} color="white" strokeWidth={2.5} />
+                  <Lightning size={20} color="white" weight="fill" />
                 </Flex>
                 <Text size="2" weight="medium" style={{ color: "var(--green-11)" }}>
                   Temps moyen de configuration : 15 minutes

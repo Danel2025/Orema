@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { Box, Container, Flex, Text } from "@radix-ui/themes";
-import { ArrowRight, Menu, X } from "lucide-react";
+import { ArrowRight, List, X } from "@phosphor-icons/react";
 import Link from "next/link";
 import Image from "next/image";
 import { motion, AnimatePresence } from "motion/react";
@@ -168,7 +168,7 @@ export function Navbar() {
                       whileTap={{ scale: 0.98 }}
                       className="flex cursor-pointer items-center gap-2 rounded-full"
                       style={{
-                        background: "linear-gradient(135deg, var(--violet-9) 0%, var(--purple-9) 100%)",
+                        background: "var(--accent-9)",
                         color: "white",
                         padding: "10px 20px",
                       }}
@@ -214,7 +214,7 @@ export function Navbar() {
                           exit={{ rotate: -90, opacity: 0 }}
                           transition={{ duration: 0.2 }}
                         >
-                          <Menu size={20} style={{ color: "var(--gray-11)" }} aria-hidden="true" />
+                          <List size={20} style={{ color: "var(--gray-11)" }} aria-hidden="true" />
                         </motion.div>
                       )}
                     </AnimatePresence>
@@ -307,7 +307,7 @@ export function Navbar() {
                     <Box
                       className="mt-2 flex items-center justify-center gap-2 rounded-xl font-medium"
                       style={{
-                        background: "linear-gradient(135deg, var(--violet-9) 0%, var(--purple-9) 100%)",
+                        background: "var(--accent-9)",
                         color: "white",
                         padding: "14px 20px",
                       }}

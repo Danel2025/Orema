@@ -9,7 +9,7 @@ import {
   Text,
   Card,
 } from "@radix-ui/themes";
-import { Check, Zap } from "lucide-react";
+import { Check, Lightning } from "@phosphor-icons/react";
 import Link from "next/link";
 import { motion } from "motion/react";
 import { FadeIn, StaggerContainer, StaggerItem } from "./motion-wrapper";
@@ -116,7 +116,7 @@ export function Pricing() {
                         left: "50%",
                         transform: "translateX(-50%)",
                         zIndex: 10,
-                        background: "var(--violet-9)",
+                        background: "var(--accent-9)",
                         color: "white",
                         padding: "8px 20px",
                         borderRadius: 20,
@@ -126,18 +126,18 @@ export function Pricing() {
                         alignItems: "center",
                         gap: 6,
                         whiteSpace: "nowrap",
-                        boxShadow: "0 4px 12px rgba(139, 92, 246, 0.3)",
+                        boxShadow: "0 4px 12px var(--accent-a5)",
                       }}
                     >
-                      <Zap size={12} fill="white" />
+                      <Lightning size={12} weight="fill" />
                       Plus populaire
                     </div> : null}
                   <Card
                     size="3"
                     style={{
                       height: "100%",
-                      border: plan.popular ? "2px solid var(--violet-8)" : undefined,
-                      boxShadow: plan.popular ? "0 20px 40px -10px rgba(139, 92, 246, 0.2)" : undefined,
+                      border: plan.popular ? "2px solid var(--accent-8)" : undefined,
+                      boxShadow: plan.popular ? "0 20px 40px -10px var(--accent-a4)" : undefined,
                     }}
                   >
 
@@ -157,7 +157,7 @@ export function Pricing() {
                           weight="bold"
                           style={
                             plan.popular
-                              ? { color: "var(--violet-9)" }
+                              ? { color: "var(--accent-9)" }
                               : { color: "var(--gray-12)" }
                           }
                         >
@@ -177,7 +177,7 @@ export function Pricing() {
                                 width: 20,
                                 height: 20,
                                 borderRadius: "50%",
-                                background: plan.popular ? "var(--violet-a4)" : "var(--green-a4)",
+                                background: plan.popular ? "var(--accent-a4)" : "var(--green-a4)",
                                 display: "flex",
                                 alignItems: "center",
                                 justifyContent: "center",
@@ -186,8 +186,9 @@ export function Pricing() {
                             >
                               <Check
                                 size={12}
+                                weight="bold"
                                 style={{
-                                  color: plan.popular ? "var(--violet-9)" : "var(--green-9)",
+                                  color: plan.popular ? "var(--accent-9)" : "var(--green-9)",
                                 }}
                               />
                             </Box>
@@ -214,10 +215,10 @@ export function Pricing() {
                             fontSize: 14,
                             cursor: "pointer",
                             background: plan.popular
-                              ? "var(--violet-9)"
+                              ? "var(--accent-9)"
                               : "transparent",
-                            color: plan.popular ? "white" : "var(--violet-9)",
-                            border: plan.popular ? "none" : "1px solid var(--violet-8)",
+                            color: plan.popular ? "white" : "var(--accent-9)",
+                            border: plan.popular ? "none" : "1px solid var(--accent-8)",
                           }}
                         >
                           {plan.cta}

@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg id="Calque_2" data-name="Calque 2" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1130.68 331.32">
+  <defs>
+    <style>
+      .cls-1 {
+        font-family: NagodaRegular, Nagoda;
+        font-size: 197.96px;
+      }
+
+      .cls-1, .cls-2 {
+        fill: #fff;
+      }
+
+      .cls-3 {
+        letter-spacing: -.01em;
+      }
+
+      .cls-2 {
+        font-family: Poppins-Light, Poppins;
+        font-size: 67.87px;
+        font-weight: 300;
+        letter-spacing: .1em;
+      }
+    </style>
+  </defs>
+  <g id="OBJECTS">
+    <g>
+      <text class="cls-1" transform="translate(78.46 168.27)"><tspan x="0" y="0">O</tspan><tspan class="cls-3" x="153.22" y="0">r</tspan><tspan x="238.94" y="0">éma N+</tspan></text>
+      <text class="cls-2" transform="translate(0 293.04)"><tspan x="0" y="0">AU COEUR DE VOTRE BUSINESS</tspan></text>
+    </g>
+  </g>
+</svg>

@@ -1,6 +1,5 @@
 export { Navbar } from "./navbar";
 export { Hero } from "./hero";
-export { HeroScene3D } from "./hero-scene-3d";
 export { HowItWorks } from "./how-it-works";
 export { Features } from "./features";
 export { DemoSection } from "./demo-section";

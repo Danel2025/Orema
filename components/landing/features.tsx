@@ -11,13 +11,13 @@ import {
 } from "@radix-ui/themes";
 import {
   Monitor,
-  LayoutGrid,
+  GridFour,
   Wallet,
-  WifiOff,
-  BarChart3,
+  WifiSlash,
+  ChartBar,
   Printer,
   ArrowRight,
-} from "lucide-react";
+} from "@phosphor-icons/react";
 import { motion } from "motion/react";
 import { FadeIn, StaggerContainer, StaggerItem, ScaleOnHover } from "./motion-wrapper";
 
@@ -27,10 +27,10 @@ const features = [
     title: "Caisse tactile intuitive",
     description:
       "Interface optimisée pour écrans tactiles. Vos employés sont opérationnels en quelques minutes.",
-    color: "violet" as const,
+    color: "accent" as const,
   },
   {
-    icon: LayoutGrid,
+    icon: GridFour,
     title: "Gestion des tables",
     description:
       "Plan de salle interactif avec statuts en temps réel. Transferts et additions séparées.",
@@ -44,18 +44,18 @@ const features = [
     color: "green" as const,
   },
   {
-    icon: WifiOff,
+    icon: WifiSlash,
     title: "Mode hors-ligne",
     description:
       "Continuez à vendre sans internet. Synchronisation automatique au retour du réseau.",
-    color: "purple" as const,
+    color: "amber" as const,
   },
   {
-    icon: BarChart3,
+    icon: ChartBar,
     title: "Rapports temps réel",
     description:
       "Ventes, produits populaires, heures de pointe. Décidez avec les bonnes données.",
-    color: "amber" as const,
+    color: "teal" as const,
   },
   {
     icon: Printer,
@@ -67,10 +67,10 @@ const features = [
 ];
 
 const colorStyles = {
-  violet: {
-    bg: "var(--violet-a3)",
-    icon: "var(--violet-9)",
-    border: "var(--violet-a5)",
+  accent: {
+    bg: "var(--accent-a3)",
+    icon: "var(--accent-9)",
+    border: "var(--accent-a5)",
   },
   blue: {
     bg: "var(--blue-a3)",
@@ -82,15 +82,15 @@ const colorStyles = {
     icon: "var(--green-9)",
     border: "var(--green-a5)",
   },
-  purple: {
-    bg: "var(--purple-a3)",
-    icon: "var(--purple-9)",
-    border: "var(--purple-a5)",
-  },
   amber: {
-    bg: "var(--purple-a3)",
-    icon: "var(--purple-9)",
-    border: "var(--purple-a5)",
+    bg: "var(--amber-a3)",
+    icon: "var(--amber-9)",
+    border: "var(--amber-a5)",
+  },
+  teal: {
+    bg: "var(--teal-a3)",
+    icon: "var(--teal-9)",
+    border: "var(--teal-a5)",
   },
   red: {
     bg: "var(--red-a3)",
@@ -115,15 +115,15 @@ export function Features() {
             <Box
               className="rounded-full"
               style={{
-                background: "var(--violet-a3)",
-                border: "1px solid var(--violet-a5)",
+                background: "var(--accent-a3)",
+                border: "1px solid var(--accent-a5)",
                 padding: "8px 18px",
               }}
             >
               <Text
                 size="2"
                 weight="medium"
-                style={{ color: "var(--violet-11)" }}
+                style={{ color: "var(--accent-11)" }}
               >
                 Fonctionnalités
               </Text>
@@ -196,8 +196,8 @@ export function Features() {
             size="3"
             mt="8"
             style={{
-              background: "var(--violet-a3)",
-              border: "1px solid var(--violet-a5)",
+              background: "var(--accent-a3)",
+              border: "1px solid var(--accent-a5)",
             }}
           >
             <Flex
@@ -221,7 +221,7 @@ export function Features() {
                 whileTap={{ scale: 0.98 }}
                 className="flex cursor-pointer items-center gap-2 rounded-lg font-medium text-white transition-opacity hover:opacity-90"
                 style={{
-                  background: "var(--violet-9)",
+                  background: "var(--accent-9)",
                   flexShrink: 0,
                   padding: "12px 20px",
                 }}

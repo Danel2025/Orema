@@ -25,6 +25,13 @@ export const metadata: Metadata = {
   description: "Système de point de vente moderne pour restaurants, bars et commerces en Afrique",
   keywords: ["POS", "caisse", "restaurant", "Gabon", "Afrique", "point de vente"],
   authors: [{ name: "Oréma N+" }],
+  icons: {
+    icon: [
+      { url: "/images/logos/ic-lg.svg", type: "image/svg+xml" },
+      { url: "/favicon.ico", sizes: "32x32" },
+    ],
+    apple: { url: "/images/logos/ic-lg.webp", type: "image/webp" },
+  },
 };
 
 export const viewport: Viewport = {
