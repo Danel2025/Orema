@@ -1,4 +1,4 @@
-'use client'
+"use client";
 
 /**
  * Route Guard
@@ -7,72 +7,51 @@
  * Redirige vers la premiere page autorisee si non autorise.
  */
 
-import { useEffect, useState } from 'react'
-import { usePathname, useRouter } from 'next/navigation'
-import { useAuth } from '@/lib/auth/context'
-import { Flex, Text } from '@radix-ui/themes'
-import { Loader2, ShieldAlert } from 'lucide-react'
+import { useEffect, useMemo } from "react";
+import { usePathname, useRouter } from "next/navigation";
+import { useAuth } from "@/lib/auth/context";
+import { Flex, Text } from "@radix-ui/themes";
+import { Loader2, ShieldAlert } from "lucide-react";
 
 interface RouteGuardProps {
-  children: React.ReactNode
+  children: React.ReactNode;
 }
 
 export function RouteGuard({ children }: RouteGuardProps) {
-  const pathname = usePathname()
-  const router = useRouter()
-  const { user, isAdmin, canAccessRoute, accessibleRoutes } = useAuth()
-  const [isChecking, setIsChecking] = useState(true)
-  const [isAuthorized, setIsAuthorized] = useState(false)
+  const pathname = usePathname();
+  const router = useRouter();
+  const { user, isAdmin, canAccessRoute, accessibleRoutes } = useAuth();
+
+  // Derive auth state during render (best practice: rerender-derived-state-no-effect)
+  const { isChecking, isAuthorized, redirectTo } = useMemo(() => {
+    if (!user) {
+      return { isChecking: false, isAuthorized: false, redirectTo: null };
+    }
+    if (isAdmin) {
+      return { isChecking: false, isAuthorized: true, redirectTo: null };
+    }
+    const result = canAccessRoute(pathname);
+    if (result.allowed) {
+      return { isChecking: false, isAuthorized: true, redirectTo: null };
+    }
+    // Not allowed - find redirect target
+    const firstRoute = accessibleRoutes[0];
+    return { isChecking: false, isAuthorized: false, redirectTo: firstRoute ?? null };
+  }, [user, isAdmin, canAccessRoute, pathname, accessibleRoutes]);
 
   useEffect(() => {
-    if (!user) {
-      setIsChecking(false)
-      return
+    if (!isChecking && !isAuthorized && redirectTo) {
+      router.replace(redirectTo.path);
     }
-
-    // Les admins ont acces a tout
-    if (isAdmin) {
-      setIsAuthorized(true)
-      setIsChecking(false)
-      return
-    }
-
-    // Verifier l'acces a la route actuelle
-    const result = canAccessRoute(pathname)
-
-    if (result.allowed) {
-      setIsAuthorized(true)
-      setIsChecking(false)
-      return
-    }
-
-    // Non autorise - trouver la premiere page accessible
-    console.log('[RouteGuard] Access denied to:', pathname, 'Reason:', result.reason)
-
-    // Trouver la premiere route accessible
-    if (accessibleRoutes.length > 0) {
-      const firstAccessible = accessibleRoutes[0].path
-      console.log('[RouteGuard] Redirecting to first accessible route:', firstAccessible)
-      router.replace(firstAccessible)
-    } else {
-      // Aucune route accessible - afficher un message
-      console.log('[RouteGuard] No accessible routes found')
-      setIsAuthorized(false)
-      setIsChecking(false)
-    }
-  }, [pathname, user, isAdmin, canAccessRoute, accessibleRoutes, router])
+  }, [isChecking, isAuthorized, redirectTo, router]);
 
   // Chargement
   if (isChecking) {
     return (
-      <Flex
-        align="center"
-        justify="center"
-        style={{ minHeight: '50vh' }}
-      >
-        <Loader2 className="animate-spin" size={32} style={{ color: 'var(--accent-9)' }} />
+      <Flex align="center" justify="center" style={{ minHeight: "50vh" }}>
+        <Loader2 className="animate-spin" size={32} style={{ color: "var(--accent-9)" }} />
       </Flex>
-    )
+    );
   }
 
   // Non autorise et aucune route accessible
@@ -83,20 +62,20 @@ export function RouteGuard({ children }: RouteGuardProps) {
         align="center"
         justify="center"
         gap="4"
-        style={{ minHeight: '50vh' }}
+        style={{ minHeight: "50vh" }}
       >
-        <ShieldAlert size={64} style={{ color: 'var(--red-9)' }} />
+        <ShieldAlert size={64} style={{ color: "var(--red-9)" }} />
         <Text size="5" weight="bold">
-          Acces non autorise
+          Accès non autorisé
         </Text>
         <Text size="2" color="gray" align="center">
-          Vous n'avez pas acces a cette page.
+          Vous n'avez pas accès à cette page.
           <br />
-          Contactez votre administrateur pour obtenir les autorisations necessaires.
+          Contactez votre administrateur pour obtenir les autorisations nécessaires.
         </Text>
       </Flex>
-    )
+    );
   }
 
-  return <>{children}</>
+  return <>{children}</>;
 }

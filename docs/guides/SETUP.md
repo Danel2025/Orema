@@ -7,18 +7,21 @@ Ce guide vous aidera à configurer et démarrer le projet Oréma N+ en quelques 
 Les corrections suivantes ont été appliquées pour résoudre les problèmes d'intégration :
 
 ### 1. Architecture de Routing
+
 - ✅ Suppression du dossier `app/dashboard/` dupliqué
 - ✅ Conservation de la structure avec route groups `app/(dashboard)/`
 - ✅ Middleware de protection des routes créé
 - ✅ Routes TypeScript typées activées
 
 ### 2. TanStack Query (React Query)
+
 - ✅ Migration vers le pattern SSR recommandé avec `isServer`
 - ✅ Remplacement de `useState` par `getQueryClient()`
 - ✅ Support du streaming et des pending queries
 - ✅ Fichier utilitaire `lib/query-client.ts` créé
 
 ### 3. Schéma Prisma
+
 - ✅ Ajout de `url = env("DATABASE_URL")` dans datasource
 - ✅ Migration vers UUID natif PostgreSQL
 - ✅ Nouveaux enums : `TauxTva`, `StatutTable`, `ActionAudit`
@@ -60,6 +63,7 @@ cp .env.example .env
 ```
 
 Éditer `.env` :
+
 ```env
 DATABASE_URL="postgresql://postgres:VOTRE_MOT_DE_PASSE@localhost:5432/orema_nplus_dev?schema=public"
 ```
@@ -147,6 +151,7 @@ gabon-pos/
 ## 🎨 Stack Technique
 
 ### Frontend
+
 - **Next.js 16.1.5** (App Router) - Framework React fullstack
 - **React 19.2.3** - Bibliothèque UI
 - **TypeScript 5.x** - Typage statique
@@ -154,18 +159,21 @@ gabon-pos/
 - **Tailwind CSS 4.x** - Framework CSS utility-first
 
 ### État & Données
+
 - **TanStack Query 5.x** - Gestion du state serveur (avec pattern SSR)
 - **Zustand 5.x** - State management global (cart, UI, session)
 - **React Hook Form 7.x** - Gestion des formulaires
 - **Zod 4.x** - Validation de schémas
 
 ### Backend
+
 - **PostgreSQL** - Base de données
 - **Prisma 7.3.0** - ORM avec UUID natifs
 - **Next.js Server Actions** - Mutations serveur
 - **Next.js API Routes** - Endpoints REST
 
 ### Autres
+
 - **Sonner** - Notifications toast
 - **Lucide React** - Icônes
 - **date-fns** - Manipulation de dates
@@ -204,10 +212,12 @@ pnpm db:push          # Push le schéma (sans migration)
 ## 🔐 Sécurité
 
 ### En Développement
+
 - Le middleware bypass l'authentification en dev
 - Accès libre à toutes les routes
 
 ### En Production (À implémenter)
+
 - Authentification Supabase Auth
 - Row Level Security (RLS) pour isoler les établissements
 - PIN codes hashés pour accès rapide caisse
@@ -263,6 +273,7 @@ enum ModePaiement {
 ## 🎯 Fonctionnalités Clés
 
 ### Module Caisse (POS)
+
 - Vente directe, sur table, livraison, emporter
 - Paiements multiples (espèces, carte, Mobile Money)
 - Gestion des remises
@@ -270,6 +281,7 @@ enum ModePaiement {
 - Mode hors ligne avec synchronisation
 
 ### Gestion Produits
+
 - CRUD complet
 - Import/export CSV
 - Gestion du stock avec déduction automatique
@@ -277,12 +289,14 @@ enum ModePaiement {
 - Code-barres
 
 ### Plan de Salle
+
 - Éditeur drag & drop
 - Statuts en temps réel
 - Division d'addition
 - Transfert de table
 
 ### Rapports
+
 - Rapport Z (clôture journalière)
 - Statistiques de ventes
 - Produits les plus vendus
@@ -296,24 +310,25 @@ enum ModePaiement {
 
 ```typescript
 // Formater un montant en FCFA
-formatCurrency(5000) // → "5 000 FCFA"
+formatCurrency(5000); // → "5 000 FCFA"
 
 // Calculer la TVA
-calculerTVA(10000, TauxTva.STANDARD) // → 1800
-calculerTTC(10000, TauxTva.STANDARD) // → 11800
-calculerHT(11800, TauxTva.STANDARD)  // → 10000
+calculerTVA(10000, TauxTva.STANDARD); // → 1800
+calculerTTC(10000, TauxTva.STANDARD); // → 11800
+calculerHT(11800, TauxTva.STANDARD); // → 10000
 
 // Calculer une ligne de vente
-calculerLigneVente(1000, 3, TauxTva.STANDARD)
+calculerLigneVente(1000, 3, TauxTva.STANDARD);
 // → { sousTotal: 3000, montantTva: 540, total: 3540 }
 
 // Générer un numéro de ticket
-formatTicketNumber(new Date(), 1) // → "2026012600001"
+formatTicketNumber(new Date(), 1); // → "2026012600001"
 ```
 
 ## 🐛 Dépannage
 
 ### Erreur "Can't reach database server"
+
 ```bash
 # Vérifier que PostgreSQL est démarré
 # Windows: Services → PostgreSQL
@@ -324,6 +339,7 @@ psql -U postgres -d orema_nplus_dev
 ```
 
 ### Erreur "prisma generate" échoue
+
 ```bash
 # Nettoyer et regénérer
 rm -rf node_modules/.prisma
@@ -331,6 +347,7 @@ pnpm prisma generate
 ```
 
 ### Port 3000 déjà utilisé
+
 ```bash
 # Changer le port dans package.json
 "dev": "next dev --turbopack -p 3001"

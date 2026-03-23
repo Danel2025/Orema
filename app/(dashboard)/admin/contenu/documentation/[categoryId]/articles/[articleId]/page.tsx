@@ -17,13 +17,7 @@ import {
   Skeleton,
   Badge,
 } from "@radix-ui/themes";
-import {
-  ArrowLeft,
-  FileText,
-  Save,
-  Trash2,
-  ExternalLink,
-} from "lucide-react";
+import { ArrowLeft, FileText, FloppyDisk, Trash, ArrowSquareOut } from "@phosphor-icons/react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
@@ -103,7 +97,8 @@ export default function EditArticlePage({
     },
   });
 
-  const watchedValues = watch();
+  const [content, status] = watch(["content", "status"]);
+  const watchedValues = { content, status };
 
   useEffect(() => {
     async function loadData() {
@@ -199,7 +194,7 @@ export default function EditArticlePage({
           <Flex align="center" gap="4">
             <Link href={`/admin/contenu/documentation/${categoryId}`}>
               <Button variant="ghost" size="2" style={{ cursor: "pointer" }}>
-                <ArrowLeft size={18} />
+                <ArrowLeft size={18} weight="bold" />
               </Button>
             </Link>
             <Box
@@ -209,21 +204,19 @@ export default function EditArticlePage({
                 borderRadius: 8,
               }}
             >
-              <FileText size={20} style={{ color: `var(--${category.color}-9)` }} />
+              <FileText size={20} weight="duotone" style={{ color: `var(--${category.color}-9)` }} />
             </Box>
             <Box>
               <Flex align="center" gap="2">
                 <Heading size="5">Modifier l'article</Heading>
-                <Badge
-                  color={statusColor as "green" | "gray" | "violet"}
-                  variant="soft"
-                  size="1"
-                >
+                <Badge color={statusColor as "green" | "gray" | "violet"} variant="soft" size="1">
                   {contentStatusLabels[watchedValues.status]}
                 </Badge>
-                {isDirty ? <Badge color="violet" variant="soft" size="1">
+                {isDirty ? (
+                  <Badge color="violet" variant="soft" size="1">
                     Non enregistré
-                  </Badge> : null}
+                  </Badge>
+                ) : null}
               </Flex>
               <Text size="2" color="gray">
                 {category.title}
@@ -232,12 +225,9 @@ export default function EditArticlePage({
           </Flex>
 
           {article.status === "PUBLISHED" && (
-            <Link
-              href={`/docs/${category.slug}/${article.slug}`}
-              target="_blank"
-            >
+            <Link href={`/docs/${category.slug}/${article.slug}`} target="_blank">
               <Button variant="soft" size="2" style={{ cursor: "pointer" }}>
-                <ExternalLink size={16} />
+                <ArrowSquareOut size={16} weight="bold" />
                 Voir sur le site
               </Button>
             </Link>
@@ -267,9 +257,11 @@ export default function EditArticlePage({
                       placeholder="Ex: Comment créer une commande"
                       {...register("title")}
                     />
-                    {errors.title ? <Text size="1" color="red" mt="1">
+                    {errors.title ? (
+                      <Text size="1" color="red" mt="1">
                         {errors.title.message}
-                      </Text> : null}
+                      </Text>
+                    ) : null}
                   </Box>
 
                   <Box>
@@ -282,12 +274,16 @@ export default function EditArticlePage({
                       {...register("slug")}
                     >
                       <TextField.Slot side="left">
-                        <Text size="1" color="gray">/docs/{category.slug}/</Text>
+                        <Text size="1" color="gray">
+                          /docs/{category.slug}/
+                        </Text>
                       </TextField.Slot>
                     </TextField.Root>
-                    {errors.slug ? <Text size="1" color="red" mt="1">
+                    {errors.slug ? (
+                      <Text size="1" color="red" mt="1">
                         {errors.slug.message}
-                      </Text> : null}
+                      </Text>
+                    ) : null}
                   </Box>
 
                   <Box>
@@ -372,11 +368,7 @@ export default function EditArticlePage({
                     <Text size="2" weight="medium" mb="2" style={{ display: "block" }}>
                       Temps de lecture
                     </Text>
-                    <TextField.Root
-                      size="3"
-                      placeholder="5 min"
-                      {...register("readTime")}
-                    />
+                    <TextField.Root size="3" placeholder="5 min" {...register("readTime")} />
                   </Box>
 
                   <Box>
@@ -403,7 +395,7 @@ export default function EditArticlePage({
                     disabled={isSubmitting || !isDirty}
                     style={{
                       width: "100%",
-                      background: `linear-gradient(135deg, var(--${category.color}-9) 0%, var(--${category.color}-10) 100%)`,
+                      background: `var(--${category.color}-9)`,
                       cursor: isSubmitting ? "wait" : "pointer",
                       opacity: !isDirty ? 0.5 : 1,
                     }}
@@ -412,7 +404,7 @@ export default function EditArticlePage({
                       <>Enregistrement...</>
                     ) : (
                       <>
-                        <Save size={18} />
+                        <FloppyDisk size={18} weight="bold" />
                         Enregistrer
                       </>
                     )}

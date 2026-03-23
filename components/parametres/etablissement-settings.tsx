@@ -7,36 +7,24 @@
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { Box, Flex, Text, TextField, TextArea, Button, Callout } from "@radix-ui/themes";
 import {
-  Box,
-  Card,
-  Flex,
-  Text,
-  TextField,
-  TextArea,
-  Button,
-  Callout,
-} from "@radix-ui/themes";
-import {
-  Building2,
+  Buildings,
   Phone,
-  Mail,
+  EnvelopeSimple,
   MapPin,
   FileText,
-  Save,
-  Loader2,
-  CheckCircle2,
-  AlertCircle,
-  Upload,
+  FloppyDisk,
+  CircleNotch,
+  CheckCircle,
+  WarningCircle,
   Image as ImageIcon,
-} from "lucide-react";
+} from "@phosphor-icons/react";
 import { toast } from "sonner";
 
 import { updateEtablissement } from "@/actions/parametres";
-import {
-  etablissementSchema,
-  type EtablissementFormData,
-} from "@/schemas/parametres.schema";
+import { etablissementSchema, type EtablissementFormData } from "@/schemas/parametres.schema";
+import { ImageUpload } from "@/components/produits/image-upload";
 
 interface EtablissementSettingsProps {
   initialData: {
@@ -59,8 +47,9 @@ export function EtablissementSettings({ initialData }: EtablissementSettingsProp
   const {
     register,
     handleSubmit,
+    setValue,
+    watch,
     formState: { errors, isDirty },
-   
   } = useForm<EtablissementFormData>({
     resolver: zodResolver(etablissementSchema) as any,
     defaultValues: {
@@ -75,6 +64,8 @@ export function EtablissementSettings({ initialData }: EtablissementSettingsProp
     },
   });
 
+  const logoValue = watch("logo");
+
   const onSubmit = async (data: EtablissementFormData) => {
     setIsLoading(true);
     setSaveStatus("idle");
@@ -84,7 +75,7 @@ export function EtablissementSettings({ initialData }: EtablissementSettingsProp
 
       if (result.success) {
         setSaveStatus("success");
-        toast.success("Parametres enregistres avec succes");
+        toast.success("Paramètres enregistrés avec succès");
         setTimeout(() => setSaveStatus("idle"), 3000);
       } else {
         setSaveStatus("error");
@@ -102,10 +93,10 @@ export function EtablissementSettings({ initialData }: EtablissementSettingsProp
     <form onSubmit={handleSubmit(onSubmit)}>
       <Flex direction="column" gap="5">
         {/* Informations principales */}
-        <Card size="3">
+        <Box style={{ border: "1px solid var(--gray-a6)", borderRadius: 8 }} p="4">
           <Flex direction="column" gap="4">
             <Flex align="center" gap="2">
-              <Building2 size={20} style={{ color: "var(--accent-9)" }} />
+              <Buildings size={20} weight="duotone" style={{ color: "var(--accent-9)" }} />
               <Text size="4" weight="bold">
                 Informations de l'etablissement
               </Text>
@@ -120,9 +111,11 @@ export function EtablissementSettings({ initialData }: EtablissementSettingsProp
                 placeholder="Ex: Restaurant Le Coeur de Libreville"
                 size="3"
               />
-              {errors.nom ? <Text size="1" color="red" mt="1">
+              {errors.nom ? (
+                <Text size="1" color="red" mt="1">
                   {errors.nom.message}
-                </Text> : null}
+                </Text>
+              ) : null}
             </Box>
 
             <Box>
@@ -143,7 +136,7 @@ export function EtablissementSettings({ initialData }: EtablissementSettingsProp
               <Box style={{ flex: "1 1 200px" }}>
                 <Text as="label" size="2" weight="medium" mb="1">
                   <Flex align="center" gap="1">
-                    <Phone size={14} />
+                    <Phone size={14} weight="regular" />
                     Telephone
                   </Flex>
                 </Text>
@@ -157,7 +150,7 @@ export function EtablissementSettings({ initialData }: EtablissementSettingsProp
               <Box style={{ flex: "1 1 200px" }}>
                 <Text as="label" size="2" weight="medium" mb="1">
                   <Flex align="center" gap="1">
-                    <Mail size={14} />
+                    <EnvelopeSimple size={14} />
                     Email
                   </Flex>
                 </Text>
@@ -167,19 +160,21 @@ export function EtablissementSettings({ initialData }: EtablissementSettingsProp
                   placeholder="contact@example.com"
                   size="3"
                 />
-                {errors.email ? <Text size="1" color="red" mt="1">
+                {errors.email ? (
+                  <Text size="1" color="red" mt="1">
                     {errors.email.message}
-                  </Text> : null}
+                  </Text>
+                ) : null}
               </Box>
             </Flex>
           </Flex>
-        </Card>
+        </Box>
 
         {/* Informations fiscales */}
-        <Card size="3">
+        <Box style={{ border: "1px solid var(--gray-a6)", borderRadius: 8 }} p="4">
           <Flex direction="column" gap="4">
             <Flex align="center" gap="2">
-              <FileText size={20} style={{ color: "var(--accent-9)" }} />
+              <FileText size={20} weight="duotone" style={{ color: "var(--accent-9)" }} />
               <Text size="4" weight="bold">
                 Informations fiscales (Gabon)
               </Text>
@@ -187,7 +182,7 @@ export function EtablissementSettings({ initialData }: EtablissementSettingsProp
 
             <Callout.Root color="violet" size="1">
               <Callout.Icon>
-                <AlertCircle size={16} />
+                <WarningCircle size={16} />
               </Callout.Icon>
               <Callout.Text>
                 Ces informations apparaitront sur vos tickets de caisse et factures.
@@ -197,16 +192,14 @@ export function EtablissementSettings({ initialData }: EtablissementSettingsProp
             <Flex gap="4" wrap="wrap">
               <Box style={{ flex: "1 1 200px" }}>
                 <Text as="label" size="2" weight="medium" mb="1">
-                  NIF (Numero d'Identification Fiscale)
+                  NIF (Numéro d'Identification Fiscale)
                 </Text>
-                <TextField.Root
-                  {...register("nif")}
-                  placeholder="Ex: 123456789A"
-                  size="3"
-                />
-                {errors.nif ? <Text size="1" color="red" mt="1">
+                <TextField.Root {...register("nif")} placeholder="Ex: 123456789A" size="3" />
+                {errors.nif ? (
+                  <Text size="1" color="red" mt="1">
                     {errors.nif.message}
-                  </Text> : null}
+                  </Text>
+                ) : null}
               </Box>
 
               <Box style={{ flex: "1 1 200px" }}>
@@ -218,63 +211,66 @@ export function EtablissementSettings({ initialData }: EtablissementSettingsProp
                   placeholder="Ex: GA-LBV-01-2024-B12-00001"
                   size="3"
                 />
-                {errors.rccm ? <Text size="1" color="red" mt="1">
+                {errors.rccm ? (
+                  <Text size="1" color="red" mt="1">
                     {errors.rccm.message}
-                  </Text> : null}
+                  </Text>
+                ) : null}
               </Box>
             </Flex>
           </Flex>
-        </Card>
+        </Box>
 
         {/* Logo et personnalisation */}
-        <Card size="3">
+        <Box style={{ border: "1px solid var(--gray-a6)", borderRadius: 8 }} p="4">
           <Flex direction="column" gap="4">
             <Flex align="center" gap="2">
-              <ImageIcon size={20} style={{ color: "var(--accent-9)" }} />
+              <ImageIcon size={20} weight="duotone" style={{ color: "var(--accent-9)" }} />
               <Text size="4" weight="bold">
                 Personnalisation des tickets
               </Text>
             </Flex>
 
-            <Box>
-              <Text as="label" size="2" weight="medium" mb="1">
-                URL du logo
-              </Text>
-              <TextField.Root
-                {...register("logo")}
-                placeholder="https://example.com/logo.png"
-                size="3"
-              >
-                <TextField.Slot>
-                  <Upload size={16} />
-                </TextField.Slot>
-              </TextField.Root>
-              <Text size="1" color="gray" mt="1">
-                Le logo apparaitra en haut de vos tickets (format recommande: PNG ou JPEG, max 200x100px)
-              </Text>
-            </Box>
+            <Flex gap="4" wrap="wrap">
+              <Box style={{ flex: "1 1 250px" }}>
+                <Text as="label" size="2" weight="medium" mb="1">
+                  Logo de l'établissement
+                </Text>
+                <ImageUpload
+                  value={logoValue}
+                  onChange={(url) => {
+                    setValue("logo", url || "", { shouldDirty: true });
+                  }}
+                  disabled={isLoading}
+                  folder="etablissements"
+                />
+                <Text size="1" color="gray" mt="1">
+                  Format recommandé : PNG ou JPEG, max 200x100px
+                </Text>
+              </Box>
 
-            <Box>
-              <Text as="label" size="2" weight="medium" mb="1">
-                Message de remerciement
-              </Text>
-              <TextArea
-                {...register("messageTicket")}
-                placeholder="Ex: Merci de votre visite ! A bientot chez nous."
-                rows={2}
-              />
-              <Text size="1" color="gray" mt="1">
-                Ce message apparaitra en bas de chaque ticket de caisse
-              </Text>
-            </Box>
+              <Box style={{ flex: "1 1 250px" }}>
+                <Text as="label" size="2" weight="medium" mb="1">
+                  Message de remerciement
+                </Text>
+                <TextArea
+                  {...register("messageTicket")}
+                  placeholder="Ex: Merci de votre visite ! A bientôt chez nous."
+                  rows={5}
+                />
+                <Text size="1" color="gray" mt="1">
+                  Ce message apparaîtra en bas de chaque ticket de caisse
+                </Text>
+              </Box>
+            </Flex>
           </Flex>
-        </Card>
+        </Box>
 
         {/* Bouton de sauvegarde */}
         <Flex justify="end" gap="3" align="center">
           {saveStatus === "success" && (
             <Flex align="center" gap="2">
-              <CheckCircle2 size={16} className="text-green-500" />
+              <CheckCircle size={16} className="text-green-500" />
               <Text size="2" color="green">
                 Enregistre
               </Text>
@@ -282,23 +278,14 @@ export function EtablissementSettings({ initialData }: EtablissementSettingsProp
           )}
           {saveStatus === "error" && (
             <Flex align="center" gap="2">
-              <AlertCircle size={16} className="text-red-500" />
+              <WarningCircle size={16} className="text-red-500" />
               <Text size="2" color="red">
                 Erreur d'enregistrement
               </Text>
             </Flex>
           )}
-          <Button
-            type="submit"
-            size="3"
-            disabled={isLoading || !isDirty}
-           
-          >
-            {isLoading ? (
-              <Loader2 size={16} className="animate-spin" />
-            ) : (
-              <Save size={16} />
-            )}
+          <Button type="submit" size="3" disabled={isLoading || !isDirty}>
+            {isLoading ? <CircleNotch size={16} className="animate-spin" /> : <FloppyDisk size={16} />}
             Enregistrer les modifications
           </Button>
         </Flex>

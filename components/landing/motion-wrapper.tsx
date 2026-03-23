@@ -93,7 +93,11 @@ interface StaggerItemProps {
   className?: string;
 }
 
-export function StaggerItem({ children, className = "", style }: StaggerItemProps & { style?: React.CSSProperties }) {
+export function StaggerItem({
+  children,
+  className = "",
+  style,
+}: StaggerItemProps & { style?: React.CSSProperties }) {
   return (
     <motion.div
       style={style}
@@ -166,10 +170,7 @@ export function CountUp({
       animate={isInView ? { opacity: 1 } : { opacity: 0 }}
     >
       {isInView ? (
-        <motion.span
-          initial={{ opacity: 1 }}
-          animate={{ opacity: 1 }}
-        >
+        <motion.span initial={{ opacity: 1 }} animate={{ opacity: 1 }}>
           <CountUpAnimation
             value={value}
             duration={duration}
@@ -212,9 +213,7 @@ function CountUpAnimation({
       onUpdate: (latest: number) => {
         if (nodeRef.current) {
           nodeRef.current.textContent =
-            decimals > 0
-              ? latest.toFixed(decimals)
-              : Math.floor(latest).toLocaleString("fr-FR");
+            decimals > 0 ? latest.toFixed(decimals) : Math.floor(latest).toLocaleString("fr-FR");
         }
       },
     });

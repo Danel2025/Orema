@@ -1,4 +1,4 @@
-'use client'
+"use client";
 
 /**
  * Composant de protection des routes
@@ -7,13 +7,13 @@
  * soit le contenu, soit une page d'acces refuse.
  */
 
-import { usePathname } from 'next/navigation'
-import { type ReactNode, useMemo } from 'react'
-import { useAuth } from '@/lib/auth/context'
-import { AccessDenied } from './access-denied'
+import { usePathname } from "next/navigation";
+import { type ReactNode, useMemo } from "react";
+import { useAuth } from "@/lib/auth/context";
+import { AccessDenied } from "./access-denied";
 
 interface RouteGuardProps {
-  children: ReactNode
+  children: ReactNode;
 }
 
 /**
@@ -30,30 +30,30 @@ interface RouteGuardProps {
  * ```
  */
 export function RouteGuard({ children }: RouteGuardProps) {
-  const pathname = usePathname()
-  const { user, canAccessRoute, isLoading } = useAuth()
+  const pathname = usePathname();
+  const { user, canAccessRoute, isLoading } = useAuth();
 
   const accessResult = useMemo(() => {
-    if (!user) return { allowed: false, reason: 'Non authentifie' }
-    return canAccessRoute(pathname)
-  }, [user, pathname, canAccessRoute])
+    if (!user) return { allowed: false, reason: "Non authentifie" };
+    return canAccessRoute(pathname);
+  }, [user, pathname, canAccessRoute]);
 
   // Pendant le chargement, afficher le contenu (le layout gere le loading)
   if (isLoading) {
-    return <>{children}</>
+    return <>{children}</>;
   }
 
   // Si pas d'utilisateur, le layout devrait rediriger vers /login
   // Mais au cas ou, on bloque l'acces
   if (!user) {
-    return <>{children}</>
+    return <>{children}</>;
   }
 
   // Si acces refuse, afficher la page d'erreur
   if (!accessResult.allowed) {
-    return <AccessDenied reason={accessResult.reason} pathname={pathname} />
+    return <AccessDenied reason={accessResult.reason} pathname={pathname} />;
   }
 
   // Acces autorise
-  return <>{children}</>
+  return <>{children}</>;
 }

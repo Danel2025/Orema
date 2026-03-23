@@ -9,22 +9,21 @@ import { useState, useTransition } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
-  Mail,
-  Shield,
-  Building2,
+  EnvelopeSimple,
+  ShieldCheck,
+  Buildings,
   Lock,
-  KeyRound,
+  Key,
   Eye,
-  EyeOff,
-  Loader2,
+  EyeSlash,
+  CircleNotch,
   Check,
-  AlertCircle,
-} from "lucide-react";
+  WarningCircle,
+} from "@phosphor-icons/react";
 import { useAuth } from "@/lib/auth/context";
 import { updatePassword, updatePin } from "@/actions/auth";
 import { updatePasswordSchema, updatePinSchema } from "@/schemas/auth";
 import type { Role } from "@/lib/db/types";
-
 
 const roleLabels: Record<Role, string> = {
   SUPER_ADMIN: "Super Administrateur",
@@ -123,9 +122,10 @@ export default function ProfilPage() {
           minHeight: 400,
         }}
       >
-        <Loader2
+        <CircleNotch
           size={32}
-          style={{ color: "var(--accent-9)", animation: "spin 1s linear infinite" }}
+          className="animate-spin"
+          style={{ color: "var(--accent-9)" }}
         />
       </div>
     );
@@ -143,7 +143,7 @@ export default function ProfilPage() {
           gap: 16,
         }}
       >
-        <AlertCircle size={48} style={{ color: "var(--red-9)" }} />
+        <WarningCircle size={48} style={{ color: "var(--red-9)" }} />
         <p style={{ color: "var(--gray-11)" }}>Impossible de charger le profil</p>
       </div>
     );
@@ -250,7 +250,7 @@ export default function ProfilPage() {
                   fontWeight: 600,
                 }}
               >
-                <Shield size={12} />
+                <ShieldCheck size={12} />
                 {roleLabels[user.role]}
               </span>
             </div>
@@ -271,11 +271,12 @@ export default function ProfilPage() {
                   color: "var(--gray-11)",
                 }}
               >
-                <Mail size={16} />
+                <EnvelopeSimple size={16} />
                 {user.email}
               </div>
 
-              {user.etablissementNom ? <div
+              {user.etablissementNom ? (
+                <div
                   style={{
                     display: "flex",
                     alignItems: "center",
@@ -284,9 +285,10 @@ export default function ProfilPage() {
                     color: "var(--gray-11)",
                   }}
                 >
-                  <Building2 size={16} />
+                  <Buildings size={16} />
                   {user.etablissementNom}
-                </div> : null}
+                </div>
+              ) : null}
             </div>
           </div>
         </div>
@@ -322,7 +324,7 @@ export default function ProfilPage() {
                 justifyContent: "center",
               }}
             >
-              <Lock size={20} style={{ color: "var(--blue-9)" }} />
+              <Lock size={20} weight="duotone" style={{ color: "var(--blue-9)" }} />
             </div>
             <div>
               <h3
@@ -334,13 +336,12 @@ export default function ProfilPage() {
               >
                 Mot de passe
               </h3>
-              <p style={{ fontSize: 12, color: "var(--gray-10)" }}>
-                Modifier votre mot de passe
-              </p>
+              <p style={{ fontSize: 12, color: "var(--gray-10)" }}>Modifier votre mot de passe</p>
             </div>
           </div>
 
-          {passwordSuccess ? <div
+          {passwordSuccess ? (
+            <div
               style={{
                 display: "flex",
                 alignItems: "center",
@@ -355,7 +356,8 @@ export default function ProfilPage() {
             >
               <Check size={16} />
               Mot de passe mis à jour avec succès
-            </div> : null}
+            </div>
+          ) : null}
 
           <form onSubmit={onPasswordSubmit}>
             <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
@@ -377,9 +379,7 @@ export default function ProfilPage() {
                   />
                   <button
                     type="button"
-                    onClick={() =>
-                      setShowPasswords((p) => ({ ...p, current: !p.current }))
-                    }
+                    onClick={() => setShowPasswords((p) => ({ ...p, current: !p.current }))}
                     style={{
                       position: "absolute",
                       right: 10,
@@ -391,12 +391,14 @@ export default function ProfilPage() {
                       color: "var(--gray-9)",
                     }}
                   >
-                    {showPasswords.current ? <EyeOff size={18} /> : <Eye size={18} />}
+                    {showPasswords.current ? <EyeSlash size={18} /> : <Eye size={18} />}
                   </button>
                 </div>
-                {passwordForm.formState.errors.currentPassword ? <p style={{ fontSize: 12, color: "var(--red-11)", marginTop: 4 }}>
+                {passwordForm.formState.errors.currentPassword ? (
+                  <p style={{ fontSize: 12, color: "var(--red-11)", marginTop: 4 }}>
                     {passwordForm.formState.errors.currentPassword.message}
-                  </p> : null}
+                  </p>
+                ) : null}
               </div>
 
               {/* Nouveau mot de passe */}
@@ -429,12 +431,14 @@ export default function ProfilPage() {
                       color: "var(--gray-9)",
                     }}
                   >
-                    {showPasswords.new ? <EyeOff size={18} /> : <Eye size={18} />}
+                    {showPasswords.new ? <EyeSlash size={18} /> : <Eye size={18} />}
                   </button>
                 </div>
-                {passwordForm.formState.errors.newPassword ? <p style={{ fontSize: 12, color: "var(--red-11)", marginTop: 4 }}>
+                {passwordForm.formState.errors.newPassword ? (
+                  <p style={{ fontSize: 12, color: "var(--red-11)", marginTop: 4 }}>
                     {passwordForm.formState.errors.newPassword.message}
-                  </p> : null}
+                  </p>
+                ) : null}
               </div>
 
               {/* Confirmer mot de passe */}
@@ -455,9 +459,7 @@ export default function ProfilPage() {
                   />
                   <button
                     type="button"
-                    onClick={() =>
-                      setShowPasswords((p) => ({ ...p, confirm: !p.confirm }))
-                    }
+                    onClick={() => setShowPasswords((p) => ({ ...p, confirm: !p.confirm }))}
                     style={{
                       position: "absolute",
                       right: 10,
@@ -469,12 +471,14 @@ export default function ProfilPage() {
                       color: "var(--gray-9)",
                     }}
                   >
-                    {showPasswords.confirm ? <EyeOff size={18} /> : <Eye size={18} />}
+                    {showPasswords.confirm ? <EyeSlash size={18} /> : <Eye size={18} />}
                   </button>
                 </div>
-                {passwordForm.formState.errors.confirmPassword ? <p style={{ fontSize: 12, color: "var(--red-11)", marginTop: 4 }}>
+                {passwordForm.formState.errors.confirmPassword ? (
+                  <p style={{ fontSize: 12, color: "var(--red-11)", marginTop: 4 }}>
                     {passwordForm.formState.errors.confirmPassword.message}
-                  </p> : null}
+                  </p>
+                ) : null}
               </div>
 
               <button
@@ -496,7 +500,7 @@ export default function ProfilPage() {
                   opacity: isPendingPassword ? 0.7 : 1,
                 }}
               >
-                {isPendingPassword ? <Loader2 size={16} className="animate-spin" /> : null}
+                {isPendingPassword ? <CircleNotch size={16} className="animate-spin" /> : null}
                 Mettre à jour
               </button>
             </div>
@@ -531,7 +535,7 @@ export default function ProfilPage() {
                 justifyContent: "center",
               }}
             >
-              <KeyRound size={20} style={{ color: "var(--purple-9)" }} />
+              <Key size={20} weight="duotone" style={{ color: "var(--purple-9)" }} />
             </div>
             <div>
               <h3
@@ -543,13 +547,12 @@ export default function ProfilPage() {
               >
                 Code PIN
               </h3>
-              <p style={{ fontSize: 12, color: "var(--gray-10)" }}>
-                Modifier votre code PIN
-              </p>
+              <p style={{ fontSize: 12, color: "var(--gray-10)" }}>Modifier votre code PIN</p>
             </div>
           </div>
 
-          {pinSuccess ? <div
+          {pinSuccess ? (
+            <div
               style={{
                 display: "flex",
                 alignItems: "center",
@@ -564,7 +567,8 @@ export default function ProfilPage() {
             >
               <Check size={16} />
               Code PIN mis à jour avec succès
-            </div> : null}
+            </div>
+          ) : null}
 
           <form onSubmit={onPinSubmit}>
             <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
@@ -602,12 +606,14 @@ export default function ProfilPage() {
                       color: "var(--gray-9)",
                     }}
                   >
-                    {showPins.current ? <EyeOff size={18} /> : <Eye size={18} />}
+                    {showPins.current ? <EyeSlash size={18} /> : <Eye size={18} />}
                   </button>
                 </div>
-                {pinForm.formState.errors.currentPin ? <p style={{ fontSize: 12, color: "var(--red-11)", marginTop: 4 }}>
+                {pinForm.formState.errors.currentPin ? (
+                  <p style={{ fontSize: 12, color: "var(--red-11)", marginTop: 4 }}>
                     {pinForm.formState.errors.currentPin.message}
-                  </p> : null}
+                  </p>
+                ) : null}
               </div>
 
               {/* Nouveau PIN */}
@@ -644,12 +650,14 @@ export default function ProfilPage() {
                       color: "var(--gray-9)",
                     }}
                   >
-                    {showPins.new ? <EyeOff size={18} /> : <Eye size={18} />}
+                    {showPins.new ? <EyeSlash size={18} /> : <Eye size={18} />}
                   </button>
                 </div>
-                {pinForm.formState.errors.newPin ? <p style={{ fontSize: 12, color: "var(--red-11)", marginTop: 4 }}>
+                {pinForm.formState.errors.newPin ? (
+                  <p style={{ fontSize: 12, color: "var(--red-11)", marginTop: 4 }}>
                     {pinForm.formState.errors.newPin.message}
-                  </p> : null}
+                  </p>
+                ) : null}
               </div>
 
               {/* Confirmer PIN */}
@@ -686,12 +694,14 @@ export default function ProfilPage() {
                       color: "var(--gray-9)",
                     }}
                   >
-                    {showPins.confirm ? <EyeOff size={18} /> : <Eye size={18} />}
+                    {showPins.confirm ? <EyeSlash size={18} /> : <Eye size={18} />}
                   </button>
                 </div>
-                {pinForm.formState.errors.confirmPin ? <p style={{ fontSize: 12, color: "var(--red-11)", marginTop: 4 }}>
+                {pinForm.formState.errors.confirmPin ? (
+                  <p style={{ fontSize: 12, color: "var(--red-11)", marginTop: 4 }}>
                     {pinForm.formState.errors.confirmPin.message}
-                  </p> : null}
+                  </p>
+                ) : null}
               </div>
 
               <button
@@ -713,7 +723,7 @@ export default function ProfilPage() {
                   opacity: isPendingPin ? 0.7 : 1,
                 }}
               >
-                {isPendingPin ? <Loader2 size={16} className="animate-spin" /> : null}
+                {isPendingPin ? <CircleNotch size={16} className="animate-spin" /> : null}
                 Mettre à jour
               </button>
             </div>

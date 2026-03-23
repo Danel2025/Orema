@@ -1,13 +1,13 @@
-const { chromium } = require('playwright');
-const path = require('path');
-const fs = require('fs');
+const { chromium } = require("playwright");
+const path = require("path");
+const fs = require("fs");
 
 // Configuration
-const VIDEO_DIR = path.join(__dirname, 'videos');
+const VIDEO_DIR = path.join(__dirname, "videos");
 // Résolution Full HD - viewport et recordVideo.size DOIVENT être IDENTIQUES
 const VIDEO_WIDTH = 1920;
 const VIDEO_HEIGHT = 1080;
-const BASE_URL = 'http://localhost:3000';
+const BASE_URL = "http://localhost:3000";
 
 // Ensure video directory exists
 if (!fs.existsSync(VIDEO_DIR)) {
@@ -91,7 +91,7 @@ const CUSTOM_CURSOR_SCRIPT = `
   });
 `;
 
-const wait = ms => new Promise(r => setTimeout(r, ms));
+const wait = (ms) => new Promise((r) => setTimeout(r, ms));
 
 async function injectCursor(page) {
   try {
@@ -105,19 +105,23 @@ async function smoothClick(page, selector, options = {}) {
 
   try {
     const el = await page.locator(selector).first();
-    await el.waitFor({ state: 'visible', timeout: 10000 });
+    await el.waitFor({ state: "visible", timeout: 10000 });
     const box = await el.boundingBox();
     if (!box) return false;
 
-    const x = box.x + box.width / 2, y = box.y + box.height / 2;
-    await page.evaluate(async ({x, y, d}) => window.__moveCursor && await window.__moveCursor(x, y, d), {x, y, d: moveTime});
+    const x = box.x + box.width / 2,
+      y = box.y + box.height / 2;
+    await page.evaluate(
+      async ({ x, y, d }) => window.__moveCursor && (await window.__moveCursor(x, y, d)),
+      { x, y, d: moveTime }
+    );
     await wait(200);
     await page.mouse.move(x, y);
     await page.mouse.click(x, y);
     await wait(waitAfter);
     return true;
   } catch (e) {
-    console.log(`   ⚠️ ${selector.substring(0, 40)}: ${e.message.split('\n')[0]}`);
+    console.log(`   ⚠️ ${selector.substring(0, 40)}: ${e.message.split("\n")[0]}`);
     return false;
   }
 }
@@ -128,12 +132,16 @@ async function smoothHover(page, selector, options = {}) {
 
   try {
     const el = await page.locator(selector).first();
-    await el.waitFor({ state: 'visible', timeout: 8000 });
+    await el.waitFor({ state: "visible", timeout: 8000 });
     const box = await el.boundingBox();
     if (!box) return false;
 
-    const x = box.x + box.width / 2, y = box.y + box.height / 2;
-    await page.evaluate(async ({x, y, d}) => window.__moveCursor && await window.__moveCursor(x, y, d), {x, y, d: moveTime});
+    const x = box.x + box.width / 2,
+      y = box.y + box.height / 2;
+    await page.evaluate(
+      async ({ x, y, d }) => window.__moveCursor && (await window.__moveCursor(x, y, d)),
+      { x, y, d: moveTime }
+    );
     await wait(100);
     await page.mouse.move(x, y);
     await wait(waitAfter);
@@ -144,17 +152,17 @@ async function smoothHover(page, selector, options = {}) {
 }
 
 async function recordDemo() {
-  console.log('🎬 Démarrage de l\'enregistrement sur Microsoft Edge...\n');
+  console.log("🎬 Démarrage de l'enregistrement sur Microsoft Edge...\n");
 
   // Utiliser Microsoft Edge
   const browser = await chromium.launch({
     headless: false,
-    channel: 'msedge',
+    channel: "msedge",
     args: [
-      '--disable-infobars',
-      '--window-position=0,0',
-      `--window-size=${VIDEO_WIDTH},${VIDEO_HEIGHT + 150}` // +150 pour les barres du navigateur
-    ]
+      "--disable-infobars",
+      "--window-position=0,0",
+      `--window-size=${VIDEO_WIDTH},${VIDEO_HEIGHT + 150}`, // +150 pour les barres du navigateur
+    ],
   });
 
   // IMPORTANT: viewport et recordVideo.size doivent être IDENTIQUES
@@ -162,10 +170,10 @@ async function recordDemo() {
     viewport: { width: VIDEO_WIDTH, height: VIDEO_HEIGHT },
     recordVideo: {
       dir: VIDEO_DIR,
-      size: { width: VIDEO_WIDTH, height: VIDEO_HEIGHT } // Même taille que viewport
+      size: { width: VIDEO_WIDTH, height: VIDEO_HEIGHT }, // Même taille que viewport
     },
-    colorScheme: 'light',
-    deviceScaleFactor: 1 // Pas de mise à l'échelle
+    colorScheme: "light",
+    deviceScaleFactor: 1, // Pas de mise à l'échelle
   });
   const page = await context.newPage();
 
@@ -173,50 +181,54 @@ async function recordDemo() {
     // ==========================================
     // SCÈNE 1: PAGE DE CONNEXION PIN
     // ==========================================
-    console.log('📍 Scène 1: Page de connexion PIN...');
-    await page.goto(`${BASE_URL}/login/pin`, { waitUntil: 'networkidle' });
+    console.log("📍 Scène 1: Page de connexion PIN...");
+    await page.goto(`${BASE_URL}/login/pin`, { waitUntil: "networkidle" });
     await wait(2500);
     await injectCursor(page);
     await wait(1500);
 
     // Saisie email
-    console.log('   → Saisie email...');
-    const emailInput = page.getByRole('textbox', { name: 'Email' });
+    console.log("   → Saisie email...");
+    const emailInput = page.getByRole("textbox", { name: "Email" });
     const emailBox = await emailInput.boundingBox();
     if (emailBox) {
-      await page.evaluate(async ({x, y}) => window.__moveCursor && await window.__moveCursor(x, y, 600),
-        {x: emailBox.x + emailBox.width/2, y: emailBox.y + emailBox.height/2});
+      await page.evaluate(
+        async ({ x, y }) => window.__moveCursor && (await window.__moveCursor(x, y, 600)),
+        { x: emailBox.x + emailBox.width / 2, y: emailBox.y + emailBox.height / 2 }
+      );
       await wait(200);
     }
-    await emailInput.fill('caissier@orema.ga');
+    await emailInput.fill("caissier@orema.ga");
     await wait(600);
 
     // Saisie PIN
-    console.log('   → Saisie code PIN...');
-    const pinInput = page.getByRole('textbox').nth(1);
+    console.log("   → Saisie code PIN...");
+    const pinInput = page.getByRole("textbox").nth(1);
     const pinBox = await pinInput.boundingBox();
     if (pinBox) {
-      await page.evaluate(async ({x, y}) => window.__moveCursor && await window.__moveCursor(x, y, 500),
-        {x: pinBox.x + pinBox.width/2, y: pinBox.y + pinBox.height/2});
+      await page.evaluate(
+        async ({ x, y }) => window.__moveCursor && (await window.__moveCursor(x, y, 500)),
+        { x: pinBox.x + pinBox.width / 2, y: pinBox.y + pinBox.height / 2 }
+      );
       await wait(200);
     }
     await pinInput.click();
     await wait(300);
 
-    for (const digit of ['2', '0', '0', '5']) {
+    for (const digit of ["2", "0", "0", "5"]) {
       await page.keyboard.press(digit);
       await wait(250);
     }
     await wait(800);
 
     // Connexion
-    console.log('   → Clic sur Connexion...');
+    console.log("   → Clic sur Connexion...");
     await smoothClick(page, 'button:has-text("Se connecter")', { waitAfter: 500 });
 
     // Attendre redirection
-    console.log('   → Redirection vers caisse...');
-    await page.waitForURL('**/caisse', { timeout: 30000 });
-    await page.waitForLoadState('networkidle');
+    console.log("   → Redirection vers caisse...");
+    await page.waitForURL("**/caisse", { timeout: 30000 });
+    await page.waitForLoadState("networkidle");
     await wait(4000);
     await injectCursor(page);
     await wait(2000);
@@ -224,10 +236,10 @@ async function recordDemo() {
     // ==========================================
     // SCÈNE 2: INTERFACE CAISSE - VENTE DIRECTE
     // ==========================================
-    console.log('\n📍 Scène 2: Interface Caisse - Vente directe...');
+    console.log("\n📍 Scène 2: Interface Caisse - Vente directe...");
 
     // Présenter les modes de vente
-    console.log('   → Survol des modes de vente...');
+    console.log("   → Survol des modes de vente...");
     await smoothHover(page, 'button:has-text("Vente directe")');
     await smoothHover(page, 'button:has-text("Service")');
     await smoothHover(page, 'button:has-text("Livraison")');
@@ -237,12 +249,12 @@ async function recordDemo() {
     // Vider panier si existant
     const viderBtn = page.locator('button:has-text("Vider")');
     if (await viderBtn.isVisible().catch(() => false)) {
-      console.log('   → Vidage panier existant...');
+      console.log("   → Vidage panier existant...");
       await smoothClick(page, 'button:has-text("Vider")', { waitAfter: 1000 });
     }
 
     // Parcourir les catégories
-    console.log('   → Navigation dans les catégories...');
+    console.log("   → Navigation dans les catégories...");
     await smoothClick(page, 'button:has-text("Bières")', { waitAfter: 800 });
     await smoothClick(page, 'button:has-text("Softs")', { waitAfter: 800 });
     await smoothClick(page, 'button:has-text("Plats Gabonais")', { waitAfter: 800 });
@@ -250,7 +262,7 @@ async function recordDemo() {
     await smoothClick(page, 'button:has-text("Bières")', { waitAfter: 800 });
 
     // Ajouter des produits
-    console.log('   → Ajout de produits au panier...');
+    console.log("   → Ajout de produits au panier...");
     await smoothClick(page, 'button:has-text("Heineken")', { waitAfter: 700 });
     await smoothClick(page, 'button:has-text("Corona")', { waitAfter: 700 });
     await smoothClick(page, 'button:has-text("Guinness")', { waitAfter: 700 });
@@ -260,73 +272,73 @@ async function recordDemo() {
     await smoothClick(page, 'button:has-text("Poulet")', { waitAfter: 800 });
 
     // Montrer le panier
-    console.log('   → Visualisation du panier...');
+    console.log("   → Visualisation du panier...");
     await wait(1500);
 
     // ==========================================
     // SCÈNE 3: MODAL D'ENCAISSEMENT
     // ==========================================
-    console.log('\n📍 Scène 3: Modal d\'encaissement...');
+    console.log("\n📍 Scène 3: Modal d'encaissement...");
     await smoothClick(page, 'button:has-text("Encaisser")', { waitAfter: 1500 });
 
     // Présenter les modes de paiement
-    console.log('   → Présentation des modes de paiement...');
+    console.log("   → Présentation des modes de paiement...");
     await smoothHover(page, 'button:has-text("Espèces")', { waitAfter: 600 });
     await smoothHover(page, 'button:has-text("Carte")', { waitAfter: 600 });
     await smoothHover(page, 'button:has-text("Airtel")', { waitAfter: 600 });
     await smoothHover(page, 'button:has-text("Moov")', { waitAfter: 600 });
 
     // Sélectionner Espèces
-    console.log('   → Sélection paiement Espèces...');
+    console.log("   → Sélection paiement Espèces...");
     await smoothClick(page, 'button:has-text("Espèces")', { waitAfter: 1500 });
     await wait(2000);
 
     // Fermer le modal
-    console.log('   → Fermeture du modal...');
-    await page.keyboard.press('Escape');
+    console.log("   → Fermeture du modal...");
+    await page.keyboard.press("Escape");
     await wait(1500);
 
     // ==========================================
     // SCÈNE 4: PAGE STOCKS
     // ==========================================
-    console.log('\n📍 Scène 4: Page Stocks...');
+    console.log("\n📍 Scène 4: Page Stocks...");
     await smoothClick(page, 'a:has-text("Stocks")', { waitAfter: 1500 });
-    await page.waitForLoadState('networkidle').catch(() => {});
+    await page.waitForLoadState("networkidle").catch(() => {});
     await wait(3000);
     await injectCursor(page);
     await wait(2000);
 
     // Explorer la page stocks
-    console.log('   → Exploration de la page Stocks...');
+    console.log("   → Exploration de la page Stocks...");
     await smoothHover(page, 'input[placeholder*="Rechercher"]', { waitAfter: 500 });
     await wait(1500);
 
     // ==========================================
     // SCÈNE 5: PAGE EMPLOYÉS
     // ==========================================
-    console.log('\n📍 Scène 5: Page Employés...');
+    console.log("\n📍 Scène 5: Page Employés...");
     await smoothClick(page, 'a:has-text("Employés")', { waitAfter: 1500 });
-    await page.waitForLoadState('networkidle').catch(() => {});
+    await page.waitForLoadState("networkidle").catch(() => {});
     await wait(3000);
     await injectCursor(page);
     await wait(2000);
 
     // Explorer la page employés
-    console.log('   → Exploration de la page Employés...');
+    console.log("   → Exploration de la page Employés...");
     await wait(2000);
 
     // ==========================================
     // SCÈNE 6: PAGE RAPPORTS
     // ==========================================
-    console.log('\n📍 Scène 6: Page Rapports...');
+    console.log("\n📍 Scène 6: Page Rapports...");
     await smoothClick(page, 'a:has-text("Rapports")', { waitAfter: 1500 });
-    await page.waitForLoadState('networkidle').catch(() => {});
+    await page.waitForLoadState("networkidle").catch(() => {});
     await wait(3000);
     await injectCursor(page);
     await wait(2000);
 
     // Explorer les rapports
-    console.log('   → Exploration des rapports...');
+    console.log("   → Exploration des rapports...");
     await smoothHover(page, 'button:has-text("Aujourd")', { waitAfter: 500 });
     await smoothHover(page, 'button:has-text("Semaine")', { waitAfter: 500 });
     await smoothHover(page, 'button:has-text("Mois")', { waitAfter: 500 });
@@ -335,52 +347,57 @@ async function recordDemo() {
     // ==========================================
     // SCÈNE 7: MODE SOMBRE
     // ==========================================
-    console.log('\n📍 Scène 7: Basculement en mode sombre...');
-    await smoothClick(page, 'button[aria-label*="thème"], button:has-text("Basculer le thème")', { waitAfter: 2500 });
+    console.log("\n📍 Scène 7: Basculement en mode sombre...");
+    await smoothClick(page, 'button[aria-label*="thème"], button:has-text("Basculer le thème")', {
+      waitAfter: 2500,
+    });
 
     // Montrer l'interface en mode sombre
-    console.log('   → Interface en mode sombre...');
+    console.log("   → Interface en mode sombre...");
     await wait(2000);
 
     // ==========================================
     // SCÈNE 8: RETOUR À LA CAISSE EN MODE SOMBRE
     // ==========================================
-    console.log('\n📍 Scène 8: Caisse en mode sombre...');
+    console.log("\n📍 Scène 8: Caisse en mode sombre...");
     await smoothClick(page, 'a:has-text("Caisse")', { waitAfter: 1500 });
-    await page.waitForLoadState('networkidle').catch(() => {});
+    await page.waitForLoadState("networkidle").catch(() => {});
     await wait(3000);
     await injectCursor(page);
     await wait(2000);
 
     // Montrer la caisse en mode sombre
-    console.log('   → Visualisation de la caisse en mode sombre...');
+    console.log("   → Visualisation de la caisse en mode sombre...");
     await wait(2000);
 
     // ==========================================
     // SCÈNE 9: RETOUR EN MODE CLAIR
     // ==========================================
-    console.log('\n📍 Scène 9: Retour en mode clair...');
-    await smoothClick(page, 'button[aria-label*="thème"], button:has-text("Basculer le thème")', { waitAfter: 2500 });
+    console.log("\n📍 Scène 9: Retour en mode clair...");
+    await smoothClick(page, 'button[aria-label*="thème"], button:has-text("Basculer le thème")', {
+      waitAfter: 2500,
+    });
     await wait(3000);
 
-    console.log('\n✅ Enregistrement complet terminé!');
-
+    console.log("\n✅ Enregistrement complet terminé!");
   } catch (error) {
-    console.error('\n❌ Erreur:', error.message);
+    console.error("\n❌ Erreur:", error.message);
   }
 
   // Sauvegarde
-  console.log('\n💾 Sauvegarde de la vidéo...');
+  console.log("\n💾 Sauvegarde de la vidéo...");
   await page.close();
   await context.close();
   await browser.close();
 
   await wait(2000);
-  const files = fs.readdirSync(VIDEO_DIR).filter(f => f.endsWith('.webm') && f !== 'demo-pos.webm');
+  const files = fs
+    .readdirSync(VIDEO_DIR)
+    .filter((f) => f.endsWith(".webm") && f !== "demo-pos.webm");
   if (files.length > 0) {
     const latest = files.sort().pop();
     const oldPath = path.join(VIDEO_DIR, latest);
-    const newPath = path.join(VIDEO_DIR, 'demo-pos.webm');
+    const newPath = path.join(VIDEO_DIR, "demo-pos.webm");
     try {
       if (fs.existsSync(newPath)) fs.unlinkSync(newPath);
       fs.renameSync(oldPath, newPath);
@@ -392,7 +409,7 @@ async function recordDemo() {
     }
   }
 
-  console.log('\n🎬 Session terminée!');
+  console.log("\n🎬 Session terminée!");
 }
 
 recordDemo().catch(console.error);

@@ -2,10 +2,12 @@
 
 /**
  * CategoryList - Liste complète des catégories avec actions
+ * Utilise Radix UI AlertDialog pour la confirmation de suppression (accessibilité)
  */
 
-import { useState, useEffect } from "react";
-import { Plus, Search, Filter, AlertCircle } from "lucide-react";
+import { useState, useEffect, useCallback } from "react";
+import { Plus, MagnifyingGlass, Funnel, WarningCircle } from "@phosphor-icons/react";
+import { Box, Flex, Text, Button, AlertDialog, Spinner } from "@radix-ui/themes";
 import { toast } from "sonner";
 import { CategoryCard } from "./category-card";
 import { CategoryForm } from "./category-form";
@@ -60,15 +62,15 @@ export function CategoryList() {
   const [searchQuery, setSearchQuery] = useState("");
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
 
-  // Charger les données
-  const loadData = async () => {
+  // Charger les données (wrapped in useCallback)
+  const loadData = useCallback(async () => {
     try {
       setIsLoading(true);
       const [categoriesData, imprimantesData] = await Promise.all([
         getCategories({ includeInactive: true }),
         getImprimantes(),
       ]);
-      setCategories(categoriesData);
+      setCategories(categoriesData as Categorie[]);
       setImprimantes(imprimantesData);
     } catch (error) {
       console.error("Erreur lors du chargement:", error);
@@ -76,11 +78,11 @@ export function CategoryList() {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, []);
 
   useEffect(() => {
     loadData();
-  }, []);
+  }, [loadData]);
 
   // Filtrer les catégories
   const filteredCategories = categories.filter((cat) => {
@@ -170,29 +172,18 @@ export function CategoryList() {
   };
 
   return (
-    <div>
+    <Box>
       {/* Header avec actions */}
-      <div
-        style={{
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-          marginBottom: 24,
-          flexWrap: "wrap",
-          gap: 16,
-        }}
+      <Flex
+        justify="between"
+        align="center"
+        mb="5"
+        wrap="wrap"
+        gap="4"
       >
         {/* Recherche */}
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            gap: 12,
-            flex: 1,
-            maxWidth: 400,
-          }}
-        >
-          <div
+        <Flex align="center" gap="3" style={{ flex: 1, maxWidth: 400 }}>
+          <Box
             style={{
               display: "flex",
               alignItems: "center",
@@ -203,12 +194,13 @@ export function CategoryList() {
               flex: 1,
             }}
           >
-            <Search size={18} style={{ color: "var(--gray-9)" }} />
+            <MagnifyingGlass size={18} style={{ color: "var(--gray-9)" }} aria-hidden="true" />
             <input
               type="text"
               placeholder="Rechercher une catégorie..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
+              aria-label="Rechercher une catégorie"
               style={{
                 flex: 1,
                 border: "none",
@@ -216,77 +208,44 @@ export function CategoryList() {
                 outline: "none",
                 fontSize: 14,
                 color: "var(--gray-12)",
+                minHeight: 24,
               }}
             />
-          </div>
+          </Box>
 
           {/* Toggle inactifs */}
-          <button
+          <Button
+            variant={showInactive ? "solid" : "outline"}
+            color={showInactive ? "orange" : "gray"}
+            size="2"
             onClick={() => setShowInactive(!showInactive)}
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: 6,
-              padding: "10px 14px",
-              borderRadius: 8,
-              border: showInactive ? "1px solid var(--accent-9)" : "1px solid var(--gray-a6)",
-              backgroundColor: showInactive ? "var(--accent-a3)" : "transparent",
-              cursor: "pointer",
-              fontSize: 14,
-              color: showInactive ? "var(--accent-11)" : "var(--gray-11)",
-            }}
+            style={{ minHeight: 44 }}
           >
-            <Filter size={16} />
+            <Funnel size={16} aria-hidden="true" />
             Inactifs
-          </button>
-        </div>
+          </Button>
+        </Flex>
 
         {/* Bouton ajouter */}
-        <button
+        <Button
+          size="2"
           onClick={() => setShowForm(true)}
-          style={{
-            display: "flex",
-            alignItems: "center",
-            gap: 8,
-            padding: "10px 20px",
-            borderRadius: 8,
-            border: "none",
-            backgroundColor: "var(--accent-9)",
-            color: "white",
-            fontSize: 14,
-            fontWeight: 600,
-            cursor: "pointer",
-          }}
+          style={{ minHeight: 44 }}
         >
-          <Plus size={18} />
+          <Plus size={18} aria-hidden="true" />
           Nouvelle catégorie
-        </button>
-      </div>
+        </Button>
+      </Flex>
 
       {/* Liste des catégories */}
       {isLoading ? (
-        <div
-          style={{
-            display: "flex",
-            justifyContent: "center",
-            alignItems: "center",
-            padding: 48,
-            color: "var(--gray-11)",
-          }}
-        >
-          Chargement...
-        </div>
+        <Flex justify="center" align="center" py="9" role="status" aria-live="polite">
+          <Spinner size="3" />
+          <Text size="2" color="gray" ml="3">Chargement...</Text>
+        </Flex>
       ) : filteredCategories.length === 0 ? (
-        <div
-          style={{
-            display: "flex",
-            flexDirection: "column",
-            alignItems: "center",
-            padding: 48,
-            textAlign: "center",
-          }}
-        >
-          <div
+        <Flex direction="column" align="center" py="9" style={{ textAlign: "center" }}>
+          <Box
             style={{
               width: 64,
               height: 64,
@@ -298,53 +257,23 @@ export function CategoryList() {
               marginBottom: 16,
             }}
           >
-            <AlertCircle size={28} style={{ color: "var(--gray-9)" }} />
-          </div>
-          <h3
-            style={{
-              fontSize: 16,
-              fontWeight: 600,
-              color: "var(--gray-12)",
-              marginBottom: 8,
-            }}
-          >
-            {searchQuery
-              ? "Aucune catégorie trouvée"
-              : "Aucune catégorie"}
-          </h3>
-          <p
-            style={{
-              fontSize: 14,
-              color: "var(--gray-11)",
-              marginBottom: 20,
-            }}
-          >
+            <WarningCircle size={28} style={{ color: "var(--gray-9)" }} aria-hidden="true" />
+          </Box>
+          <Text size="3" weight="bold" mb="2">
+            {searchQuery ? "Aucune catégorie trouvée" : "Aucune catégorie"}
+          </Text>
+          <Text size="2" color="gray" mb="4">
             {searchQuery
               ? "Essayez avec d'autres termes de recherche"
               : "Créez votre première catégorie pour organiser vos produits"}
-          </p>
+          </Text>
           {!searchQuery && (
-            <button
-              onClick={() => setShowForm(true)}
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: 8,
-                padding: "10px 20px",
-                borderRadius: 8,
-                border: "none",
-                backgroundColor: "var(--accent-9)",
-                color: "white",
-                fontSize: 14,
-                fontWeight: 600,
-                cursor: "pointer",
-              }}
-            >
-              <Plus size={18} />
+            <Button size="2" onClick={() => setShowForm(true)} style={{ minHeight: 44 }}>
+              <Plus size={18} aria-hidden="true" />
               Créer une catégorie
-            </button>
+            </Button>
           )}
-        </div>
+        </Flex>
       ) : (
         <div
           style={{
@@ -370,148 +299,88 @@ export function CategoryList() {
 
       {/* Statistiques */}
       {!isLoading && categories.length > 0 && (
-        <div
+        <Flex
+          mt="5"
+          p="4"
+          gap="5"
           style={{
-            marginTop: 24,
-            padding: 16,
             backgroundColor: "var(--gray-a2)",
             borderRadius: 8,
-            display: "flex",
-            gap: 24,
             fontSize: 13,
             color: "var(--gray-11)",
           }}
         >
-          <span>
-            <strong style={{ color: "var(--gray-12)" }}>{categories.length}</strong> catégorie
+          <Text size="2">
+            <Text weight="bold" style={{ color: "var(--gray-12)" }}>{categories.length}</Text> catégorie
             {categories.length > 1 ? "s" : ""} au total
-          </span>
-          <span>
-            <strong style={{ color: "var(--green-11)" }}>
+          </Text>
+          <Text size="2">
+            <Text weight="bold" style={{ color: "var(--green-11)" }}>
               {categories.filter((c) => c.actif).length}
-            </strong>{" "}
+            </Text>{" "}
             active{categories.filter((c) => c.actif).length > 1 ? "s" : ""}
-          </span>
-          <span>
-            <strong style={{ color: "var(--gray-10)" }}>
+          </Text>
+          <Text size="2">
+            <Text weight="bold" style={{ color: "var(--gray-10)" }}>
               {categories.filter((c) => !c.actif).length}
-            </strong>{" "}
+            </Text>{" "}
             inactive{categories.filter((c) => !c.actif).length > 1 ? "s" : ""}
-          </span>
-        </div>
+          </Text>
+        </Flex>
       )}
 
       {/* Modal de création */}
-      {showForm ? <CategoryForm
+      {showForm ? (
+        <CategoryForm
           imprimantes={imprimantes}
           onSubmit={handleCreate}
           onCancel={() => setShowForm(false)}
           isLoading={isSubmitting}
-        /> : null}
+        />
+      ) : null}
 
       {/* Modal d'édition */}
-      {editingCategory ? <CategoryForm
+      {editingCategory ? (
+        <CategoryForm
           initialData={editingCategory}
           imprimantes={imprimantes}
           onSubmit={handleUpdate}
           onCancel={() => setEditingCategory(null)}
           isLoading={isSubmitting}
-        /> : null}
+        />
+      ) : null}
 
-      {/* Modal de confirmation de suppression */}
-      {deleteConfirm ? <div
-          style={{
-            position: "fixed",
-            inset: 0,
-            backgroundColor: "rgba(0, 0, 0, 0.5)",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            zIndex: 100,
-            padding: 16,
-          }}
-          onClick={() => setDeleteConfirm(null)}
-        >
-          <div
-            style={{
-              backgroundColor: "var(--color-panel-solid)",
-              borderRadius: 16,
-              padding: 24,
-              maxWidth: 400,
-              width: "100%",
-            }}
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div
-              style={{
-                width: 48,
-                height: 48,
-                borderRadius: 12,
-                backgroundColor: "var(--red-a3)",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                marginBottom: 16,
-              }}
-            >
-              <AlertCircle size={24} style={{ color: "var(--red-9)" }} />
-            </div>
+      {/* AlertDialog de confirmation de suppression (Radix UI) */}
+      <AlertDialog.Root
+        open={!!deleteConfirm}
+        onOpenChange={(open) => { if (!open) setDeleteConfirm(null); }}
+      >
+        <AlertDialog.Content maxWidth="400px">
+          <AlertDialog.Title>Supprimer cette catégorie ?</AlertDialog.Title>
+          <AlertDialog.Description size="2">
+            Cette action est irréversible. Si la catégorie contient des produits, vous devrez
+            d&apos;abord les déplacer ou les supprimer.
+          </AlertDialog.Description>
 
-            <h3
-              style={{
-                fontSize: 18,
-                fontWeight: 600,
-                color: "var(--gray-12)",
-                marginBottom: 8,
-              }}
-            >
-              Supprimer cette catégorie ?
-            </h3>
-
-            <p
-              style={{
-                fontSize: 14,
-                color: "var(--gray-11)",
-                marginBottom: 24,
-              }}
-            >
-              Cette action est irréversible. Si la catégorie contient des produits, vous devrez d'abord les déplacer ou les supprimer.
-            </p>
-
-            <div style={{ display: "flex", gap: 12, justifyContent: "flex-end" }}>
-              <button
-                onClick={() => setDeleteConfirm(null)}
-                style={{
-                  padding: "10px 20px",
-                  fontSize: 14,
-                  fontWeight: 500,
-                  borderRadius: 8,
-                  border: "1px solid var(--gray-a6)",
-                  backgroundColor: "transparent",
-                  color: "var(--gray-12)",
-                  cursor: "pointer",
-                }}
-              >
+          <Flex gap="3" mt="4" justify="end">
+            <AlertDialog.Cancel>
+              <Button variant="soft" color="gray" size="2" style={{ minHeight: 44 }}>
                 Annuler
-              </button>
-              <button
-                onClick={() => handleDelete(deleteConfirm)}
-                style={{
-                  padding: "10px 20px",
-                  fontSize: 14,
-                  fontWeight: 600,
-                  borderRadius: 8,
-                  border: "none",
-                  backgroundColor: "var(--red-9)",
-                  color: "white",
-                  cursor: "pointer",
-                }}
+              </Button>
+            </AlertDialog.Cancel>
+            <AlertDialog.Action>
+              <Button
+                color="red"
+                size="2"
+                style={{ minHeight: 44 }}
+                onClick={() => { if (deleteConfirm) handleDelete(deleteConfirm); }}
               >
                 Supprimer
-              </button>
-            </div>
-          </div>
-        </div> : null}
-    </div>
+              </Button>
+            </AlertDialog.Action>
+          </Flex>
+        </AlertDialog.Content>
+      </AlertDialog.Root>
+    </Box>
   );
 }

@@ -16,4 +16,5 @@ export { DataSettings } from "./data-settings";
 export { BackupSettings } from "./backup-settings";
 export { InvoiceSettings } from "./invoice-settings";
 export { TicketPreview } from "./ticket-preview";
+export { EcransSettings } from "./ecrans-settings";
 export { ParametresTabs, TabContent } from "./parametres-tabs";

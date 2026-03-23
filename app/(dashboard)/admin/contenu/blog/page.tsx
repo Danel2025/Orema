@@ -25,18 +25,22 @@ import {
 import {
   Plus,
   Newspaper,
-  Search,
+  MagnifyingGlass,
   Eye,
-  EyeOff,
-  Trash2,
-  Edit,
+  EyeSlash,
+  Trash,
+  PencilSimple,
   Star,
-  StarOff,
-  Filter,
-  Calendar,
+  StarHalf,
+  Funnel,
+  CalendarBlank,
   User,
   Tag,
-} from "lucide-react";
+  Article,
+  CheckCircle,
+  PencilLine,
+} from "@phosphor-icons/react";
+import { StatCard } from "@/components/composed";
 import Link from "next/link";
 import { motion } from "motion/react";
 import { toast } from "sonner";
@@ -193,12 +197,11 @@ export default function BlogPage() {
             <Box
               p="3"
               style={{
-                background: "linear-gradient(135deg, var(--violet-9) 0%, var(--purple-9) 100%)",
+                background: "var(--violet-9)",
                 borderRadius: 12,
-                boxShadow: "0 4px 16px var(--violet-a4)",
               }}
             >
-              <Newspaper size={24} style={{ color: "white" }} />
+              <Newspaper size={24} weight="duotone" style={{ color: "white" }} />
             </Box>
             <Box>
               <Heading size="5">Blog</Heading>
@@ -215,18 +218,18 @@ export default function BlogPage() {
               onClick={() => setShowFilters(!showFilters)}
               style={{ cursor: "pointer" }}
             >
-              <Filter size={16} />
+              <Funnel size={16} weight="bold" />
               Filtres
             </Button>
             <Link href="/admin/contenu/blog/nouveau">
               <Button
                 size="3"
                 style={{
-                  background: "linear-gradient(135deg, var(--violet-9) 0%, var(--purple-9) 100%)",
+                  background: "var(--violet-9)",
                   cursor: "pointer",
                 }}
               >
-                <Plus size={18} />
+                <Plus size={18} weight="bold" />
                 Nouvel article
               </Button>
             </Link>
@@ -240,43 +243,36 @@ export default function BlogPage() {
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.3, delay: 0.1 }}
       >
-        <Grid columns="4" gap="4" mb="6">
-          {[
-            { label: "Total", value: stats.total, color: "violet" },
-            { label: "Publiés", value: stats.published, color: "green" },
-            { label: "Brouillons", value: stats.draft, color: "gray" },
-            { label: "En vedette", value: stats.featured, color: "amber" },
-          ].map((stat) => (
-            <Box
-              key={stat.label}
-              p="4"
-              style={{
-                background: "var(--color-background)",
-                borderRadius: 12,
-                border: "1px solid var(--gray-a4)",
-              }}
-            >
-              <Text size="1" color="gray" style={{ display: "block" }}>
-                {stat.label}
-              </Text>
-              {isLoading ? (
-                <Skeleton style={{ width: 40, height: 32, marginTop: 4 }} />
-              ) : (
-                <Text
-                  size="6"
-                  weight="bold"
-                  style={{ color: `var(--${stat.color}-11)` }}
-                >
-                  {stat.value}
-                </Text>
-              )}
-            </Box>
-          ))}
+        <Grid columns={{ initial: "2", md: "4" }} gap="4" mb="6">
+          <StatCard
+            title="Total"
+            value={isLoading ? "..." : stats.total.toString()}
+            icon={Article}
+            color="violet"
+          />
+          <StatCard
+            title="Publiés"
+            value={isLoading ? "..." : stats.published.toString()}
+            icon={CheckCircle}
+            color="green"
+          />
+          <StatCard
+            title="Brouillons"
+            value={isLoading ? "..." : stats.draft.toString()}
+            icon={PencilLine}
+          />
+          <StatCard
+            title="En vedette"
+            value={isLoading ? "..." : stats.featured.toString()}
+            icon={Star}
+            color="amber"
+          />
         </Grid>
       </motion.div>
 
       {/* Filters */}
-      {showFilters ? <motion.div
+      {showFilters ? (
+        <motion.div
           initial={{ opacity: 0, height: 0 }}
           animate={{ opacity: 1, height: "auto" }}
           exit={{ opacity: 0, height: 0 }}
@@ -294,7 +290,7 @@ export default function BlogPage() {
                   onChange={(e) => setSearchQuery(e.target.value)}
                 >
                   <TextField.Slot>
-                    <Search size={14} />
+                    <MagnifyingGlass size={14} weight="bold" />
                   </TextField.Slot>
                 </TextField.Root>
               </Box>
@@ -305,7 +301,7 @@ export default function BlogPage() {
                 </Text>
                 <Select.Root value={statusFilter} onValueChange={setStatusFilter}>
                   <Select.Trigger style={{ width: "100%" }} />
-                  <Select.Content>
+                  <Select.Content position="popper">
                     <Select.Item value="all">Tous</Select.Item>
                     <Select.Item value="PUBLISHED">Publiés</Select.Item>
                     <Select.Item value="DRAFT">Brouillons</Select.Item>
@@ -320,7 +316,7 @@ export default function BlogPage() {
                 </Text>
                 <Select.Root value={categoryFilter} onValueChange={setCategoryFilter}>
                   <Select.Trigger style={{ width: "100%" }} />
-                  <Select.Content>
+                  <Select.Content position="popper">
                     <Select.Item value="all">Toutes</Select.Item>
                     {categories.map((cat) => (
                       <Select.Item key={cat.id} value={cat.id}>
@@ -332,7 +328,8 @@ export default function BlogPage() {
               </Box>
             </Flex>
           </Card>
-        </motion.div> : null}
+        </motion.div>
+      ) : null}
 
       {/* Posts Table */}
       <motion.div
@@ -345,7 +342,7 @@ export default function BlogPage() {
         ) : posts.length === 0 ? (
           <Card size="4">
             <Flex direction="column" align="center" justify="center" py="8">
-              <Newspaper size={48} style={{ color: "var(--gray-8)", marginBottom: 16 }} />
+              <Newspaper size={48} weight="duotone" style={{ color: "var(--gray-8)", marginBottom: 16 }} />
               <Heading size="4" mb="2" color="gray">
                 Aucun article
               </Heading>
@@ -354,7 +351,7 @@ export default function BlogPage() {
               </Text>
               <Link href="/admin/contenu/blog/nouveau">
                 <Button size="2">
-                  <Plus size={16} />
+                  <Plus size={16} weight="bold" />
                   Créer un article
                 </Button>
               </Link>
@@ -376,7 +373,8 @@ export default function BlogPage() {
 
               <Table.Body>
                 {posts.map((post, index) => {
-                  const PostIcon = (LucideIcons as unknown as Record<string, LucideIcon>)[post.icon] || Newspaper;
+                  const PostIcon =
+                    (LucideIcons as unknown as Record<string, LucideIcon>)[post.icon] || Newspaper;
                   const statusColor = contentStatusColors[post.status];
 
                   return (
@@ -402,7 +400,13 @@ export default function BlogPage() {
                               <Text size="2" weight="medium">
                                 {post.title}
                               </Text>
-                              {post.featured ? <Star size={14} style={{ color: "var(--purple-9)", fill: "var(--purple-9)" }} /> : null}
+                              {post.featured ? (
+                                <Star
+                                  size={14}
+                                  weight="fill"
+                                  style={{ color: "var(--purple-9)" }}
+                                />
+                              ) : null}
                             </Flex>
                             <Text size="1" color="gray">
                               /{post.slug}
@@ -413,22 +417,30 @@ export default function BlogPage() {
 
                       <Table.Cell>
                         {post.category ? (
-                          <Badge color={post.category.color as "blue" | "violet" | "green"} variant="soft" size="1">
+                          <Badge
+                            color={post.category.color as "blue" | "violet" | "green"}
+                            variant="soft"
+                            size="1"
+                          >
                             {post.category.name}
                           </Badge>
                         ) : (
-                          <Text size="1" color="gray">-</Text>
+                          <Text size="1" color="gray">
+                            -
+                          </Text>
                         )}
                       </Table.Cell>
 
                       <Table.Cell>
                         {post.author ? (
                           <Flex align="center" gap="2">
-                            <User size={12} style={{ color: "var(--gray-9)" }} />
+                            <User size={12} weight="duotone" style={{ color: "var(--gray-9)" }} />
                             <Text size="1">{post.author.name}</Text>
                           </Flex>
                         ) : (
-                          <Text size="1" color="gray">-</Text>
+                          <Text size="1" color="gray">
+                            -
+                          </Text>
                         )}
                       </Table.Cell>
 
@@ -444,7 +456,7 @@ export default function BlogPage() {
 
                       <Table.Cell>
                         <Flex align="center" gap="1">
-                          <Calendar size={12} style={{ color: "var(--gray-9)" }} />
+                          <CalendarBlank size={12} weight="duotone" style={{ color: "var(--gray-9)" }} />
                           <Text size="1" color="gray">
                             {post.published_at
                               ? new Date(post.published_at).toLocaleDateString("fr-FR")
@@ -457,7 +469,7 @@ export default function BlogPage() {
                         <Flex gap="1" justify="end">
                           <Link href={`/admin/contenu/blog/${post.id}`}>
                             <Button variant="ghost" size="1" style={{ cursor: "pointer" }}>
-                              <Edit size={14} />
+                              <PencilSimple size={14} weight="bold" />
                             </Button>
                           </Link>
 
@@ -468,7 +480,7 @@ export default function BlogPage() {
                             onClick={() => handleToggleFeatured(post.id)}
                             style={{ cursor: "pointer" }}
                           >
-                            {post.featured ? <Star size={14} /> : <StarOff size={14} />}
+                            {post.featured ? <Star size={14} weight="fill" /> : <StarHalf size={14} weight="bold" />}
                           </Button>
 
                           {post.status === "DRAFT" ? (
@@ -479,7 +491,7 @@ export default function BlogPage() {
                               onClick={() => handleStatusChange(post.id, "PUBLISHED")}
                               style={{ cursor: "pointer" }}
                             >
-                              <Eye size={14} />
+                              <Eye size={14} weight="bold" />
                             </Button>
                           ) : post.status === "PUBLISHED" ? (
                             <Button
@@ -489,7 +501,7 @@ export default function BlogPage() {
                               onClick={() => handleStatusChange(post.id, "DRAFT")}
                               style={{ cursor: "pointer" }}
                             >
-                              <EyeOff size={14} />
+                              <EyeSlash size={14} weight="bold" />
                             </Button>
                           ) : null}
 
@@ -500,7 +512,7 @@ export default function BlogPage() {
                             onClick={() => setDeleteId(post.id)}
                             style={{ cursor: "pointer" }}
                           >
-                            <Trash2 size={14} />
+                            <Trash size={14} weight="bold" />
                           </Button>
                         </Flex>
                       </Table.Cell>
@@ -520,8 +532,10 @@ export default function BlogPage() {
           {categories.length > 0 && (
             <Card size="2">
               <Flex align="center" gap="2" mb="3">
-                <Tag size={14} style={{ color: "var(--violet-9)" }} />
-                <Text size="2" weight="medium">Catégories</Text>
+                <Tag size={14} weight="duotone" style={{ color: "var(--violet-9)" }} />
+                <Text size="2" weight="medium">
+                  Catégories
+                </Text>
                 <Badge variant="soft" size="1" color="gray" ml="auto">
                   {categories.length}
                 </Badge>
@@ -553,8 +567,10 @@ export default function BlogPage() {
           {authors.length > 0 && (
             <Card size="2">
               <Flex align="center" gap="2" mb="3">
-                <User size={14} style={{ color: "var(--violet-9)" }} />
-                <Text size="2" weight="medium">Auteurs</Text>
+                <User size={14} weight="duotone" style={{ color: "var(--violet-9)" }} />
+                <Text size="2" weight="medium">
+                  Auteurs
+                </Text>
                 <Badge variant="soft" size="1" color="gray" ml="auto">
                   {authors.length}
                 </Badge>
@@ -605,16 +621,17 @@ export default function BlogPage() {
                 Annuler
               </Button>
             </AlertDialog.Cancel>
-            <AlertDialog.Action>
-              <Button
-                variant="solid"
-                color="red"
-                onClick={handleDelete}
-                disabled={isDeleting}
-              >
-                {isDeleting ? "Suppression..." : "Supprimer"}
-              </Button>
-            </AlertDialog.Action>
+            <Button
+              variant="solid"
+              color="red"
+              disabled={isDeleting}
+              onClick={async (e) => {
+                e.preventDefault();
+                await handleDelete();
+              }}
+            >
+              {isDeleting ? "Suppression..." : "Supprimer"}
+            </Button>
           </Flex>
         </AlertDialog.Content>
       </AlertDialog.Root>

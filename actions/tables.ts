@@ -13,6 +13,7 @@ import {
   tableSchema,
   tablePositionSchema,
   tableStatutSchema,
+  tableTransferSchema,
   type TableFormData,
   type TablePositionData,
   type TableStatutData,
@@ -25,10 +26,14 @@ import {
 export async function getTables(options?: { includeInactive?: boolean; zoneId?: string }) {
   const user = await getCurrentUser();
   if (!user || !user.etablissementId) {
-    throw new Error("Etablissement non trouvé. Veuillez vous connecter.");
+    throw new Error("Établissement non trouvé. Veuillez vous connecter.");
   }
   const etablissementId = user.etablissementId;
-  const supabase = await createAuthenticatedClient({ userId: user.userId, etablissementId, role: user.role });
+  const supabase = await createAuthenticatedClient({
+    userId: user.userId,
+    etablissementId,
+    role: user.role,
+  });
 
   // Récupérer les tables
   const tables = await db.getTables(supabase, etablissementId, {
@@ -50,12 +55,10 @@ export async function getTables(options?: { includeInactive?: boolean; zoneId?: 
 
   // Récupérer le nombre de lignes pour toutes les ventes en une seule requête
   const venteIds = (allVentes ?? []).map((v) => v.id);
-  const { data: lignesCounts } = venteIds.length > 0
-    ? await supabase
-        .from("lignes_vente")
-        .select("vente_id")
-        .in("vente_id", venteIds)
-    : { data: [] };
+  const { data: lignesCounts } =
+    venteIds.length > 0
+      ? await supabase.from("lignes_vente").select("vente_id").in("vente_id", venteIds)
+      : { data: [] };
 
   // Créer un map pour compter les lignes par vente
   const lignesCountMap = new Map<string, number>();
@@ -87,13 +90,14 @@ export async function getTables(options?: { includeInactive?: boolean; zoneId?: 
     return {
       ...table,
       // Map snake_case to camelCase for compatibility
+      numero: table.numero as string,
       positionX: table.position_x,
       positionY: table.position_y,
       zoneId: table.zone_id,
       etablissementId: table.etablissement_id,
       createdAt: table.created_at,
       updatedAt: table.updated_at,
-      zone: table.zone_id ? zonesMap.get(table.zone_id) ?? null : null,
+      zone: table.zone_id ? (zonesMap.get(table.zone_id) ?? null) : null,
       ventes: ventesWithCount,
     };
   });
@@ -113,9 +117,13 @@ export async function getTables(options?: { includeInactive?: boolean; zoneId?: 
 export async function getTableById(id: string) {
   const user = await getCurrentUser();
   if (!user || !user.etablissementId) {
-    throw new Error("Etablissement non trouvé. Veuillez vous connecter.");
+    throw new Error("Établissement non trouvé. Veuillez vous connecter.");
   }
-  const supabase = await createAuthenticatedClient({ userId: user.userId, etablissementId: user.etablissementId, role: user.role });
+  const supabase = await createAuthenticatedClient({
+    userId: user.userId,
+    etablissementId: user.etablissementId,
+    role: user.role,
+  });
 
   const table = await db.getTableById(supabase, id);
 
@@ -189,10 +197,14 @@ export async function getTableById(id: string) {
 export async function getZones() {
   const user = await getCurrentUser();
   if (!user || !user.etablissementId) {
-    throw new Error("Etablissement non trouvé. Veuillez vous connecter.");
+    throw new Error("Établissement non trouvé. Veuillez vous connecter.");
   }
   const etablissementId = user.etablissementId;
-  const supabase = await createAuthenticatedClient({ userId: user.userId, etablissementId, role: user.role });
+  const supabase = await createAuthenticatedClient({
+    userId: user.userId,
+    etablissementId,
+    role: user.role,
+  });
 
   const zones = await db.getZones(supabase, etablissementId, { active: true });
 
@@ -215,11 +227,15 @@ export async function createZone(data: {
   if (!user || !user.etablissementId) {
     return {
       success: false,
-      error: "Etablissement non trouvé. Veuillez vous connecter.",
+      error: "Établissement non trouvé. Veuillez vous connecter.",
     };
   }
   const etablissementId = user.etablissementId;
-  const supabase = await createAuthenticatedClient({ userId: user.userId, etablissementId, role: user.role });
+  const supabase = await createAuthenticatedClient({
+    userId: user.userId,
+    etablissementId,
+    role: user.role,
+  });
 
   // Vérifier l'unicité du nom
   const exists = await db.zoneNomExists(supabase, etablissementId, data.nom);
@@ -263,10 +279,22 @@ export async function createTable(data: TableFormData) {
   const user = await getCurrentUser();
   if (!user || !user.etablissementId) return { success: false, error: "Vous devez être connecté" };
   const etablissementId = user.etablissementId;
-  const supabase = await createAuthenticatedClient({ userId: user.userId, etablissementId, role: user.role });
+  const supabase = await createAuthenticatedClient({
+    userId: user.userId,
+    etablissementId,
+    role: user.role,
+  });
 
   // Validation
-  const validatedData = tableSchema.parse(data);
+  const validated = tableSchema.safeParse(data);
+  if (!validated.success) {
+    return {
+      success: false,
+      error: "Données invalides",
+      fieldErrors: validated.error.flatten().fieldErrors,
+    };
+  }
+  const validatedData = validated.data;
 
   // Vérifier l'unicité du numéro
   const exists = await db.tableNumeroExists(supabase, etablissementId, validatedData.numero);
@@ -304,27 +332,35 @@ export async function createTable(data: TableFormData) {
   const largeur = validatedData.largeur ?? (validatedData.forme === "RECTANGULAIRE" ? 120 : 80);
   const hauteur = validatedData.hauteur ?? 80;
 
-  // Créer la table
-  const table = await db.createTable(supabase, {
-    numero: validatedData.numero,
-    capacite: validatedData.capacite,
-    forme: validatedData.forme,
-    zone_id: validatedData.zoneId || null,
-    position_x: positionX,
-    position_y: positionY,
-    largeur,
-    hauteur,
-    active: validatedData.active,
-    statut: "LIBRE" as StatutTable,
-    etablissement_id: etablissementId,
-  });
+  try {
+    // Créer la table
+    const table = await db.createTable(supabase, {
+      numero: validatedData.numero,
+      capacite: validatedData.capacite,
+      forme: validatedData.forme,
+      zone_id: validatedData.zoneId || null,
+      position_x: positionX,
+      position_y: positionY,
+      largeur,
+      hauteur,
+      active: validatedData.active,
+      statut: "LIBRE" as StatutTable,
+      etablissement_id: etablissementId,
+    });
 
-  revalidatePath("/salle");
+    revalidatePath("/salle");
 
-  return {
-    success: true,
-    data: table,
-  };
+    return {
+      success: true,
+      data: table,
+    };
+  } catch (error) {
+    console.error("[createTable] Error:", error);
+    return {
+      success: false,
+      error: "Échec de la création de la table. Veuillez réessayer.",
+    };
+  }
 }
 
 /**
@@ -334,10 +370,22 @@ export async function updateTable(id: string, data: TableFormData) {
   const user = await getCurrentUser();
   if (!user || !user.etablissementId) return { success: false, error: "Vous devez être connecté" };
   const etablissementId = user.etablissementId;
-  const supabase = await createAuthenticatedClient({ userId: user.userId, etablissementId, role: user.role });
+  const supabase = await createAuthenticatedClient({
+    userId: user.userId,
+    etablissementId,
+    role: user.role,
+  });
 
   // Validation
-  const validatedData = tableSchema.parse(data);
+  const validated = tableSchema.safeParse(data);
+  if (!validated.success) {
+    return {
+      success: false,
+      error: "Données invalides",
+      fieldErrors: validated.error.flatten().fieldErrors,
+    };
+  }
+  const validatedData = validated.data;
 
   // Vérifier que la table existe (RLS filtre par établissement)
   const existing = await db.getTableById(supabase, id);
@@ -350,12 +398,7 @@ export async function updateTable(id: string, data: TableFormData) {
   }
 
   // Vérifier l'unicité du numéro (sauf pour la table actuelle)
-  const duplicate = await db.tableNumeroExists(
-    supabase,
-    etablissementId,
-    validatedData.numero,
-    id
-  );
+  const duplicate = await db.tableNumeroExists(supabase, etablissementId, validatedData.numero, id);
 
   if (duplicate) {
     return {
@@ -364,25 +407,33 @@ export async function updateTable(id: string, data: TableFormData) {
     };
   }
 
-  // Mettre à jour
-  const table = await db.updateTable(supabase, id, {
-    numero: validatedData.numero,
-    capacite: validatedData.capacite,
-    forme: validatedData.forme,
-    zone_id: validatedData.zoneId || null,
-    position_x: validatedData.positionX,
-    position_y: validatedData.positionY,
-    largeur: validatedData.largeur,
-    hauteur: validatedData.hauteur,
-    active: validatedData.active,
-  });
+  try {
+    // Mettre à jour
+    const table = await db.updateTable(supabase, id, {
+      numero: validatedData.numero,
+      capacite: validatedData.capacite,
+      forme: validatedData.forme,
+      zone_id: validatedData.zoneId || null,
+      position_x: validatedData.positionX,
+      position_y: validatedData.positionY,
+      largeur: validatedData.largeur,
+      hauteur: validatedData.hauteur,
+      active: validatedData.active,
+    });
 
-  revalidatePath("/salle");
+    revalidatePath("/salle");
 
-  return {
-    success: true,
-    data: table,
-  };
+    return {
+      success: true,
+      data: table,
+    };
+  } catch (error) {
+    console.error("[updateTable] Error:", error);
+    return {
+      success: false,
+      error: "Échec de la mise à jour de la table. Veuillez réessayer.",
+    };
+  }
 }
 
 /**
@@ -391,7 +442,11 @@ export async function updateTable(id: string, data: TableFormData) {
 export async function deleteTable(id: string) {
   const user = await getCurrentUser();
   if (!user || !user.etablissementId) return { success: false, error: "Vous devez être connecté" };
-  const supabase = await createAuthenticatedClient({ userId: user.userId, etablissementId: user.etablissementId, role: user.role });
+  const supabase = await createAuthenticatedClient({
+    userId: user.userId,
+    etablissementId: user.etablissementId,
+    role: user.role,
+  });
 
   // Vérifier que la table existe (RLS filtre par établissement)
   const table = await db.getTableById(supabase, id);
@@ -433,10 +488,21 @@ export async function deleteTable(id: string) {
 export async function updateTablePosition(data: TablePositionData) {
   const user = await getCurrentUser();
   if (!user || !user.etablissementId) return { success: false, error: "Vous devez être connecté" };
-  const supabase = await createAuthenticatedClient({ userId: user.userId, etablissementId: user.etablissementId, role: user.role });
+  const supabase = await createAuthenticatedClient({
+    userId: user.userId,
+    etablissementId: user.etablissementId,
+    role: user.role,
+  });
 
   // Validation
-  const validatedData = tablePositionSchema.parse(data);
+  const validated = tablePositionSchema.safeParse(data);
+  if (!validated.success) {
+    return {
+      success: false,
+      error: "Données de position invalides",
+    };
+  }
+  const validatedData = validated.data;
 
   // Vérifier que la table existe (RLS filtre par établissement)
   const table = await db.getTableById(supabase, validatedData.id);
@@ -467,7 +533,11 @@ export async function updateTablePosition(data: TablePositionData) {
 export async function updateTablesPositions(positions: TablePositionData[]) {
   const user = await getCurrentUser();
   if (!user || !user.etablissementId) return { success: false, error: "Vous devez être connecté" };
-  const supabase = await createAuthenticatedClient({ userId: user.userId, etablissementId: user.etablissementId, role: user.role });
+  const supabase = await createAuthenticatedClient({
+    userId: user.userId,
+    etablissementId: user.etablissementId,
+    role: user.role,
+  });
 
   // Préparer les positions pour le batch update
   const positionsData = positions.map((pos) => ({
@@ -488,15 +558,38 @@ export async function updateTablesPositions(positions: TablePositionData[]) {
 }
 
 /**
+ * Transitions de statut valides pour les tables.
+ * Chaque clé est un statut source, la valeur est la liste des statuts cibles autorisés.
+ */
+const VALID_STATUS_TRANSITIONS: Record<StatutTableType, StatutTableType[]> = {
+  LIBRE: ["OCCUPEE", "EN_PREPARATION"],
+  OCCUPEE: ["EN_PREPARATION", "ADDITION", "A_NETTOYER", "LIBRE"],
+  EN_PREPARATION: ["OCCUPEE", "ADDITION", "A_NETTOYER"],
+  ADDITION: ["A_NETTOYER", "LIBRE", "OCCUPEE"],
+  A_NETTOYER: ["LIBRE"],
+};
+
+/**
  * Met à jour le statut d'une table
  */
 export async function updateTableStatut(data: TableStatutData) {
   const user = await getCurrentUser();
   if (!user || !user.etablissementId) return { success: false, error: "Vous devez être connecté" };
-  const supabase = await createAuthenticatedClient({ userId: user.userId, etablissementId: user.etablissementId, role: user.role });
+  const supabase = await createAuthenticatedClient({
+    userId: user.userId,
+    etablissementId: user.etablissementId,
+    role: user.role,
+  });
 
   // Validation
-  const validatedData = tableStatutSchema.parse(data);
+  const validated = tableStatutSchema.safeParse(data);
+  if (!validated.success) {
+    return {
+      success: false,
+      error: "Données de statut invalides",
+    };
+  }
+  const validatedData = validated.data;
 
   // Vérifier que la table existe (RLS filtre par établissement)
   const table = await db.getTableById(supabase, validatedData.id);
@@ -505,6 +598,18 @@ export async function updateTableStatut(data: TableStatutData) {
     return {
       success: false,
       error: "Table non trouvée",
+    };
+  }
+
+  // Valider la transition de statut
+  const currentStatut = table.statut as StatutTableType;
+  const newStatut = validatedData.statut as StatutTableType;
+  const allowedTransitions = VALID_STATUS_TRANSITIONS[currentStatut];
+
+  if (!allowedTransitions || !allowedTransitions.includes(newStatut)) {
+    return {
+      success: false,
+      error: `Transition de statut invalide : ${currentStatut} vers ${newStatut}`,
     };
   }
 
@@ -536,10 +641,14 @@ export async function libererTable(id: string) {
 export async function getTablesStats() {
   const user = await getCurrentUser();
   if (!user || !user.etablissementId) {
-    throw new Error("Etablissement non trouvé. Veuillez vous connecter.");
+    throw new Error("Établissement non trouvé. Veuillez vous connecter.");
   }
   const etablissementId = user.etablissementId;
-  const supabase = await createAuthenticatedClient({ userId: user.userId, etablissementId, role: user.role });
+  const supabase = await createAuthenticatedClient({
+    userId: user.userId,
+    etablissementId,
+    role: user.role,
+  });
 
   // Récupérer toutes les tables actives
   const tables = await db.getTables(supabase, etablissementId, { active: true });
@@ -570,12 +679,27 @@ export async function transferTable(data: {
 }) {
   const user = await getCurrentUser();
   if (!user || !user.etablissementId) return { success: false, error: "Vous devez être connecté" };
-  const supabase = await createAuthenticatedClient({ userId: user.userId, etablissementId: user.etablissementId, role: user.role });
+
+  // Validation des données d'entrée
+  const validated = tableTransferSchema.safeParse(data);
+  if (!validated.success) {
+    return {
+      success: false,
+      error: validated.error.issues[0]?.message ?? "Données de transfert invalides",
+    };
+  }
+  const validatedData = validated.data;
+
+  const supabase = await createAuthenticatedClient({
+    userId: user.userId,
+    etablissementId: user.etablissementId,
+    role: user.role,
+  });
 
   // Vérifier que les deux tables existent (RLS filtre par établissement)
   const [fromTable, toTable] = await Promise.all([
-    db.getTableById(supabase, data.fromTableId),
-    db.getTableById(supabase, data.toTableId),
+    db.getTableById(supabase, validatedData.fromTableId),
+    db.getTableById(supabase, validatedData.toTableId),
   ]);
 
   if (!fromTable) {
@@ -596,7 +720,7 @@ export async function transferTable(data: {
   const { data: ventesSource } = await supabase
     .from("ventes")
     .select("*")
-    .eq("table_id", data.fromTableId)
+    .eq("table_id", validatedData.fromTableId)
     .eq("statut", "EN_COURS")
     .limit(1);
 
@@ -613,7 +737,7 @@ export async function transferTable(data: {
   const { data: ventesDestination } = await supabase
     .from("ventes")
     .select("id")
-    .eq("table_id", data.toTableId)
+    .eq("table_id", validatedData.toTableId)
     .eq("statut", "EN_COURS")
     .limit(1);
 
@@ -628,20 +752,20 @@ export async function transferTable(data: {
   }
 
   // Déterminer le statut de la table source après transfert
-  const newSourceStatus = data.markSourceAsClean ? "A_NETTOYER" : "LIBRE";
+  const newSourceStatus = validatedData.markSourceAsClean ? "A_NETTOYER" : "LIBRE";
 
   // Effectuer le transfert (opérations séquentielles)
   // 1. Transférer la vente vers la nouvelle table
   await supabase
     .from("ventes")
-    .update({ table_id: data.toTableId, updated_at: new Date().toISOString() })
+    .update({ table_id: validatedData.toTableId, updated_at: new Date().toISOString() })
     .eq("id", venteEnCours.id);
 
   // 2. Mettre à jour le statut de l'ancienne table
-  await db.updateTableStatut(supabase, data.fromTableId, newSourceStatus as StatutTable);
+  await db.updateTableStatut(supabase, validatedData.fromTableId, newSourceStatus as StatutTable);
 
   // 3. Occuper la nouvelle table avec le même statut que l'ancienne
-  await db.updateTableStatut(supabase, data.toTableId, fromTable.statut);
+  await db.updateTableStatut(supabase, validatedData.toTableId, fromTable.statut);
 
   revalidatePath("/salle");
   revalidatePath("/caisse");
@@ -666,7 +790,11 @@ export async function mergeTableOrders(data: {
   const user = await getCurrentUser();
   if (!user || !user.etablissementId) return { success: false, error: "Vous devez être connecté" };
   const etablissementId = user.etablissementId;
-  const supabase = await createAuthenticatedClient({ userId: user.userId, etablissementId, role: user.role });
+  const supabase = await createAuthenticatedClient({
+    userId: user.userId,
+    etablissementId,
+    role: user.role,
+  });
 
   // Récupérer les deux ventes
   const [sourceVenteResult, targetVenteResult, sourceTableResult] = await Promise.all([
@@ -792,7 +920,11 @@ export async function mergeTableOrders(data: {
 export async function getTableVenteDetails(tableId: string) {
   const user = await getCurrentUser();
   if (!user || !user.etablissementId) return null;
-  const supabase = await createAuthenticatedClient({ userId: user.userId, etablissementId: user.etablissementId, role: user.role });
+  const supabase = await createAuthenticatedClient({
+    userId: user.userId,
+    etablissementId: user.etablissementId,
+    role: user.role,
+  });
 
   const table = await db.getTableById(supabase, tableId);
 
@@ -890,10 +1022,14 @@ export async function getTableVenteDetails(tableId: string) {
 export async function getTablesForTransfer(excludeTableId?: string) {
   const user = await getCurrentUser();
   if (!user || !user.etablissementId) {
-    throw new Error("Etablissement non trouvé. Veuillez vous connecter.");
+    throw new Error("Établissement non trouvé. Veuillez vous connecter.");
   }
   const etablissementId = user.etablissementId;
-  const supabase = await createAuthenticatedClient({ userId: user.userId, etablissementId, role: user.role });
+  const supabase = await createAuthenticatedClient({
+    userId: user.userId,
+    etablissementId,
+    role: user.role,
+  });
 
   // Récupérer les tables actives
   let tables = await db.getTables(supabase, etablissementId, { active: true });
@@ -917,12 +1053,10 @@ export async function getTablesForTransfer(excludeTableId?: string) {
 
   // Récupérer le nombre de lignes pour toutes les ventes en une seule requête
   const venteIds = (allVentes ?? []).map((v) => v.id);
-  const { data: lignesCounts } = venteIds.length > 0
-    ? await supabase
-        .from("lignes_vente")
-        .select("vente_id")
-        .in("vente_id", venteIds)
-    : { data: [] };
+  const { data: lignesCounts } =
+    venteIds.length > 0
+      ? await supabase.from("lignes_vente").select("vente_id").in("vente_id", venteIds)
+      : { data: [] };
 
   // Créer un map pour compter les lignes par vente
   const lignesCountMap = new Map<string, number>();
@@ -953,11 +1087,12 @@ export async function getTablesForTransfer(excludeTableId?: string) {
 
     return {
       ...table,
+      numero: table.numero as string,
       positionX: table.position_x,
       positionY: table.position_y,
       zoneId: table.zone_id,
       etablissementId: table.etablissement_id,
-      zone: table.zone_id ? zonesMap.get(table.zone_id) ?? null : null,
+      zone: table.zone_id ? (zonesMap.get(table.zone_id) ?? null) : null,
       ventes: ventesWithCount,
     };
   });
@@ -989,7 +1124,11 @@ export async function updateZone(
   const user = await getCurrentUser();
   if (!user || !user.etablissementId) return { success: false, error: "Vous devez être connecté" };
   const etablissementId = user.etablissementId;
-  const supabase = await createAuthenticatedClient({ userId: user.userId, etablissementId, role: user.role });
+  const supabase = await createAuthenticatedClient({
+    userId: user.userId,
+    etablissementId,
+    role: user.role,
+  });
 
   // Vérifier que la zone existe (RLS filtre par établissement)
   const existing = await db.getZoneById(supabase, id);
@@ -1038,7 +1177,11 @@ export async function deleteZone(id: string) {
   const user = await getCurrentUser();
   if (!user || !user.etablissementId) return { success: false, error: "Vous devez être connecté" };
   const etablissementId = user.etablissementId;
-  const supabase = await createAuthenticatedClient({ userId: user.userId, etablissementId, role: user.role });
+  const supabase = await createAuthenticatedClient({
+    userId: user.userId,
+    etablissementId,
+    role: user.role,
+  });
 
   // Vérifier que la zone existe (RLS filtre par établissement)
   const zone = await db.getZoneById(supabase, id);
@@ -1076,7 +1219,11 @@ export async function reorderZones(zoneIds: string[]) {
   const user = await getCurrentUser();
   if (!user || !user.etablissementId) return { success: false, error: "Vous devez être connecté" };
   const etablissementId = user.etablissementId;
-  const supabase = await createAuthenticatedClient({ userId: user.userId, etablissementId, role: user.role });
+  const supabase = await createAuthenticatedClient({
+    userId: user.userId,
+    etablissementId,
+    role: user.role,
+  });
 
   // Vérifier que toutes les zones appartiennent à l'établissement
   const zones = await db.getZones(supabase, etablissementId);
@@ -1101,10 +1248,14 @@ export async function reorderZones(zoneIds: string[]) {
 export async function getZonesWithTableCount() {
   const user = await getCurrentUser();
   if (!user || !user.etablissementId) {
-    throw new Error("Etablissement non trouvé. Veuillez vous connecter.");
+    throw new Error("Établissement non trouvé. Veuillez vous connecter.");
   }
   const etablissementId = user.etablissementId;
-  const supabase = await createAuthenticatedClient({ userId: user.userId, etablissementId, role: user.role });
+  const supabase = await createAuthenticatedClient({
+    userId: user.userId,
+    etablissementId,
+    role: user.role,
+  });
 
   const zones = await db.getZonesWithTableCount(supabase, etablissementId, { active: true });
 
@@ -1126,7 +1277,11 @@ export async function updateZonesPositions(
   const user = await getCurrentUser();
   if (!user || !user.etablissementId) return { success: false, error: "Vous devez être connecté" };
   const etablissementId = user.etablissementId;
-  const supabase = await createAuthenticatedClient({ userId: user.userId, etablissementId, role: user.role });
+  const supabase = await createAuthenticatedClient({
+    userId: user.userId,
+    etablissementId,
+    role: user.role,
+  });
 
   // Vérifier que toutes les zones appartiennent à l'établissement
   const zones = await db.getZones(supabase, etablissementId);

@@ -136,9 +136,7 @@ export function getProductsExampleCSV(): string {
     },
   ];
 
-  const rows = examples.map((ex) =>
-    headers.map((h) => ex[h as keyof typeof ex] || "").join(";")
-  );
+  const rows = examples.map((ex) => headers.map((h) => ex[h as keyof typeof ex] || "").join(";"));
 
   return BOM + headers.join(";") + "\n" + rows.join("\n");
 }

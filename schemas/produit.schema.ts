@@ -35,12 +35,10 @@ const optionalNonNegativeInt = z
 /**
  * Helper pour les chaînes optionnelles
  */
-const optionalString = z
-  .union([z.string(), z.null(), z.undefined()])
-  .transform((val) => {
-    if (val === null || val === undefined || val === "") return undefined;
-    return val;
-  });
+const optionalString = z.union([z.string(), z.null(), z.undefined()]).transform((val) => {
+  if (val === null || val === undefined || val === "") return undefined;
+  return val;
+});
 
 /**
  * Schema Zod pour la création/édition d'un produit
@@ -103,6 +101,21 @@ export const produitFilterSchema = z.object({
 export type ProduitFilterData = z.infer<typeof produitFilterSchema>;
 
 /**
+ * Helper pour parser les booléens depuis un CSV
+ * Accepte: boolean, "oui"/"non", "true"/"false", "1"/"0", "vrai"/"faux"
+ */
+const csvBoolean = z.union([z.boolean(), z.string()]).transform((val) => {
+  if (typeof val === "boolean") return val;
+  const lower = val.toLowerCase().trim();
+  const trueValues = ["oui", "true", "1", "vrai", "yes"];
+  const falseValues = ["non", "false", "0", "faux", "no"];
+  if (trueValues.includes(lower)) return true;
+  if (falseValues.includes(lower)) return false;
+  // Valeur non reconnue : défaut à true (comportement sûr pour disponibilité)
+  return true;
+});
+
+/**
  * Schema pour l'import CSV de produits
  */
 export const produitCsvSchema = z.object({
@@ -122,20 +135,13 @@ export const produitCsvSchema = z.object({
 
   prixAchat: z.coerce.number().positive().int().optional().nullable(),
 
-  tauxTva: z.coerce
-    .number()
-    .refine((val) => [0, 10, 18].includes(val), {
-      message: "Le taux TVA doit être 0, 10 ou 18",
-    }),
+  tauxTva: z.coerce.number().refine((val) => [0, 10, 18].includes(val), {
+    message: "Le taux TVA doit être 0, 10 ou 18",
+  }),
 
   categorie: z.string().min(1, "La catégorie est requise"),
 
-  gererStock: z
-    .union([z.boolean(), z.string()])
-    .transform((val) => {
-      if (typeof val === "boolean") return val;
-      return val.toLowerCase() === "oui" || val.toLowerCase() === "true" || val === "1";
-    }),
+  gererStock: csvBoolean,
 
   stockActuel: z.coerce.number().int().nonnegative().optional().nullable(),
   stockMin: z.coerce.number().int().nonnegative().optional().nullable(),
@@ -143,41 +149,10 @@ export const produitCsvSchema = z.object({
 
   unite: z.string().optional().nullable(),
 
-  disponibleDirect: z
-    .union([z.boolean(), z.string()])
-    .transform((val) => {
-      if (typeof val === "boolean") return val;
-      return val.toLowerCase() === "oui" || val.toLowerCase() === "true" || val === "1";
-    })
-    .optional()
-    .default(true),
-
-  disponibleTable: z
-    .union([z.boolean(), z.string()])
-    .transform((val) => {
-      if (typeof val === "boolean") return val;
-      return val.toLowerCase() === "oui" || val.toLowerCase() === "true" || val === "1";
-    })
-    .optional()
-    .default(true),
-
-  disponibleLivraison: z
-    .union([z.boolean(), z.string()])
-    .transform((val) => {
-      if (typeof val === "boolean") return val;
-      return val.toLowerCase() === "oui" || val.toLowerCase() === "true" || val === "1";
-    })
-    .optional()
-    .default(true),
-
-  disponibleEmporter: z
-    .union([z.boolean(), z.string()])
-    .transform((val) => {
-      if (typeof val === "boolean") return val;
-      return val.toLowerCase() === "oui" || val.toLowerCase() === "true" || val === "1";
-    })
-    .optional()
-    .default(true),
+  disponibleDirect: csvBoolean.optional().default(true),
+  disponibleTable: csvBoolean.optional().default(true),
+  disponibleLivraison: csvBoolean.optional().default(true),
+  disponibleEmporter: csvBoolean.optional().default(true),
 });
 
 export type ProduitCsvData = z.infer<typeof produitCsvSchema>;

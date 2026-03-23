@@ -6,29 +6,20 @@
  */
 
 import { useEffect, useState } from "react";
+import { Box, Flex, Grid, Heading, Text, Skeleton } from "@radix-ui/themes";
 import {
-  Box,
-  Flex,
-  Grid,
-  Heading,
-  Text,
-  Badge,
-  Skeleton,
-} from "@radix-ui/themes";
-import {
-  BookOpen,
+  BookOpenText,
   FileText,
   Newspaper,
   Users,
   Tag,
-  TrendingUp,
+  TrendUp,
   Eye,
-  EyeOff,
-  Archive,
+  EyeSlash,
   Star,
   ArrowRight,
-  Sparkles,
-} from "lucide-react";
+} from "@phosphor-icons/react";
+import Image from "next/image";
 import Link from "next/link";
 import { motion } from "motion/react";
 import { getDocStats } from "@/actions/admin/documentation";
@@ -54,10 +45,7 @@ export default function AdminPage() {
   useEffect(() => {
     async function loadStats() {
       try {
-        const [docStats, blogStats] = await Promise.all([
-          getDocStats(),
-          getBlogStats(),
-        ]);
+        const [docStats, blogStats] = await Promise.all([getDocStats(), getBlogStats()]);
         setStats({
           doc: docStats,
           blog: blogStats,
@@ -75,22 +63,19 @@ export default function AdminPage() {
     {
       href: "/admin/contenu/documentation/nouveau",
       label: "Nouvelle catégorie doc",
-      icon: BookOpen,
-      color: "blue",
+      icon: BookOpenText,
     },
     {
       href: "/admin/contenu/blog/nouveau",
       label: "Nouvel article blog",
       icon: Newspaper,
-      color: "violet",
     },
   ];
 
   const statCards = [
     {
       title: "Documentation",
-      icon: BookOpen,
-      color: "blue",
+      icon: BookOpenText,
       href: "/admin/contenu/documentation",
       stats: [
         {
@@ -107,20 +92,19 @@ export default function AdminPage() {
           label: "Publiés",
           value: stats?.doc.articles.published || 0,
           icon: Eye,
-          color: "green",
+          accent: true,
         },
         {
           label: "Brouillons",
           value: stats?.doc.articles.draft || 0,
-          icon: EyeOff,
-          color: "gray",
+          icon: EyeSlash,
+          muted: true,
         },
       ],
     },
     {
       title: "Blog",
       icon: Newspaper,
-      color: "violet",
       href: "/admin/contenu/blog",
       stats: [
         {
@@ -132,19 +116,19 @@ export default function AdminPage() {
           label: "Publiés",
           value: stats?.blog.posts.published || 0,
           icon: Eye,
-          color: "green",
+          accent: true,
         },
         {
           label: "Mis en avant",
           value: stats?.blog.posts.featured || 0,
           icon: Star,
-          color: "amber",
+          accent: true,
         },
         {
           label: "Brouillons",
           value: stats?.blog.posts.draft || 0,
-          icon: EyeOff,
-          color: "gray",
+          icon: EyeSlash,
+          muted: true,
         },
       ],
     },
@@ -155,19 +139,16 @@ export default function AdminPage() {
       label: "Catégories",
       value: stats?.blog.categories || 0,
       icon: FileText,
-      color: "purple",
     },
     {
       label: "Auteurs",
       value: stats?.blog.authors || 0,
       icon: Users,
-      color: "cyan",
     },
     {
       label: "Tags",
       value: stats?.blog.tags || 0,
       icon: Tag,
-      color: "pink",
     },
   ];
 
@@ -181,17 +162,26 @@ export default function AdminPage() {
       >
         <Flex align="center" gap="3" mb="2">
           <Box
-            p="3"
             style={{
-              background: "linear-gradient(135deg, var(--violet-9) 0%, var(--purple-9) 100%)",
               borderRadius: 12,
-              boxShadow: "0 4px 16px var(--violet-a4)",
+              overflow: "hidden",
+              flexShrink: 0,
+              width: 44,
+              height: 44,
             }}
           >
-            <Sparkles size={24} style={{ color: "white" }} />
+            <Image
+              src="/images/logos/ic-lg.webp"
+              alt="Oréma N+"
+              width={44}
+              height={44}
+              style={{ display: "block" }}
+            />
           </Box>
           <Box>
-            <Heading size="6">Panneau d'administration</Heading>
+            <Heading size="6" weight="bold">
+              Panneau d&apos;administration
+            </Heading>
             <Text size="2" color="gray">
               Gérez le contenu public de votre plateforme
             </Text>
@@ -210,34 +200,30 @@ export default function AdminPage() {
             {quickActions.map((action) => {
               const Icon = action.icon;
               return (
-                <Link
-                  key={action.href}
-                  href={action.href}
-                  style={{ textDecoration: "none" }}
-                >
+                <Link key={action.href} href={action.href} style={{ textDecoration: "none" }}>
                   <Flex
                     align="center"
                     gap="2"
                     px="4"
-                    py="3"
+                    py="2"
                     style={{
-                      background: `var(--${action.color}-a2)`,
-                      border: `1px solid var(--${action.color}-a4)`,
+                      background: "var(--accent-a2)",
+                      border: "1px solid var(--accent-a4)",
                       borderRadius: 9999,
                       transition: "all 0.2s ease",
                       cursor: "pointer",
                     }}
                     onMouseEnter={(e) => {
-                      e.currentTarget.style.background = `var(--${action.color}-a3)`;
-                      e.currentTarget.style.transform = "translateY(-2px)";
+                      e.currentTarget.style.background = "var(--accent-a3)";
+                      e.currentTarget.style.transform = "translateY(-1px)";
                     }}
                     onMouseLeave={(e) => {
-                      e.currentTarget.style.background = `var(--${action.color}-a2)`;
+                      e.currentTarget.style.background = "var(--accent-a2)";
                       e.currentTarget.style.transform = "translateY(0)";
                     }}
                   >
-                    <Icon size={16} style={{ color: `var(--${action.color}-9)` }} />
-                    <Text size="2" weight="medium" style={{ color: `var(--${action.color}-11)` }}>
+                    <Icon size={16} weight="bold" style={{ color: "var(--accent-9)" }} />
+                    <Text size="2" weight="medium" style={{ color: "var(--accent-11)" }}>
                       {action.label}
                     </Text>
                   </Flex>
@@ -248,7 +234,7 @@ export default function AdminPage() {
         </Box>
       </motion.div>
 
-      {/* Stats Cards */}
+      {/* Stat Cards */}
       <Grid columns={{ initial: "1", md: "2" }} gap="5" mb="6">
         {statCards.map((card, index) => {
           const CardIcon = card.icon;
@@ -264,14 +250,14 @@ export default function AdminPage() {
                   p="5"
                   style={{
                     background: "var(--color-background)",
-                    borderRadius: 16,
+                    borderRadius: 12,
                     border: "1px solid var(--gray-a4)",
                     transition: "all 0.2s ease",
                     cursor: "pointer",
                   }}
                   onMouseEnter={(e) => {
-                    e.currentTarget.style.borderColor = `var(--${card.color}-a6)`;
-                    e.currentTarget.style.boxShadow = `0 8px 24px var(--${card.color}-a3)`;
+                    e.currentTarget.style.borderColor = "var(--accent-a6)";
+                    e.currentTarget.style.boxShadow = "0 4px 16px var(--accent-a3)";
                     e.currentTarget.style.transform = "translateY(-2px)";
                   }}
                   onMouseLeave={(e) => {
@@ -285,15 +271,18 @@ export default function AdminPage() {
                       <Box
                         p="3"
                         style={{
-                          background: `var(--${card.color}-a3)`,
-                          borderRadius: 10,
+                          background: "var(--accent-a3)",
+                          borderRadius: 8,
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
                         }}
                       >
-                        <CardIcon size={20} style={{ color: `var(--${card.color}-9)` }} />
+                        <CardIcon size={20} weight="duotone" style={{ color: "var(--accent-9)" }} />
                       </Box>
                       <Heading size="4">{card.title}</Heading>
                     </Flex>
-                    <ArrowRight size={18} style={{ color: "var(--gray-8)" }} />
+                    <ArrowRight size={18} weight="bold" style={{ color: "var(--gray-8)" }} />
                   </Flex>
 
                   <Grid columns="4" gap="3">
@@ -308,10 +297,13 @@ export default function AdminPage() {
                               <Flex align="center" gap="1" mb="1">
                                 <StatIcon
                                   size={12}
+                                  weight="bold"
                                   style={{
-                                    color: stat.color
-                                      ? `var(--${stat.color}-9)`
-                                      : "var(--gray-9)",
+                                    color: stat.accent
+                                      ? "var(--accent-9)"
+                                      : stat.muted
+                                        ? "var(--gray-8)"
+                                        : "var(--gray-9)",
                                   }}
                                 />
                                 <Text size="1" color="gray">
@@ -322,9 +314,11 @@ export default function AdminPage() {
                                 size="5"
                                 weight="bold"
                                 style={{
-                                  color: stat.color
-                                    ? `var(--${stat.color}-11)`
-                                    : "var(--gray-12)",
+                                  color: stat.accent
+                                    ? "var(--accent-11)"
+                                    : stat.muted
+                                      ? "var(--gray-11)"
+                                      : "var(--gray-12)",
                                 }}
                               >
                                 {stat.value}
@@ -348,7 +342,7 @@ export default function AdminPage() {
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.4, delay: 0.4 }}
       >
-        <Box mb="4">
+        <Box mb="6">
           <Heading size="3" mb="3">
             Métadonnées Blog
           </Heading>
@@ -363,17 +357,27 @@ export default function AdminPage() {
                     background: "var(--color-background)",
                     borderRadius: 12,
                     border: "1px solid var(--gray-a4)",
+                    transition: "all 0.15s ease",
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.borderColor = "var(--accent-a5)";
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.borderColor = "var(--gray-a4)";
                   }}
                 >
                   <Flex align="center" gap="3">
                     <Box
                       p="2"
                       style={{
-                        background: `var(--${meta.color}-a3)`,
+                        background: "var(--accent-a3)",
                         borderRadius: 8,
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
                       }}
                     >
-                      <MetaIcon size={16} style={{ color: `var(--${meta.color}-9)` }} />
+                      <MetaIcon size={16} weight="duotone" style={{ color: "var(--accent-9)" }} />
                     </Box>
                     <Box>
                       <Text size="1" color="gray" style={{ display: "block" }}>
@@ -395,7 +399,7 @@ export default function AdminPage() {
         </Box>
       </motion.div>
 
-      {/* Tips */}
+      {/* Conseils */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -404,13 +408,13 @@ export default function AdminPage() {
         <Box
           p="5"
           style={{
-            background: "linear-gradient(135deg, var(--violet-a2) 0%, var(--purple-a2) 100%)",
-            borderRadius: 16,
-            border: "1px solid var(--violet-a4)",
+            background: "var(--accent-a2)",
+            borderRadius: 12,
+            border: "1px solid var(--accent-a4)",
           }}
         >
-          <Flex align="center" gap="3" mb="3">
-            <TrendingUp size={20} style={{ color: "var(--violet-9)" }} />
+          <Flex align="center" gap="2" mb="3">
+            <TrendUp size={20} weight="bold" style={{ color: "var(--accent-9)" }} />
             <Heading size="3">Conseils</Heading>
           </Flex>
           <Grid columns={{ initial: "1", md: "2" }} gap="4">
@@ -419,8 +423,8 @@ export default function AdminPage() {
                 Documentation
               </Text>
               <Text size="2" color="gray">
-                Organisez votre documentation en catégories claires. Utilisez des slugs
-                descriptifs pour améliorer le SEO.
+                Organisez votre documentation en catégories claires. Utilisez des slugs descriptifs
+                pour améliorer le SEO.
               </Text>
             </Box>
             <Box>
@@ -428,8 +432,8 @@ export default function AdminPage() {
                 Blog
               </Text>
               <Text size="2" color="gray">
-                Mettez un article en avant pour l'afficher en tête de page. Utilisez les
-                tags pour faciliter la navigation.
+                Mettez un article en avant pour l&apos;afficher en tête de page. Utilisez les tags
+                pour faciliter la navigation.
               </Text>
             </Box>
           </Grid>

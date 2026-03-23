@@ -40,6 +40,7 @@ pnpm validate:md         # Validate markdown structure
 ## Environment Variables
 
 Required in `.env` (see `.env.example`):
+
 ```
 NEXT_PUBLIC_SUPABASE_URL      # Supabase project URL
 NEXT_PUBLIC_SUPABASE_ANON_KEY # Supabase anon (public) key
@@ -63,6 +64,7 @@ AUTH_SECRET                   # JWT session secret
 ### Authentication & Route Protection
 
 **No middleware.ts** — Auth is enforced in `app/(dashboard)/layout.tsx`:
+
 1. Calls `getCurrentUser()` from `@/lib/auth` (checks Supabase session + loads user from DB)
 2. Redirects to `/login` if no user or no `etablissementId`
 3. Loads role-based permissions from DB via `getPermissionsForRole()`
@@ -83,12 +85,12 @@ PIN-based quick access for cashiers uses a separate `createAuthenticatedClient()
 **Query pattern**: All DB queries are exposed via `db` object from `@/lib/db`. Every query function takes a Supabase client as its first argument:
 
 ```ts
-import { db, createClient } from '@/lib/db'
+import { db, createClient } from "@/lib/db";
 
 // In a Server Action or Server Component
-const supabase = await createClient()
-const categories = await db.getCategories(supabase, etablissementId)
-const produit = await db.getProduitById(supabase, produitId)
+const supabase = await createClient();
+const categories = await db.getCategories(supabase, etablissementId);
+const produit = await db.getProduitById(supabase, produitId);
 ```
 
 Query files are organized by domain in `lib/db/queries/` (produits, ventes, tables, clients, stocks, rapports, etc.).
@@ -96,6 +98,7 @@ Query files are organized by domain in `lib/db/queries/` (produits, ventes, tabl
 ### Server Actions (`actions/`)
 
 All mutations go through Server Actions. Key modules:
+
 - `ventes.ts` — Sales creation, payment processing
 - `caisse.ts` — Cash register session open/close
 - `produits.ts`, `categories.ts` — Product/category CRUD
@@ -125,6 +128,7 @@ Import from `@/components/ui` for base, `@/components/composed` for composed.
 ### Key Utilities (`lib/utils.ts`)
 
 Critical business functions — use these instead of writing custom logic:
+
 - `formatCurrency(15000)` → `"15 000 FCFA"` (XAF, no decimals)
 - `calculerTVA(montantHT, tauxTva)` — Calculates VAT amount
 - `calculerTTC(montantHT, tauxTva)` — HT to TTC
@@ -139,6 +143,7 @@ Critical business functions — use these instead of writing custom logic:
 ### Printing System (`lib/print/`)
 
 ESC/POS thermal printer support with multi-printer routing:
+
 - `ticket.ts` / `ticket-client.ts` — Receipt generation
 - `bon-cuisine.ts` / `bon-bar.ts` — Kitchen/bar order slips
 - `rapport-z.ts` — Daily closing report
@@ -176,6 +181,7 @@ Zod schemas for form validation, named `*.schema.ts` (e.g., `produit.schema.ts`,
 3. **NE JAMAIS** utiliser `supabase db push` en CLI
 
 Autres outils MCP Supabase utiles :
+
 - `mcp__supabase__list_migrations` — Lister les migrations appliquées
 - `mcp__supabase__execute_sql` — Exécuter du SQL (lecture)
 - `mcp__supabase__list_tables` — Lister les tables
@@ -201,3 +207,34 @@ Autres outils MCP Supabase utiles :
 - TypeScript strict
 - Ne créer de documentation que si **explicitement demandé**
 - Préférer éditer un fichier existant plutôt qu'en créer un nouveau
+
+## Règle Stricte : Accents Français
+
+**OBLIGATOIRE** : Tout texte français (labels, descriptions, messages d'erreur, toasts, commentaires) DOIT utiliser les accents corrects.
+
+### Vérification
+```bash
+pnpm check:accents    # Détecte les accents manquants
+```
+
+### Mots les plus fréquemment oubliés
+| Incorrect | Correct | | Incorrect | Correct |
+|-----------|---------|---|-----------|---------|
+| Etablissement | Établissement | | Creer | Créer |
+| Employes | Employés | | Generer | Générer |
+| Parametres | Paramètres | | Gerer | Gérer |
+| Systeme | Système | | Reinitialiser | Réinitialiser |
+| Categories | Catégories | | Cloturer | Clôturer |
+| Prenom | Prénom | | Selectionnez | Sélectionnez |
+| Telephone | Téléphone | | Desactiver | Désactiver |
+| Numero | Numéro | | doit etre | doit être |
+| Derniere(s) | Dernière(s) | | reessayer | réessayer |
+| Telechargement | Téléchargement | | superieur | supérieur |
+| role (nom) | rôle | | credit (nom) | crédit |
+| Acces | Accès | | prepaye | prépayé |
+
+### Ne PAS modifier les identifiants programmatiques
+- Clés de permissions : `"vente:creer"`, `"employe:modifier"` → ne pas toucher
+- Colonnes DB Supabase : `prenom`, `telephone`, `role` → ne pas toucher
+- Noms de variables/fonctions : `creerLivraison`, `categorie` → ne pas toucher
+- Slugs et URLs : `"creer-modifier-produits"` → ne pas toucher

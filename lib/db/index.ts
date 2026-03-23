@@ -16,16 +16,23 @@
 
 // Re-export des clients
 // Import des requêtes pour l'objet db
-import * as queries from './queries'
+import * as queries from "./queries";
 
-export { createClient, createServiceClient, getServerClient, getServiceClient, createAuthenticatedClient } from './client'
-export type { DbClient, RlsContext } from './client'
+export {
+  createClient,
+  createServiceClient,
+  getServerClient,
+  getServiceClient,
+  createAuthenticatedClient,
+  createScopedClient,
+} from "./client";
+export type { DbClient, RlsContext, ScopedClient } from "./client";
 
 // Re-export des types
-export * from './types'
+export * from "./types";
 
 // Re-export des utilitaires
-export * from './utils'
+export * from "./utils";
 
 /**
  * Objet db contenant toutes les requêtes de base de données
@@ -48,7 +55,9 @@ export const db = {
   // Catégories
   getCategories: queries.getCategories,
   getCategoriesPaginated: queries.getCategoriesPaginated,
+  getCategoriesWithProductCount: queries.getCategoriesWithProductCount,
   getCategorieById: queries.getCategorieById,
+  findCategorieByNom: queries.findCategorieByNom,
   createCategorie: queries.createCategorie,
   updateCategorie: queries.updateCategorie,
   deleteCategorie: queries.deleteCategorie,
@@ -112,7 +121,10 @@ export const db = {
   getProduitsPaginated: queries.getProduitsPaginated,
   getProduitById: queries.getProduitById,
   getProduitByCodeBarre: queries.getProduitByCodeBarre,
+  findProduitByNom: queries.findProduitByNom,
+  findProduitsByNoms: queries.findProduitsByNoms,
   createProduit: queries.createProduit,
+  createProduitsBatch: queries.createProduitsBatch,
   updateProduit: queries.updateProduit,
   deleteProduit: queries.deleteProduit,
   updateProduitStock: queries.updateProduitStock,
@@ -192,7 +204,53 @@ export const db = {
   getPaiementsVente: queries.getPaiementsVente,
   countVentes: queries.countVentes,
   getTotalVentes: queries.getTotalVentes,
-}
+
+  // Notifications
+  getNotifications: queries.getNotifications,
+  getNotificationsPaginated: queries.getNotificationsPaginated,
+  countUnreadNotifications: queries.countUnreadNotifications,
+  createNotification: queries.createNotification,
+  createNotifications: queries.createNotifications,
+  markNotificationAsRead: queries.markNotificationAsRead,
+  markAllNotificationsAsRead: queries.markAllNotificationsAsRead,
+  deleteNotification: queries.deleteNotification,
+  deleteReadNotifications: queries.deleteReadNotifications,
+
+  // Tarification - Règles
+  getReglesTarification: queries.getReglesTarification,
+  getRegleForRole: queries.getRegleForRole,
+  upsertRegleTarification: queries.upsertRegleTarification,
+  deleteRegleTarification: queries.deleteRegleTarification,
+  getConfigTarification: queries.getConfigTarification,
+  updateConfigTarification: queries.updateConfigTarification,
+
+  // Tarification - Historique prix
+  getHistoriquePrix: queries.getHistoriquePrix,
+  createHistoriquePrix: queries.createHistoriquePrix,
+  getHistoriquePrixProduit: queries.getHistoriquePrixProduit,
+
+  // Tarification - Approbations remise
+  createApprobation: queries.createApprobation,
+  getApprobationsPending: queries.getApprobationsPending,
+  updateApprobation: queries.updateApprobation,
+  getApprobationsHistory: queries.getApprobationsHistory,
+
+  // Tarification - Tarifs horaires
+  getTarifsHoraires: queries.getTarifsHoraires,
+  createTarifHoraire: queries.createTarifHoraire,
+  updateTarifHoraire: queries.updateTarifHoraire,
+  deleteTarifHoraire: queries.deleteTarifHoraire,
+  getTarifActif: queries.getTarifActif,
+
+  // Billing stats admin
+  getBillingOverview: queries.getBillingOverview,
+  getPlanDistribution: queries.getPlanDistribution,
+  getRevenueHistory: queries.getRevenueHistory,
+  getRecentPayments: queries.getRecentPayments,
+  getExpiringTrials: queries.getExpiringTrials,
+  getFailedPayments: queries.getFailedPayments,
+  getQuotaAlerts: queries.getQuotaAlerts,
+};
 
 // Export default pour compatibilité
-export default db
+export default db;

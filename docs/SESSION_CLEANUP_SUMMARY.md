@@ -53,6 +53,7 @@ POST /api/clear-session
 ```
 
 **Utilisation**:
+
 ```bash
 curl -X POST http://localhost:3000/api/clear-session
 ```
@@ -67,6 +68,7 @@ curl -X POST http://localhost:3000/api/clear-session
 ```
 
 **Usage**:
+
 ```tsx
 export default function Layout({ children }) {
   return (
@@ -74,7 +76,7 @@ export default function Layout({ children }) {
       <SessionValidator /> {/* Ajouter ici */}
       {children}
     </>
-  )
+  );
 }
 ```
 
@@ -87,6 +89,7 @@ clearSessionSilent() → Nettoie sans redirection
 ```
 
 **Usage**:
+
 ```tsx
 <form action={clearSessionAction}>
   <button>Logout</button>
@@ -119,16 +122,19 @@ npx tsx scripts/test-session-cleanup.ts
 ### Test Manuel
 
 1. **Se connecter normalement**
+
    ```bash
    # Login avec utilisateur valide
    ```
 
 2. **Supprimer l'établissement en base**
+
    ```sql
    DELETE FROM etablissements WHERE id = '...';
    ```
 
 3. **Rafraîchir la page**
+
    ```
    ✅ Devrait automatiquement nettoyer le cookie
    ✅ Devrait rediriger vers /login
@@ -145,11 +151,13 @@ npx tsx scripts/test-session-cleanup.ts
 ### Comment savoir si le problème arrive ?
 
 **Symptômes**:
+
 - ❌ Redirections infinies entre pages
 - ❌ Impossible d'accéder au dashboard
 - ❌ Cookie présent mais session null
 
 **Vérification**:
+
 ```javascript
 // Console navigateur
 document.cookie // Vérifier orema_session
@@ -171,17 +179,17 @@ SELECT * FROM etablissements WHERE id = 'abc-123';
 2. **Appeler** `POST /api/clear-session`
 3. **Supprimer cookie manuellement**:
    ```javascript
-   document.cookie = 'orema_session=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT'
-   window.location.href = '/login'
+   document.cookie = "orema_session=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT";
+   window.location.href = "/login";
    ```
 
 ## 📈 Performance
 
-| Couche | Impact Performance | Latence |
-|--------|-------------------|---------|
-| Validation getSession() | +1 requête SQL | ~5-10ms |
-| Script protection | Inline 2KB | <1ms |
-| SessionValidator | Passive listener | 0ms |
+| Couche                  | Impact Performance | Latence |
+| ----------------------- | ------------------ | ------- |
+| Validation getSession() | +1 requête SQL     | ~5-10ms |
+| Script protection       | Inline 2KB         | <1ms    |
+| SessionValidator        | Passive listener   | 0ms     |
 
 **Conclusion**: Impact négligeable, gain en stabilité énorme.
 
@@ -229,29 +237,32 @@ Pour étendre la validation, modifier `getSession()`:
 // Vérifier utilisateur actif
 const user = await prisma.utilisateur.findUnique({
   where: { id: session.userId },
-  select: { actif: true }
-})
+  select: { actif: true },
+});
 
 if (!user || !user.actif) {
-  await deleteSessionCookie()
-  return null
+  await deleteSessionCookie();
+  return null;
 }
 ```
 
 ## 📞 Support
 
 **En cas de problème**:
+
 1. Vérifier les logs serveur
 2. Vérifier la console navigateur
 3. Exécuter `npx tsx scripts/test-session-cleanup.ts`
 4. Consulter `docs/SESSION_CLEANUP.md`
 
 **Fichiers modifiés**:
+
 - `lib/auth/session.ts`
 - `app/api/clear-session/route.ts`
 - `app/layout.tsx`
 
 **Fichiers créés**:
+
 - `components/session-validator.tsx`
 - `app/actions/clear-session.ts`
 - `docs/SESSION_CLEANUP.md`

@@ -24,12 +24,12 @@ import {
 import {
   ArrowLeft,
   Newspaper,
-  Save,
-  ExternalLink,
+  FloppyDisk,
+  ArrowSquareOut,
   Plus,
-  Image as ImageIcon,
+  ImageSquare as ImageIcon,
   Star,
-} from "lucide-react";
+} from "@phosphor-icons/react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useForm, Controller } from "react-hook-form";
@@ -49,12 +49,7 @@ import {
   getBlogAuthors,
   getBlogTags,
 } from "@/actions/admin/blog";
-import {
-  MarkdownEditor,
-  IconPicker,
-  ColorPicker,
-  StatusSelect,
-} from "@/components/admin/content";
+import { MarkdownEditor, IconPicker, ColorPicker, StatusSelect } from "@/components/admin/content";
 
 interface BlogCategory {
   id: string;
@@ -94,11 +89,7 @@ interface BlogPost {
   tags: { id: string; name: string }[];
 }
 
-export default function EditBlogPostPage({
-  params,
-}: {
-  params: Promise<{ postId: string }>;
-}) {
+export default function EditBlogPostPage({ params }: { params: Promise<{ postId: string }> }) {
   const { postId } = use(params);
   const router = useRouter();
   const [post, setPost] = useState<BlogPost | null>(null);
@@ -136,7 +127,17 @@ export default function EditBlogPostPage({
     },
   });
 
-  const watchedValues = watch();
+  const [content, status, featured, categoryId, authorId, watchedTags, icon, color] = watch([
+    "content",
+    "status",
+    "featured",
+    "categoryId",
+    "authorId",
+    "tags",
+    "icon",
+    "color",
+  ]);
+  const watchedValues = { content, status, featured, categoryId, authorId, tags: watchedTags, icon, color };
 
   useEffect(() => {
     async function loadData() {
@@ -241,7 +242,7 @@ export default function EditBlogPostPage({
           <Flex align="center" gap="4">
             <Link href="/admin/contenu/blog">
               <Button variant="ghost" size="2" style={{ cursor: "pointer" }}>
-                <ArrowLeft size={18} />
+                <ArrowLeft size={18} weight="bold" />
               </Button>
             </Link>
             <Box
@@ -251,25 +252,25 @@ export default function EditBlogPostPage({
                 borderRadius: 8,
               }}
             >
-              <Newspaper size={20} style={{ color: `var(--${watchedValues.color}-9)` }} />
+              <Newspaper size={20} weight="duotone" style={{ color: `var(--${watchedValues.color}-9)` }} />
             </Box>
             <Box>
               <Flex align="center" gap="2">
                 <Heading size="5">Modifier l'article</Heading>
-                <Badge
-                  color={statusColor as "green" | "gray" | "violet"}
-                  variant="soft"
-                  size="1"
-                >
+                <Badge color={statusColor as "green" | "gray" | "violet"} variant="soft" size="1">
                   {contentStatusLabels[watchedValues.status]}
                 </Badge>
-                {watchedValues.featured ? <Badge color="amber" variant="soft" size="1">
-                    <Star size={10} style={{ marginRight: 4 }} />
+                {watchedValues.featured ? (
+                  <Badge color="amber" variant="soft" size="1">
+                    <Star size={10} weight="fill" style={{ marginRight: 4 }} />
                     Vedette
-                  </Badge> : null}
-                {isDirty ? <Badge color="violet" variant="soft" size="1">
+                  </Badge>
+                ) : null}
+                {isDirty ? (
+                  <Badge color="violet" variant="soft" size="1">
                     Non enregistré
-                  </Badge> : null}
+                  </Badge>
+                ) : null}
               </Flex>
               <Text size="2" color="gray">
                 /blog/{post.slug}
@@ -280,7 +281,7 @@ export default function EditBlogPostPage({
           {post.status === "PUBLISHED" && (
             <Link href={`/blog/${post.slug}`} target="_blank">
               <Button variant="soft" size="2" style={{ cursor: "pointer" }}>
-                <ExternalLink size={16} />
+                <ArrowSquareOut size={16} weight="bold" />
                 Voir sur le site
               </Button>
             </Link>
@@ -310,9 +311,11 @@ export default function EditBlogPostPage({
                       placeholder="Un titre accrocheur pour votre article"
                       {...register("title")}
                     />
-                    {errors.title ? <Text size="1" color="red" mt="1">
+                    {errors.title ? (
+                      <Text size="1" color="red" mt="1">
                         {errors.title.message}
-                      </Text> : null}
+                      </Text>
+                    ) : null}
                   </Box>
 
                   <Box>
@@ -325,12 +328,16 @@ export default function EditBlogPostPage({
                       {...register("slug")}
                     >
                       <TextField.Slot side="left">
-                        <Text size="1" color="gray">/blog/</Text>
+                        <Text size="1" color="gray">
+                          /blog/
+                        </Text>
                       </TextField.Slot>
                     </TextField.Root>
-                    {errors.slug ? <Text size="1" color="red" mt="1">
+                    {errors.slug ? (
+                      <Text size="1" color="red" mt="1">
                         {errors.slug.message}
-                      </Text> : null}
+                      </Text>
+                    ) : null}
                   </Box>
 
                   <Box>
@@ -447,11 +454,8 @@ export default function EditBlogPostPage({
                       value={watchedValues.categoryId}
                       onValueChange={(val) => setValue("categoryId", val, { shouldDirty: true })}
                     >
-                      <Select.Trigger
-                        placeholder="Sélectionner..."
-                        style={{ width: "100%" }}
-                      />
-                      <Select.Content>
+                      <Select.Trigger placeholder="Sélectionner..." style={{ width: "100%" }} />
+                      <Select.Content position="popper">
                         {categories.map((cat) => (
                           <Select.Item key={cat.id} value={cat.id}>
                             {cat.name}
@@ -459,9 +463,11 @@ export default function EditBlogPostPage({
                         ))}
                       </Select.Content>
                     </Select.Root>
-                    {errors.categoryId ? <Text size="1" color="red" mt="1">
+                    {errors.categoryId ? (
+                      <Text size="1" color="red" mt="1">
                         {errors.categoryId.message}
-                      </Text> : null}
+                      </Text>
+                    ) : null}
                   </Box>
 
                   <Box>
@@ -472,11 +478,8 @@ export default function EditBlogPostPage({
                       value={watchedValues.authorId}
                       onValueChange={(val) => setValue("authorId", val, { shouldDirty: true })}
                     >
-                      <Select.Trigger
-                        placeholder="Sélectionner..."
-                        style={{ width: "100%" }}
-                      />
-                      <Select.Content>
+                      <Select.Trigger placeholder="Sélectionner..." style={{ width: "100%" }} />
+                      <Select.Content position="popper">
                         {authors.map((author) => (
                           <Select.Item key={author.id} value={author.id}>
                             {author.name}
@@ -484,9 +487,11 @@ export default function EditBlogPostPage({
                         ))}
                       </Select.Content>
                     </Select.Root>
-                    {errors.authorId ? <Text size="1" color="red" mt="1">
+                    {errors.authorId ? (
+                      <Text size="1" color="red" mt="1">
                         {errors.authorId.message}
-                      </Text> : null}
+                      </Text>
+                    ) : null}
                   </Box>
                 </Flex>
               </Card>
@@ -550,7 +555,7 @@ export default function EditBlogPostPage({
                       {...register("featuredImage")}
                     >
                       <TextField.Slot>
-                        <ImageIcon size={14} />
+                        <ImageIcon size={14} weight="duotone" />
                       </TextField.Slot>
                     </TextField.Root>
                   </Box>
@@ -566,7 +571,7 @@ export default function EditBlogPostPage({
                     disabled={isSubmitting || !isDirty}
                     style={{
                       width: "100%",
-                      background: "linear-gradient(135deg, var(--violet-9) 0%, var(--purple-9) 100%)",
+                      background: "var(--violet-9)",
                       cursor: isSubmitting ? "wait" : "pointer",
                       opacity: !isDirty ? 0.5 : 1,
                     }}
@@ -575,7 +580,7 @@ export default function EditBlogPostPage({
                       <>Enregistrement...</>
                     ) : (
                       <>
-                        <Save size={18} />
+                        <FloppyDisk size={18} weight="bold" />
                         Enregistrer
                       </>
                     )}

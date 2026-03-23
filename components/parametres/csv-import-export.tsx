@@ -7,7 +7,6 @@
 import { useState, useRef } from "react";
 import {
   Box,
-  Card,
   Flex,
   Text,
   Button,
@@ -19,25 +18,20 @@ import {
   TextField,
 } from "@radix-ui/themes";
 import {
-  Upload,
-  Download,
-  FileSpreadsheet,
-  AlertCircle,
-  CheckCircle2,
-  Loader2,
-  FileDown,
+  UploadSimple,
+  DownloadSimple,
+  Table as TableIcon,
+  WarningCircle,
+  CheckCircle,
+  CircleNotch,
+  FileArrowDown,
   Users,
   ShoppingCart,
   Package,
-} from "lucide-react";
+} from "@phosphor-icons/react";
 import { toast } from "sonner";
 
-import {
-  importProductsFromCSV,
-  exportProducts,
-  exportVentes,
-  exportClients,
-} from "@/actions/csv";
+import { importProductsFromCSV, exportProducts, exportVentes, exportClients } from "@/actions/csv";
 import {
   getProductsTemplate,
   getProductsExampleCSV,
@@ -51,13 +45,13 @@ export function CSVImportExport() {
       <Tabs.List mb="4">
         <Tabs.Trigger value="import">
           <Flex align="center" gap="2">
-            <Upload size={16} />
+            <UploadSimple size={16} />
             Importer
           </Flex>
         </Tabs.Trigger>
         <Tabs.Trigger value="export">
           <Flex align="center" gap="2">
-            <Download size={16} />
+            <DownloadSimple size={16} />
             Exporter
           </Flex>
         </Tabs.Trigger>
@@ -137,9 +131,9 @@ function ImportSection() {
   return (
     <Flex direction="column" gap="4">
       {/* Zone d'import */}
-      <Card size="3">
+      <Box style={{ border: "1px solid var(--gray-a6)", borderRadius: 8 }} p="4">
         <Flex direction="column" gap="4" align="center" py="6">
-          <FileSpreadsheet size={48} style={{ color: "var(--accent-9)" }} />
+          <TableIcon size={48} weight="duotone" style={{ color: "var(--accent-9)" }} />
           <Text size="4" weight="medium">
             Importer des produits
           </Text>
@@ -157,52 +151,34 @@ function ImportSection() {
           />
 
           <Flex gap="3">
-            <Button
-              size="3"
-             
-              onClick={() => fileInputRef.current?.click()}
-              disabled={isImporting}
-            >
-              {isImporting ? (
-                <Loader2 size={16} className="animate-spin" />
-              ) : (
-                <Upload size={16} />
-              )}
+            <Button size="3" onClick={() => fileInputRef.current?.click()} disabled={isImporting}>
+              {isImporting ? <CircleNotch size={16} className="animate-spin" /> : <UploadSimple size={16} />}
               {isImporting ? "Import en cours..." : "Choisir un fichier"}
             </Button>
           </Flex>
 
           <Flex gap="2" mt="2">
-            <Button
-              size="1"
-              variant="soft"
-              color="gray"
-              onClick={handleDownloadTemplate}
-            >
-              <FileDown size={14} />
+            <Button size="1" variant="soft" color="gray" onClick={handleDownloadTemplate}>
+              <FileArrowDown size={14} />
               Template vide
             </Button>
-            <Button
-              size="1"
-              variant="soft"
-              color="gray"
-              onClick={handleDownloadExample}
-            >
-              <FileDown size={14} />
+            <Button size="1" variant="soft" color="gray" onClick={handleDownloadExample}>
+              <FileArrowDown size={14} />
               Exemple avec donnees
             </Button>
           </Flex>
         </Flex>
-      </Card>
+      </Box>
 
       {/* Resultat de l'import */}
-      {importResult ? <Card>
+      {importResult ? (
+        <Box style={{ border: "1px solid var(--gray-a6)", borderRadius: 8 }} p="4">
           <Flex direction="column" gap="3">
             <Flex align="center" gap="2">
               {importResult.success ? (
-                <CheckCircle2 size={20} className="text-green-500" />
+                <CheckCircle size={20} className="text-green-500" />
               ) : (
-                <AlertCircle size={20} className="text-red-500" />
+                <WarningCircle size={20} className="text-red-500" />
               )}
               <Text size="3" weight="medium">
                 {importResult.message}
@@ -213,11 +189,7 @@ function ImportSection() {
               <Badge color="green" size="2">
                 {importResult.importes} importe(s)
               </Badge>
-              {importResult.ignores > 0 && (
-                <Badge size="2">
-                  {importResult.ignores} ignore(s)
-                </Badge>
-              )}
+              {importResult.ignores > 0 && <Badge size="2">{importResult.ignores} ignore(s)</Badge>}
             </Flex>
 
             {importResult.erreurs.length > 0 && (
@@ -225,9 +197,7 @@ function ImportSection() {
                 <Text size="2" weight="medium" mb="2">
                   Erreurs:
                 </Text>
-                <Box
-                  className="max-h-40 overflow-y-auto bg-gray-50 rounded p-2"
-                >
+                <Box className="max-h-40 overflow-y-auto rounded bg-gray-50 p-2">
                   {importResult.erreurs.slice(0, 10).map((err, i) => (
                     <Text key={i} size="1" color="red" as="p">
                       Ligne {err.ligne}: {err.message}
@@ -242,16 +212,16 @@ function ImportSection() {
               </Box>
             )}
           </Flex>
-        </Card> : null}
+        </Box>
+      ) : null}
 
       {/* Aide sur le format */}
-      <Card>
+      <Box style={{ border: "1px solid var(--gray-a6)", borderRadius: 8 }} p="4">
         <Text size="3" weight="medium" mb="3">
           Format du fichier CSV
         </Text>
         <Text size="2" color="gray" mb="3">
-          Le fichier doit utiliser le point-virgule (;) comme separateur et
-          l'encodage UTF-8.
+          Le fichier doit utiliser le point-virgule (;) comme separateur et l'encodage UTF-8.
         </Text>
 
         <Table.Root size="1">
@@ -286,7 +256,7 @@ function ImportSection() {
             ))}
           </Table.Body>
         </Table.Root>
-      </Card>
+      </Box>
     </Flex>
   );
 }
@@ -299,9 +269,7 @@ function ExportSection() {
   const [dateDebut, setDateDebut] = useState(
     new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split("T")[0]
   );
-  const [dateFin, setDateFin] = useState(
-    new Date().toISOString().split("T")[0]
-  );
+  const [dateFin, setDateFin] = useState(new Date().toISOString().split("T")[0]);
 
   const handleExportProducts = async () => {
     setIsExporting("products");
@@ -321,10 +289,7 @@ function ExportSection() {
   const handleExportVentes = async () => {
     setIsExporting("ventes");
     try {
-      const result = await exportVentes(
-        new Date(dateDebut),
-        new Date(dateFin + "T23:59:59")
-      );
+      const result = await exportVentes(new Date(dateDebut), new Date(dateFin + "T23:59:59"));
       if (result.success && result.data) {
         downloadCSV(result.data, generateFilename("ventes"));
         toast.success(`${result.count} vente(s) exportee(s)`);
@@ -354,7 +319,7 @@ function ExportSection() {
   return (
     <Flex direction="column" gap="4">
       {/* Export Produits */}
-      <Card>
+      <Box style={{ border: "1px solid var(--gray-a6)", borderRadius: 8 }} p="4">
         <Flex justify="between" align="center">
           <Flex align="center" gap="3">
             <Box style={{ padding: 8, backgroundColor: "var(--accent-a3)", borderRadius: 8 }}>
@@ -369,28 +334,23 @@ function ExportSection() {
               </Text>
             </Box>
           </Flex>
-          <Button
-            size="2"
-           
-            onClick={handleExportProducts}
-            disabled={isExporting !== null}
-          >
+          <Button size="2" onClick={handleExportProducts} disabled={isExporting !== null}>
             {isExporting === "products" ? (
-              <Loader2 size={16} className="animate-spin" />
+              <CircleNotch size={16} className="animate-spin" />
             ) : (
-              <Download size={16} />
+              <DownloadSimple size={16} />
             )}
             Exporter
           </Button>
         </Flex>
-      </Card>
+      </Box>
 
       {/* Export Ventes */}
-      <Card>
+      <Box style={{ border: "1px solid var(--gray-a6)", borderRadius: 8 }} p="4">
         <Flex direction="column" gap="3">
           <Flex justify="between" align="center">
             <Flex align="center" gap="3">
-              <Box className="p-2 bg-blue-100 rounded-lg">
+              <Box className="rounded-lg bg-blue-100 p-2">
                 <ShoppingCart size={24} className="text-blue-600" />
               </Box>
               <Box>
@@ -409,9 +369,9 @@ function ExportSection() {
               disabled={isExporting !== null}
             >
               {isExporting === "ventes" ? (
-                <Loader2 size={16} className="animate-spin" />
+                <CircleNotch size={16} className="animate-spin" />
               ) : (
-                <Download size={16} />
+                <DownloadSimple size={16} />
               )}
               Exporter
             </Button>
@@ -442,13 +402,13 @@ function ExportSection() {
             </Box>
           </Flex>
         </Flex>
-      </Card>
+      </Box>
 
       {/* Export Clients */}
-      <Card>
+      <Box style={{ border: "1px solid var(--gray-a6)", borderRadius: 8 }} p="4">
         <Flex justify="between" align="center">
           <Flex align="center" gap="3">
-            <Box className="p-2 bg-green-100 rounded-lg">
+            <Box className="rounded-lg bg-green-100 p-2">
               <Users size={24} className="text-green-600" />
             </Box>
             <Box>
@@ -467,23 +427,22 @@ function ExportSection() {
             disabled={isExporting !== null}
           >
             {isExporting === "clients" ? (
-              <Loader2 size={16} className="animate-spin" />
+              <CircleNotch size={16} className="animate-spin" />
             ) : (
-              <Download size={16} />
+              <DownloadSimple size={16} />
             )}
             Exporter
           </Button>
         </Flex>
-      </Card>
+      </Box>
 
       {/* Information */}
       <Callout.Root color="gray" size="1">
         <Callout.Icon>
-          <AlertCircle size={16} />
+          <WarningCircle size={16} />
         </Callout.Icon>
         <Callout.Text>
-          Les fichiers exportes sont au format CSV (UTF-8) compatible avec Excel
-          et Google Sheets.
+          Les fichiers exportes sont au format CSV (UTF-8) compatible avec Excel et Google Sheets.
         </Callout.Text>
       </Callout.Root>
     </Flex>

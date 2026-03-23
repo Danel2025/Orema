@@ -4,8 +4,24 @@ import Link from "next/link";
 import type { Route } from "next";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
-import { useMemo , useEffect, useState } from "react";
-import { Bell, Search, Sun, Moon, LayoutDashboard, ShoppingCart, UtensilsCrossed, Package, Warehouse, Users, UserCircle, BarChart3, Settings } from "lucide-react";
+import { useMemo } from "react";
+
+import { useMounted } from "@/hooks/use-mounted";
+import {
+  Search,
+  Sun,
+  Moon,
+  LayoutDashboard,
+  ShoppingCart,
+  UtensilsCrossed,
+  Package,
+  Warehouse,
+  Users,
+  UserCircle,
+  BarChart3,
+  Settings,
+} from "lucide-react";
+import { NotificationCenter } from "./notification-center";
 import { useTheme } from "next-themes";
 import { UserMenu } from "./user-menu";
 import { useAuth } from "@/lib/auth/context";
@@ -29,14 +45,10 @@ const allNavItems: NavItem[] = [
 ];
 
 export function Header() {
-  const [mounted, setMounted] = useState(false);
+  const mounted = useMounted();
   const { resolvedTheme, setTheme } = useTheme();
   const pathname = usePathname();
   const { isAdmin, canAccessRoute, user } = useAuth();
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
 
   const toggleTheme = () => {
     setTheme(resolvedTheme === "light" ? "dark" : "light");
@@ -45,24 +57,35 @@ export function Header() {
   // Navigation items filtrés pour les non-admins
   const navItems = useMemo(() => {
     if (!user) {
-      console.log('[Header] No user, returning empty navItems');
+      console.log("[Header] No user, returning empty navItems");
       return [];
     }
     if (isAdmin) {
-      console.log('[Header] User is admin, returning empty navItems (admin uses sidebar)');
+      console.log("[Header] User is admin, returning empty navItems (admin uses sidebar)");
       return [];
     }
 
-    console.log('[Header] User:', user.email, 'Role:', user.role);
-    console.log('[Header] allowedRoutes:', JSON.stringify(user.allowedRoutes));
+    console.log("[Header] User:", user.email, "Role:", user.role);
+    console.log("[Header] allowedRoutes:", JSON.stringify(user.allowedRoutes));
 
     const filtered = allNavItems.filter((item) => {
       const result = canAccessRoute(item.href);
-      console.log('[Header] Route:', item.href, '→ allowed:', result.allowed, result.reason ? `(${result.reason})` : '');
+      console.log(
+        "[Header] Route:",
+        item.href,
+        "→ allowed:",
+        result.allowed,
+        result.reason ? `(${result.reason})` : ""
+      );
       return result.allowed;
     });
 
-    console.log('[Header] Filtered navItems count:', filtered.length, 'items:', filtered.map(i => i.href).join(', '));
+    console.log(
+      "[Header] Filtered navItems count:",
+      filtered.length,
+      "items:",
+      filtered.map((i) => i.href).join(", ")
+    );
     return filtered;
   }, [user, isAdmin, canAccessRoute]);
 
@@ -86,7 +109,10 @@ export function Header() {
       {!isAdmin && (
         <div style={{ display: "flex", alignItems: "center", gap: 24, flexShrink: 0 }}>
           {/* Logo */}
-          <Link href="/dashboard" style={{ textDecoration: "none", display: "flex", alignItems: "center", gap: 10 }}>
+          <Link
+            href="/dashboard"
+            style={{ textDecoration: "none", display: "flex", alignItems: "center", gap: 10 }}
+          >
             <Image
               src="/images/logos/ic-lg.webp"
               alt="Oréma N+"
@@ -94,7 +120,14 @@ export function Header() {
               height={36}
               style={{ objectFit: "contain", flexShrink: 0 }}
             />
-            <span style={{ fontWeight: 700, fontSize: 16, color: "var(--gray-12)", whiteSpace: "nowrap" }}>
+            <span
+              style={{
+                fontWeight: 700,
+                fontSize: 16,
+                color: "var(--gray-12)",
+                whiteSpace: "nowrap",
+              }}
+            >
               Oréma N+
             </span>
           </Link>
@@ -200,34 +233,7 @@ export function Header() {
           </button>
 
           {/* Notifications */}
-          <button
-            style={{
-              width: 40,
-              height: 40,
-              border: "none",
-              backgroundColor: "transparent",
-              cursor: "pointer",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              position: "relative",
-            }}
-          >
-            <Bell size={18} style={{ color: "var(--gray-11)" }} />
-            {/* Badge notification */}
-            <span
-              style={{
-                position: "absolute",
-                top: 8,
-                right: 8,
-                width: 8,
-                height: 8,
-                borderRadius: "50%",
-                backgroundColor: "var(--red-9)",
-                border: "2px solid var(--color-background)",
-              }}
-            />
-          </button>
+          <NotificationCenter />
         </div>
 
         {/* User Menu */}

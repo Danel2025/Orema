@@ -3,7 +3,7 @@
  * Migré vers Supabase
  */
 
-import type { NextRequest} from "next/server";
+import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/db";
 import { getEtablissementId } from "@/lib/etablissement";
@@ -21,10 +21,12 @@ function serializeProduit<T extends Record<string, unknown>>(produit: T): T {
   if (serialized.prix_vente !== undefined) serialized.prixVente = Number(serialized.prix_vente);
   if (serialized.prix_achat !== undefined) serialized.prixAchat = Number(serialized.prix_achat);
   if (Array.isArray(serialized.supplements_produits)) {
-    serialized.supplements = serialized.supplements_produits.map((sup: Record<string, unknown>) => ({
-      ...sup,
-      prix: sup.prix !== undefined ? Number(sup.prix) : null,
-    }));
+    serialized.supplements = serialized.supplements_produits.map(
+      (sup: Record<string, unknown>) => ({
+        ...sup,
+        prix: sup.prix !== undefined ? Number(sup.prix) : null,
+      })
+    );
   }
   return serialized as T;
 }
@@ -49,11 +51,14 @@ export async function GET(request: NextRequest) {
     // Construire la requête
     let query = supabase
       .from("produits")
-      .select(`
+      .select(
+        `
         *,
         categories(id, nom, couleur, icone),
         supplements_produits(id, nom, prix)
-      `, { count: "exact" })
+      `,
+        { count: "exact" }
+      )
       .eq("etablissement_id", etablissementId);
 
     if (actif !== null && actif !== undefined && actif !== "") {
@@ -64,13 +69,17 @@ export async function GET(request: NextRequest) {
     if (search) {
       const cleanSearch = sanitizeSearchTerm(search);
       if (cleanSearch) {
-        query = query.or(`nom.ilike.%${cleanSearch}%,description.ilike.%${cleanSearch}%,code_barre.ilike.%${cleanSearch}%`);
+        query = query.or(
+          `nom.ilike.%${cleanSearch}%,description.ilike.%${cleanSearch}%,code_barre.ilike.%${cleanSearch}%`
+        );
       }
     }
 
-    const { data: produits, count, error } = await query
-      .order("nom", { ascending: true })
-      .range(offset, offset + limit - 1);
+    const {
+      data: produits,
+      count,
+      error,
+    } = await query.order("nom", { ascending: true }).range(offset, offset + limit - 1);
 
     if (error) throw error;
 

@@ -20,18 +20,16 @@ export const metadata: Metadata = {
   },
 };
 
-export default function PublicLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export default function PublicLayout({ children }: { children: React.ReactNode }) {
   return (
     <div className="public-page">
       <a href="#main-content" className="skip-to-content">
         Aller au contenu principal
       </a>
       <Navbar />
-      <main id="main-content" style={{ paddingTop: "80px" }}>{children}</main>
+      <main id="main-content" style={{ paddingTop: "80px" }}>
+        {children}
+      </main>
       <Footer />
     </div>
   );

@@ -1,17 +1,14 @@
-'use client';
+"use client";
 
-import { useCallback, useState, useTransition } from 'react';
-import { useRouter } from 'next/navigation';
-import { Badge, Flex, Heading, Text } from '@/components/ui';
-import { Truck, RefreshCcw } from 'lucide-react';
-import { Button, IconButton, Tooltip } from '@radix-ui/themes';
-import { DeliveryBoard } from '@/components/livraison';
-import { EmptyState } from '@/components/composed';
-import {
-  updateStatutLivraison,
-  getHistoriqueLivraison,
-} from '@/actions/livraison';
-import type { Livraison, StatutLivraison, HistoriqueLivraison } from '@/lib/delivery';
+import { useCallback, useState, useTransition } from "react";
+import { useRouter } from "next/navigation";
+import { Badge, Flex, Heading, Text } from "@/components/ui";
+import { Truck, RefreshCcw } from "lucide-react";
+import { Button, IconButton, Tooltip } from "@radix-ui/themes";
+import { DeliveryBoard } from "@/components/livraison";
+import { EmptyState } from "@/components/composed";
+import { updateStatutLivraison, getHistoriqueLivraison } from "@/actions/livraison";
+import type { Livraison, StatutLivraison, HistoriqueLivraison } from "@/lib/delivery";
 
 // ============================================================================
 // TYPES
@@ -28,18 +25,19 @@ interface LivraisonContentProps {
 export function LivraisonContent({ livraisons }: LivraisonContentProps) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
-  const [historiques, setHistoriques] = useState<
-    Record<string, HistoriqueLivraison[]>
-  >({});
+  const [historiques, setHistoriques] = useState<Record<string, HistoriqueLivraison[]>>({});
 
   // Charger l'historique d'une livraison quand on ouvre le detail
-  const loadHistorique = useCallback(async (livraisonId: string) => {
-    if (historiques[livraisonId]) return; // Deja charge
-    const result = await getHistoriqueLivraison(livraisonId);
-    if (result.success && result.data) {
-      setHistoriques((prev) => ({ ...prev, [livraisonId]: result.data! }));
-    }
-  }, [historiques]);
+  const loadHistorique = useCallback(
+    async (livraisonId: string) => {
+      if (historiques[livraisonId]) return; // Deja charge
+      const result = await getHistoriqueLivraison(livraisonId);
+      if (result.success && result.data) {
+        setHistoriques((prev) => ({ ...prev, [livraisonId]: result.data! }));
+      }
+    },
+    [historiques]
+  );
 
   // Mettre a jour le statut d'une livraison
   const handleUpdateStatut = useCallback(
@@ -58,7 +56,7 @@ export function LivraisonContent({ livraisons }: LivraisonContentProps) {
         });
       }
     },
-    [router, startTransition],
+    [router, startTransition]
   );
 
   // Rafraichir manuellement
@@ -79,9 +77,9 @@ export function LivraisonContent({ livraisons }: LivraisonContentProps) {
       direction="column"
       gap="4"
       style={{
-        height: '100%',
+        height: "100%",
         opacity: isPending ? 0.7 : 1,
-        transition: 'opacity 0.2s ease',
+        transition: "opacity 0.2s ease",
       }}
     >
       {/* Header */}
@@ -92,13 +90,13 @@ export function LivraisonContent({ livraisons }: LivraisonContentProps) {
               width: 48,
               height: 48,
               borderRadius: 12,
-              backgroundColor: 'var(--violet-a3)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
+              backgroundColor: "var(--violet-a3)",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
             }}
           >
-            <Truck size={24} style={{ color: 'var(--violet-9)' }} />
+            <Truck size={24} style={{ color: "var(--violet-9)" }} />
           </div>
           <div>
             <Flex align="center" gap="2">
@@ -122,13 +120,13 @@ export function LivraisonContent({ livraisons }: LivraisonContentProps) {
             size="2"
             onClick={handleRefresh}
             disabled={isPending}
-            style={{ cursor: 'pointer' }}
+            style={{ cursor: "pointer" }}
             aria-label="Rafraichir les livraisons"
           >
             <RefreshCcw
               size={16}
               style={{
-                animation: isPending ? 'spin 1s linear infinite' : 'none',
+                animation: isPending ? "spin 1s linear infinite" : "none",
               }}
             />
           </IconButton>

@@ -21,10 +21,7 @@ import { type AdditionData, TYPE_VENTE_LABELS } from "./types";
 /**
  * Genere les commandes ESC/POS pour une addition
  */
-export function generateAddition(
-  data: AdditionData,
-  paperWidth: 58 | 80 = 80
-): string {
+export function generateAddition(data: AdditionData, paperWidth: 58 | 80 = 80): string {
   const builder = createESCPOSBuilder(paperWidth);
 
   builder.init().align("center");
@@ -54,12 +51,7 @@ export function generateAddition(
   builder.line("=");
 
   // Titre "ADDITION"
-  builder
-    .size("double")
-    .bold(true)
-    .println("ADDITION")
-    .size("normal")
-    .bold(false);
+  builder.size("double").bold(true).println("ADDITION").size("normal").bold(false);
 
   builder.line("=");
 

@@ -2,11 +2,15 @@
 
 /**
  * ProductForm - Formulaire de création/édition de produit
+ * Utilise Radix UI Dialog pour l'accessibilité (focus trap, Escape, ARIA)
  */
 
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { X, Loader2, Barcode } from "lucide-react";
+import { X, SpinnerGap, Barcode, Scan } from "@phosphor-icons/react";
+import { Dialog, Flex, Text, Button, IconButton, Box, Tooltip } from "@radix-ui/themes";
+import { useBarcodeScan } from "@/lib/hooks/use-barcode-scan";
+import { toast } from "sonner";
 import { produitSchema, type ProduitFormData } from "@/schemas/produit.schema";
 import { ImageUpload } from "./image-upload";
 
@@ -73,6 +77,7 @@ export function ProductForm({
     handleSubmit,
     watch,
     control,
+    setValue,
     formState: { errors },
   } = useForm({
     resolver: zodResolver(produitSchema),
@@ -100,6 +105,14 @@ export function ProductForm({
 
   const gererStock = watch("gererStock");
 
+  // Détection automatique des scans code-barres (scanner USB)
+  useBarcodeScan({
+    onScan: (barcode) => {
+      setValue("codeBarre", barcode, { shouldValidate: true });
+      toast.success(`Code-barres détecté : ${barcode}`);
+    },
+  });
+
   const handleFormSubmit = handleSubmit(async (data) => {
     await onSubmit(data as ProduitFormData);
   });
@@ -113,9 +126,10 @@ export function ProductForm({
     backgroundColor: "var(--gray-a2)",
     color: "var(--gray-12)",
     outline: "none",
+    minHeight: 44,
   };
 
-  const labelStyle = {
+  const labelStyle: React.CSSProperties = {
     display: "block",
     fontSize: 14,
     fontWeight: 500,
@@ -124,123 +138,52 @@ export function ProductForm({
   };
 
   return (
-    <div
-      style={{
-        position: "fixed",
-        inset: 0,
-        backgroundColor: "rgba(0, 0, 0, 0.5)",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        zIndex: 100,
-        padding: 16,
-      }}
-      onClick={onCancel}
-    >
-      <div
-        style={{
-          backgroundColor: "var(--color-panel-solid)",
-          borderRadius: 16,
-          width: "100%",
-          maxWidth: 600,
-          maxHeight: "90vh",
-          display: "flex",
-          flexDirection: "column",
-          overflow: "hidden",
-        }}
-        onClick={(e) => e.stopPropagation()}
-      >
-        {/* Header */}
-        <div
-          style={{
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
-            padding: "20px 24px",
-            borderBottom: "1px solid var(--gray-a6)",
-            flexShrink: 0,
-          }}
-        >
-          <h2
-            style={{
-              fontSize: 20,
-              fontWeight: 600,
-              color: "var(--gray-12)",
-              margin: 0,
-            }}
-          >
-            {isEditing ? "Modifier le produit" : "Nouveau produit"}
-          </h2>
-          <button
-            onClick={onCancel}
-            style={{
-              width: 32,
-              height: 32,
-              borderRadius: 8,
-              border: "none",
-              backgroundColor: "var(--gray-a3)",
-              cursor: "pointer",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              color: "var(--gray-11)",
-            }}
-          >
-            <X size={18} />
-          </button>
-        </div>
+    <Dialog.Root open onOpenChange={(open) => { if (!open) onCancel(); }}>
+      <Dialog.Content maxWidth="600px" style={{ maxHeight: "90vh", display: "flex", flexDirection: "column" }}>
+        <Dialog.Title>{isEditing ? "Modifier le produit" : "Nouveau produit"}</Dialog.Title>
 
         {/* Form */}
-        <form onSubmit={handleFormSubmit} style={{ display: "flex", flexDirection: "column", flex: 1, minHeight: 0 }}>
-          <div style={{ padding: 24, display: "flex", flexDirection: "column", gap: 20, overflowY: "auto", flex: 1 }}>
+        <form
+          onSubmit={handleFormSubmit}
+          style={{ display: "flex", flexDirection: "column", flex: 1, minHeight: 0 }}
+        >
+          <Box
+            style={{
+              padding: "16px 0",
+              display: "flex",
+              flexDirection: "column",
+              gap: 20,
+              overflowY: "auto",
+              flex: 1,
+            }}
+          >
             {/* Section: Image du produit */}
-            <div>
-              <h3
-                style={{
-                  fontSize: 14,
-                  fontWeight: 600,
-                  color: "var(--gray-11)",
-                  marginBottom: 16,
-                  textTransform: "uppercase",
-                  letterSpacing: 0.5,
-                }}
-              >
+            <Box>
+              <Text size="2" weight="bold" color="gray" mb="3" style={{ display: "block", textTransform: "uppercase", letterSpacing: 0.5 }}>
                 Image du produit
-              </h3>
+              </Text>
               <Controller
                 name="image"
                 control={control}
                 render={({ field }) => (
-                  <ImageUpload
-                    value={field.value}
-                    onChange={field.onChange}
-                    disabled={isLoading}
-                  />
+                  <ImageUpload value={field.value} onChange={field.onChange} disabled={isLoading} />
                 )}
               />
-            </div>
+            </Box>
 
             {/* Section: Informations générales */}
-            <div>
-              <h3
-                style={{
-                  fontSize: 14,
-                  fontWeight: 600,
-                  color: "var(--gray-11)",
-                  marginBottom: 16,
-                  textTransform: "uppercase",
-                  letterSpacing: 0.5,
-                }}
-              >
+            <Box>
+              <Text size="2" weight="bold" color="gray" mb="3" style={{ display: "block", textTransform: "uppercase", letterSpacing: 0.5 }}>
                 Informations générales
-              </h3>
+              </Text>
 
-              <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+              <Flex direction="column" gap="3">
                 {/* Nom */}
-                <div>
-                  <label style={labelStyle}>Nom du produit *</label>
+                <Box>
+                  <label htmlFor="produit-nom" style={labelStyle}>Nom du produit *</label>
                   <input
                     {...register("nom")}
+                    id="produit-nom"
                     type="text"
                     placeholder="Ex: Poulet DG, Coca-Cola 33cl..."
                     style={{
@@ -248,16 +191,17 @@ export function ProductForm({
                       borderColor: errors.nom ? "var(--red-9)" : "var(--gray-a6)",
                     }}
                   />
-                  {errors.nom ? <p style={{ fontSize: 13, color: "var(--red-11)", marginTop: 4 }}>
+                  {errors.nom ? <p role="alert" style={{ fontSize: 13, color: "var(--red-11)", marginTop: 4 }}>
                       {errors.nom.message}
                     </p> : null}
-                </div>
+                </Box>
 
                 {/* Description */}
-                <div>
-                  <label style={labelStyle}>Description</label>
+                <Box>
+                  <label htmlFor="produit-description" style={labelStyle}>Description</label>
                   <textarea
                     {...register("description")}
+                    id="produit-description"
                     placeholder="Description du produit..."
                     rows={2}
                     style={{
@@ -265,29 +209,55 @@ export function ProductForm({
                       resize: "vertical",
                     }}
                   />
-                </div>
+                </Box>
 
                 {/* Code-barres */}
-                <div>
-                  <label style={labelStyle}>
-                    <span style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                      <Barcode size={16} />
-                      Code-barres
-                    </span>
+                <Box>
+                  <label htmlFor="produit-codeBarre" style={labelStyle}>
+                    <Flex align="center" gap="1" asChild>
+                      <span>
+                        <Barcode size={16} aria-hidden="true" />
+                        Code-barres
+                      </span>
+                    </Flex>
                   </label>
-                  <input
-                    {...register("codeBarre")}
-                    type="text"
-                    placeholder="Ex: 6901234567890"
-                    style={inputStyle}
-                  />
-                </div>
+                  <Flex align="center" gap="2">
+                    <input
+                      {...register("codeBarre")}
+                      id="produit-codeBarre"
+                      type="text"
+                      placeholder="Scanner ou saisir le code-barres..."
+                      style={{ ...inputStyle, flex: 1 }}
+                    />
+                    <Tooltip content="Scannez un code-barres avec votre lecteur USB">
+                      <Box
+                        style={{
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          width: 44,
+                          height: 44,
+                          borderRadius: 8,
+                          backgroundColor: "var(--accent-a3)",
+                          color: "var(--accent-11)",
+                          flexShrink: 0,
+                        }}
+                      >
+                        <Scan size={20} aria-hidden="true" />
+                      </Box>
+                    </Tooltip>
+                  </Flex>
+                  <Text size="1" color="gray" mt="1" style={{ display: "block" }}>
+                    Utilisez votre lecteur USB pour scanner automatiquement
+                  </Text>
+                </Box>
 
                 {/* Catégorie */}
-                <div>
-                  <label style={labelStyle}>Catégorie *</label>
+                <Box>
+                  <label htmlFor="produit-categorieId" style={labelStyle}>Catégorie *</label>
                   <select
                     {...register("categorieId")}
+                    id="produit-categorieId"
                     style={{
                       ...inputStyle,
                       cursor: "pointer",
@@ -301,34 +271,26 @@ export function ProductForm({
                       </option>
                     ))}
                   </select>
-                  {errors.categorieId ? <p style={{ fontSize: 13, color: "var(--red-11)", marginTop: 4 }}>
+                  {errors.categorieId ? <p role="alert" style={{ fontSize: 13, color: "var(--red-11)", marginTop: 4 }}>
                       {errors.categorieId.message}
                     </p> : null}
-                </div>
-              </div>
-            </div>
+                </Box>
+              </Flex>
+            </Box>
 
             {/* Section: Prix */}
-            <div>
-              <h3
-                style={{
-                  fontSize: 14,
-                  fontWeight: 600,
-                  color: "var(--gray-11)",
-                  marginBottom: 16,
-                  textTransform: "uppercase",
-                  letterSpacing: 0.5,
-                }}
-              >
+            <Box>
+              <Text size="2" weight="bold" color="gray" mb="3" style={{ display: "block", textTransform: "uppercase", letterSpacing: 0.5 }}>
                 Prix et TVA
-              </h3>
+              </Text>
 
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 16 }}>
                 {/* Prix de vente */}
-                <div>
-                  <label style={labelStyle}>Prix de vente (FCFA) *</label>
+                <Box>
+                  <label htmlFor="produit-prixVente" style={labelStyle}>Prix de vente (FCFA) *</label>
                   <input
                     {...register("prixVente", { valueAsNumber: true })}
+                    id="produit-prixVente"
                     type="number"
                     min={0}
                     step={100}
@@ -339,16 +301,17 @@ export function ProductForm({
                       borderColor: errors.prixVente ? "var(--red-9)" : "var(--gray-a6)",
                     }}
                   />
-                  {errors.prixVente ? <p style={{ fontSize: 13, color: "var(--red-11)", marginTop: 4 }}>
+                  {errors.prixVente ? <p role="alert" style={{ fontSize: 13, color: "var(--red-11)", marginTop: 4 }}>
                       {errors.prixVente.message}
                     </p> : null}
-                </div>
+                </Box>
 
                 {/* Prix d'achat */}
-                <div>
-                  <label style={labelStyle}>Prix d'achat (FCFA)</label>
+                <Box>
+                  <label htmlFor="produit-prixAchat" style={labelStyle}>Prix d&apos;achat (FCFA)</label>
                   <input
-                    {...register("prixAchat")}
+                    {...register("prixAchat", { valueAsNumber: true })}
+                    id="produit-prixAchat"
                     type="number"
                     min={0}
                     step={100}
@@ -358,13 +321,14 @@ export function ProductForm({
                       fontFamily: "var(--font-google-sans-code), ui-monospace, monospace",
                     }}
                   />
-                </div>
+                </Box>
 
                 {/* Taux TVA */}
-                <div>
-                  <label style={labelStyle}>Taux TVA *</label>
+                <Box>
+                  <label htmlFor="produit-tauxTva" style={labelStyle}>Taux TVA *</label>
                   <select
                     {...register("tauxTva", { valueAsNumber: true })}
+                    id="produit-tauxTva"
                     style={{
                       ...inputStyle,
                       cursor: "pointer",
@@ -374,34 +338,18 @@ export function ProductForm({
                     <option value={10}>10% (Réduit)</option>
                     <option value={0}>0% (Exonéré)</option>
                   </select>
-                </div>
+                </Box>
               </div>
-            </div>
+            </Box>
 
             {/* Section: Stock */}
-            <div>
-              <h3
-                style={{
-                  fontSize: 14,
-                  fontWeight: 600,
-                  color: "var(--gray-11)",
-                  marginBottom: 16,
-                  textTransform: "uppercase",
-                  letterSpacing: 0.5,
-                }}
-              >
+            <Box>
+              <Text size="2" weight="bold" color="gray" mb="3" style={{ display: "block", textTransform: "uppercase", letterSpacing: 0.5 }}>
                 Gestion du stock
-              </h3>
+              </Text>
 
               {/* Toggle gérer stock */}
-              <div
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 12,
-                  marginBottom: 16,
-                }}
-              >
+              <Flex align="center" gap="3" mb="3">
                 <input
                   {...register("gererStock")}
                   type="checkbox"
@@ -423,66 +371,61 @@ export function ProductForm({
                 >
                   Gérer le stock de ce produit
                 </label>
-              </div>
+              </Flex>
 
               {/* Champs stock (si activé) */}
-              {gererStock ? <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr", gap: 16 }}>
-                  <div>
-                    <label style={labelStyle}>Stock actuel</label>
+              {gererStock ? <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(120px, 1fr))", gap: 16 }}>
+                  <Box>
+                    <label htmlFor="produit-stockActuel" style={labelStyle}>Stock actuel</label>
                     <input
-                      {...register("stockActuel")}
+                      {...register("stockActuel", { valueAsNumber: true })}
+                      id="produit-stockActuel"
                       type="number"
                       min={0}
                       placeholder="0"
                       style={inputStyle}
                     />
-                  </div>
-                  <div>
-                    <label style={labelStyle}>Stock minimum</label>
+                  </Box>
+                  <Box>
+                    <label htmlFor="produit-stockMin" style={labelStyle}>Stock minimum</label>
                     <input
-                      {...register("stockMin")}
+                      {...register("stockMin", { valueAsNumber: true })}
+                      id="produit-stockMin"
                       type="number"
                       min={0}
                       placeholder="0"
                       style={inputStyle}
                     />
-                  </div>
-                  <div>
-                    <label style={labelStyle}>Stock maximum</label>
+                  </Box>
+                  <Box>
+                    <label htmlFor="produit-stockMax" style={labelStyle}>Stock maximum</label>
                     <input
-                      {...register("stockMax")}
+                      {...register("stockMax", { valueAsNumber: true })}
+                      id="produit-stockMax"
                       type="number"
                       min={0}
                       placeholder="0"
                       style={inputStyle}
                     />
-                  </div>
-                  <div>
-                    <label style={labelStyle}>Unité</label>
+                  </Box>
+                  <Box>
+                    <label htmlFor="produit-unite" style={labelStyle}>Unité</label>
                     <input
                       {...register("unite")}
+                      id="produit-unite"
                       type="text"
                       placeholder="pcs, kg, L..."
                       style={inputStyle}
                     />
-                  </div>
+                  </Box>
                 </div> : null}
-            </div>
+            </Box>
 
             {/* Section: Disponibilité */}
-            <div>
-              <h3
-                style={{
-                  fontSize: 14,
-                  fontWeight: 600,
-                  color: "var(--gray-11)",
-                  marginBottom: 16,
-                  textTransform: "uppercase",
-                  letterSpacing: 0.5,
-                }}
-              >
+            <Box>
+              <Text size="2" weight="bold" color="gray" mb="3" style={{ display: "block", textTransform: "uppercase", letterSpacing: 0.5 }}>
                 Disponibilité par mode de vente
-              </h3>
+              </Text>
 
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
                 {[
@@ -491,18 +434,11 @@ export function ProductForm({
                   { name: "disponibleLivraison", label: "Livraison" },
                   { name: "disponibleEmporter", label: "À emporter" },
                 ].map((mode) => (
-                  <div
-                    key={mode.name}
-                    style={{
-                      display: "flex",
-                      alignItems: "center",
-                      gap: 10,
-                    }}
-                  >
+                  <Flex key={mode.name} align="center" gap="2">
                     <input
                       {...register(mode.name as keyof ProduitFormData)}
                       type="checkbox"
-                      id={mode.name}
+                      id={`produit-${mode.name}`}
                       style={{
                         width: 18,
                         height: 18,
@@ -511,7 +447,7 @@ export function ProductForm({
                       }}
                     />
                     <label
-                      htmlFor={mode.name}
+                      htmlFor={`produit-${mode.name}`}
                       style={{
                         fontSize: 14,
                         color: "var(--gray-12)",
@@ -520,18 +456,17 @@ export function ProductForm({
                     >
                       {mode.label}
                     </label>
-                  </div>
+                  </Flex>
                 ))}
               </div>
-            </div>
+            </Box>
 
             {/* Actif */}
-            <div
+            <Flex
+              align="center"
+              gap="3"
+              p="3"
               style={{
-                display: "flex",
-                alignItems: "center",
-                gap: 12,
-                padding: 16,
                 backgroundColor: "var(--gray-a2)",
                 borderRadius: 8,
               }}
@@ -539,7 +474,7 @@ export function ProductForm({
               <input
                 {...register("actif")}
                 type="checkbox"
-                id="actif"
+                id="produit-actif"
                 style={{
                   width: 20,
                   height: 20,
@@ -548,7 +483,7 @@ export function ProductForm({
                 }}
               />
               <label
-                htmlFor="actif"
+                htmlFor="produit-actif"
                 style={{
                   fontSize: 14,
                   color: "var(--gray-12)",
@@ -557,61 +492,23 @@ export function ProductForm({
               >
                 Produit actif (visible dans la caisse)
               </label>
-            </div>
-          </div>
+            </Flex>
+          </Box>
 
           {/* Footer */}
-          <div
-            style={{
-              display: "flex",
-              justifyContent: "flex-end",
-              gap: 12,
-              padding: "16px 24px",
-              borderTop: "1px solid var(--gray-a6)",
-              flexShrink: 0,
-            }}
-          >
-            <button
-              type="button"
-              onClick={onCancel}
-              disabled={isLoading}
-              style={{
-                padding: "10px 20px",
-                fontSize: 14,
-                fontWeight: 500,
-                borderRadius: 8,
-                border: "1px solid var(--gray-a6)",
-                backgroundColor: "transparent",
-                color: "var(--gray-12)",
-                cursor: "pointer",
-              }}
-            >
-              Annuler
-            </button>
-            <button
-              type="submit"
-              disabled={isLoading}
-              style={{
-                padding: "10px 20px",
-                fontSize: 14,
-                fontWeight: 600,
-                borderRadius: 8,
-                border: "none",
-                backgroundColor: "var(--accent-9)",
-                color: "white",
-                cursor: isLoading ? "not-allowed" : "pointer",
-                display: "flex",
-                alignItems: "center",
-                gap: 8,
-                opacity: isLoading ? 0.7 : 1,
-              }}
-            >
-              {isLoading ? <Loader2 size={16} className="animate-spin" /> : null}
+          <Flex gap="3" justify="end" pt="4" style={{ borderTop: "1px solid var(--gray-a6)" }}>
+            <Dialog.Close>
+              <Button type="button" variant="soft" color="gray" disabled={isLoading} size="2" style={{ minHeight: 44 }}>
+                Annuler
+              </Button>
+            </Dialog.Close>
+            <Button type="submit" disabled={isLoading} size="2" style={{ minHeight: 44 }}>
+              {isLoading ? <SpinnerGap size={16} className="animate-spin" aria-hidden="true" /> : null}
               {isEditing ? "Enregistrer" : "Créer le produit"}
-            </button>
-          </div>
+            </Button>
+          </Flex>
         </form>
-      </div>
-    </div>
+      </Dialog.Content>
+    </Dialog.Root>
   );
 }

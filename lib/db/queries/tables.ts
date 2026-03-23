@@ -2,7 +2,7 @@
  * Requêtes Supabase pour les tables et zones
  */
 
-import type { DbClient } from '../client'
+import type { DbClient } from "../client";
 import type {
   Table,
   TableInsert,
@@ -12,8 +12,8 @@ import type {
   ZoneInsert,
   ZoneUpdate,
   StatutTable,
-} from '../types'
-import { getErrorMessage } from '../utils'
+} from "../types";
+import { getErrorMessage } from "../utils";
 
 // ================== ZONES ==================
 
@@ -26,101 +26,77 @@ export async function getZones(
   options?: { active?: boolean }
 ): Promise<Zone[]> {
   let query = client
-    .from('zones')
-    .select('*')
-    .eq('etablissement_id', etablissementId)
-    .order('ordre', { ascending: true })
+    .from("zones")
+    .select("*")
+    .eq("etablissement_id", etablissementId)
+    .order("ordre", { ascending: true });
 
   if (options?.active !== undefined) {
-    query = query.eq('active', options.active)
+    query = query.eq("active", options.active);
   }
 
-  const { data, error } = await query
+  const { data, error } = await query;
 
   if (error) {
-    throw new Error(getErrorMessage(error))
+    throw new Error(getErrorMessage(error));
   }
 
-  return data ?? []
+  return data ?? [];
 }
 
 /**
  * Récupère une zone par son ID
  */
-export async function getZoneById(
-  client: DbClient,
-  id: string
-): Promise<Zone | null> {
-  const { data, error } = await client
-    .from('zones')
-    .select('*')
-    .eq('id', id)
-    .single()
+export async function getZoneById(client: DbClient, id: string): Promise<Zone | null> {
+  const { data, error } = await client.from("zones").select("*").eq("id", id).single();
 
   if (error) {
-    if (error.code === 'PGRST116') return null
-    throw new Error(getErrorMessage(error))
+    if (error.code === "PGRST116") return null;
+    throw new Error(getErrorMessage(error));
   }
 
-  return data
+  return data;
 }
 
 /**
  * Crée une nouvelle zone
  */
-export async function createZone(
-  client: DbClient,
-  data: ZoneInsert
-): Promise<Zone> {
-  const { data: zone, error } = await client
-    .from('zones')
-    .insert(data)
-    .select()
-    .single()
+export async function createZone(client: DbClient, data: ZoneInsert): Promise<Zone> {
+  const { data: zone, error } = await client.from("zones").insert(data).select().single();
 
   if (error) {
-    throw new Error(getErrorMessage(error))
+    throw new Error(getErrorMessage(error));
   }
 
-  return zone
+  return zone;
 }
 
 /**
  * Met à jour une zone
  */
-export async function updateZone(
-  client: DbClient,
-  id: string,
-  data: ZoneUpdate
-): Promise<Zone> {
+export async function updateZone(client: DbClient, id: string, data: ZoneUpdate): Promise<Zone> {
   const { data: zone, error } = await client
-    .from('zones')
+    .from("zones")
     .update({ ...data, updated_at: new Date().toISOString() })
-    .eq('id', id)
+    .eq("id", id)
     .select()
-    .single()
+    .single();
 
   if (error) {
-    throw new Error(getErrorMessage(error))
+    throw new Error(getErrorMessage(error));
   }
 
-  return zone
+  return zone;
 }
 
 /**
  * Supprime une zone
  */
-export async function deleteZone(
-  client: DbClient,
-  id: string
-): Promise<void> {
-  const { error } = await client
-    .from('zones')
-    .delete()
-    .eq('id', id)
+export async function deleteZone(client: DbClient, id: string): Promise<void> {
+  const { error } = await client.from("zones").delete().eq("id", id);
 
   if (error) {
-    throw new Error(getErrorMessage(error))
+    throw new Error(getErrorMessage(error));
   }
 }
 
@@ -133,57 +109,50 @@ export async function getTables(
   client: DbClient,
   etablissementId: string,
   options?: {
-    active?: boolean
-    zoneId?: string
-    statut?: StatutTable
+    active?: boolean;
+    zoneId?: string;
+    statut?: StatutTable;
   }
 ): Promise<Table[]> {
   let query = client
-    .from('tables')
-    .select('*')
-    .eq('etablissement_id', etablissementId)
-    .order('numero', { ascending: true })
+    .from("tables")
+    .select("*")
+    .eq("etablissement_id", etablissementId)
+    .order("numero", { ascending: true });
 
   if (options?.active !== undefined) {
-    query = query.eq('active', options.active)
+    query = query.eq("active", options.active);
   }
 
   if (options?.zoneId) {
-    query = query.eq('zone_id', options.zoneId)
+    query = query.eq("zone_id", options.zoneId);
   }
 
   if (options?.statut) {
-    query = query.eq('statut', options.statut)
+    query = query.eq("statut", options.statut);
   }
 
-  const { data, error } = await query
+  const { data, error } = await query;
 
   if (error) {
-    throw new Error(getErrorMessage(error))
+    throw new Error(getErrorMessage(error));
   }
 
-  return (data ?? []) as Table[]
+  return (data ?? []) as Table[];
 }
 
 /**
  * Récupère une table par son ID
  */
-export async function getTableById(
-  client: DbClient,
-  id: string
-): Promise<Table | null> {
-  const { data, error } = await client
-    .from('tables')
-    .select('*')
-    .eq('id', id)
-    .single()
+export async function getTableById(client: DbClient, id: string): Promise<Table | null> {
+  const { data, error } = await client.from("tables").select("*").eq("id", id).single();
 
   if (error) {
-    if (error.code === 'PGRST116') return null
-    throw new Error(getErrorMessage(error))
+    if (error.code === "PGRST116") return null;
+    throw new Error(getErrorMessage(error));
   }
 
-  return data as Table
+  return data as Table;
 }
 
 /**
@@ -195,60 +164,49 @@ export async function getTableByNumero(
   numero: string
 ): Promise<Table | null> {
   const { data, error } = await client
-    .from('tables')
-    .select('*')
-    .eq('etablissement_id', etablissementId)
-    .eq('numero', numero)
-    .single()
+    .from("tables")
+    .select("*")
+    .eq("etablissement_id", etablissementId)
+    .eq("numero", numero)
+    .single();
 
   if (error) {
-    if (error.code === 'PGRST116') return null
-    throw new Error(getErrorMessage(error))
+    if (error.code === "PGRST116") return null;
+    throw new Error(getErrorMessage(error));
   }
 
-  return data
+  return data;
 }
 
 /**
  * Crée une nouvelle table
  */
-export async function createTable(
-  client: DbClient,
-  data: TableInsert
-): Promise<Table> {
-  const { data: table, error } = await client
-    .from('tables')
-    .insert(data)
-    .select()
-    .single()
+export async function createTable(client: DbClient, data: TableInsert): Promise<Table> {
+  const { data: table, error } = await client.from("tables").insert(data).select().single();
 
   if (error) {
-    throw new Error(getErrorMessage(error))
+    throw new Error(getErrorMessage(error));
   }
 
-  return table
+  return table;
 }
 
 /**
  * Met à jour une table
  */
-export async function updateTable(
-  client: DbClient,
-  id: string,
-  data: TableUpdate
-): Promise<Table> {
+export async function updateTable(client: DbClient, id: string, data: TableUpdate): Promise<Table> {
   const { data: table, error } = await client
-    .from('tables')
+    .from("tables")
     .update({ ...data, updated_at: new Date().toISOString() })
-    .eq('id', id)
+    .eq("id", id)
     .select()
-    .single()
+    .single();
 
   if (error) {
-    throw new Error(getErrorMessage(error))
+    throw new Error(getErrorMessage(error));
   }
 
-  return table
+  return table;
 }
 
 /**
@@ -259,7 +217,7 @@ export async function updateTableStatut(
   id: string,
   statut: StatutTable
 ): Promise<Table> {
-  return updateTable(client, id, { statut })
+  return updateTable(client, id, { statut });
 }
 
 /**
@@ -273,23 +231,17 @@ export async function updateTablePosition(
   return updateTable(client, id, {
     position_x: position.x,
     position_y: position.y,
-  })
+  });
 }
 
 /**
  * Supprime une table
  */
-export async function deleteTable(
-  client: DbClient,
-  id: string
-): Promise<void> {
-  const { error } = await client
-    .from('tables')
-    .delete()
-    .eq('id', id)
+export async function deleteTable(client: DbClient, id: string): Promise<void> {
+  const { error } = await client.from("tables").delete().eq("id", id);
 
   if (error) {
-    throw new Error(getErrorMessage(error))
+    throw new Error(getErrorMessage(error));
   }
 }
 
@@ -301,13 +253,13 @@ export async function countTablesByStatut(
   etablissementId: string
 ): Promise<Record<StatutTable, number>> {
   const { data, error } = await client
-    .from('tables')
-    .select('statut')
-    .eq('etablissement_id', etablissementId)
-    .eq('active', true)
+    .from("tables")
+    .select("statut")
+    .eq("etablissement_id", etablissementId)
+    .eq("active", true);
 
   if (error) {
-    throw new Error(getErrorMessage(error))
+    throw new Error(getErrorMessage(error));
   }
 
   const counts: Record<StatutTable, number> = {
@@ -316,35 +268,32 @@ export async function countTablesByStatut(
     EN_PREPARATION: 0,
     ADDITION: 0,
     A_NETTOYER: 0,
-  }
+  };
 
   for (const table of data ?? []) {
-    counts[table.statut]++
+    counts[table.statut as keyof typeof counts]++;
   }
 
-  return counts
+  return counts;
 }
 
 /**
  * Récupère les tables libres
  */
-export async function getTablesLibres(
-  client: DbClient,
-  etablissementId: string
-): Promise<Table[]> {
+export async function getTablesLibres(client: DbClient, etablissementId: string): Promise<Table[]> {
   const { data, error } = await client
-    .from('tables')
-    .select('*')
-    .eq('etablissement_id', etablissementId)
-    .eq('active', true)
-    .eq('statut', 'LIBRE')
-    .order('numero', { ascending: true })
+    .from("tables")
+    .select("*")
+    .eq("etablissement_id", etablissementId)
+    .eq("active", true)
+    .eq("statut", "LIBRE")
+    .order("numero", { ascending: true });
 
   if (error) {
-    throw new Error(getErrorMessage(error))
+    throw new Error(getErrorMessage(error));
   }
 
-  return data ?? []
+  return data ?? [];
 }
 
 /**
@@ -357,18 +306,18 @@ export async function tableNumeroExists(
   excludeId?: string
 ): Promise<boolean> {
   let query = client
-    .from('tables')
-    .select('id', { count: 'exact', head: true })
-    .eq('etablissement_id', etablissementId)
-    .eq('numero', numero)
+    .from("tables")
+    .select("id", { count: "exact", head: true })
+    .eq("etablissement_id", etablissementId)
+    .eq("numero", numero);
 
   if (excludeId) {
-    query = query.neq('id', excludeId)
+    query = query.neq("id", excludeId);
   }
 
-  const { count } = await query
+  const { count } = await query;
 
-  return (count ?? 0) > 0
+  return (count ?? 0) > 0;
 }
 
 /**
@@ -380,44 +329,41 @@ export async function countTables(
   options?: { zoneId?: string; active?: boolean }
 ): Promise<number> {
   let query = client
-    .from('tables')
-    .select('*', { count: 'exact', head: true })
-    .eq('etablissement_id', etablissementId)
+    .from("tables")
+    .select("*", { count: "exact", head: true })
+    .eq("etablissement_id", etablissementId);
 
   if (options?.zoneId) {
-    query = query.eq('zone_id', options.zoneId)
+    query = query.eq("zone_id", options.zoneId);
   }
 
   if (options?.active !== undefined) {
-    query = query.eq('active', options.active)
+    query = query.eq("active", options.active);
   }
 
-  const { count, error } = await query
+  const { count, error } = await query;
 
   if (error) {
-    throw new Error(getErrorMessage(error))
+    throw new Error(getErrorMessage(error));
   }
 
-  return count ?? 0
+  return count ?? 0;
 }
 
 /**
  * Compte le nombre de zones d'un établissement
  */
-export async function countZones(
-  client: DbClient,
-  etablissementId: string
-): Promise<number> {
+export async function countZones(client: DbClient, etablissementId: string): Promise<number> {
   const { count, error } = await client
-    .from('zones')
-    .select('*', { count: 'exact', head: true })
-    .eq('etablissement_id', etablissementId)
+    .from("zones")
+    .select("*", { count: "exact", head: true })
+    .eq("etablissement_id", etablissementId);
 
   if (error) {
-    throw new Error(getErrorMessage(error))
+    throw new Error(getErrorMessage(error));
   }
 
-  return count ?? 0
+  return count ?? 0;
 }
 
 /**
@@ -430,18 +376,18 @@ export async function zoneNomExists(
   excludeId?: string
 ): Promise<boolean> {
   let query = client
-    .from('zones')
-    .select('id', { count: 'exact', head: true })
-    .eq('etablissement_id', etablissementId)
-    .eq('nom', nom)
+    .from("zones")
+    .select("id", { count: "exact", head: true })
+    .eq("etablissement_id", etablissementId)
+    .eq("nom", nom);
 
   if (excludeId) {
-    query = query.neq('id', excludeId)
+    query = query.neq("id", excludeId);
   }
 
-  const { count } = await query
+  const { count } = await query;
 
-  return (count ?? 0) > 0
+  return (count ?? 0) > 0;
 }
 
 /**
@@ -455,12 +401,12 @@ export async function updateZonesOrder(
   // donc on fait des updates séquentiels
   for (const { id, ordre } of orders) {
     const { error } = await client
-      .from('zones')
+      .from("zones")
       .update({ ordre, updated_at: new Date().toISOString() })
-      .eq('id', id)
+      .eq("id", id);
 
     if (error) {
-      throw new Error(getErrorMessage(error))
+      throw new Error(getErrorMessage(error));
     }
   }
 }
@@ -474,16 +420,16 @@ export async function updateTablesPositions(
 ): Promise<void> {
   for (const { id, position_x, position_y } of positions) {
     const { error } = await client
-      .from('tables')
+      .from("tables")
       .update({
         position_x,
         position_y,
         updated_at: new Date().toISOString(),
       })
-      .eq('id', id)
+      .eq("id", id);
 
     if (error) {
-      throw new Error(getErrorMessage(error))
+      throw new Error(getErrorMessage(error));
     }
   }
 }
@@ -497,54 +443,51 @@ export async function getZonesWithTableCount(
   options?: { active?: boolean }
 ): Promise<Array<Zone & { _count: { tables: number } }>> {
   let query = client
-    .from('zones')
-    .select('*')
-    .eq('etablissement_id', etablissementId)
-    .order('ordre', { ascending: true })
+    .from("zones")
+    .select("*")
+    .eq("etablissement_id", etablissementId)
+    .order("ordre", { ascending: true });
 
   if (options?.active !== undefined) {
-    query = query.eq('active', options.active)
+    query = query.eq("active", options.active);
   }
 
-  const { data: zones, error } = await query
+  const { data: zones, error } = await query;
 
   if (error) {
-    throw new Error(getErrorMessage(error))
+    throw new Error(getErrorMessage(error));
   }
 
   // Pour chaque zone, compter les tables
   const zonesWithCount = await Promise.all(
     (zones ?? []).map(async (zone) => {
-      const tableCount = await countTables(client, etablissementId, { zoneId: zone.id })
+      const tableCount = await countTables(client, etablissementId, { zoneId: zone.id });
       return {
         ...zone,
         _count: { tables: tableCount },
-      }
+      };
     })
-  )
+  );
 
-  return zonesWithCount
+  return zonesWithCount;
 }
 
 /**
  * Récupère la dernière zone pour calculer l'ordre
  */
-export async function getLastZone(
-  client: DbClient,
-  etablissementId: string
-): Promise<Zone | null> {
+export async function getLastZone(client: DbClient, etablissementId: string): Promise<Zone | null> {
   const { data, error } = await client
-    .from('zones')
-    .select('*')
-    .eq('etablissement_id', etablissementId)
-    .order('ordre', { ascending: false })
+    .from("zones")
+    .select("*")
+    .eq("etablissement_id", etablissementId)
+    .order("ordre", { ascending: false })
     .limit(1)
-    .single()
+    .single();
 
   if (error) {
-    if (error.code === 'PGRST116') return null
-    throw new Error(getErrorMessage(error))
+    if (error.code === "PGRST116") return null;
+    throw new Error(getErrorMessage(error));
   }
 
-  return data
+  return data;
 }

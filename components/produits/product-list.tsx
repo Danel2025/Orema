@@ -6,7 +6,14 @@
  */
 
 import { useState, useEffect, useMemo, useCallback } from "react";
-import { Plus, AlertCircle, ChevronDown, ChevronRight, ChevronsUpDown } from "lucide-react";
+import {
+  Plus,
+  WarningCircle,
+  CaretDown,
+  CaretRight,
+  ArrowsOutLineVertical,
+} from "@phosphor-icons/react";
+import { Box, Flex, Text, Button, AlertDialog, Spinner } from "@radix-ui/themes";
 import { toast } from "sonner";
 import * as Accordion from "@radix-ui/react-accordion";
 import "./product-list.css";
@@ -18,9 +25,6 @@ import {
   ProductFilters,
   useDefaultFilters,
   type ProductFiltersState,
-  type StockFilter,
-  type SortField,
-  type SortDirection,
 } from "./product-filters";
 import {
   getProduits,
@@ -51,14 +55,16 @@ export function ProductList() {
   const [editingProduct, setEditingProduct] = useState<Produit | null>(null);
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
   const [openCategories, setOpenCategories] = useState<string[]>([]);
-  const [supplementsProduct, setSupplementsProduct] = useState<{ id: string; nom: string } | null>(null);
+  const [supplementsProduct, setSupplementsProduct] = useState<{ id: string; nom: string } | null>(
+    null
+  );
 
   // Filtres avancés
   const defaultFilters = useDefaultFilters();
   const [filters, setFilters] = useState<ProductFiltersState>(defaultFilters);
 
   // Charger les données
-  const loadData = async () => {
+  const loadData = useCallback(async () => {
     try {
       setIsLoading(true);
       const [produitsData, categoriesData] = await Promise.all([
@@ -66,18 +72,18 @@ export function ProductList() {
         getCategories({ includeInactive: false }),
       ]);
       setProduits(produitsData);
-      setCategories(categoriesData);
+      setCategories(categoriesData as unknown as Categorie[]);
     } catch (error) {
       console.error("Erreur lors du chargement:", error);
       toast.error("Erreur lors du chargement des produits");
     } finally {
       setIsLoading(false);
     }
-  };
+  }, []);
 
   useEffect(() => {
     loadData();
-  }, []);
+  }, [loadData]);
 
   // Handler pour les changements de filtres
   const handleFiltersChange = useCallback((newFilters: ProductFiltersState) => {
@@ -97,8 +103,7 @@ export function ProductList() {
           prod.codeBarre?.toLowerCase().includes(searchLower);
 
         // Filtre par catégorie
-        const matchesCategory =
-          !filters.categorieId || prod.categorieId === filters.categorieId;
+        const matchesCategory = !filters.categorieId || prod.categorieId === filters.categorieId;
 
         // Filtre par statut actif/inactif
         const matchesActive = filters.showInactive || prod.actif;
@@ -121,14 +126,12 @@ export function ProductList() {
               break;
           }
         } else if (filters.stockFilter !== "all" && !prod.gererStock) {
-          // Si le produit ne gère pas le stock, considérer comme "en stock"
           matchesStock = filters.stockFilter === "in_stock";
         }
 
         return matchesSearch && matchesCategory && matchesActive && matchesStock;
       })
       .sort((a, b) => {
-        // Tri
         const direction = filters.sortDirection === "asc" ? 1 : -1;
 
         switch (filters.sortField) {
@@ -139,10 +142,7 @@ export function ProductList() {
           case "stockActuel":
             return direction * ((a.stockActuel ?? 0) - (b.stockActuel ?? 0));
           case "createdAt":
-            return (
-              direction *
-              (new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime())
-            );
+            return direction * (new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
           default:
             return 0;
         }
@@ -156,7 +156,6 @@ export function ProductList() {
       if (!catId) return acc;
 
       if (!acc[catId]) {
-        // Trouver la catégorie dans la liste
         const categorie = categories.find((c) => c.id === catId);
         if (!categorie) return acc;
 
@@ -252,47 +251,23 @@ export function ProductList() {
   };
 
   return (
-    <div>
+    <Box>
       {/* Header avec boutons d'action */}
-      <div
-        style={{
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-          marginBottom: 16,
-          flexWrap: "wrap",
-          gap: 16,
-        }}
-      >
-        <div style={{ flex: 1 }} />
+      <Flex justify="between" align="center" mb="4" wrap="wrap" gap="4">
+        <Box style={{ flex: 1 }} />
 
         {/* Boutons d'action */}
-        <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+        <Flex gap="2" align="center">
           {/* Import/Export CSV */}
           <CSVImportExport onImportComplete={loadData} />
 
           {/* Bouton nouveau produit */}
-          <button
-            onClick={() => setShowForm(true)}
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: 8,
-              padding: "10px 20px",
-              borderRadius: 8,
-              border: "none",
-              backgroundColor: "var(--accent-9)",
-              color: "white",
-              fontSize: 14,
-              fontWeight: 600,
-              cursor: "pointer",
-            }}
-          >
-            <Plus size={18} />
+          <Button onClick={() => setShowForm(true)} size="2" style={{ minHeight: 44 }}>
+            <Plus size={18} weight="bold" aria-hidden="true" />
             Nouveau produit
-          </button>
-        </div>
-      </div>
+          </Button>
+        </Flex>
+      </Flex>
 
       {/* Filtres avancés */}
       <ProductFilters
@@ -305,28 +280,15 @@ export function ProductList() {
 
       {/* Liste des produits */}
       {isLoading ? (
-        <div
-          style={{
-            display: "flex",
-            justifyContent: "center",
-            alignItems: "center",
-            padding: 48,
-            color: "var(--gray-11)",
-          }}
-        >
-          Chargement...
-        </div>
+        <Flex justify="center" align="center" py="9" role="status" aria-live="polite">
+          <Spinner size="3" />
+          <Text size="2" color="gray" ml="3">
+            Chargement des produits...
+          </Text>
+        </Flex>
       ) : filteredProduits.length === 0 ? (
-        <div
-          style={{
-            display: "flex",
-            flexDirection: "column",
-            alignItems: "center",
-            padding: 48,
-            textAlign: "center",
-          }}
-        >
-          <div
+        <Flex direction="column" align="center" py="9" style={{ textAlign: "center" }}>
+          <Box
             style={{
               width: 64,
               height: 64,
@@ -338,96 +300,50 @@ export function ProductList() {
               marginBottom: 16,
             }}
           >
-            <AlertCircle size={28} style={{ color: "var(--gray-9)" }} />
-          </div>
-          <h3
-            style={{
-              fontSize: 16,
-              fontWeight: 600,
-              color: "var(--gray-12)",
-              marginBottom: 8,
-            }}
-          >
+            <WarningCircle size={28} style={{ color: "var(--gray-9)" }} aria-hidden="true" />
+          </Box>
+          <Text as="p" size="3" weight="bold" mb="2">
             {filters.search || filters.categorieId || filters.stockFilter !== "all"
               ? "Aucun produit trouvé"
               : "Aucun produit"}
-          </h3>
-          <p
-            style={{
-              fontSize: 14,
-              color: "var(--gray-11)",
-              marginBottom: 20,
-            }}
-          >
+          </Text>
+          <Text as="p" size="2" color="gray" mb="4">
             {filters.search || filters.categorieId || filters.stockFilter !== "all"
               ? "Essayez avec d'autres filtres"
               : "Créez votre premier produit pour commencer"}
-          </p>
+          </Text>
           {!filters.search && !filters.categorieId && filters.stockFilter === "all" && (
-            <button
-              onClick={() => setShowForm(true)}
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: 8,
-                padding: "10px 20px",
-                borderRadius: 8,
-                border: "none",
-                backgroundColor: "var(--accent-9)",
-                color: "white",
-                fontSize: 14,
-                fontWeight: 600,
-                cursor: "pointer",
-              }}
-            >
-              <Plus size={18} />
+            <Button onClick={() => setShowForm(true)} size="2" style={{ minHeight: 44 }}>
+              <Plus size={18} weight="bold" aria-hidden="true" />
               Créer un produit
-            </button>
+            </Button>
           )}
-        </div>
+        </Flex>
       ) : (
-        <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+        <Flex direction="column" gap="2">
           {/* Boutons Tout ouvrir / Tout fermer */}
-          <div style={{ display: "flex", gap: 8, marginBottom: 8 }}>
-            <button
+          <Flex gap="2" mb="2">
+            <Button
+              variant="outline"
+              color="gray"
+              size="2"
               onClick={() => setOpenCategories(Object.keys(groupedProduits))}
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: 6,
-                padding: "6px 12px",
-                fontSize: 12,
-                fontWeight: 500,
-                borderRadius: 6,
-                border: "1px solid var(--gray-a6)",
-                backgroundColor: "transparent",
-                color: "var(--gray-11)",
-                cursor: "pointer",
-              }}
+              style={{ minHeight: 44 }}
             >
-              <ChevronsUpDown size={14} />
+              <ArrowsOutLineVertical size={14} aria-hidden="true" />
               Tout ouvrir
-            </button>
-            <button
+            </Button>
+            <Button
+              variant="outline"
+              color="gray"
+              size="2"
               onClick={() => setOpenCategories([])}
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: 6,
-                padding: "6px 12px",
-                fontSize: 12,
-                fontWeight: 500,
-                borderRadius: 6,
-                border: "1px solid var(--gray-a6)",
-                backgroundColor: "transparent",
-                color: "var(--gray-11)",
-                cursor: "pointer",
-              }}
+              style={{ minHeight: 44 }}
             >
-              <ChevronRight size={14} />
+              <CaretRight size={14} aria-hidden="true" />
               Tout fermer
-            </button>
-          </div>
+            </Button>
+          </Flex>
 
           {/* Accordéon des catégories */}
           <Accordion.Root
@@ -437,10 +353,7 @@ export function ProductList() {
             style={{ display: "flex", flexDirection: "column", gap: 8 }}
           >
             {Object.values(groupedProduits).map(({ categorie, produits: catProduits }) => (
-              <Accordion.Item
-                key={categorie.id}
-                value={categorie.id}
-              >
+              <Accordion.Item key={categorie.id} value={categorie.id}>
                 <Accordion.Header style={{ margin: 0 }}>
                   <Accordion.Trigger
                     style={{
@@ -453,6 +366,7 @@ export function ProductList() {
                       border: "none",
                       cursor: "pointer",
                       textAlign: "left",
+                      minHeight: 44,
                     }}
                   >
                     {/* Indicateur couleur catégorie */}
@@ -467,32 +381,26 @@ export function ProductList() {
                     />
 
                     {/* Nom et compteur */}
-                    <div style={{ flex: 1, display: "flex", alignItems: "center", gap: 10 }}>
-                      <span
-                        style={{
-                          fontSize: 15,
-                          fontWeight: 600,
-                          color: "var(--gray-12)",
-                        }}
-                      >
+                    <Flex align="center" gap="2" style={{ flex: 1 }}>
+                      <Text size="3" weight="bold">
                         {categorie.nom}
-                      </span>
-                      <span
+                      </Text>
+                      <Text
+                        size="1"
+                        weight="medium"
+                        color="gray"
                         style={{
-                          fontSize: 13,
-                          fontWeight: 500,
-                          color: "var(--gray-10)",
                           backgroundColor: "var(--gray-a3)",
                           padding: "2px 8px",
                           borderRadius: 10,
                         }}
                       >
                         {catProduits.length}
-                      </span>
-                    </div>
+                      </Text>
+                    </Flex>
 
                     {/* Chevron avec rotation */}
-                    <ChevronDown
+                    <CaretDown
                       size={18}
                       style={{
                         color: "var(--gray-9)",
@@ -500,6 +408,7 @@ export function ProductList() {
                         flexShrink: 0,
                       }}
                       className="accordion-chevron"
+                      aria-hidden="true"
                     />
                   </Accordion.Trigger>
                 </Accordion.Header>
@@ -538,44 +447,50 @@ export function ProductList() {
               </Accordion.Item>
             ))}
           </Accordion.Root>
-        </div>
+        </Flex>
       )}
 
       {/* Statistiques */}
       {!isLoading && produits.length > 0 && (
-        <div
+        <Flex
+          gap="5"
+          wrap="wrap"
+          mt="6"
+          p="4"
           style={{
-            marginTop: 32,
-            padding: 16,
             backgroundColor: "var(--gray-a2)",
             borderRadius: 8,
-            display: "flex",
-            gap: 24,
             fontSize: 13,
-            color: "var(--gray-11)",
-            flexWrap: "wrap",
           }}
         >
-          <span>
-            <strong style={{ color: "var(--gray-12)" }}>{produits.length}</strong> produit
-            {produits.length > 1 ? "s" : ""} au total
-          </span>
-          <span>
-            <strong style={{ color: "var(--green-11)" }}>
+          <Text size="2" color="gray">
+            <Text weight="bold" style={{ color: "var(--gray-12)" }}>{produits.length}</Text>
+            {" "}produit{produits.length > 1 ? "s" : ""} au total
+          </Text>
+          <Text size="2" color="gray">
+            <Text weight="bold" style={{ color: "var(--green-11)" }}>
               {produits.filter((p) => p.actif).length}
-            </strong>{" "}
-            actif{produits.filter((p) => p.actif).length > 1 ? "s" : ""}
-          </span>
-          <span>
-            <strong style={{ color: "var(--red-11)" }}>
-              {produits.filter((p) => p.gererStock && p.stockActuel !== null && p.stockMin !== null && p.stockActuel <= p.stockMin).length}
-            </strong>{" "}
-            en stock bas
-          </span>
-        </div>
+            </Text>
+            {" "}actif{produits.filter((p) => p.actif).length > 1 ? "s" : ""}
+          </Text>
+          <Text size="2" color="gray">
+            <Text weight="bold" style={{ color: "var(--red-11)" }}>
+              {
+                produits.filter(
+                  (p) =>
+                    p.gererStock &&
+                    p.stockActuel !== null &&
+                    p.stockMin !== null &&
+                    p.stockActuel <= p.stockMin
+                ).length
+              }
+            </Text>
+            {" "}en stock bas
+          </Text>
+        </Flex>
       )}
 
-      {/* Modal de création */}
+      {/* Modal de création - Dialog Radix UI */}
       {showForm ? <ProductForm
           categories={categories}
           onSubmit={handleCreate}
@@ -583,7 +498,7 @@ export function ProductList() {
           isLoading={isSubmitting}
         /> : null}
 
-      {/* Modal d'édition */}
+      {/* Modal d'édition - Dialog Radix UI */}
       {editingProduct ? <ProductForm
           initialData={editingProduct}
           categories={categories}
@@ -599,100 +514,38 @@ export function ProductList() {
           onClose={() => setSupplementsProduct(null)}
         /> : null}
 
-      {/* Modal de confirmation de suppression */}
-      {deleteConfirm ? <div
-          style={{
-            position: "fixed",
-            inset: 0,
-            backgroundColor: "rgba(0, 0, 0, 0.5)",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            zIndex: 100,
-            padding: 16,
-          }}
-          onClick={() => setDeleteConfirm(null)}
-        >
-          <div
-            style={{
-              backgroundColor: "var(--color-panel-solid)",
-              borderRadius: 16,
-              padding: 24,
-              maxWidth: 400,
-              width: "100%",
-            }}
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div
-              style={{
-                width: 48,
-                height: 48,
-                borderRadius: 12,
-                backgroundColor: "var(--red-a3)",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                marginBottom: 16,
-              }}
-            >
-              <AlertCircle size={24} style={{ color: "var(--red-9)" }} />
-            </div>
+      {/* AlertDialog de confirmation de suppression - Radix UI */}
+      <AlertDialog.Root
+        open={!!deleteConfirm}
+        onOpenChange={(open) => {
+          if (!open) setDeleteConfirm(null);
+        }}
+      >
+        <AlertDialog.Content maxWidth="400px">
+          <AlertDialog.Title>Supprimer ce produit ?</AlertDialog.Title>
+          <AlertDialog.Description size="2">
+            Le produit sera désactivé et n&apos;apparaîtra plus dans la liste. Vous pourrez le réactiver ultérieurement si nécessaire.
+          </AlertDialog.Description>
 
-            <h3
-              style={{
-                fontSize: 18,
-                fontWeight: 600,
-                color: "var(--gray-12)",
-                marginBottom: 8,
-              }}
-            >
-              Supprimer ce produit ?
-            </h3>
-
-            <p
-              style={{
-                fontSize: 14,
-                color: "var(--gray-11)",
-                marginBottom: 24,
-              }}
-            >
-              Cette action est irréversible. Si le produit a été vendu, la suppression sera bloquée.
-            </p>
-
-            <div style={{ display: "flex", gap: 12, justifyContent: "flex-end" }}>
-              <button
-                onClick={() => setDeleteConfirm(null)}
-                style={{
-                  padding: "10px 20px",
-                  fontSize: 14,
-                  fontWeight: 500,
-                  borderRadius: 8,
-                  border: "1px solid var(--gray-a6)",
-                  backgroundColor: "transparent",
-                  color: "var(--gray-12)",
-                  cursor: "pointer",
-                }}
-              >
+          <Flex gap="3" mt="4" justify="end">
+            <AlertDialog.Cancel>
+              <Button variant="soft" color="gray">
                 Annuler
-              </button>
-              <button
-                onClick={() => handleDelete(deleteConfirm)}
-                style={{
-                  padding: "10px 20px",
-                  fontSize: 14,
-                  fontWeight: 600,
-                  borderRadius: 8,
-                  border: "none",
-                  backgroundColor: "var(--red-9)",
-                  color: "white",
-                  cursor: "pointer",
+              </Button>
+            </AlertDialog.Cancel>
+            <AlertDialog.Action>
+              <Button
+                color="red"
+                onClick={() => {
+                  if (deleteConfirm) handleDelete(deleteConfirm);
                 }}
               >
                 Supprimer
-              </button>
-            </div>
-          </div>
-        </div> : null}
-    </div>
+              </Button>
+            </AlertDialog.Action>
+          </Flex>
+        </AlertDialog.Content>
+      </AlertDialog.Root>
+    </Box>
   );
 }

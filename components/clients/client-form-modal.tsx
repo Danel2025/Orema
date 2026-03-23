@@ -55,7 +55,6 @@ export function ClientFormModal({
     setValue,
     reset,
     formState: { errors },
-   
   } = useForm<ClientFormData>({
     resolver: zodResolver(clientSchema) as any,
     defaultValues: {
@@ -80,9 +79,7 @@ export function ClientFormModal({
         : await createClient(data);
 
       if (result.success) {
-        toast.success(
-          isEditing ? "Client mis a jour avec succes" : "Client cree avec succes"
-        );
+        toast.success(isEditing ? "Client mis à jour avec succès" : "Client créé avec succès");
         reset();
         onOpenChange(false);
         onSuccess?.();
@@ -99,13 +96,11 @@ export function ClientFormModal({
   return (
     <Dialog.Root open={open} onOpenChange={onOpenChange}>
       <Dialog.Content maxWidth="500px">
-        <Dialog.Title>
-          {isEditing ? "Modifier le client" : "Nouveau client"}
-        </Dialog.Title>
+        <Dialog.Title>{isEditing ? "Modifier le client" : "Nouveau client"}</Dialog.Title>
         <Dialog.Description size="2" color="gray" mb="4">
           {isEditing
             ? "Modifiez les informations du client."
-            : "Remplissez les informations pour creer un nouveau client."}
+            : "Remplissez les informations pour créer un nouveau client."}
         </Dialog.Description>
 
         <form onSubmit={handleSubmit(onSubmit)}>
@@ -130,26 +125,25 @@ export function ClientFormModal({
                     <User size={16} />
                   </TextField.Slot>
                 </TextField.Root>
-                {errors.nom ? <Text size="1" color="red">
+                {errors.nom ? (
+                  <Text size="1" color="red">
                     {errors.nom.message}
-                  </Text> : null}
+                  </Text>
+                ) : null}
               </Flex>
 
-              {/* Prenom */}
+              {/* Prénom */}
               <Flex direction="column" gap="1">
                 <Text as="label" size="2" weight="medium">
-                  Prenom
+                  Prénom
                 </Text>
-                <TextField.Root
-                  {...register("prenom")}
-                  placeholder="Ex: Jean-Pierre, Marie..."
-                />
+                <TextField.Root {...register("prenom")} placeholder="Ex: Jean-Pierre, Marie..." />
               </Flex>
 
-              {/* Telephone */}
+              {/* Téléphone */}
               <Flex direction="column" gap="1">
                 <Text as="label" size="2" weight="medium">
-                  Telephone
+                  Téléphone
                 </Text>
                 <TextField.Root
                   {...register("telephone")}
@@ -160,9 +154,11 @@ export function ClientFormModal({
                     <Phone size={16} />
                   </TextField.Slot>
                 </TextField.Root>
-                {errors.telephone ? <Text size="1" color="red">
+                {errors.telephone ? (
+                  <Text size="1" color="red">
                     {errors.telephone.message}
-                  </Text> : null}
+                  </Text>
+                ) : null}
               </Flex>
 
               {/* Email */}
@@ -180,9 +176,11 @@ export function ClientFormModal({
                     <Mail size={16} />
                   </TextField.Slot>
                 </TextField.Root>
-                {errors.email ? <Text size="1" color="red">
+                {errors.email ? (
+                  <Text size="1" color="red">
                     {errors.email.message}
-                  </Text> : null}
+                  </Text>
+                ) : null}
               </Flex>
 
               {/* Adresse */}
@@ -200,20 +198,20 @@ export function ClientFormModal({
 
             <Separator size="4" />
 
-            {/* Section: Credit */}
+            {/* Section: Crédit */}
             <Flex direction="column" gap="3">
               <Text size="2" weight="medium" color="gray">
-                Options de credit
+                Options de crédit
               </Text>
 
-              {/* Autoriser credit */}
+              {/* Autoriser crédit */}
               <Flex align="center" justify="between">
                 <Flex direction="column" gap="1">
                   <Text size="2" weight="medium">
-                    Autoriser le credit
+                    Autoriser le crédit
                   </Text>
                   <Text size="1" color="gray">
-                    Permet au client d'acheter a credit
+                    Permet au client d'acheter à crédit
                   </Text>
                 </Flex>
                 <Switch
@@ -222,10 +220,11 @@ export function ClientFormModal({
                 />
               </Flex>
 
-              {/* Limite credit */}
-              {creditAutorise ? <Flex direction="column" gap="1">
+              {/* Limite crédit */}
+              {creditAutorise ? (
+                <Flex direction="column" gap="1">
                   <Text as="label" size="2" weight="medium">
-                    Limite de credit (FCFA)
+                    Limite de crédit (FCFA)
                   </Text>
                   <TextField.Root
                     {...register("limitCredit")}
@@ -238,7 +237,8 @@ export function ClientFormModal({
                       <Building2 size={16} />
                     </TextField.Slot>
                   </TextField.Root>
-                </Flex> : null}
+                </Flex>
+              ) : null}
             </Flex>
 
             <Separator size="4" />
@@ -269,7 +269,7 @@ export function ClientFormModal({
             </Dialog.Close>
             <Button type="submit" disabled={isLoading}>
               {isLoading ? <Loader2 size={16} className="animate-spin" /> : null}
-              {isEditing ? "Enregistrer" : "Creer le client"}
+              {isEditing ? "Enregistrer" : "Créer le client"}
             </Button>
           </Flex>
         </form>

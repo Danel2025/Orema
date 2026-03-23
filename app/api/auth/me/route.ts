@@ -7,25 +7,25 @@
  * ou null si non connecte.
  */
 
-import { NextResponse } from 'next/server'
-import { getCurrentUser } from '@/lib/auth'
+import { NextResponse } from "next/server";
+import { getCurrentUser } from "@/lib/auth";
 
-export const dynamic = 'force-dynamic'
+export const dynamic = "force-dynamic";
 
 export async function GET() {
   try {
-    const user = await getCurrentUser()
+    const user = await getCurrentUser();
 
     if (!user) {
-      return NextResponse.json({ user: null }, { status: 200 })
+      return NextResponse.json({ user: null }, { status: 200 });
     }
 
-    return NextResponse.json({ user })
+    return NextResponse.json({ user });
   } catch (error) {
-    console.error('[API /auth/me] Erreur:', error)
+    console.error("[API /auth/me] Erreur:", error);
     return NextResponse.json(
-      { error: 'Erreur lors de la recuperation de l\'utilisateur' },
+      { error: "Erreur lors de la recuperation de l'utilisateur" },
       { status: 500 }
-    )
+    );
   }
 }

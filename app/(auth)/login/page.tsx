@@ -1,34 +1,42 @@
-'use client'
+"use client";
 
 /**
  * Page de connexion par email et mot de passe
  * Design split-screen moderne avec illustration
  */
 
-import { useState, useEffect, Suspense } from 'react'
-import { useRouter, useSearchParams } from 'next/navigation'
-import { useForm } from 'react-hook-form'
-import { zodResolver } from '@hookform/resolvers/zod'
-import Link from 'next/link'
-import Image from 'next/image'
-import { toast } from 'sonner'
-import { Box, Button, Flex, Text, TextField, Separator } from '@radix-ui/themes'
-import { LockIcon, MailIcon, AlertCircleIcon, UtensilsCrossed, ShoppingCart, BarChart3, Users } from 'lucide-react'
-import { createClient } from '@/lib/supabase/client'
-import { loginSchema, type LoginInput } from '@/schemas/auth'
-import { ThemeToggle } from '@/components/layout/theme-toggle'
-import { getDefaultRedirectRoute } from '@/actions/auth-supabase'
+import { useState, useEffect, Suspense } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import Link from "next/link";
+import Image from "next/image";
+import { toast } from "sonner";
+import { Box, Button, Flex, Text, TextField, Separator } from "@radix-ui/themes";
+import {
+  LockIcon,
+  MailIcon,
+  AlertCircleIcon,
+  UtensilsCrossed,
+  ShoppingCart,
+  BarChart3,
+  Users,
+} from "lucide-react";
+import { createClient } from "@/lib/supabase/client";
+import { loginSchema, type LoginInput } from "@/schemas/auth";
+import { ThemeToggle } from "@/components/layout/theme-toggle";
+import { getDefaultRedirectRoute } from "@/actions/auth-supabase";
 
 function LoginPageContent() {
-  const router = useRouter()
-  const searchParams = useSearchParams()
-  const [isLoading, setIsLoading] = useState(false)
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
-    if (searchParams.get('registered') === 'true') {
-      toast.success('Compte créé avec succès ! Connectez-vous pour accéder à votre établissement.')
+    if (searchParams.get("registered") === "true") {
+      toast.success("Compte créé avec succès ! Connectez-vous pour accéder à votre établissement.");
     }
-  }, [searchParams])
+  }, [searchParams]);
 
   const {
     register,
@@ -36,36 +44,37 @@ function LoginPageContent() {
     formState: { errors },
   } = useForm<LoginInput>({
     resolver: zodResolver(loginSchema),
-  })
+  });
 
   const onSubmit = async (data: LoginInput) => {
-    setIsLoading(true)
+    setIsLoading(true);
 
     try {
-      const supabase = createClient()
+      const supabase = createClient();
       const { data: authData, error } = await supabase.auth.signInWithPassword({
         email: data.email,
         password: data.password,
-      })
+      });
 
       if (error) {
-        console.error('[Login] Supabase Auth error:', error.message)
-        toast.error('Email ou mot de passe incorrect')
-        setIsLoading(false)
+        console.error("[Login] Supabase Auth error:", error.message);
+        toast.error("Email ou mot de passe incorrect");
+        setIsLoading(false);
       } else {
-        toast.success('Connexion réussie')
-        const redirectResult = await getDefaultRedirectRoute()
-        const redirectPath = redirectResult.success && redirectResult.data ? redirectResult.data : '/caisse'
+        toast.success("Connexion réussie");
+        const redirectResult = await getDefaultRedirectRoute();
+        const redirectPath =
+          redirectResult.success && redirectResult.data ? redirectResult.data : "/caisse";
         setTimeout(() => {
-          window.location.href = redirectPath
-        }, 500)
+          window.location.href = redirectPath;
+        }, 500);
       }
     } catch (error) {
-      toast.error('Une erreur est survenue')
-      console.error('[Login] Unexpected error:', error)
-      setIsLoading(false)
+      toast.error("Une erreur est survenue");
+      console.error("[Login] Unexpected error:", error);
+      setIsLoading(false);
     }
-  }
+  };
 
   return (
     <>
@@ -382,27 +391,45 @@ function LoginPageContent() {
         {/* Left Panel - Illustration */}
         <div className="left-panel">
           {/* Floating decorative icons */}
-          <div className="floating-icon" style={{ top: '10%', left: '10%' }}>
+          <div className="floating-icon" style={{ top: "10%", left: "10%" }}>
             <UtensilsCrossed size={48} />
           </div>
-          <div className="floating-icon" style={{ top: '20%', right: '15%' }}>
+          <div className="floating-icon" style={{ top: "20%", right: "15%" }}>
             <ShoppingCart size={40} />
           </div>
-          <div className="floating-icon" style={{ bottom: '25%', left: '20%' }}>
+          <div className="floating-icon" style={{ bottom: "25%", left: "20%" }}>
             <BarChart3 size={44} />
           </div>
-          <div className="floating-icon" style={{ bottom: '15%', right: '10%' }}>
+          <div className="floating-icon" style={{ bottom: "15%", right: "10%" }}>
             <Users size={36} />
           </div>
 
           {/* Glow effects */}
-          <div className="glow-circle" style={{ width: '300px', height: '300px', top: '-50px', right: '-50px' }} />
-          <div className="glow-circle" style={{ width: '400px', height: '400px', bottom: '-100px', left: '-100px', animationDelay: '2s' }} />
+          <div
+            className="glow-circle"
+            style={{ width: "300px", height: "300px", top: "-50px", right: "-50px" }}
+          />
+          <div
+            className="glow-circle"
+            style={{
+              width: "400px",
+              height: "400px",
+              bottom: "-100px",
+              left: "-100px",
+              animationDelay: "2s",
+            }}
+          />
 
           {/* Hero Content */}
           <div className="hero-content">
             <div className="hero-logo">
-              <Image src="/images/logos/ic-lg.webp" alt="Oréma N+" width={56} height={56} style={{ objectFit: "contain" }} />
+              <Image
+                src="/images/logos/ic-lg.webp"
+                alt="Oréma N+"
+                width={56}
+                height={56}
+                style={{ objectFit: "contain" }}
+              />
             </div>
             <h1 className="hero-title">Oréma N+</h1>
             <p className="hero-subtitle">
@@ -452,7 +479,13 @@ function LoginPageContent() {
           <div className="login-form-container">
             <div className="form-header">
               <div className="form-logo-mobile">
-                <Image src="/images/logos/ic-lg.webp" alt="Oréma N+" width={36} height={36} style={{ objectFit: "contain" }} />
+                <Image
+                  src="/images/logos/ic-lg.webp"
+                  alt="Oréma N+"
+                  width={36}
+                  height={36}
+                  style={{ objectFit: "contain" }}
+                />
               </div>
               <h2 className="form-title">Connexion</h2>
               <p className="form-subtitle">Accédez à votre espace administrateur</p>
@@ -470,20 +503,22 @@ function LoginPageContent() {
                   placeholder="votre@email.com"
                   autoComplete="email"
                   size="3"
-                  {...register('email')}
+                  {...register("email")}
                   disabled={isLoading}
-                  style={{ width: '100%' }}
+                  style={{ width: "100%" }}
                 >
                   <TextField.Slot side="left">
-                    <MailIcon size={18} style={{ color: 'var(--gray-9)' }} />
+                    <MailIcon size={18} style={{ color: "var(--gray-9)" }} />
                   </TextField.Slot>
                 </TextField.Root>
-                {errors.email ? <Flex gap="1" align="center" mt="1">
+                {errors.email ? (
+                  <Flex gap="1" align="center" mt="1">
                     <AlertCircleIcon size={14} color="var(--red-9)" />
                     <Text size="1" color="red">
                       {errors.email.message}
                     </Text>
-                  </Flex> : null}
+                  </Flex>
+                ) : null}
               </div>
 
               {/* Password */}
@@ -497,29 +532,27 @@ function LoginPageContent() {
                   placeholder="••••••••"
                   autoComplete="current-password"
                   size="3"
-                  {...register('password')}
+                  {...register("password")}
                   disabled={isLoading}
-                  style={{ width: '100%' }}
+                  style={{ width: "100%" }}
                 >
                   <TextField.Slot side="left">
-                    <LockIcon size={18} style={{ color: 'var(--gray-9)' }} />
+                    <LockIcon size={18} style={{ color: "var(--gray-9)" }} />
                   </TextField.Slot>
                 </TextField.Root>
-                {errors.password ? <Flex gap="1" align="center" mt="1">
+                {errors.password ? (
+                  <Flex gap="1" align="center" mt="1">
                     <AlertCircleIcon size={14} color="var(--red-9)" />
                     <Text size="1" color="red">
                       {errors.password.message}
                     </Text>
-                  </Flex> : null}
+                  </Flex>
+                ) : null}
               </div>
 
               {/* Submit Button */}
-              <button
-                type="submit"
-                className="submit-button"
-                disabled={isLoading}
-              >
-                {isLoading ? 'Connexion en cours...' : 'Se connecter'}
+              <button type="submit" className="submit-button" disabled={isLoading}>
+                {isLoading ? "Connexion en cours..." : "Se connecter"}
               </button>
             </form>
 
@@ -546,13 +579,11 @@ function LoginPageContent() {
             </div>
           </div>
 
-          <div className="footer">
-            Oréma N+ POS System © 2026
-          </div>
+          <div className="footer">Oréma N+ POS System © 2026</div>
         </div>
       </div>
     </>
-  )
+  );
 }
 
 export default function LoginPage() {
@@ -560,5 +591,5 @@ export default function LoginPage() {
     <Suspense>
       <LoginPageContent />
     </Suspense>
-  )
+  );
 }

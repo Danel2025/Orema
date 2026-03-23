@@ -5,21 +5,16 @@
  * qui devra etre rejouee quand le reseau revient.
  */
 
-import type { IDBPDatabase } from 'idb'
-import type {
-  OfflineDBSchema,
-  MutationEntry,
-  MutationType,
-  MutationStatus,
-} from './types'
-import { STORE_NAMES, MAX_MUTATION_RETRIES } from './constants'
+import type { IDBPDatabase } from "idb";
+import type { OfflineDBSchema, MutationEntry, MutationType, MutationStatus } from "./types";
+import { STORE_NAMES, MAX_MUTATION_RETRIES } from "./constants";
 
 // ============================================================================
 // Helpers
 // ============================================================================
 
 function generateId(): string {
-  return `mut_${Date.now()}_${Math.random().toString(36).slice(2, 9)}`
+  return `mut_${Date.now()}_${Math.random().toString(36).slice(2, 9)}`;
 }
 
 // ============================================================================
@@ -33,10 +28,10 @@ function generateId(): string {
 export async function enqueueMutation(
   db: IDBPDatabase<OfflineDBSchema>,
   mutation: {
-    type: MutationType
-    entity: string
-    entityId: string
-    data: unknown
+    type: MutationType;
+    entity: string;
+    entityId: string;
+    data: unknown;
   }
 ): Promise<string> {
   const entry: MutationEntry = {
@@ -47,11 +42,11 @@ export async function enqueueMutation(
     data: mutation.data,
     timestamp: Date.now(),
     retryCount: 0,
-    status: 'pending',
-  }
+    status: "pending",
+  };
 
-  await db.put(STORE_NAMES.mutationQueue, entry)
-  return entry.id
+  await db.put(STORE_NAMES.mutationQueue, entry);
+  return entry.id;
 }
 
 /**
@@ -61,11 +56,11 @@ export async function dequeueMutation(
   db: IDBPDatabase<OfflineDBSchema>,
   id: string
 ): Promise<void> {
-  const entry = await db.get(STORE_NAMES.mutationQueue, id)
-  if (!entry) return
+  const entry = await db.get(STORE_NAMES.mutationQueue, id);
+  if (!entry) return;
 
-  entry.status = 'completed'
-  await db.put(STORE_NAMES.mutationQueue, entry)
+  entry.status = "completed";
+  await db.put(STORE_NAMES.mutationQueue, entry);
 }
 
 /**
@@ -74,45 +69,28 @@ export async function dequeueMutation(
 export async function getPendingMutations(
   db: IDBPDatabase<OfflineDBSchema>
 ): Promise<MutationEntry[]> {
-  const all = await db.getAllFromIndex(
-    STORE_NAMES.mutationQueue,
-    'by-status',
-    'pending'
-  )
-  return all.sort((a, b) => a.timestamp - b.timestamp)
+  const all = await db.getAllFromIndex(STORE_NAMES.mutationQueue, "by-status", "pending");
+  return all.sort((a, b) => a.timestamp - b.timestamp);
 }
 
 /**
  * Retourne le nombre de mutations en attente (pending + failed).
  */
-export async function getMutationCount(
-  db: IDBPDatabase<OfflineDBSchema>
-): Promise<number> {
-  const pending = await db.countFromIndex(
-    STORE_NAMES.mutationQueue,
-    'by-status',
-    'pending'
-  )
-  const failed = await db.countFromIndex(
-    STORE_NAMES.mutationQueue,
-    'by-status',
-    'failed'
-  )
-  return pending + failed
+export async function getMutationCount(db: IDBPDatabase<OfflineDBSchema>): Promise<number> {
+  const pending = await db.countFromIndex(STORE_NAMES.mutationQueue, "by-status", "pending");
+  const failed = await db.countFromIndex(STORE_NAMES.mutationQueue, "by-status", "failed");
+  return pending + failed;
 }
 
 /**
  * Marque une mutation comme en cours de synchronisation.
  */
-export async function markSyncing(
-  db: IDBPDatabase<OfflineDBSchema>,
-  id: string
-): Promise<void> {
-  const entry = await db.get(STORE_NAMES.mutationQueue, id)
-  if (!entry) return
+export async function markSyncing(db: IDBPDatabase<OfflineDBSchema>, id: string): Promise<void> {
+  const entry = await db.get(STORE_NAMES.mutationQueue, id);
+  if (!entry) return;
 
-  entry.status = 'syncing'
-  await db.put(STORE_NAMES.mutationQueue, entry)
+  entry.status = "syncing";
+  await db.put(STORE_NAMES.mutationQueue, entry);
 }
 
 /**
@@ -124,41 +102,38 @@ export async function markFailed(
   id: string,
   error: string
 ): Promise<void> {
-  const entry = await db.get(STORE_NAMES.mutationQueue, id)
-  if (!entry) return
+  const entry = await db.get(STORE_NAMES.mutationQueue, id);
+  if (!entry) return;
 
-  entry.retryCount += 1
+  entry.retryCount += 1;
 
   if (entry.retryCount >= MAX_MUTATION_RETRIES) {
-    entry.status = 'failed'
+    entry.status = "failed";
   } else {
     // Remet en pending pour la prochaine tentative
-    entry.status = 'pending'
+    entry.status = "pending";
   }
 
   // Stocker l'erreur dans les data pour diagnostic
   entry.data = {
-    ...(typeof entry.data === 'object' && entry.data !== null ? entry.data : {}),
+    ...(typeof entry.data === "object" && entry.data !== null ? entry.data : {}),
     _lastError: error,
     _lastRetryAt: Date.now(),
-  }
+  };
 
-  await db.put(STORE_NAMES.mutationQueue, entry)
+  await db.put(STORE_NAMES.mutationQueue, entry);
 }
 
 /**
  * Remet une mutation failed en pending pour re-essayer.
  */
-export async function retryMutation(
-  db: IDBPDatabase<OfflineDBSchema>,
-  id: string
-): Promise<void> {
-  const entry = await db.get(STORE_NAMES.mutationQueue, id)
-  if (!entry || entry.status !== 'failed') return
+export async function retryMutation(db: IDBPDatabase<OfflineDBSchema>, id: string): Promise<void> {
+  const entry = await db.get(STORE_NAMES.mutationQueue, id);
+  if (!entry || entry.status !== "failed") return;
 
-  entry.status = 'pending'
-  entry.retryCount = 0
-  await db.put(STORE_NAMES.mutationQueue, entry)
+  entry.status = "pending";
+  entry.retryCount = 0;
+  await db.put(STORE_NAMES.mutationQueue, entry);
 }
 
 /**
@@ -167,44 +142,32 @@ export async function retryMutation(
 export async function getFailedMutations(
   db: IDBPDatabase<OfflineDBSchema>
 ): Promise<MutationEntry[]> {
-  return db.getAllFromIndex(
-    STORE_NAMES.mutationQueue,
-    'by-status',
-    'failed'
-  )
+  return db.getAllFromIndex(STORE_NAMES.mutationQueue, "by-status", "failed");
 }
 
 /**
  * Purge les mutations terminees (completed) de la queue.
  */
-export async function clearCompleted(
-  db: IDBPDatabase<OfflineDBSchema>
-): Promise<number> {
-  const completed = await db.getAllFromIndex(
-    STORE_NAMES.mutationQueue,
-    'by-status',
-    'completed'
-  )
+export async function clearCompleted(db: IDBPDatabase<OfflineDBSchema>): Promise<number> {
+  const completed = await db.getAllFromIndex(STORE_NAMES.mutationQueue, "by-status", "completed");
 
-  const tx = db.transaction(STORE_NAMES.mutationQueue, 'readwrite')
-  let count = 0
+  const tx = db.transaction(STORE_NAMES.mutationQueue, "readwrite");
+  let count = 0;
 
   for (const entry of completed) {
-    await tx.store.delete(entry.id)
-    count++
+    await tx.store.delete(entry.id);
+    count++;
   }
 
-  await tx.done
-  return count
+  await tx.done;
+  return count;
 }
 
 /**
  * Purge toutes les mutations (pour un reset complet).
  */
-export async function clearAllMutations(
-  db: IDBPDatabase<OfflineDBSchema>
-): Promise<void> {
-  await db.clear(STORE_NAMES.mutationQueue)
+export async function clearAllMutations(db: IDBPDatabase<OfflineDBSchema>): Promise<void> {
+  await db.clear(STORE_NAMES.mutationQueue);
 }
 
 /**
@@ -214,5 +177,5 @@ export async function getMutationById(
   db: IDBPDatabase<OfflineDBSchema>,
   id: string
 ): Promise<MutationEntry | undefined> {
-  return db.get(STORE_NAMES.mutationQueue, id)
+  return db.get(STORE_NAMES.mutationQueue, id);
 }

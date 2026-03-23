@@ -4,17 +4,18 @@
  * ProductFilters - Filtres avancés pour la liste des produits
  */
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useRef } from "react";
 import {
-  Search,
-  Filter,
-  ChevronDown,
+  MagnifyingGlass,
+  Funnel,
+  CaretDown,
   X,
   SlidersHorizontal,
-  AlertTriangle,
+  Warning,
   Package,
   Check,
-} from "lucide-react";
+} from "@phosphor-icons/react";
+import { Box, Flex, Text, Button, IconButton } from "@radix-ui/themes";
 
 interface Categorie {
   id: string;
@@ -52,19 +53,24 @@ export function ProductFilters({
 }: ProductFiltersProps) {
   const [showAdvanced, setShowAdvanced] = useState(false);
   const [localSearch, setLocalSearch] = useState(filters.search);
+  const debounceRef = useRef<ReturnType<typeof setTimeout>>(undefined);
 
-  // Debounce la recherche
+  // Debounce la recherche avec ref pour éviter les boucles
   useEffect(() => {
-    const timer = setTimeout(() => {
+    debounceRef.current = setTimeout(() => {
       if (localSearch !== filters.search) {
         onFiltersChange({ ...filters, search: localSearch });
       }
     }, 300);
 
-    return () => clearTimeout(timer);
-  }, [localSearch, filters, onFiltersChange]);
+    return () => {
+      if (debounceRef.current) clearTimeout(debounceRef.current);
+    };
+    // On utilise uniquement localSearch pour le debounce
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [localSearch]);
 
-  // Mettre à jour la recherche locale quand les filtres changent
+  // Mettre à jour la recherche locale quand les filtres changent de l'extérieur
   useEffect(() => {
     setLocalSearch(filters.search);
   }, [filters.search]);
@@ -79,9 +85,7 @@ export function ProductFilters({
 
   const handleSortChange = (field: SortField) => {
     const direction =
-      filters.sortField === field && filters.sortDirection === "asc"
-        ? "desc"
-        : "asc";
+      filters.sortField === field && filters.sortDirection === "asc" ? "desc" : "asc";
     onFiltersChange({ ...filters, sortField: field, sortDirection: direction });
   };
 
@@ -103,16 +107,13 @@ export function ProductFilters({
 
   // Vérifier si des filtres sont actifs
   const hasActiveFilters =
-    filters.search ||
-    filters.categorieId ||
-    filters.stockFilter !== "all" ||
-    filters.showInactive;
+    filters.search || filters.categorieId || filters.stockFilter !== "all" || filters.showInactive;
 
   const stockFilterOptions: { value: StockFilter; label: string; icon: React.ReactNode }[] = [
-    { value: "all", label: "Tout", icon: <Package size={14} /> },
-    { value: "in_stock", label: "En stock", icon: <Check size={14} /> },
-    { value: "low_stock", label: "Stock bas", icon: <AlertTriangle size={14} /> },
-    { value: "out_of_stock", label: "Rupture", icon: <X size={14} /> },
+    { value: "all", label: "Tout", icon: <Package size={14} aria-hidden="true" /> },
+    { value: "in_stock", label: "En stock", icon: <Check size={14} aria-hidden="true" /> },
+    { value: "low_stock", label: "Stock bas", icon: <Warning size={14} aria-hidden="true" /> },
+    { value: "out_of_stock", label: "Rupture", icon: <X size={14} aria-hidden="true" /> },
   ];
 
   const sortOptions: { value: SortField; label: string }[] = [
@@ -123,22 +124,14 @@ export function ProductFilters({
   ];
 
   return (
-    <div style={{ marginBottom: 24 }}>
+    <Box mb="5">
       {/* Ligne principale de filtres */}
-      <div
-        style={{
-          display: "flex",
-          alignItems: "center",
-          gap: 12,
-          flexWrap: "wrap",
-        }}
-      >
+      <Flex align="center" gap="3" wrap="wrap">
         {/* Recherche */}
-        <div
+        <Flex
+          align="center"
+          gap="2"
           style={{
-            display: "flex",
-            alignItems: "center",
-            gap: 10,
             backgroundColor: "var(--gray-a3)",
             borderRadius: 8,
             padding: "10px 14px",
@@ -147,10 +140,11 @@ export function ProductFilters({
             maxWidth: 350,
           }}
         >
-          <Search size={18} style={{ color: "var(--gray-9)", flexShrink: 0 }} />
+          <MagnifyingGlass size={18} style={{ color: "var(--gray-9)", flexShrink: 0 }} aria-hidden="true" />
           <input
             type="text"
             placeholder="Rechercher par nom, description ou code-barres..."
+            aria-label="Rechercher des produits"
             value={localSearch}
             onChange={(e) => setLocalSearch(e.target.value)}
             style={{
@@ -162,28 +156,27 @@ export function ProductFilters({
               color: "var(--gray-12)",
             }}
           />
-          {localSearch ? <button
+          {localSearch ? <IconButton
+              variant="ghost"
+              color="gray"
+              size="1"
               onClick={() => {
                 setLocalSearch("");
                 onFiltersChange({ ...filters, search: "" });
               }}
-              style={{
-                background: "none",
-                border: "none",
-                padding: 0,
-                cursor: "pointer",
-                color: "var(--gray-9)",
-              }}
+              aria-label="Effacer la recherche"
+              style={{ minWidth: 28, minHeight: 28 }}
             >
-              <X size={16} />
-            </button> : null}
-        </div>
+              <X size={16} aria-hidden="true" />
+            </IconButton> : null}
+        </Flex>
 
         {/* Filtre catégorie */}
         <div style={{ position: "relative" }}>
           <select
             value={filters.categorieId}
             onChange={(e) => handleCategoryChange(e.target.value)}
+            aria-label="Filtrer par catégorie"
             style={{
               appearance: "none",
               padding: "10px 36px 10px 14px",
@@ -199,16 +192,17 @@ export function ProductFilters({
               cursor: "pointer",
               outline: "none",
               minWidth: 180,
+              minHeight: 44,
             }}
           >
-            <option value="">Toutes les categories</option>
+            <option value="">Toutes les catégories</option>
             {categories.map((cat) => (
               <option key={cat.id} value={cat.id}>
                 {cat.nom}
               </option>
             ))}
           </select>
-          <ChevronDown
+          <CaretDown
             size={16}
             style={{
               position: "absolute",
@@ -218,28 +212,19 @@ export function ProductFilters({
               color: filters.categorieId ? "var(--accent-11)" : "var(--gray-9)",
               pointerEvents: "none",
             }}
+            aria-hidden="true"
           />
         </div>
 
         {/* Toggle filtres avancés */}
-        <button
+        <Button
+          variant={showAdvanced ? "soft" : "outline"}
+          color={showAdvanced ? undefined : "gray"}
+          size="2"
           onClick={() => setShowAdvanced(!showAdvanced)}
-          style={{
-            display: "flex",
-            alignItems: "center",
-            gap: 6,
-            padding: "10px 14px",
-            borderRadius: 8,
-            border: showAdvanced
-              ? "1px solid var(--accent-9)"
-              : "1px solid var(--gray-a6)",
-            backgroundColor: showAdvanced ? "var(--accent-a3)" : "transparent",
-            cursor: "pointer",
-            fontSize: 14,
-            color: showAdvanced ? "var(--accent-11)" : "var(--gray-11)",
-          }}
+          style={{ minHeight: 44 }}
         >
-          <SlidersHorizontal size={16} />
+          <SlidersHorizontal size={16} aria-hidden="true" />
           Filtres
           {hasActiveFilters ? <span
               style={{
@@ -249,16 +234,10 @@ export function ProductFilters({
                 backgroundColor: "var(--accent-9)",
               }}
             /> : null}
-        </button>
+        </Button>
 
         {/* Compteur */}
-        <div
-          style={{
-            fontSize: 13,
-            color: "var(--gray-10)",
-            marginLeft: "auto",
-          }}
-        >
+        <Text size="2" color="gray" style={{ marginLeft: "auto" }}>
           {filteredCount === totalCount ? (
             <span>{totalCount} produits</span>
           ) : (
@@ -266,207 +245,110 @@ export function ProductFilters({
               {filteredCount} sur {totalCount} produits
             </span>
           )}
-        </div>
-      </div>
+        </Text>
+      </Flex>
 
       {/* Filtres avancés */}
-      {showAdvanced ? <div
+      {showAdvanced ? <Box
+          mt="4"
+          p="4"
           style={{
-            marginTop: 16,
-            padding: 16,
             backgroundColor: "var(--gray-a2)",
             borderRadius: 12,
-            display: "flex",
-            flexDirection: "column",
-            gap: 16,
           }}
         >
-          {/* Ligne 1: Stock + Inactifs */}
-          <div
-            style={{
-              display: "flex",
-              gap: 24,
-              alignItems: "center",
-              flexWrap: "wrap",
-            }}
-          >
-            {/* Filtre stock */}
-            <div>
-              <label
-                style={{
-                  display: "block",
-                  fontSize: 12,
-                  fontWeight: 500,
-                  color: "var(--gray-11)",
-                  marginBottom: 8,
-                }}
-              >
-                Disponibilite stock
-              </label>
-              <div style={{ display: "flex", gap: 4 }}>
-                {stockFilterOptions.map((option) => (
-                  <button
-                    key={option.value}
-                    onClick={() => handleStockFilterChange(option.value)}
-                    style={{
-                      display: "flex",
-                      alignItems: "center",
-                      gap: 4,
-                      padding: "6px 12px",
-                      fontSize: 12,
-                      fontWeight: 500,
-                      borderRadius: 6,
-                      border:
-                        filters.stockFilter === option.value
-                          ? "1px solid var(--accent-9)"
-                          : "1px solid var(--gray-a6)",
-                      backgroundColor:
-                        filters.stockFilter === option.value
-                          ? "var(--accent-a3)"
-                          : "transparent",
-                      color:
-                        filters.stockFilter === option.value
-                          ? "var(--accent-11)"
-                          : "var(--gray-11)",
-                      cursor: "pointer",
-                    }}
-                  >
-                    {option.icon}
-                    {option.label}
-                  </button>
-                ))}
-              </div>
-            </div>
+          <Flex direction="column" gap="4">
+            {/* Ligne 1: Stock + Inactifs */}
+            <Flex gap="5" align="center" wrap="wrap">
+              {/* Filtre stock */}
+              <Box>
+                <Text as="label" size="1" weight="medium" color="gray" mb="2" style={{ display: "block" }}>
+                  Disponibilité stock
+                </Text>
+                <Flex gap="1">
+                  {stockFilterOptions.map((option) => (
+                    <Button
+                      key={option.value}
+                      variant={filters.stockFilter === option.value ? "soft" : "outline"}
+                      color={filters.stockFilter === option.value ? undefined : "gray"}
+                      size="1"
+                      onClick={() => handleStockFilterChange(option.value)}
+                      style={{ minHeight: 36 }}
+                    >
+                      {option.icon}
+                      {option.label}
+                    </Button>
+                  ))}
+                </Flex>
+              </Box>
 
-            {/* Toggle inactifs */}
-            <div>
-              <label
-                style={{
-                  display: "block",
-                  fontSize: 12,
-                  fontWeight: 500,
-                  color: "var(--gray-11)",
-                  marginBottom: 8,
-                }}
-              >
-                Produits inactifs
-              </label>
-              <button
-                onClick={handleToggleInactive}
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 6,
-                  padding: "6px 12px",
-                  borderRadius: 6,
-                  border: filters.showInactive
-                    ? "1px solid var(--accent-9)"
-                    : "1px solid var(--gray-a6)",
-                  backgroundColor: filters.showInactive
-                    ? "var(--accent-a3)"
-                    : "transparent",
-                  cursor: "pointer",
-                  fontSize: 12,
-                  fontWeight: 500,
-                  color: filters.showInactive
-                    ? "var(--accent-11)"
-                    : "var(--gray-11)",
-                }}
-              >
-                <Filter size={14} />
-                {filters.showInactive ? "Affiches" : "Masques"}
-              </button>
-            </div>
-          </div>
+              {/* Toggle inactifs */}
+              <Box>
+                <Text as="label" size="1" weight="medium" color="gray" mb="2" style={{ display: "block" }}>
+                  Produits inactifs
+                </Text>
+                <Button
+                  variant={filters.showInactive ? "soft" : "outline"}
+                  color={filters.showInactive ? undefined : "gray"}
+                  size="1"
+                  onClick={handleToggleInactive}
+                  style={{ minHeight: 36 }}
+                >
+                  <Funnel size={14} aria-hidden="true" />
+                  {filters.showInactive ? "Visibles" : "Masqués"}
+                </Button>
+              </Box>
+            </Flex>
 
-          {/* Ligne 2: Tri */}
-          <div>
-            <label
-              style={{
-                display: "block",
-                fontSize: 12,
-                fontWeight: 500,
-                color: "var(--gray-11)",
-                marginBottom: 8,
-              }}
-            >
-              Trier par
-            </label>
-            <div style={{ display: "flex", gap: 4 }}>
-              {sortOptions.map((option) => {
-                const isActive = filters.sortField === option.value;
-                return (
-                  <button
-                    key={option.value}
-                    onClick={() => handleSortChange(option.value)}
-                    style={{
-                      display: "flex",
-                      alignItems: "center",
-                      gap: 4,
-                      padding: "6px 12px",
-                      fontSize: 12,
-                      fontWeight: 500,
-                      borderRadius: 6,
-                      border: isActive
-                        ? "1px solid var(--blue-9)"
-                        : "1px solid var(--gray-a6)",
-                      backgroundColor: isActive
-                        ? "var(--blue-a3)"
-                        : "transparent",
-                      color: isActive ? "var(--blue-11)" : "var(--gray-11)",
-                      cursor: "pointer",
-                    }}
-                  >
-                    {option.label}
-                    {isActive ? <span style={{ fontSize: 10 }}>
-                        {filters.sortDirection === "asc" ? "↑" : "↓"}
-                      </span> : null}
-                  </button>
-                );
-              })}
-            </div>
-          </div>
+            {/* Ligne 2: Tri */}
+            <Box>
+              <Text as="label" size="1" weight="medium" color="gray" mb="2" style={{ display: "block" }}>
+                Trier par
+              </Text>
+              <Flex gap="1">
+                {sortOptions.map((option) => {
+                  const isActive = filters.sortField === option.value;
+                  return (
+                    <Button
+                      key={option.value}
+                      variant={isActive ? "soft" : "outline"}
+                      color={isActive ? "blue" : "gray"}
+                      size="1"
+                      onClick={() => handleSortChange(option.value)}
+                      style={{ minHeight: 36 }}
+                    >
+                      {option.label}
+                      {isActive ? <span style={{ fontSize: 10 }}>
+                          {filters.sortDirection === "asc" ? "\u2191" : "\u2193"}
+                        </span> : null}
+                    </Button>
+                  );
+                })}
+              </Flex>
+            </Box>
 
-          {/* Bouton réinitialiser */}
-          {hasActiveFilters ? <div style={{ borderTop: "1px solid var(--gray-a6)", paddingTop: 12 }}>
-              <button
-                onClick={handleClearFilters}
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 6,
-                  padding: "8px 14px",
-                  fontSize: 13,
-                  fontWeight: 500,
-                  borderRadius: 6,
-                  border: "none",
-                  backgroundColor: "var(--red-a3)",
-                  color: "var(--red-11)",
-                  cursor: "pointer",
-                }}
-              >
-                <X size={14} />
-                Reinitialiser les filtres
-              </button>
-            </div> : null}
-        </div> : null}
+            {/* Bouton réinitialiser */}
+            {hasActiveFilters ? <Box style={{ borderTop: "1px solid var(--gray-a6)", paddingTop: 12 }}>
+                <Button
+                  variant="soft"
+                  color="red"
+                  size="1"
+                  onClick={handleClearFilters}
+                  style={{ minHeight: 36 }}
+                >
+                  <X size={14} aria-hidden="true" />
+                  Réinitialiser les filtres
+                </Button>
+              </Box> : null}
+          </Flex>
+        </Box> : null}
 
       {/* Filtres actifs (badges) */}
-      {hasActiveFilters && !showAdvanced ? <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            gap: 8,
-            marginTop: 12,
-            flexWrap: "wrap",
-          }}
-        >
-          <span style={{ fontSize: 12, color: "var(--gray-10)" }}>
-            Filtres actifs:
-          </span>
+      {hasActiveFilters && !showAdvanced ? <Flex align="center" gap="2" mt="3" wrap="wrap">
+          <Text size="1" color="gray">Filtres actifs :</Text>
 
           {filters.search ? <FilterBadge
-              label={`Recherche: "${filters.search}"`}
+              label={`Recherche : "${filters.search}"`}
               onRemove={() => {
                 setLocalSearch("");
                 onFiltersChange({ ...filters, search: "" });
@@ -474,13 +356,13 @@ export function ProductFilters({
             /> : null}
 
           {filters.categorieId ? <FilterBadge
-              label={`Categorie: ${categories.find((c) => c.id === filters.categorieId)?.nom || ""}`}
+              label={`Catégorie : ${categories.find((c) => c.id === filters.categorieId)?.nom || ""}`}
               onRemove={() => onFiltersChange({ ...filters, categorieId: "" })}
             /> : null}
 
           {filters.stockFilter !== "all" && (
             <FilterBadge
-              label={`Stock: ${stockFilterOptions.find((o) => o.value === filters.stockFilter)?.label || ""}`}
+              label={`Stock : ${stockFilterOptions.find((o) => o.value === filters.stockFilter)?.label || ""}`}
               onRemove={() => onFiltersChange({ ...filters, stockFilter: "all" })}
             />
           )}
@@ -489,19 +371,13 @@ export function ProductFilters({
               label="Produits inactifs"
               onRemove={() => onFiltersChange({ ...filters, showInactive: false })}
             /> : null}
-        </div> : null}
-    </div>
+        </Flex> : null}
+    </Box>
   );
 }
 
 // Composant Badge de filtre
-function FilterBadge({
-  label,
-  onRemove,
-}: {
-  label: string;
-  onRemove: () => void;
-}) {
+function FilterBadge({ label, onRemove }: { label: string; onRemove: () => void }) {
   return (
     <span
       style={{
@@ -519,6 +395,7 @@ function FilterBadge({
       {label}
       <button
         onClick={onRemove}
+        aria-label={`Retirer le filtre : ${label}`}
         style={{
           background: "none",
           border: "none",
@@ -529,7 +406,7 @@ function FilterBadge({
           alignItems: "center",
         }}
       >
-        <X size={12} />
+        <X size={12} aria-hidden="true" />
       </button>
     </span>
   );

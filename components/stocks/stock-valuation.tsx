@@ -5,14 +5,8 @@
  * Valeur totale et par catégorie
  */
 
-import {
-  Card,
-  Flex,
-  Text,
-  Box,
-  Progress,
-} from "@radix-ui/themes";
-import { TrendingUp, Package, Layers } from "lucide-react";
+import { Card, Flex, Text, Box, Progress } from "@radix-ui/themes";
+import { TrendUp, Package, Stack } from "@phosphor-icons/react";
 import { formatCurrency } from "@/lib/design-system/currency";
 import type { ValorisationStock } from "@/schemas/stock.schema";
 
@@ -21,10 +15,7 @@ interface StockValuationProps {
 }
 
 export function StockValuation({ valorisation }: StockValuationProps) {
-  const maxCategoryValue = Math.max(
-    ...valorisation.valeurParCategorie.map((c) => c.valeur),
-    1
-  );
+  const maxCategoryValue = Math.max(...valorisation.valeurParCategorie.map((c) => c.valeur), 1);
 
   return (
     <Card>
@@ -32,7 +23,7 @@ export function StockValuation({ valorisation }: StockValuationProps) {
         {/* En-tête */}
         <Flex justify="between" align="center">
           <Flex align="center" gap="2">
-            <TrendingUp size={18} style={{ color: "var(--accent-9)" }} />
+            <TrendUp size={18} style={{ color: "var(--accent-9)" }} />
             <Text size="3" weight="medium">
               Valorisation du stock
             </Text>
@@ -74,7 +65,7 @@ export function StockValuation({ valorisation }: StockValuationProps) {
         {/* Répartition par catégorie */}
         <Flex direction="column" gap="3">
           <Flex align="center" gap="2">
-            <Layers size={16} style={{ color: "var(--gray-11)" }} />
+            <Stack size={16} style={{ color: "var(--gray-11)" }} />
             <Text size="2" weight="medium" color="gray">
               Répartition par catégorie
             </Text>
@@ -130,7 +121,6 @@ export function StockValuation({ valorisation }: StockValuationProps) {
                         style={{
                           height: 8,
                         }}
-                       
                       />
                     </Box>
                     <Flex justify="end" mt="1">
@@ -152,11 +142,7 @@ export function StockValuation({ valorisation }: StockValuationProps) {
 /**
  * Widget compact pour le dashboard
  */
-export function StockValuationWidget({
-  valorisation,
-}: {
-  valorisation: ValorisationStock;
-}) {
+export function StockValuationWidget({ valorisation }: { valorisation: ValorisationStock }) {
   return (
     <Box
       style={{
@@ -168,7 +154,7 @@ export function StockValuationWidget({
     >
       <Flex direction="column" gap="2">
         <Flex align="center" gap="2">
-          <TrendingUp size={16} style={{ color: "var(--accent-9)" }} />
+          <TrendUp size={16} style={{ color: "var(--accent-9)" }} />
           <Text size="2" color="gray">
             Valeur du stock
           </Text>

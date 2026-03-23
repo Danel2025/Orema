@@ -12,105 +12,74 @@ import {
 import { motion } from "motion/react";
 import { PageHeader } from "@/components/public";
 import {
-  Rocket,
-  Heart,
-  TrendingUp,
-  Globe,
   Code,
   Megaphone,
-  HeadphonesIcon,
-  Palette,
-  Server,
+  Headphones,
+  PaintBrush,
+  HardDrives,
   MapPin,
   Clock,
   Laptop,
   GraduationCap,
   Users,
-  Wifi,
-  ChevronRight,
+  WifiHigh,
+  TrendUp,
   Briefcase,
   Check,
-} from "lucide-react";
+  CaretRight,
+} from "@phosphor-icons/react";
 import Link from "next/link";
-
-const cultureValues = [
-  {
-    icon: Rocket,
-    title: "Innovation",
-    description:
-      "Nous construisons des solutions qui n'existent pas encore sur le marché africain. Chaque jour est une opportunité d'innover.",
-    color: "violet",
-  },
-  {
-    icon: Heart,
-    title: "Impact",
-    description:
-      "Notre travail transforme concrètement le quotidien de milliers de commerçants. Chaque fonctionnalité compte.",
-    color: "red",
-  },
-  {
-    icon: TrendingUp,
-    title: "Croissance",
-    description:
-      "Nous investissons dans le développement de chaque membre de l'équipe. Votre progression est notre priorité.",
-    color: "green",
-  },
-  {
-    icon: Globe,
-    title: "Diversité",
-    description:
-      "Une équipe multiculturelle qui reflète la richesse du continent africain. Toutes les perspectives sont valorisées.",
-    color: "blue",
-  },
-];
 
 const benefits = [
   {
-    icon: Wifi,
-    label: "Remote-friendly",
-    description: "Travaillez d'où vous voulez, avec des réunions en présentiel mensuelles",
+    icon: WifiHigh,
+    label: "Travail flexible",
+    description:
+      "Travaillez en presentiel ou a distance, avec des reunions d'equipe regulieres.",
   },
   {
     icon: Laptop,
-    label: "Matériel fourni",
-    description: "MacBook Pro ou PC de votre choix, écran et accessoires inclus",
+    label: "Materiel fourni",
+    description: "Equipement de travail complet fourni des votre arrivee.",
   },
   {
     icon: GraduationCap,
     label: "Formation continue",
-    description: "Budget formation annuel et accès à des plateformes d'apprentissage",
+    description:
+      "Budget formation annuel et acces a des plateformes d'apprentissage.",
   },
   {
     icon: Users,
-    label: "Équipe soudée",
-    description: "Team buildings réguliers, afterworks et événements d'équipe",
+    label: "Equipe soudee",
+    description: "Evenements d'equipe reguliers et environnement collaboratif.",
   },
   {
     icon: Clock,
     label: "Horaires flexibles",
-    description: "Organisez votre journée comme vous le souhaitez, résultats avant présentiel",
+    description:
+      "Organisation autonome, avec une culture orientee resultats.",
   },
   {
-    icon: TrendingUp,
-    label: "Évolution rapide",
-    description: "Startup en croissance avec de réelles opportunités de progression",
+    icon: TrendUp,
+    label: "Evolution",
+    description:
+      "Entreprise en croissance avec des opportunites de progression reelles.",
   },
 ];
 
 const openPositions = [
   {
-    title: "Développeur Full-Stack Senior",
-    department: "Ingénierie",
+    title: "Developpeur Full-Stack Senior",
+    department: "Ingenierie",
     location: "Libreville / Remote",
     type: "CDI",
     icon: Code,
-    color: "violet",
     description:
-      "Rejoignez notre équipe technique pour développer les fonctionnalités clés de notre plateforme POS. Stack : Next.js, React, TypeScript, Supabase.",
+      "Developpez les fonctionnalites cles de notre plateforme POS. Stack : Next.js, React, TypeScript, Supabase.",
     requirements: [
-      "3+ ans d'expérience en développement web",
-      "Maîtrise de React/Next.js et TypeScript",
-      "Expérience avec PostgreSQL ou Supabase",
+      "3+ ans d'experience en developpement web",
+      "Maitrise de React/Next.js et TypeScript",
+      "Experience avec PostgreSQL ou Supabase",
       "Autonomie et esprit d'initiative",
     ],
   },
@@ -120,30 +89,28 @@ const openPositions = [
     location: "Libreville",
     type: "CDI",
     icon: Megaphone,
-    color: "amber",
     description:
-      "Développez notre portefeuille clients auprès des restaurants, commerces et établissements de Libreville et du Gabon.",
+      "Developpez notre portefeuille clients aupres des restaurants, commerces et etablissements du Gabon.",
     requirements: [
-      "2+ ans d'expérience en vente B2B",
+      "2+ ans d'experience en vente B2B",
       "Connaissance du tissu commercial gabonais",
-      "Excellent relationnel et sens de la négociation",
+      "Excellent relationnel et sens de la negociation",
       "Permis de conduire",
     ],
   },
   {
-    title: "Chargé(e) de Support Client",
+    title: "Charge(e) de Support Client",
     department: "Support",
     location: "Libreville / Remote",
     type: "CDI",
-    icon: HeadphonesIcon,
-    color: "green",
+    icon: Headphones,
     description:
-      "Accompagnez nos utilisateurs au quotidien : onboarding, formation, résolution de problèmes et suivi de satisfaction.",
+      "Accompagnez nos utilisateurs au quotidien : onboarding, formation, resolution de problemes.",
     requirements: [
-      "Expérience en support client ou relation client",
-      "Patience, écoute et excellente communication",
-      "À l'aise avec les outils numériques",
-      "Français courant, anglais apprécié",
+      "Experience en support client ou relation client",
+      "Patience, ecoute et communication claire",
+      "A l'aise avec les outils numeriques",
+      "Francais courant, anglais apprecie",
     ],
   },
   {
@@ -151,49 +118,40 @@ const openPositions = [
     department: "Design",
     location: "Remote",
     type: "CDI",
-    icon: Palette,
-    color: "purple",
+    icon: PaintBrush,
     description:
-      "Concevez des interfaces intuitives et accessibles pour notre solution POS, en tenant compte des réalités du terrain africain.",
+      "Concevez des interfaces intuitives et accessibles pour notre solution POS, adaptees au terrain africain.",
     requirements: [
-      "Portfolio démontrant des compétences UX/UI",
-      "Maîtrise de Figma",
-      "Sensibilité aux problématiques d'accessibilité",
-      "Expérience avec les design systems",
+      "Portfolio demontrant des competences UX/UI",
+      "Maitrise de Figma",
+      "Sensibilite aux problematiques d'accessibilite",
+      "Experience avec les design systems",
     ],
   },
   {
-    title: "Ingénieur DevOps / SRE",
+    title: "Ingenieur DevOps / SRE",
     department: "Infrastructure",
     location: "Remote",
     type: "CDI",
-    icon: Server,
-    color: "cyan",
+    icon: HardDrives,
     description:
-      "Assurez la fiabilité, la performance et la sécurité de notre infrastructure cloud. Automatisez les déploiements et le monitoring.",
+      "Assurez la fiabilite, la performance et la securite de notre infrastructure cloud.",
     requirements: [
-      "Expérience avec Vercel, Supabase ou AWS",
+      "Experience avec Vercel, Supabase ou AWS",
       "Connaissance de Docker et CI/CD",
-      "Compétences en monitoring et observabilité",
-      "Sensibilité à la sécurité",
+      "Competences en monitoring et observabilite",
+      "Sensibilite a la securite",
     ],
   },
-];
-
-const stats = [
-  { value: "15+", label: "Collaborateurs" },
-  { value: "4", label: "Nationalités" },
-  { value: "60%", label: "En remote" },
-  { value: "5", label: "Postes ouverts" },
 ];
 
 export default function CareersPage() {
   return (
     <>
       <PageHeader
-        title="Rejoignez l'aventure"
-        subtitle="Participez à la transformation digitale du commerce en Afrique. Nous recrutons des talents passionnés."
-        badge="Carrières"
+        title="Carrieres"
+        subtitle="Participez a la transformation digitale du commerce en Afrique. Nous recrutons des professionnels motives."
+        badge="Recrutement"
       >
         <Flex gap="3" justify="center" mt="6">
           <Link
@@ -205,138 +163,31 @@ export default function CareersPage() {
               gap: 8,
               padding: "14px 28px",
               borderRadius: 9999,
-              background:
-                "linear-gradient(135deg, var(--violet-9) 0%, var(--purple-9) 100%)",
+              background: "var(--accent-9)",
               color: "white",
               fontSize: 14,
               fontWeight: 600,
             }}
           >
             Voir les postes ouverts
-            <ChevronRight size={16} />
+            <CaretRight size={16} weight="bold" />
           </Link>
         </Flex>
       </PageHeader>
 
       <Container size="4" py="9">
-        {/* Stats */}
+        {/* Why join us */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.2, duration: 0.6 }}
-        >
-          <Grid columns={{ initial: "2", md: "4" }} gap="4" mb="9">
-            {stats.map((stat, index) => (
-              <motion.div
-                key={stat.label}
-                initial={{ opacity: 0, scale: 0.9 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ delay: 0.3 + index * 0.1, duration: 0.4 }}
-              >
-                <Box
-                  p="5"
-                  style={{
-                    background: "var(--gray-a2)",
-                    borderRadius: 16,
-                    border: "1px solid var(--gray-a4)",
-                    textAlign: "center",
-                  }}
-                >
-                  <Text
-                    size="8"
-                    weight="bold"
-                    style={{
-                      display: "block",
-                      background:
-                        "linear-gradient(135deg, var(--violet-9) 0%, var(--purple-9) 100%)",
-                      WebkitBackgroundClip: "text",
-                      WebkitTextFillColor: "transparent",
-                      backgroundClip: "text",
-                    }}
-                  >
-                    {stat.value}
-                  </Text>
-                  <Text size="2" color="gray">
-                    {stat.label}
-                  </Text>
-                </Box>
-              </motion.div>
-            ))}
-          </Grid>
-        </motion.div>
-
-        {/* Culture */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.5, duration: 0.6 }}
+          transition={{ delay: 0.2, duration: 0.5 }}
         >
           <Box mb="6" style={{ textAlign: "center" }}>
             <Heading size="7" mb="3">
-              Notre culture
+              Pourquoi nous rejoindre
             </Heading>
             <Text size="4" color="gray">
-              Ce qui fait d&apos;Oréma N+ un endroit unique où travailler
-            </Text>
-          </Box>
-
-          <Grid columns={{ initial: "1", sm: "2", lg: "4" }} gap="4" mb="9">
-            {cultureValues.map((value, index) => (
-              <motion.div
-                key={value.title}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.6 + index * 0.1, duration: 0.5 }}
-              >
-                <Box
-                  p="5"
-                  style={{
-                    background: `var(--${value.color}-a2)`,
-                    borderRadius: 16,
-                    border: `1px solid var(--${value.color}-a4)`,
-                    height: "100%",
-                  }}
-                >
-                  <Box
-                    mb="4"
-                    p="3"
-                    style={{
-                      background: `var(--${value.color}-a3)`,
-                      borderRadius: 12,
-                      width: "fit-content",
-                    }}
-                  >
-                    <value.icon
-                      size={24}
-                      style={{ color: `var(--${value.color}-9)` }}
-                    />
-                  </Box>
-                  <Heading size="4" mb="2">
-                    {value.title}
-                  </Heading>
-                  <Text size="2" color="gray">
-                    {value.description}
-                  </Text>
-                </Box>
-              </motion.div>
-            ))}
-          </Grid>
-        </motion.div>
-
-        <Separator size="4" my="9" />
-
-        {/* Benefits */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.8, duration: 0.6 }}
-        >
-          <Box mb="6" style={{ textAlign: "center" }}>
-            <Heading size="7" mb="3">
-              Avantages
-            </Heading>
-            <Text size="4" color="gray">
-              Nous prenons soin de notre équipe
+              Ce que nous offrons a nos collaborateurs
             </Text>
           </Box>
 
@@ -346,7 +197,7 @@ export default function CareersPage() {
                 key={benefit.label}
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.9 + index * 0.08, duration: 0.5 }}
+                transition={{ delay: 0.3 + index * 0.08, duration: 0.4 }}
               >
                 <Flex
                   gap="4"
@@ -362,18 +213,23 @@ export default function CareersPage() {
                   <Box
                     p="3"
                     style={{
-                      background: "var(--violet-a3)",
+                      background: "var(--accent-a3)",
                       borderRadius: 12,
                       flexShrink: 0,
                     }}
                   >
                     <benefit.icon
                       size={20}
-                      style={{ color: "var(--violet-9)" }}
+                      weight="duotone"
+                      style={{ color: "var(--accent-9)" }}
                     />
                   </Box>
                   <Box>
-                    <Text size="3" weight="bold" style={{ display: "block" }}>
+                    <Text
+                      size="3"
+                      weight="bold"
+                      style={{ display: "block" }}
+                    >
                       {benefit.label}
                     </Text>
                     <Text size="2" color="gray">
@@ -393,14 +249,14 @@ export default function CareersPage() {
           id="postes"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 1, duration: 0.6 }}
+          transition={{ delay: 0.6, duration: 0.5 }}
         >
           <Box mb="6" style={{ textAlign: "center" }}>
             <Heading size="7" mb="3">
               Postes ouverts
             </Heading>
             <Text size="4" color="gray">
-              Trouvez le rôle qui vous correspond
+              {openPositions.length} postes a pourvoir actuellement
             </Text>
           </Box>
 
@@ -410,32 +266,30 @@ export default function CareersPage() {
                 key={position.title}
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 1.1 + index * 0.08, duration: 0.5 }}
+                transition={{ delay: 0.7 + index * 0.08, duration: 0.4 }}
               >
                 <Box
                   p="6"
                   style={{
                     background: "var(--gray-a2)",
-                    borderRadius: 20,
+                    borderRadius: 16,
                     border: "1px solid var(--gray-a4)",
                   }}
                 >
-                  <Grid
-                    columns={{ initial: "1", md: "3" }}
-                    gap="6"
-                  >
+                  <Grid columns={{ initial: "1", md: "3" }} gap="6">
                     <Box style={{ gridColumn: "span 2" }}>
                       <Flex align="center" gap="3" mb="3">
                         <Box
                           p="3"
                           style={{
-                            background: `var(--${position.color}-a3)`,
+                            background: "var(--accent-a3)",
                             borderRadius: 12,
                           }}
                         >
                           <position.icon
                             size={22}
-                            style={{ color: `var(--${position.color}-9)` }}
+                            weight="duotone"
+                            style={{ color: "var(--accent-9)" }}
                           />
                         </Box>
                         <Box>
@@ -497,15 +351,16 @@ export default function CareersPage() {
                         mb="3"
                         style={{ display: "block" }}
                       >
-                        Profil recherché
+                        Profil recherche
                       </Text>
                       <Flex direction="column" gap="2">
                         {position.requirements.map((req, i) => (
                           <Flex key={i} align="start" gap="2">
                             <Check
                               size={14}
+                              weight="bold"
                               style={{
-                                color: `var(--${position.color}-9)`,
+                                color: "var(--accent-9)",
                                 flexShrink: 0,
                                 marginTop: 3,
                               }}
@@ -528,21 +383,16 @@ export default function CareersPage() {
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 1.5, duration: 0.6 }}
+          transition={{ delay: 1.2, duration: 0.5 }}
         >
           <Box
             p="8"
             style={{
-              background:
-                "linear-gradient(135deg, var(--violet-9) 0%, var(--purple-9) 100%)",
-              borderRadius: 24,
+              background: "var(--accent-9)",
+              borderRadius: 20,
               textAlign: "center",
             }}
           >
-            <Briefcase
-              size={48}
-              style={{ color: "white", marginBottom: 16, opacity: 0.9 }}
-            />
             <Heading size="6" mb="3" style={{ color: "white" }}>
               Vous ne trouvez pas votre poste ?
             </Heading>
@@ -556,19 +406,19 @@ export default function CareersPage() {
                 display: "block",
               }}
             >
-              Envoyez-nous une candidature spontanée. Nous sommes toujours à la
-              recherche de talents motivés pour rejoindre notre aventure.
+              Envoyez-nous une candidature spontanee. Nous sommes toujours a la
+              recherche de professionnels motives.
             </Text>
             <Flex gap="3" justify="center" wrap="wrap">
               <Link
-                href="mailto:careers@orema-nplus.ga?subject=Candidature spontanée"
+                href="mailto:careers@orema-nplus.ga?subject=Candidature spontanee"
                 style={{
                   textDecoration: "none",
                   display: "inline-flex",
                   alignItems: "center",
                   gap: 8,
                   background: "white",
-                  color: "var(--violet-9)",
+                  color: "var(--accent-9)",
                   padding: "14px 28px",
                   borderRadius: 9999,
                   fontWeight: 600,
@@ -576,7 +426,7 @@ export default function CareersPage() {
                 }}
               >
                 Postuler
-                <ChevronRight size={16} />
+                <CaretRight size={16} weight="bold" />
               </Link>
               <Link
                 href="/about"

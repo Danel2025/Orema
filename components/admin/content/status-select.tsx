@@ -5,12 +5,7 @@
  * Permet de choisir entre Brouillon, Publié, Archivé
  */
 
-import {
-  Box,
-  Flex,
-  Text,
-  Select,
-} from "@radix-ui/themes";
+import { Box, Flex, Text, Select } from "@radix-ui/themes";
 import { Eye, EyeOff, Archive } from "lucide-react";
 import {
   contentStatusValues,
@@ -32,17 +27,14 @@ const statusIcons: Record<ContentStatus, React.ReactNode> = {
   ARCHIVED: <Archive size={14} />,
 };
 
-export function StatusSelect({
-  value,
-  onChange,
-  label,
-  error,
-}: StatusSelectProps) {
+export function StatusSelect({ value, onChange, label, error }: StatusSelectProps) {
   return (
     <Box>
-      {label ? <Text size="2" weight="medium" mb="2" style={{ display: "block" }}>
+      {label ? (
+        <Text size="2" weight="medium" mb="2" style={{ display: "block" }}>
           {label}
-        </Text> : null}
+        </Text>
+      ) : null}
 
       <Select.Root value={value} onValueChange={(v) => onChange(v as ContentStatus)}>
         <Select.Trigger
@@ -62,7 +54,7 @@ export function StatusSelect({
             <Text>{contentStatusLabels[value]}</Text>
           </Flex>
         </Select.Trigger>
-        <Select.Content>
+        <Select.Content position="popper">
           {contentStatusValues.map((status) => (
             <Select.Item key={status} value={status}>
               <Flex align="center" gap="2">
@@ -89,9 +81,11 @@ export function StatusSelect({
         </Text>
       </Box>
 
-      {error ? <Text size="1" color="red" mt="1">
+      {error ? (
+        <Text size="1" color="red" mt="1">
           {error}
-        </Text> : null}
+        </Text>
+      ) : null}
     </Box>
   );
 }

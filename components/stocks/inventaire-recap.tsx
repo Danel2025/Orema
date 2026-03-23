@@ -5,26 +5,17 @@
  * Affiche les statistiques, la liste des ecarts et le bouton de validation
  */
 
-import {
-  Flex,
-  Text,
-  Box,
-  Table,
-  Badge,
-  Button,
-  Callout,
-  Checkbox,
-} from "@radix-ui/themes";
+import { Flex, Text, Box, Table, Badge, Button, Callout, Checkbox } from "@radix-ui/themes";
 import { ScrollArea } from "@/components/ui";
 import {
   CheckCircle,
-  AlertCircle,
-  TrendingDown,
-  TrendingUp,
-  Save,
+  WarningCircle,
+  TrendDown,
+  TrendUp,
+  FloppyDisk,
   ArrowLeft,
   Package,
-} from "lucide-react";
+} from "@phosphor-icons/react";
 import { formatCurrency } from "@/lib/design-system/currency";
 import type { InventaireLigne } from "./inventaire-table";
 
@@ -111,11 +102,7 @@ export function InventaireRecap({
               Produits comptes
             </Text>
           </Flex>
-          <Text
-            size="5"
-            weight="bold"
-            style={{ fontVariantNumeric: "tabular-nums" }}
-          >
+          <Text size="5" weight="bold" style={{ fontVariantNumeric: "tabular-nums" }}>
             {lignesComptees.length} / {lignes.length}
           </Text>
         </Box>
@@ -125,26 +112,17 @@ export function InventaireRecap({
             flex: "1 1 180px",
             padding: 16,
             borderRadius: 8,
-            backgroundColor:
-              lignesAvecEcart.length > 0
-                ? "var(--accent-a3)"
-                : "var(--green-a3)",
+            backgroundColor: lignesAvecEcart.length > 0 ? "var(--accent-a3)" : "var(--green-a3)",
           }}
         >
           <Flex align="center" gap="2" mb="1">
-            <AlertCircle
+            <WarningCircle
               size={16}
               style={{
-                color:
-                  lignesAvecEcart.length > 0
-                    ? "var(--accent-9)"
-                    : "var(--green-9)",
+                color: lignesAvecEcart.length > 0 ? "var(--accent-9)" : "var(--green-9)",
               }}
             />
-            <Text
-              size="2"
-              color={lignesAvecEcart.length > 0 ? "violet" : "green"}
-            >
+            <Text size="2" color={lignesAvecEcart.length > 0 ? "violet" : "green"}>
               Ecarts detectes
             </Text>
           </Flex>
@@ -163,24 +141,16 @@ export function InventaireRecap({
             flex: "1 1 180px",
             padding: 16,
             borderRadius: 8,
-            backgroundColor:
-              ecartsPositifs.length > 0
-                ? "var(--green-a3)"
-                : "var(--gray-a3)",
+            backgroundColor: ecartsPositifs.length > 0 ? "var(--green-a3)" : "var(--gray-a3)",
           }}
         >
           <Flex align="center" gap="2" mb="1">
-            <TrendingUp size={16} style={{ color: "var(--green-9)" }} />
+            <TrendUp size={16} style={{ color: "var(--green-9)" }} />
             <Text size="2" color="green">
               Excedents
             </Text>
           </Flex>
-          <Text
-            size="5"
-            weight="bold"
-            color="green"
-            style={{ fontVariantNumeric: "tabular-nums" }}
-          >
+          <Text size="5" weight="bold" color="green" style={{ fontVariantNumeric: "tabular-nums" }}>
             +{formatCurrency(valeurEcartsPositifs)}
           </Text>
           <Text size="1" color="gray">
@@ -193,24 +163,16 @@ export function InventaireRecap({
             flex: "1 1 180px",
             padding: 16,
             borderRadius: 8,
-            backgroundColor:
-              ecartsNegatifs.length > 0
-                ? "var(--red-a3)"
-                : "var(--gray-a3)",
+            backgroundColor: ecartsNegatifs.length > 0 ? "var(--red-a3)" : "var(--gray-a3)",
           }}
         >
           <Flex align="center" gap="2" mb="1">
-            <TrendingDown size={16} style={{ color: "var(--red-9)" }} />
+            <TrendDown size={16} style={{ color: "var(--red-9)" }} />
             <Text size="2" color="red">
               Manquants
             </Text>
           </Flex>
-          <Text
-            size="5"
-            weight="bold"
-            color="red"
-            style={{ fontVariantNumeric: "tabular-nums" }}
-          >
+          <Text size="5" weight="bold" color="red" style={{ fontVariantNumeric: "tabular-nums" }}>
             {formatCurrency(valeurEcartsNegatifs)}
           </Text>
           <Text size="1" color="gray">
@@ -229,8 +191,8 @@ export function InventaireRecap({
             valeurEcartTotal === 0
               ? "var(--gray-a2)"
               : valeurEcartTotal > 0
-              ? "var(--green-a2)"
-              : "var(--red-a2)",
+                ? "var(--green-a2)"
+                : "var(--red-a2)",
         }}
       >
         <Flex justify="between" align="center">
@@ -241,13 +203,7 @@ export function InventaireRecap({
             <Text
               size="6"
               weight="bold"
-              color={
-                valeurEcartTotal === 0
-                  ? "gray"
-                  : valeurEcartTotal > 0
-                  ? "green"
-                  : "red"
-              }
+              color={valeurEcartTotal === 0 ? "gray" : valeurEcartTotal > 0 ? "green" : "red"}
               style={{
                 fontVariantNumeric: "tabular-nums",
                 fontFamily: "var(--font-google-sans-code), monospace",
@@ -265,13 +221,7 @@ export function InventaireRecap({
             <Text
               size="5"
               weight="bold"
-              color={
-                ecartTotalQte === 0
-                  ? "gray"
-                  : ecartTotalQte > 0
-                  ? "green"
-                  : "red"
-              }
+              color={ecartTotalQte === 0 ? "gray" : ecartTotalQte > 0 ? "green" : "red"}
               style={{
                 fontVariantNumeric: "tabular-nums",
                 display: "block",
@@ -289,11 +239,10 @@ export function InventaireRecap({
       {lignesNonComptees > 0 && (
         <Callout.Root color="violet" size="1">
           <Callout.Icon>
-            <AlertCircle size={16} />
+            <WarningCircle size={16} />
           </Callout.Icon>
           <Callout.Text>
-            {lignesNonComptees} produit(s) n'ont pas ete comptes. Leur stock ne sera pas
-            modifie.
+            {lignesNonComptees} produit(s) n'ont pas ete comptes. Leur stock ne sera pas modifie.
           </Callout.Text>
         </Callout.Root>
       )}
@@ -317,14 +266,10 @@ export function InventaireRecap({
                   <Table.Row>
                     <Table.ColumnHeaderCell>Produit</Table.ColumnHeaderCell>
                     <Table.ColumnHeaderCell>Categorie</Table.ColumnHeaderCell>
-                    <Table.ColumnHeaderCell>
-                      Stock theorique
-                    </Table.ColumnHeaderCell>
+                    <Table.ColumnHeaderCell>Stock theorique</Table.ColumnHeaderCell>
                     <Table.ColumnHeaderCell>Compte</Table.ColumnHeaderCell>
                     <Table.ColumnHeaderCell>Ecart</Table.ColumnHeaderCell>
-                    <Table.ColumnHeaderCell>
-                      Valeur ecart
-                    </Table.ColumnHeaderCell>
+                    <Table.ColumnHeaderCell>Valeur ecart</Table.ColumnHeaderCell>
                   </Table.Row>
                 </Table.Header>
                 <Table.Body>
@@ -356,19 +301,12 @@ export function InventaireRecap({
                           </Text>
                         </Table.Cell>
                         <Table.Cell>
-                          <Text
-                            weight="medium"
-                            style={{ fontVariantNumeric: "tabular-nums" }}
-                          >
+                          <Text weight="medium" style={{ fontVariantNumeric: "tabular-nums" }}>
                             {ligne.quantiteComptee} {ligne.unite || ""}
                           </Text>
                         </Table.Cell>
                         <Table.Cell>
-                          <Badge
-                            color={ecart > 0 ? "green" : "red"}
-                            variant="solid"
-                            size="2"
-                          >
+                          <Badge color={ecart > 0 ? "green" : "red"} variant="solid" size="2">
                             {ecart >= 0 ? "+" : ""}
                             {ecart}
                           </Badge>
@@ -380,8 +318,7 @@ export function InventaireRecap({
                             color={valeur > 0 ? "green" : "red"}
                             style={{
                               fontVariantNumeric: "tabular-nums",
-                              fontFamily:
-                                "var(--font-google-sans-code), monospace",
+                              fontFamily: "var(--font-google-sans-code), monospace",
                             }}
                           >
                             {valeur >= 0 ? "+" : ""}
@@ -397,13 +334,7 @@ export function InventaireRecap({
           </ScrollArea>
         </>
       ) : (
-        <Flex
-          direction="column"
-          align="center"
-          justify="center"
-          py="6"
-          gap="2"
-        >
+        <Flex direction="column" align="center" justify="center" py="6" gap="2">
           <CheckCircle size={32} style={{ color: "var(--green-9)" }} />
           <Text color="green" weight="medium">
             Aucun ecart detecte
@@ -415,12 +346,14 @@ export function InventaireRecap({
       )}
 
       {/* Erreur */}
-      {error ? <Callout.Root color="red" size="1">
+      {error ? (
+        <Callout.Root color="red" size="1">
           <Callout.Icon>
-            <AlertCircle size={16} />
+            <WarningCircle size={16} />
           </Callout.Icon>
           <Callout.Text>{error}</Callout.Text>
-        </Callout.Root> : null}
+        </Callout.Root>
+      ) : null}
 
       {/* Actions */}
       <Flex gap="3" justify="between" pt="2">
@@ -441,12 +374,12 @@ export function InventaireRecap({
           disabled={isSubmitting || lignesAvecEcart.length === 0}
           style={{ minHeight: 44, minWidth: 200 }}
         >
-          <Save size={16} />
+          <FloppyDisk size={16} />
           {isSubmitting
             ? "Enregistrement..."
             : lignesAvecEcart.length === 0
-            ? "Aucun ecart a enregistrer"
-            : `Valider l'inventaire (${lignesAvecEcart.length} ajustement(s))`}
+              ? "Aucun ecart a enregistrer"
+              : `Valider l'inventaire (${lignesAvecEcart.length} ajustement(s))`}
         </Button>
       </Flex>
     </Flex>

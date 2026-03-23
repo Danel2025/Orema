@@ -6,19 +6,19 @@
 
 import { useState } from "react";
 import {
-  Trash2,
+  Trash,
   Minus,
   Plus,
   Percent,
   X,
   ShoppingCart,
-  MessageSquare,
+  ChatText,
   Tag,
   Users,
   Clock,
   CreditCard,
   PlusCircle,
-} from "lucide-react";
+} from "@phosphor-icons/react";
 import { Tooltip } from "@radix-ui/themes";
 import { useCartStore } from "@/stores/cart-store";
 import { useSplitBillStore } from "@/stores/split-bill-store";
@@ -59,22 +59,21 @@ export function CaisseCart({
   etablissement,
   serveurNom = "Caissier",
 }: CaisseCartProps) {
-  const {
-    items,
-    sousTotal,
-    totalTva,
-    totalRemise,
-    totalFinal,
-    remise,
-    updateQuantity,
-    removeItem,
-    clearRemise,
-    clearCart,
-    canMettreEnAttente,
-    canMettreEnCompte,
-    getCreditDisponible,
-    client,
-  } = useCartStore();
+  // Selecteurs atomiques Zustand - evite les re-renders inutiles
+  const items = useCartStore((s) => s.items);
+  const sousTotal = useCartStore((s) => s.sousTotal);
+  const totalTva = useCartStore((s) => s.totalTva);
+  const totalRemise = useCartStore((s) => s.totalRemise);
+  const totalFinal = useCartStore((s) => s.totalFinal);
+  const remise = useCartStore((s) => s.remise);
+  const updateQuantity = useCartStore((s) => s.updateQuantity);
+  const removeItem = useCartStore((s) => s.removeItem);
+  const clearRemise = useCartStore((s) => s.clearRemise);
+  const clearCart = useCartStore((s) => s.clearCart);
+  const canMettreEnAttente = useCartStore((s) => s.canMettreEnAttente);
+  const canMettreEnCompte = useCartStore((s) => s.canMettreEnCompte);
+  const getCreditDisponible = useCartStore((s) => s.getCreditDisponible);
+  const client = useCartStore((s) => s.client);
 
   const { openSplitBill } = useSplitBillStore();
   const { user } = useAuth();
@@ -104,10 +103,7 @@ export function CaisseCart({
   };
 
   // Calculer le total des remises par ligne
-  const totalRemisesLignes = items.reduce(
-    (acc, item) => acc + (item.montantRemiseLigne || 0),
-    0
-  );
+  const totalRemisesLignes = items.reduce((acc, item) => acc + (item.montantRemiseLigne || 0), 0);
 
   return (
     <div
@@ -131,9 +127,7 @@ export function CaisseCart({
       >
         <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
           <ShoppingCart size={20} style={{ color: "var(--accent-9)" }} />
-          <span style={{ fontSize: 16, fontWeight: 600, color: "var(--gray-12)" }}>
-            Panier
-          </span>
+          <span style={{ fontSize: 16, fontWeight: 600, color: "var(--gray-12)" }}>Panier</span>
           {items.length > 0 && (
             <span
               style={{
@@ -152,6 +146,7 @@ export function CaisseCart({
         {items.length > 0 && (
           <button
             onClick={clearCart}
+            aria-label="Vider le panier"
             style={{
               padding: "6px 12px",
               fontSize: 12,
@@ -190,9 +185,7 @@ export function CaisseCart({
           >
             <ShoppingCart size={48} style={{ marginBottom: 16, opacity: 0.3 }} />
             <p style={{ margin: 0 }}>Le panier est vide</p>
-            <p style={{ margin: "8px 0 0", fontSize: 13 }}>
-              Cliquez sur un produit pour l'ajouter
-            </p>
+            <p style={{ margin: "8px 0 0", fontSize: 13 }}>Cliquez sur un produit pour l'ajouter</p>
           </div>
         ) : (
           <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
@@ -231,10 +224,12 @@ export function CaisseCart({
                         color: "var(--gray-10)",
                       }}
                     >
-                      {formatCurrency(item.prixUnitaire + (item.totalSupplements || 0))} x {item.quantite}
+                      {formatCurrency(item.prixUnitaire + (item.totalSupplements || 0))} x{" "}
+                      {item.quantite}
                     </span>
                     {/* Afficher les supplements si presents */}
-                    {item.supplements && item.supplements.length > 0 ? <div
+                    {item.supplements && item.supplements.length > 0 ? (
+                      <div
                         style={{
                           display: "flex",
                           flexDirection: "column",
@@ -255,9 +250,11 @@ export function CaisseCart({
                             + {sup.nom}: {formatCurrency(sup.prix)}
                           </span>
                         ))}
-                      </div> : null}
+                      </div>
+                    ) : null}
                     {/* Afficher la remise par ligne si presente */}
-                    {item.remiseLigne ? <span
+                    {item.remiseLigne ? (
+                      <span
                         style={{
                           display: "block",
                           fontSize: 11,
@@ -265,13 +262,18 @@ export function CaisseCart({
                           marginTop: 2,
                         }}
                       >
-                        Remise: {item.remiseLigne.type === "POURCENTAGE"
+                        Remise:{" "}
+                        {item.remiseLigne.type === "POURCENTAGE"
                           ? `${item.remiseLigne.valeur}%`
                           : formatCurrency(item.remiseLigne.valeur)}
-                        {item.montantRemiseLigne ? ` (-${formatCurrency(item.montantRemiseLigne)})` : ""}
-                      </span> : null}
+                        {item.montantRemiseLigne
+                          ? ` (-${formatCurrency(item.montantRemiseLigne)})`
+                          : ""}
+                      </span>
+                    ) : null}
                     {/* Afficher les notes si presentes */}
-                    {item.notes ? <span
+                    {item.notes ? (
+                      <span
                         style={{
                           display: "block",
                           fontSize: 11,
@@ -281,7 +283,8 @@ export function CaisseCart({
                         }}
                       >
                         Note: {item.notes}
-                      </span> : null}
+                      </span>
+                    ) : null}
                   </div>
                   <span
                     style={{
@@ -305,9 +308,10 @@ export function CaisseCart({
                 >
                   <button
                     onClick={() => updateQuantity(item.lineId, item.quantite - 1)}
+                    aria-label="Diminuer la quantité"
                     style={{
-                      width: 32,
-                      height: 32,
+                      minWidth: 44,
+                      minHeight: 44,
                       borderRadius: 6,
                       border: "1px solid var(--gray-a6)",
                       backgroundColor: "var(--color-panel-solid)",
@@ -335,9 +339,10 @@ export function CaisseCart({
 
                   <button
                     onClick={() => updateQuantity(item.lineId, item.quantite + 1)}
+                    aria-label="Augmenter la quantité"
                     style={{
-                      width: 32,
-                      height: 32,
+                      minWidth: 44,
+                      minHeight: 44,
                       borderRadius: 6,
                       border: "1px solid var(--gray-a6)",
                       backgroundColor: "var(--color-panel-solid)",
@@ -357,24 +362,21 @@ export function CaisseCart({
                   <LineNotesPopover item={item}>
                     <Tooltip content="Ajouter une note">
                       <button
+                        aria-label="Ajouter une note"
                         style={{
-                          width: 32,
-                          height: 32,
+                          minWidth: 44,
+                          minHeight: 44,
                           borderRadius: 6,
                           border: "none",
-                          backgroundColor: item.notes
-                            ? "var(--accent-a3)"
-                            : "var(--gray-a3)",
+                          backgroundColor: item.notes ? "var(--accent-a3)" : "var(--gray-a3)",
                           cursor: "pointer",
                           display: "flex",
                           alignItems: "center",
                           justifyContent: "center",
-                          color: item.notes
-                            ? "var(--accent-11)"
-                            : "var(--gray-11)",
+                          color: item.notes ? "var(--accent-11)" : "var(--gray-11)",
                         }}
                       >
-                        <MessageSquare size={14} />
+                        <ChatText size={14} />
                       </button>
                     </Tooltip>
                   </LineNotesPopover>
@@ -383,21 +385,18 @@ export function CaisseCart({
                   <Tooltip content="Remise sur cette ligne">
                     <button
                       onClick={() => handleOpenLineDiscount(item)}
+                      aria-label="Remise sur cette ligne"
                       style={{
-                        width: 32,
-                        height: 32,
+                        minWidth: 44,
+                        minHeight: 44,
                         borderRadius: 6,
                         border: "none",
-                        backgroundColor: item.remiseLigne
-                          ? "var(--green-a3)"
-                          : "var(--gray-a3)",
+                        backgroundColor: item.remiseLigne ? "var(--green-a3)" : "var(--gray-a3)",
                         cursor: "pointer",
                         display: "flex",
                         alignItems: "center",
                         justifyContent: "center",
-                        color: item.remiseLigne
-                          ? "var(--green-11)"
-                          : "var(--gray-11)",
+                        color: item.remiseLigne ? "var(--green-11)" : "var(--gray-11)",
                       }}
                     >
                       <Tag size={14} />
@@ -408,9 +407,10 @@ export function CaisseCart({
                   <Tooltip content="Supprimer">
                     <button
                       onClick={() => removeItem(item.lineId)}
+                      aria-label="Supprimer l'article"
                       style={{
-                        width: 32,
-                        height: 32,
+                        minWidth: 44,
+                        minHeight: 44,
                         borderRadius: 6,
                         border: "none",
                         backgroundColor: "var(--red-a3)",
@@ -421,7 +421,7 @@ export function CaisseCart({
                         color: "var(--red-11)",
                       }}
                     >
-                      <Trash2 size={14} />
+                      <Trash size={14} />
                     </button>
                   </Tooltip>
                 </div>
@@ -461,6 +461,7 @@ export function CaisseCart({
                 </span>
                 <button
                   onClick={clearRemise}
+                  aria-label="Supprimer la remise globale"
                   style={{
                     background: "none",
                     border: "none",
@@ -553,9 +554,7 @@ export function CaisseCart({
                 borderTop: "1px solid var(--gray-a6)",
               }}
             >
-              <span style={{ fontSize: 16, fontWeight: 600, color: "var(--gray-12)" }}>
-                Total
-              </span>
+              <span style={{ fontSize: 16, fontWeight: 600, color: "var(--gray-12)" }}>Total</span>
               <span
                 style={{
                   fontSize: 20,
@@ -572,10 +571,9 @@ export function CaisseCart({
           {/* Boutons d'action */}
           <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
             {/* Boutons d'impression */}
-            {etablissement ? <CartPrintActions
-                etablissement={etablissement}
-                serveurNom={serveurNom}
-              /> : null}
+            {etablissement ? (
+              <CartPrintActions etablissement={etablissement} serveurNom={serveurNom} />
+            ) : null}
 
             {/* Bouton Diviser l'addition */}
             <button
@@ -635,13 +633,16 @@ export function CaisseCart({
             )}
 
             {/* Bouton Mettre en compte - désactivé pour les serveurs */}
-            {client && client.creditAutorise ? <Tooltip content={
-                isServeur
-                  ? "Les serveurs ne peuvent pas mettre en compte"
-                  : canMettreEnCompte()
-                    ? `Crédit disponible: ${formatCurrency(getCreditDisponible() || 0)}`
-                    : `Crédit insuffisant. Disponible: ${formatCurrency(getCreditDisponible() || 0)}`
-              }>
+            {client && client.creditAutorise ? (
+              <Tooltip
+                content={
+                  isServeur
+                    ? "Les serveurs ne peuvent pas mettre en compte"
+                    : canMettreEnCompte()
+                      ? `Crédit disponible: ${formatCurrency(getCreditDisponible() || 0)}`
+                      : `Crédit insuffisant. Disponible: ${formatCurrency(getCreditDisponible() || 0)}`
+                }
+              >
                 <button
                   onClick={canEncaisser ? onMettreEnCompte : undefined}
                   disabled={!canMettreEnCompte() || !canEncaisser}
@@ -665,7 +666,8 @@ export function CaisseCart({
                   <CreditCard size={16} />
                   Mettre en compte
                 </button>
-              </Tooltip> : null}
+              </Tooltip>
+            ) : null}
 
             {/* Bouton paiement */}
             <Tooltip content={isServeur ? "Les serveurs ne peuvent pas encaisser" : undefined}>

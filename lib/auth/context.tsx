@@ -1,4 +1,4 @@
-'use client'
+"use client";
 
 /**
  * Contexte d'authentification React
@@ -17,8 +17,8 @@ import {
   useMemo,
   useCallback,
   type ReactNode,
-} from 'react'
-import type { Role } from '@/lib/db/types'
+} from "react";
+import type { Role } from "@/lib/db/types";
 import {
   type Permission,
   isRoleAtLeast,
@@ -27,36 +27,32 @@ import {
   canManageUser,
   getRoleDisplayName,
   getRoleColor,
-} from '@/lib/permissions'
-import {
-  type RouteConfig,
-  getRouteConfig,
-  DASHBOARD_ROUTES,
-} from '@/lib/route-config'
+} from "@/lib/permissions";
+import { type RouteConfig, getRouteConfig, DASHBOARD_ROUTES } from "@/lib/route-config";
 
 /**
  * Donnees de l'utilisateur authentifie
  */
 export interface AuthUser {
-  userId: string
-  authId: string
-  email: string
-  nom: string
-  prenom: string
-  role: Role
+  userId: string;
+  authId: string;
+  email: string;
+  nom: string;
+  prenom: string;
+  role: Role;
   /** ID de l'établissement (peut être null pour SUPER_ADMIN global) */
-  etablissementId: string | null
-  etablissementNom?: string
+  etablissementId: string | null;
+  etablissementNom?: string;
   /** Routes personnalisées autorisées (override les permissions du rôle pour les non-admins) */
-  allowedRoutes?: string[]
+  allowedRoutes?: string[];
 }
 
 /**
  * Resultat de verification de permission
  */
 export interface PermissionCheckResult {
-  allowed: boolean
-  reason?: string
+  allowed: boolean;
+  reason?: string;
 }
 
 /**
@@ -64,65 +60,65 @@ export interface PermissionCheckResult {
  */
 export interface AuthContextValue {
   /** Utilisateur connecte (null si chargement ou non connecte) */
-  user: AuthUser | null
+  user: AuthUser | null;
   /** Chargement en cours */
-  isLoading: boolean
+  isLoading: boolean;
   /** Erreur de chargement */
-  error: string | null
+  error: string | null;
 
   // Verifications de permissions
   /** Verifie si l'utilisateur a une permission */
-  can: (permission: Permission) => boolean
+  can: (permission: Permission) => boolean;
   /** Verifie si l'utilisateur a toutes les permissions */
-  canAll: (permissions: Permission[]) => boolean
+  canAll: (permissions: Permission[]) => boolean;
   /** Verifie si l'utilisateur a au moins une des permissions */
-  canAny: (permissions: Permission[]) => boolean
+  canAny: (permissions: Permission[]) => boolean;
 
   // Verifications de roles
   /** Verifie si le role est au moins egal a un role requis */
-  isAtLeast: (requiredRole: Role) => boolean
+  isAtLeast: (requiredRole: Role) => boolean;
   /** Verifie si le role est strictement superieur */
-  isAbove: (otherRole: Role) => boolean
+  isAbove: (otherRole: Role) => boolean;
   /** Verifie si l'utilisateur peut gerer un autre utilisateur */
-  canManage: (targetRole: Role) => boolean
+  canManage: (targetRole: Role) => boolean;
   /** Roles que l'utilisateur peut gerer */
-  manageableRoles: Role[]
+  manageableRoles: Role[];
 
   // Informations sur le role
   /** Informations formatees du role */
-  roleInfo: { role: Role; displayName: string; color: string } | null
+  roleInfo: { role: Role; displayName: string; color: string } | null;
   /** Est admin (SUPER_ADMIN ou ADMIN) */
-  isAdmin: boolean
+  isAdmin: boolean;
   /** Est super admin */
-  isSuperAdmin: boolean
+  isSuperAdmin: boolean;
 
   // Verification d'acces aux routes
   /** Verifie si l'utilisateur peut acceder a une route */
-  canAccessRoute: (path: string) => PermissionCheckResult
+  canAccessRoute: (path: string) => PermissionCheckResult;
   /** Routes accessibles par l'utilisateur */
-  accessibleRoutes: RouteConfig[]
+  accessibleRoutes: RouteConfig[];
 
   // Actions
   /** Rafraichir les donnees utilisateur */
-  refresh: () => Promise<void>
+  refresh: () => Promise<void>;
   /** Deconnexion (cote client seulement - la vraie deconnexion est serveur) */
-  clearUser: () => void
+  clearUser: () => void;
 }
 
 /**
  * Contexte d'authentification
  */
-const AuthContext = createContext<AuthContextValue | null>(null)
+const AuthContext = createContext<AuthContextValue | null>(null);
 
 /**
  * Props du provider
  */
 export interface AuthProviderProps {
-  children: ReactNode
+  children: ReactNode;
   /** Utilisateur initial (passe depuis le serveur) */
-  initialUser: AuthUser | null
+  initialUser: AuthUser | null;
   /** Permissions initiales chargees depuis la BD */
-  initialPermissions?: Permission[]
+  initialPermissions?: Permission[];
 }
 
 /**
@@ -139,112 +135,112 @@ export interface AuthProviderProps {
  * ```
  */
 export function AuthProvider({ children, initialUser, initialPermissions }: AuthProviderProps) {
-  const [user, setUser] = useState<AuthUser | null>(initialUser)
-  const [permissions, setPermissions] = useState<Permission[]>(initialPermissions || [])
-  const [isLoading, setIsLoading] = useState(false)
-  const [error, setError] = useState<string | null>(null)
+  const [user, setUser] = useState<AuthUser | null>(initialUser);
+  const [permissions, setPermissions] = useState<Permission[]>(initialPermissions || []);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   // Synchroniser avec initialUser et initialPermissions quand ils changent
   useEffect(() => {
-    setUser(initialUser)
-  }, [initialUser])
+    setUser(initialUser);
+  }, [initialUser]);
 
   useEffect(() => {
     if (initialPermissions) {
-      setPermissions(initialPermissions)
+      setPermissions(initialPermissions);
     }
-  }, [initialPermissions])
+  }, [initialPermissions]);
 
   // ============= Verifications de permissions =============
   // Utilise les permissions chargees depuis la BD (ou defaults)
 
   const can = useCallback(
     (permission: Permission): boolean => {
-      if (!user) return false
+      if (!user) return false;
       // Utiliser les permissions du state (chargees depuis BD)
-      return permissions.includes(permission)
+      return permissions.includes(permission);
     },
     [user, permissions]
-  )
+  );
 
   const canAll = useCallback(
     (perms: Permission[]): boolean => {
-      if (!user) return false
-      return perms.every((p) => permissions.includes(p))
+      if (!user) return false;
+      return perms.every((p) => permissions.includes(p));
     },
     [user, permissions]
-  )
+  );
 
   const canAny = useCallback(
     (perms: Permission[]): boolean => {
-      if (!user) return false
-      return perms.some((p) => permissions.includes(p))
+      if (!user) return false;
+      return perms.some((p) => permissions.includes(p));
     },
     [user, permissions]
-  )
+  );
 
   // ============= Verifications de roles =============
 
   const isAtLeast = useCallback(
     (requiredRole: Role): boolean => {
-      if (!user) return false
-      return isRoleAtLeast(user.role, requiredRole)
+      if (!user) return false;
+      return isRoleAtLeast(user.role, requiredRole);
     },
     [user]
-  )
+  );
 
   const isAbove = useCallback(
     (otherRole: Role): boolean => {
-      if (!user) return false
-      return isRoleAbove(user.role, otherRole)
+      if (!user) return false;
+      return isRoleAbove(user.role, otherRole);
     },
     [user]
-  )
+  );
 
   const canManage = useCallback(
     (targetRole: Role): boolean => {
-      if (!user) return false
-      return canManageUser(user.role, targetRole)
+      if (!user) return false;
+      return canManageUser(user.role, targetRole);
     },
     [user]
-  )
+  );
 
   const manageableRoles = useMemo(() => {
-    if (!user) return []
-    return getManageableRoles(user.role)
-  }, [user])
+    if (!user) return [];
+    return getManageableRoles(user.role);
+  }, [user]);
 
   // ============= Informations sur le role =============
 
   const roleInfo = useMemo(() => {
-    if (!user) return null
+    if (!user) return null;
     return {
       role: user.role,
       displayName: getRoleDisplayName(user.role),
       color: getRoleColor(user.role),
-    }
-  }, [user])
+    };
+  }, [user]);
 
   const isAdmin = useMemo(() => {
-    if (!user) return false
-    return user.role === 'SUPER_ADMIN' || user.role === 'ADMIN'
-  }, [user])
+    if (!user) return false;
+    return user.role === "SUPER_ADMIN" || user.role === "ADMIN";
+  }, [user]);
 
   const isSuperAdmin = useMemo(() => {
-    if (!user) return false
-    return user.role === 'SUPER_ADMIN'
-  }, [user])
+    if (!user) return false;
+    return user.role === "SUPER_ADMIN";
+  }, [user]);
 
   // ============= Verification d'acces aux routes =============
 
   const canAccessRoute = useCallback(
     (path: string): PermissionCheckResult => {
       if (!user) {
-        return { allowed: false, reason: 'Non authentifie' }
+        return { allowed: false, reason: "Non authentifie" };
       }
 
       // Les admins (SUPER_ADMIN et ADMIN) ont accès à tout
-      const isUserAdmin = user.role === 'SUPER_ADMIN' || user.role === 'ADMIN'
+      const isUserAdmin = user.role === "SUPER_ADMIN" || user.role === "ADMIN";
 
       // Pour les non-admins avec allowedRoutes configurées
       // Seules ces routes sont accessibles (override total des permissions)
@@ -255,34 +251,34 @@ export function AuthProvider({ children, initialUser, initialPermissions }: Auth
         if (user.allowedRoutes.length === 0) {
           return {
             allowed: false,
-            reason: 'Aucune page autorisée pour ce rôle',
-          }
+            reason: "Aucune page autorisée pour ce rôle",
+          };
         }
 
         const isAllowed = user.allowedRoutes.some((route) => {
           // Correspondance exacte ou route parente
-          return path === route || path.startsWith(route + '/')
-        })
+          return path === route || path.startsWith(route + "/");
+        });
         if (!isAllowed) {
           return {
             allowed: false,
-            reason: 'Route non autorisée pour ce rôle',
-          }
+            reason: "Route non autorisée pour ce rôle",
+          };
         }
         // Route autorisée par allowedRoutes
-        return { allowed: true }
+        return { allowed: true };
       }
 
-      const routeConfig = getRouteConfig(path)
+      const routeConfig = getRouteConfig(path);
 
       // Route non configuree = accessible a tous les utilisateurs connectes
       if (!routeConfig) {
-        return { allowed: true }
+        return { allowed: true };
       }
 
       // Route publique pour tous les authentifies
       if (routeConfig.publicForAuthenticated) {
-        return { allowed: true }
+        return { allowed: true };
       }
 
       // Verification des roles autorises specifiquement
@@ -290,8 +286,8 @@ export function AuthProvider({ children, initialUser, initialPermissions }: Auth
         if (!routeConfig.allowedRoles.includes(user.role)) {
           return {
             allowed: false,
-            reason: `Role non autorise. Roles requis: ${routeConfig.allowedRoles.join(', ')}`,
-          }
+            reason: `Role non autorise. Roles requis: ${routeConfig.allowedRoles.join(", ")}`,
+          };
         }
       }
 
@@ -301,86 +297,76 @@ export function AuthProvider({ children, initialUser, initialPermissions }: Auth
           return {
             allowed: false,
             reason: `Role insuffisant. Minimum requis: ${getRoleDisplayName(routeConfig.minRole)}`,
-          }
+          };
         }
       }
 
       // Verification des permissions (toutes requises - AND)
-      if (
-        routeConfig.requiredAllPermissions &&
-        routeConfig.requiredAllPermissions.length > 0
-      ) {
-        const hasAll = routeConfig.requiredAllPermissions.every((p) =>
-          permissions.includes(p)
-        )
+      if (routeConfig.requiredAllPermissions && routeConfig.requiredAllPermissions.length > 0) {
+        const hasAll = routeConfig.requiredAllPermissions.every((p) => permissions.includes(p));
         if (!hasAll) {
           const missing = routeConfig.requiredAllPermissions.filter(
             (p) => !permissions.includes(p)
-          )
+          );
           return {
             allowed: false,
-            reason: `Permissions manquantes: ${missing.join(', ')}`,
-          }
+            reason: `Permissions manquantes: ${missing.join(", ")}`,
+          };
         }
       }
 
       // Verification des permissions (au moins une - OR)
-      if (
-        routeConfig.requiredPermissions &&
-        routeConfig.requiredPermissions.length > 0
-      ) {
-        const hasAny = routeConfig.requiredPermissions.some((p) =>
-          permissions.includes(p)
-        )
+      if (routeConfig.requiredPermissions && routeConfig.requiredPermissions.length > 0) {
+        const hasAny = routeConfig.requiredPermissions.some((p) => permissions.includes(p));
         if (!hasAny) {
           return {
             allowed: false,
-            reason: `Une permission requise parmi: ${routeConfig.requiredPermissions.join(', ')}`,
-          }
+            reason: `Une permission requise parmi: ${routeConfig.requiredPermissions.join(", ")}`,
+          };
         }
       }
 
-      return { allowed: true }
+      return { allowed: true };
     },
     [user, permissions]
-  )
+  );
 
   const accessibleRoutes = useMemo(() => {
-    if (!user) return []
+    if (!user) return [];
     return DASHBOARD_ROUTES.filter((route) => {
-      const result = canAccessRoute(route.path)
-      return result.allowed
-    })
-  }, [user, canAccessRoute])
+      const result = canAccessRoute(route.path);
+      return result.allowed;
+    });
+  }, [user, canAccessRoute]);
 
   // ============= Actions =============
 
   const refresh = useCallback(async () => {
-    setIsLoading(true)
-    setError(null)
+    setIsLoading(true);
+    setError(null);
 
     try {
       // Appeler l'API pour rafraichir les donnees utilisateur
-      const response = await fetch('/api/auth/me')
+      const response = await fetch("/api/auth/me");
       if (!response.ok) {
-        throw new Error('Erreur lors du rafraichissement')
+        throw new Error("Erreur lors du rafraichissement");
       }
-      const data = await response.json()
+      const data = await response.json();
       if (data.user) {
-        setUser(data.user)
+        setUser(data.user);
       } else {
-        setUser(null)
+        setUser(null);
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Erreur inconnue')
+      setError(err instanceof Error ? err.message : "Erreur inconnue");
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
-  }, [])
+  }, []);
 
   const clearUser = useCallback(() => {
-    setUser(null)
-  }, [])
+    setUser(null);
+  }, []);
 
   // ============= Valeur du contexte memorisee =============
 
@@ -423,9 +409,9 @@ export function AuthProvider({ children, initialUser, initialPermissions }: Auth
       refresh,
       clearUser,
     ]
-  )
+  );
 
-  return <AuthContext value={contextValue}>{children}</AuthContext>
+  return <AuthContext value={contextValue}>{children}</AuthContext>;
 }
 
 /**
@@ -447,13 +433,13 @@ export function AuthProvider({ children, initialUser, initialPermissions }: Auth
  * ```
  */
 export function useAuth(): AuthContextValue {
-  const context = useContext(AuthContext)
+  const context = useContext(AuthContext);
 
   if (!context) {
-    throw new Error('useAuth must be used within an AuthProvider')
+    throw new Error("useAuth must be used within an AuthProvider");
   }
 
-  return context
+  return context;
 }
 
 /**
@@ -468,8 +454,8 @@ export function useAuth(): AuthContextValue {
  * ```
  */
 export function useCurrentUser(): AuthUser | null {
-  const { user } = useAuth()
-  return user
+  const { user } = useAuth();
+  return user;
 }
 
 /**
@@ -485,6 +471,6 @@ export function useCurrentUser(): AuthUser | null {
  * ```
  */
 export function useCanAccessRoute(path: string): boolean {
-  const { canAccessRoute } = useAuth()
-  return canAccessRoute(path).allowed
+  const { canAccessRoute } = useAuth();
+  return canAccessRoute(path).allowed;
 }

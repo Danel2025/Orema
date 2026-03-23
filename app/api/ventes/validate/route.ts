@@ -3,7 +3,7 @@
  * Migré vers Supabase
  */
 
-import type { NextRequest} from "next/server";
+import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/db";
 import { getCurrentUser } from "@/lib/auth";
@@ -22,7 +22,12 @@ interface ValidationInput {
 }
 
 interface ValidationWarning {
-  type: "PRIX_CHANGE" | "STOCK_INSUFFISANT" | "PRODUIT_SUPPRIME" | "PRODUIT_INACTIF" | "PRODUIT_INDISPONIBLE";
+  type:
+    | "PRIX_CHANGE"
+    | "STOCK_INSUFFISANT"
+    | "PRODUIT_SUPPRIME"
+    | "PRODUIT_INACTIF"
+    | "PRODUIT_INDISPONIBLE";
   produitId: string;
   produitNom: string;
   ancienneValeur?: number;
@@ -41,10 +46,7 @@ export async function POST(request: NextRequest) {
     const input: ValidationInput = await request.json();
 
     if (!input.lignes?.length) {
-      return NextResponse.json(
-        { error: "Aucune ligne de vente à valider" },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: "Aucune ligne de vente à valider" }, { status: 400 });
     }
 
     const supabase = await createClient();
@@ -57,10 +59,12 @@ export async function POST(request: NextRequest) {
     const produitIds = input.lignes.map((l) => l.produitId);
     const { data: produits } = await supabase
       .from("produits")
-      .select(`
+      .select(
+        `
         id, nom, prix_vente, actif, gerer_stock, stock_actuel,
         disponible_direct, disponible_table, disponible_livraison, disponible_emporter
-      `)
+      `
+      )
       .eq("etablissement_id", etablissementId)
       .in("id", produitIds);
 
@@ -126,7 +130,11 @@ export async function POST(request: NextRequest) {
         });
       }
 
-      if (produit.gerer_stock && produit.stock_actuel !== null && produit.stock_actuel < ligne.quantite) {
+      if (
+        produit.gerer_stock &&
+        produit.stock_actuel !== null &&
+        produit.stock_actuel < ligne.quantite
+      ) {
         if (!hasWarning) produitsAvecWarning++;
         hasWarning = true;
         warnings.push({
@@ -143,7 +151,10 @@ export async function POST(request: NextRequest) {
     }
 
     const hasBlockingIssues = warnings.some(
-      (w) => w.type === "PRODUIT_SUPPRIME" || w.type === "PRODUIT_INACTIF" || w.type === "PRODUIT_INDISPONIBLE"
+      (w) =>
+        w.type === "PRODUIT_SUPPRIME" ||
+        w.type === "PRODUIT_INACTIF" ||
+        w.type === "PRODUIT_INDISPONIBLE"
     );
 
     return NextResponse.json({

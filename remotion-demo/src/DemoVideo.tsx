@@ -284,12 +284,10 @@ const VideoOverlay: React.FC<{
   const opacity = interpolate(frame, [0, 15], [0, 1], { extrapolateRight: "clamp" });
 
   // Animation de sortie (dernières 15 frames)
-  const exitOpacity = interpolate(
-    frame,
-    [fps * 2 - 15, fps * 2],
-    [1, 0],
-    { extrapolateLeft: "clamp", extrapolateRight: "clamp" }
-  );
+  const exitOpacity = interpolate(frame, [fps * 2 - 15, fps * 2], [1, 0], {
+    extrapolateLeft: "clamp",
+    extrapolateRight: "clamp",
+  });
 
   const finalOpacity = Math.min(opacity, exitOpacity);
 
@@ -440,7 +438,10 @@ const DemoVideoSection: React.FC = () => {
 
       {/* Overlay avec titre de la scène */}
       {currentSceneIndex >= 0 && (
-        <Sequence from={sceneStartFrame} durationInFrames={(currentScene.end - currentScene.start) * fps}>
+        <Sequence
+          from={sceneStartFrame}
+          durationInFrames={(currentScene.end - currentScene.start) * fps}
+        >
           <VideoOverlay
             title={currentScene.title}
             subtitle={currentScene.subtitle}
@@ -571,7 +572,8 @@ const OutroScene: React.FC = () => {
                 left: -100,
                 width: 60,
                 height: "100%",
-                background: "linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent)",
+                background:
+                  "linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent)",
                 transform: `translateX(${frame * 3}px)`,
               }}
             />
@@ -612,9 +614,7 @@ const OutroScene: React.FC = () => {
                   background: ORANGE,
                 }}
               />
-              <span style={{ fontSize: 16, color: "#94a3b8", fontFamily: gabarito }}>
-                {text}
-              </span>
+              <span style={{ fontSize: 16, color: "#94a3b8", fontFamily: gabarito }}>{text}</span>
             </div>
           ))}
         </div>

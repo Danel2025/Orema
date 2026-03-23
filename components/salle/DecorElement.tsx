@@ -10,7 +10,7 @@
  */
 
 import { useState } from "react";
-import { DoorOpen, UtensilsCrossed, Wine, Armchair, RotateCw } from "lucide-react";
+import { Door, ForkKnife, Wine, Armchair, ArrowClockwise } from "@phosphor-icons/react";
 import { cn } from "@/lib/utils";
 
 export type DecorType =
@@ -39,7 +39,10 @@ export interface DecorElementData {
  * Calcule les dimensions effectives en tenant compte de la rotation
  * Pour les murs droits, la rotation 90°/270° inverse width et height visuellement
  */
-export function getEffectiveDimensions(element: DecorElementData): { width: number; height: number } {
+export function getEffectiveDimensions(element: DecorElementData): {
+  width: number;
+  height: number;
+} {
   const rotation = element.rotation || 0;
   const isHorizontalRotation = rotation === 90 || rotation === 270;
 
@@ -52,7 +55,15 @@ export function getEffectiveDimensions(element: DecorElementData): { width: numb
 }
 
 export interface ResizeHandle {
-  position: "top" | "bottom" | "left" | "right" | "top-left" | "top-right" | "bottom-left" | "bottom-right";
+  position:
+    | "top"
+    | "bottom"
+    | "left"
+    | "right"
+    | "top-left"
+    | "top-right"
+    | "bottom-left"
+    | "bottom-right";
   cursor: string;
 }
 
@@ -68,9 +79,9 @@ const DECOR_STYLES: Record<DecorType, { bg: string; border: string; icon?: boole
   decoration: { bg: "#f0fdf4", border: "#22c55e", icon: true },
 };
 
-const DECOR_ICONS: Partial<Record<DecorType, typeof DoorOpen>> = {
-  door: DoorOpen,
-  counter: UtensilsCrossed,
+const DECOR_ICONS: Partial<Record<DecorType, typeof Door>> = {
+  door: Door,
+  counter: ForkKnife,
   bar: Wine,
   decoration: Armchair,
 };
@@ -115,7 +126,8 @@ export function DecorElement({
   const isWallType = element.type.startsWith("wall");
   const isShelf = element.type === "shelf";
   const isStraightWall = element.type === "wall";
-  const isShapedWall = element.type === "wall-l" || element.type === "wall-t" || element.type === "wall-cross";
+  const isShapedWall =
+    element.type === "wall-l" || element.type === "wall-t" || element.type === "wall-cross";
   const Icon = !isWallType && !isShelf ? DECOR_ICONS[element.type] : null;
   const [isHovered, setIsHovered] = useState(false);
   const [activeResizeHandle, setActiveResizeHandle] = useState<string | null>(null);
@@ -141,9 +153,10 @@ export function DecorElement({
     };
 
     // Ajout d'effets hover/active sur les poignees
-    const handleInteraction: React.CSSProperties = activeResizeHandle === handle.position
-      ? { transform: "scale(1.2)", boxShadow: "0 2px 8px rgba(0,0,0,0.3)" }
-      : {};
+    const handleInteraction: React.CSSProperties =
+      activeResizeHandle === handle.position
+        ? { transform: "scale(1.2)", boxShadow: "0 2px 8px rgba(0,0,0,0.3)" }
+        : {};
 
     switch (handle.position) {
       case "top-left":
@@ -155,13 +168,37 @@ export function DecorElement({
       case "bottom-right":
         return { ...base, ...handleInteraction, bottom: offset, right: offset };
       case "top":
-        return { ...base, ...handleInteraction, top: offset, left: "50%", transform: `translateX(-50%)${activeResizeHandle === handle.position ? ' scale(1.2)' : ''}` };
+        return {
+          ...base,
+          ...handleInteraction,
+          top: offset,
+          left: "50%",
+          transform: `translateX(-50%)${activeResizeHandle === handle.position ? " scale(1.2)" : ""}`,
+        };
       case "bottom":
-        return { ...base, ...handleInteraction, bottom: offset, left: "50%", transform: `translateX(-50%)${activeResizeHandle === handle.position ? ' scale(1.2)' : ''}` };
+        return {
+          ...base,
+          ...handleInteraction,
+          bottom: offset,
+          left: "50%",
+          transform: `translateX(-50%)${activeResizeHandle === handle.position ? " scale(1.2)" : ""}`,
+        };
       case "left":
-        return { ...base, ...handleInteraction, left: offset, top: "50%", transform: `translateY(-50%)${activeResizeHandle === handle.position ? ' scale(1.2)' : ''}` };
+        return {
+          ...base,
+          ...handleInteraction,
+          left: offset,
+          top: "50%",
+          transform: `translateY(-50%)${activeResizeHandle === handle.position ? " scale(1.2)" : ""}`,
+        };
       case "right":
-        return { ...base, ...handleInteraction, right: offset, top: "50%", transform: `translateY(-50%)${activeResizeHandle === handle.position ? ' scale(1.2)' : ''}` };
+        return {
+          ...base,
+          ...handleInteraction,
+          right: offset,
+          top: "50%",
+          transform: `translateY(-50%)${activeResizeHandle === handle.position ? " scale(1.2)" : ""}`,
+        };
       default:
         return base;
     }
@@ -191,8 +228,8 @@ export function DecorElement({
       data-decor-id={element.id}
       onMouseDown={(e) => {
         // Ne pas démarrer le drag si on clique sur une poignée de resize ou bouton
-        if ((e.target as HTMLElement).closest('[data-resize-handle]')) return;
-        if ((e.target as HTMLElement).closest('[data-action-btn]')) return;
+        if ((e.target as HTMLElement).closest("[data-resize-handle]")) return;
+        if ((e.target as HTMLElement).closest("[data-action-btn]")) return;
         onMouseDown?.(e);
       }}
       onClick={onClick}
@@ -209,7 +246,7 @@ export function DecorElement({
       }}
       className={cn(
         "absolute select-none",
-        isSelected && "ring-[3px] ring-offset-2 ring-[var(--accent-9)]",
+        isSelected && "ring-[3px] ring-[var(--accent-9)] ring-offset-2",
         !isEditMode && !isWallType && "cursor-pointer"
       )}
       style={{
@@ -235,20 +272,22 @@ export function DecorElement({
         boxShadow: isDragging
           ? "0 8px 24px rgba(0,0,0,0.3)"
           : isSelected
-          ? "0 4px 12px rgba(0,0,0,0.25)"
-          : isHovered && isEditMode
-          ? "0 6px 16px rgba(0,0,0,0.2)"
-          : isShapedWall
-          ? "none"
-          : "0 1px 3px rgba(0,0,0,0.15)",
+            ? "0 4px 12px rgba(0,0,0,0.25)"
+            : isHovered && isEditMode
+              ? "0 6px 16px rgba(0,0,0,0.2)"
+              : isShapedWall
+                ? "none"
+                : "0 1px 3px rgba(0,0,0,0.15)",
         transition: "box-shadow 0.15s, transform 0.15s",
         cursor: isDragging
           ? "grabbing"
           : isEditMode
-          ? isHovered ? "grab" : "default"
-          : !isWallType
-          ? "pointer"
-          : "default",
+            ? isHovered
+              ? "grab"
+              : "default"
+            : !isWallType
+              ? "pointer"
+              : "default",
         opacity: isDragging ? 0.7 : 1,
       }}
     >
@@ -287,8 +326,20 @@ export function DecorElement({
             transformOrigin: "center center",
           }}
         >
-          <path d="M15 15 L85 15" stroke={style.border} strokeWidth="10" fill="none" strokeLinecap="round" />
-          <path d="M50 15 L50 85" stroke={style.border} strokeWidth="10" fill="none" strokeLinecap="round" />
+          <path
+            d="M15 15 L85 15"
+            stroke={style.border}
+            strokeWidth="10"
+            fill="none"
+            strokeLinecap="round"
+          />
+          <path
+            d="M50 15 L50 85"
+            stroke={style.border}
+            strokeWidth="10"
+            fill="none"
+            strokeLinecap="round"
+          />
         </svg>
       )}
       {element.type === "wall-cross" && (
@@ -303,20 +354,34 @@ export function DecorElement({
             transformOrigin: "center center",
           }}
         >
-          <path d="M15 50 L85 50" stroke={style.border} strokeWidth="10" fill="none" strokeLinecap="round" />
-          <path d="M50 15 L50 85" stroke={style.border} strokeWidth="10" fill="none" strokeLinecap="round" />
+          <path
+            d="M15 50 L85 50"
+            stroke={style.border}
+            strokeWidth="10"
+            fill="none"
+            strokeLinecap="round"
+          />
+          <path
+            d="M50 15 L50 85"
+            stroke={style.border}
+            strokeWidth="10"
+            fill="none"
+            strokeLinecap="round"
+          />
         </svg>
       )}
 
       {/* Rendu pour le mur droit - pas de rotation CSS, on utilise le swap de dimensions */}
-      {isStraightWall ? <div
+      {isStraightWall ? (
+        <div
           style={{
             position: "absolute",
             inset: 2,
             backgroundColor: style.border,
             borderRadius: 2,
           }}
-        /> : null}
+        />
+      ) : null}
 
       {/* Rendu pour les étagères */}
       {element.type === "shelf" && (
@@ -327,15 +392,32 @@ export function DecorElement({
           preserveAspectRatio="none"
           style={{ position: "absolute", inset: 0 }}
         >
-          <rect x="2" y="2" width={displayWidth - 4} height={Math.max(4, displayHeight * 0.3)} fill={style.border} rx="1" />
-          <rect x="2" y={displayHeight - Math.max(6, displayHeight * 0.3) - 2} width={displayWidth - 4} height={Math.max(4, displayHeight * 0.3)} fill={style.border} rx="1" />
+          <rect
+            x="2"
+            y="2"
+            width={displayWidth - 4}
+            height={Math.max(4, displayHeight * 0.3)}
+            fill={style.border}
+            rx="1"
+          />
+          <rect
+            x="2"
+            y={displayHeight - Math.max(6, displayHeight * 0.3) - 2}
+            width={displayWidth - 4}
+            height={Math.max(4, displayHeight * 0.3)}
+            fill={style.border}
+            rx="1"
+          />
         </svg>
       )}
-      {Icon ? <Icon
+      {Icon ? (
+        <Icon
           size={Math.min(element.width, element.height) * 0.35}
           style={{ color: style.border, opacity: 0.8 }}
-        /> : null}
-      {element.label && !isWallType && !isShelf && element.width > 60 ? <span
+        />
+      ) : null}
+      {element.label && !isWallType && !isShelf && element.width > 60 ? (
+        <span
           style={{
             fontSize: 10,
             fontWeight: 600,
@@ -348,10 +430,12 @@ export function DecorElement({
           }}
         >
           {element.label}
-        </span> : null}
+        </span>
+      ) : null}
 
       {/* Resize handles (only when selected in edit mode) */}
-      {isSelected && isEditMode ? <>
+      {isSelected && isEditMode ? (
+        <>
           {RESIZE_HANDLES.map((handle) => {
             const isCorner = CORNER_POSITIONS.has(handle.position);
             const isCornerHovered = isCorner && activeResizeHandle === handle.position;
@@ -381,14 +465,16 @@ export function DecorElement({
                   }
                 }}
               >
-                {isCornerHovered ? <RotateCw size={7} color="white" strokeWidth={3} /> : null}
+                {isCornerHovered ? <ArrowClockwise size={7} color="white" weight="bold" /> : null}
               </div>
             );
           })}
-        </> : null}
+        </>
+      ) : null}
 
       {/* Indicateur visuel pendant le resize - affiche les nouvelles dimensions en bas */}
-      {activeResizeHandle && isSelected && isEditMode ? <div
+      {activeResizeHandle && isSelected && isEditMode ? (
+        <div
           style={{
             position: "absolute",
             bottom: -24,
@@ -407,7 +493,8 @@ export function DecorElement({
           }}
         >
           {Math.round(element.width)}×{Math.round(element.height)}
-        </div> : null}
+        </div>
+      ) : null}
     </div>
   );
 }

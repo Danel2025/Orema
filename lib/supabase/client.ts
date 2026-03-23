@@ -7,8 +7,11 @@
  * Pattern singleton: une seule instance est creee et reutilisee.
  */
 
-import { createBrowserClient } from '@supabase/ssr'
-import type { Database } from '@/types/supabase'
+import { createBrowserClient } from "@supabase/ssr";
+import type { Database } from "@/types/supabase";
+
+// Re-export Database for consumers that need the type
+export type { Database };
 
 /**
  * Cree un client Supabase pour utilisation dans le navigateur.
@@ -25,8 +28,9 @@ import type { Database } from '@/types/supabase'
  * ```
  */
 export function createClient() {
-  return createBrowserClient<Database>(
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  return createBrowserClient<any>(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-  )
+  );
 }

@@ -5,6 +5,7 @@
 ### Simulation de boucle de redirection
 
 1. **Ouvrir l'application dans le navigateur**
+
    ```
    http://localhost:3000
    ```
@@ -12,15 +13,19 @@
 2. **Ouvrir DevTools Console** (F12)
 
 3. **Exécuter ce code pour simuler des redirections**
+
    ```javascript
    // Simuler 6 redirections rapides
-   sessionStorage.setItem('orema_redirect_count', JSON.stringify({
-     count: 6,
-     timestamp: Date.now()
-   }))
+   sessionStorage.setItem(
+     "orema_redirect_count",
+     JSON.stringify({
+       count: 6,
+       timestamp: Date.now(),
+     })
+   );
 
    // Recharger la page
-   location.reload()
+   location.reload();
    ```
 
 4. **Résultat Attendu**
@@ -43,6 +48,7 @@ curl -X POST http://localhost:3000/api/clear-session
 ```
 
 **Résultat Attendu**:
+
 ```json
 {
   "success": true,
@@ -54,14 +60,14 @@ curl -X POST http://localhost:3000/api/clear-session
 
 ```javascript
 // Méthode 1: GET
-fetch('/api/clear-session')
-  .then(r => r.json())
-  .then(console.log)
+fetch("/api/clear-session")
+  .then((r) => r.json())
+  .then(console.log);
 
 // Méthode 2: POST
-fetch('/api/clear-session', { method: 'POST' })
-  .then(r => r.json())
-  .then(console.log)
+fetch("/api/clear-session", { method: "POST" })
+  .then((r) => r.json())
+  .then(console.log);
 ```
 
 ## Test 3: Validation getSession()
@@ -71,14 +77,16 @@ fetch('/api/clear-session', { method: 'POST' })
 1. **Se connecter normalement** pour obtenir un cookie valide
 
 2. **Noter l'ID de son établissement**
+
    ```javascript
    // Console DevTools
-   document.cookie
+   document.cookie;
    // Copier le cookie orema_session et le décoder sur jwt.io
    // Noter le etablissementId
    ```
 
 3. **Supprimer cet établissement en base** (ATTENTION: développement uniquement!)
+
    ```sql
    -- Dans votre outil de DB
    DELETE FROM etablissements WHERE id = 'votre-id-ici';
@@ -99,21 +107,18 @@ fetch('/api/clear-session', { method: 'POST' })
 ### Créer un composant de test
 
 ```tsx
-'use client'
+"use client";
 
-import { useClearSession } from '@/components/session-validator'
+import { useClearSession } from "@/components/session-validator";
 
 export function TestClearButton() {
-  const { clearSession } = useClearSession()
+  const { clearSession } = useClearSession();
 
   return (
-    <button
-      onClick={clearSession}
-      className="px-4 py-2 bg-red-500 text-white rounded"
-    >
+    <button onClick={clearSession} className="rounded bg-red-500 px-4 py-2 text-white">
       Test Clear Session
     </button>
-  )
+  );
 }
 ```
 
@@ -121,7 +126,7 @@ export function TestClearButton() {
 
 ```tsx
 // app/(dashboard)/page.tsx
-import { TestClearButton } from '@/components/test-clear-button'
+import { TestClearButton } from "@/components/test-clear-button";
 
 export default function DashboardPage() {
   return (
@@ -129,7 +134,7 @@ export default function DashboardPage() {
       <TestClearButton />
       {/* ... reste du contenu */}
     </div>
-  )
+  );
 }
 ```
 
@@ -144,19 +149,16 @@ export default function DashboardPage() {
 ### Créer un formulaire de test
 
 ```tsx
-import { clearSessionAction } from '@/app/actions/clear-session'
+import { clearSessionAction } from "@/app/actions/clear-session";
 
 export function TestLogoutForm() {
   return (
     <form action={clearSessionAction}>
-      <button
-        type="submit"
-        className="px-4 py-2 bg-red-500 text-white rounded"
-      >
+      <button type="submit" className="rounded bg-red-500 px-4 py-2 text-white">
         Test Server Action Logout
       </button>
     </form>
-  )
+  );
 }
 ```
 
@@ -172,7 +174,7 @@ export function TestLogoutForm() {
 
 ```javascript
 // Console DevTools
-document.cookie
+document.cookie;
 // Ne devrait PAS contenir 'orema_session'
 ```
 
@@ -188,7 +190,7 @@ document.cookie
 
 ```javascript
 // Console DevTools
-sessionStorage.getItem('orema_redirect_count')
+sessionStorage.getItem("orema_redirect_count");
 // Devrait être null ou count < 5
 ```
 
@@ -219,8 +221,8 @@ DELETE FROM etablissements;
 
 ```javascript
 // Console DevTools
-document.cookie = 'orema_session=invalid.jwt.token; path=/; SameSite=Lax'
-location.reload()
+document.cookie = "orema_session=invalid.jwt.token; path=/; SameSite=Lax";
+location.reload();
 ```
 
 **Résultat**: Token invalide → verifySession() retourne null → session cleared.
@@ -231,9 +233,9 @@ location.reload()
 
 ```javascript
 // Console DevTools - Mesurer le temps de validation
-console.time('getSession')
-await fetch('/api/votre-endpoint-protege')
-console.timeEnd('getSession')
+console.time("getSession");
+await fetch("/api/votre-endpoint-protege");
+console.timeEnd("getSession");
 // Devrait être < 50ms avec la validation établissement
 ```
 
@@ -241,9 +243,9 @@ console.timeEnd('getSession')
 
 ```javascript
 // Console DevTools
-const scriptContent = document.querySelector('script').innerHTML
-const sizeKB = new Blob([scriptContent]).size / 1024
-console.log(`Script size: ${sizeKB.toFixed(2)} KB`)
+const scriptContent = document.querySelector("script").innerHTML;
+const sizeKB = new Blob([scriptContent]).size / 1024;
+console.log(`Script size: ${sizeKB.toFixed(2)} KB`);
 // Script de protection ~ 2KB
 ```
 
@@ -253,22 +255,23 @@ console.log(`Script size: ${sizeKB.toFixed(2)} KB`)
 
 ```javascript
 // Console DevTools
-localStorage.setItem('debug', 'orema:*')
-location.reload()
+localStorage.setItem("debug", "orema:*");
+location.reload();
 ```
 
 ### Forcer un nettoyage manuel
 
 ```javascript
 // Console DevTools - Force cleanup
-document.cookie = 'orema_session=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; SameSite=Lax'
-await fetch('/api/clear-session', { method: 'POST' })
-location.href = '/login'
+document.cookie = "orema_session=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; SameSite=Lax";
+await fetch("/api/clear-session", { method: "POST" });
+location.href = "/login";
 ```
 
 ## ✅ Succès
 
 Si tous les tests passent:
+
 - ✅ Les cookies invalides sont détectés et nettoyés
 - ✅ Les boucles de redirection sont évitées
 - ✅ Les utilisateurs sont redirigés proprement vers /login

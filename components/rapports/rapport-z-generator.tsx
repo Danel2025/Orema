@@ -21,25 +21,21 @@ import {
 import {
   FileText,
   Printer,
-  Calendar,
+  CalendarBlank,
   Clock,
   User,
   Wallet,
   CreditCard,
-  Smartphone,
-  AlertTriangle,
+  DeviceMobile,
+  Warning,
   CheckCircle,
-  TrendingUp,
+  TrendUp,
   ShoppingCart,
   Receipt,
-  ChevronDown,
-  ChevronUp,
-} from "lucide-react";
-import {
-  genererRapportZAction,
-  getClosedSessions,
-  type RapportZComplet,
-} from "@/actions/rapports";
+  CaretDown,
+  CaretUp,
+} from "@phosphor-icons/react";
+import { genererRapportZAction, getClosedSessions, type RapportZComplet } from "@/actions/rapports";
 import { formatCurrency, formatDate, formatTime } from "@/lib/utils";
 
 const TYPE_VENTE_LABELS: Record<string, string> = {
@@ -76,9 +72,7 @@ interface RapportZGeneratorProps {
 export function RapportZGenerator({ initialSessions }: RapportZGeneratorProps) {
   const [sessions, setSessions] = useState<Session[]>(initialSessions || []);
   const [isLoadingSessions, setIsLoadingSessions] = useState(false);
-  const [selectedSessionId, setSelectedSessionId] = useState<string | null>(
-    null
-  );
+  const [selectedSessionId, setSelectedSessionId] = useState<string | null>(null);
   const [rapport, setRapport] = useState<RapportZComplet | null>(null);
   const [isGenerating, setIsGenerating] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -103,28 +97,25 @@ export function RapportZGenerator({ initialSessions }: RapportZGeneratorProps) {
     }
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const handleGenerate = useCallback(
-    async (sessionId: string) => {
-      setSelectedSessionId(sessionId);
-      setIsGenerating(true);
-      setError(null);
-      setRapport(null);
+  const handleGenerate = useCallback(async (sessionId: string) => {
+    setSelectedSessionId(sessionId);
+    setIsGenerating(true);
+    setError(null);
+    setRapport(null);
 
-      try {
-        const result = await genererRapportZAction(sessionId);
-        if (result.success && result.data) {
-          setRapport(result.data);
-        } else {
-          setError(result.error || "Erreur de generation");
-        }
-      } catch {
-        setError("Erreur lors de la generation du rapport");
-      } finally {
-        setIsGenerating(false);
+    try {
+      const result = await genererRapportZAction(sessionId);
+      if (result.success && result.data) {
+        setRapport(result.data);
+      } else {
+        setError(result.error || "Erreur de generation");
       }
-    },
-    []
-  );
+    } catch {
+      setError("Erreur lors de la generation du rapport");
+    } finally {
+      setIsGenerating(false);
+    }
+  }, []);
 
   const handlePrint = useCallback(() => {
     if (typeof window !== "undefined") {
@@ -143,19 +134,13 @@ export function RapportZGenerator({ initialSessions }: RapportZGeneratorProps) {
               Generer un Rapport Z
             </Text>
           </Flex>
-          <Button
-            variant="soft"
-            size="1"
-            onClick={loadSessions}
-            disabled={isLoadingSessions}
-          >
+          <Button variant="soft" size="1" onClick={loadSessions} disabled={isLoadingSessions}>
             Actualiser
           </Button>
         </Flex>
 
         <Text size="2" color="gray" mb="3" style={{ display: "block" }}>
-          Selectionnez une session cloturee pour generer le rapport de cloture
-          journaliere.
+          Selectionnez une session cloturee pour generer le rapport de cloture journaliere.
         </Text>
 
         {isLoadingSessions ? (
@@ -167,8 +152,8 @@ export function RapportZGenerator({ initialSessions }: RapportZGeneratorProps) {
         ) : sessions.length === 0 ? (
           <Callout.Root color="gray">
             <Callout.Text>
-              Aucune session cloturee trouvee. Cloturez une session de caisse
-              pour generer un rapport Z.
+              Aucune session cloturee trouvee. Cloturez une session de caisse pour generer un
+              rapport Z.
             </Callout.Text>
           </Callout.Root>
         ) : (
@@ -181,9 +166,7 @@ export function RapportZGenerator({ initialSessions }: RapportZGeneratorProps) {
                   padding: "12px 16px",
                   borderRadius: 8,
                   border: `1px solid ${
-                    selectedSessionId === session.id
-                      ? "var(--accent-8)"
-                      : "var(--gray-a5)"
+                    selectedSessionId === session.id ? "var(--accent-8)" : "var(--gray-a5)"
                   }`,
                   backgroundColor:
                     selectedSessionId === session.id
@@ -196,7 +179,7 @@ export function RapportZGenerator({ initialSessions }: RapportZGeneratorProps) {
                 <Flex justify="between" align="center">
                   <Flex direction="column" gap="1">
                     <Flex align="center" gap="2">
-                      <Calendar size={14} />
+                      <CalendarBlank size={14} />
                       <Text size="2" weight="medium">
                         {formatDate(session.dateCloture, "long")}
                       </Text>
@@ -205,15 +188,13 @@ export function RapportZGenerator({ initialSessions }: RapportZGeneratorProps) {
                       <Flex align="center" gap="1">
                         <Clock size={12} />
                         <Text size="1" color="gray">
-                          {formatTime(session.dateOuverture)} -{" "}
-                          {formatTime(session.dateCloture)}
+                          {formatTime(session.dateOuverture)} - {formatTime(session.dateCloture)}
                         </Text>
                       </Flex>
                       <Flex align="center" gap="1">
                         <User size={12} />
                         <Text size="1" color="gray">
-                          {session.utilisateur.prenom}{" "}
-                          {session.utilisateur.nom}
+                          {session.utilisateur.prenom} {session.utilisateur.nom}
                         </Text>
                       </Flex>
                     </Flex>
@@ -226,8 +207,7 @@ export function RapportZGenerator({ initialSessions }: RapportZGeneratorProps) {
                       size="2"
                       weight="bold"
                       style={{
-                        fontFamily:
-                          "var(--font-google-sans-code), ui-monospace, monospace",
+                        fontFamily: "var(--font-google-sans-code), ui-monospace, monospace",
                       }}
                     >
                       {formatCurrency(session.totalVentes)}
@@ -241,25 +221,30 @@ export function RapportZGenerator({ initialSessions }: RapportZGeneratorProps) {
       </Card>
 
       {/* Erreur */}
-      {error ? <Callout.Root color="red">
+      {error ? (
+        <Callout.Root color="red">
           <Callout.Icon>
-            <AlertTriangle size={16} />
+            <Warning size={16} />
           </Callout.Icon>
           <Callout.Text>{error}</Callout.Text>
-        </Callout.Root> : null}
+        </Callout.Root>
+      ) : null}
 
       {/* Chargement */}
-      {isGenerating ? <Card size="3">
+      {isGenerating ? (
+        <Card size="3">
           <Flex direction="column" gap="3" py="4">
             <Skeleton width="100%" height="40px" />
             <Skeleton width="100%" height="40px" />
             <Skeleton width="80%" height="40px" />
             <Skeleton width="60%" height="40px" />
           </Flex>
-        </Card> : null}
+        </Card>
+      ) : null}
 
       {/* Rapport genere */}
-      {rapport && !isGenerating ? <Card
+      {rapport && !isGenerating ? (
+        <Card
           size="3"
           id="rapport-z-print"
           style={{
@@ -278,24 +263,25 @@ export function RapportZGenerator({ initialSessions }: RapportZGeneratorProps) {
               <Text size="3" weight="medium">
                 {rapport.etablissement.nom}
               </Text>
-              {rapport.etablissement.adresse ? <Text size="2" color="gray" style={{ display: "block" }}>
+              {rapport.etablissement.adresse ? (
+                <Text size="2" color="gray" style={{ display: "block" }}>
                   {rapport.etablissement.adresse}
-                </Text> : null}
-              {rapport.etablissement.telephone ? <Text size="2" color="gray" style={{ display: "block" }}>
+                </Text>
+              ) : null}
+              {rapport.etablissement.telephone ? (
+                <Text size="2" color="gray" style={{ display: "block" }}>
                   Tel: {rapport.etablissement.telephone}
-                </Text> : null}
-              {(rapport.etablissement.nif || rapport.etablissement.rccm) ? <Text size="1" color="gray" style={{ display: "block" }}>
+                </Text>
+              ) : null}
+              {rapport.etablissement.nif || rapport.etablissement.rccm ? (
+                <Text size="1" color="gray" style={{ display: "block" }}>
                   {rapport.etablissement.nif ? `NIF: ${rapport.etablissement.nif}` : null}
-                  {rapport.etablissement.nif &&
-                    rapport.etablissement.rccm ? " - " : null}
+                  {rapport.etablissement.nif && rapport.etablissement.rccm ? " - " : null}
                   {rapport.etablissement.rccm ? `RCCM: ${rapport.etablissement.rccm}` : null}
-                </Text> : null}
+                </Text>
+              ) : null}
             </Box>
-            <Button
-              variant="solid"
-              onClick={handlePrint}
-              className="no-print"
-            >
+            <Button variant="solid" onClick={handlePrint} className="no-print">
               <Printer size={16} />
               Imprimer
             </Button>
@@ -387,8 +373,7 @@ export function RapportZGenerator({ initialSessions }: RapportZGeneratorProps) {
                   size="2"
                   weight="medium"
                   style={{
-                    fontFamily:
-                      "var(--font-google-sans-code), ui-monospace, monospace",
+                    fontFamily: "var(--font-google-sans-code), ui-monospace, monospace",
                   }}
                 >
                   {formatCurrency(rapport.ventes.panierMoyen)}
@@ -397,7 +382,7 @@ export function RapportZGenerator({ initialSessions }: RapportZGeneratorProps) {
               {rapport.ventes.nombreAnnulations > 0 && (
                 <Flex justify="between">
                   <Flex align="center" gap="2">
-                    <AlertTriangle size={14} style={{ color: "var(--red-9)" }} />
+                    <Warning size={14} style={{ color: "var(--red-9)" }} />
                     <Text size="2" color="red">
                       Annulations
                     </Text>
@@ -416,8 +401,7 @@ export function RapportZGenerator({ initialSessions }: RapportZGeneratorProps) {
                   size="4"
                   weight="bold"
                   style={{
-                    fontFamily:
-                      "var(--font-google-sans-code), ui-monospace, monospace",
+                    fontFamily: "var(--font-google-sans-code), ui-monospace, monospace",
                     color: "var(--accent-9)",
                   }}
                 >
@@ -450,8 +434,7 @@ export function RapportZGenerator({ initialSessions }: RapportZGeneratorProps) {
                     size="2"
                     weight="medium"
                     style={{
-                      fontFamily:
-                        "var(--font-google-sans-code), ui-monospace, monospace",
+                      fontFamily: "var(--font-google-sans-code), ui-monospace, monospace",
                     }}
                   >
                     {formatCurrency(rapport.paiements.especes)}
@@ -468,8 +451,7 @@ export function RapportZGenerator({ initialSessions }: RapportZGeneratorProps) {
                     size="2"
                     weight="medium"
                     style={{
-                      fontFamily:
-                        "var(--font-google-sans-code), ui-monospace, monospace",
+                      fontFamily: "var(--font-google-sans-code), ui-monospace, monospace",
                     }}
                   >
                     {formatCurrency(rapport.paiements.cartes)}
@@ -479,15 +461,14 @@ export function RapportZGenerator({ initialSessions }: RapportZGeneratorProps) {
               {rapport.paiements.mobileMoney > 0 && (
                 <Flex justify="between">
                   <Flex align="center" gap="2">
-                    <Smartphone size={14} />
+                    <DeviceMobile size={14} />
                     <Text size="2">Mobile Money</Text>
                   </Flex>
                   <Text
                     size="2"
                     weight="medium"
                     style={{
-                      fontFamily:
-                        "var(--font-google-sans-code), ui-monospace, monospace",
+                      fontFamily: "var(--font-google-sans-code), ui-monospace, monospace",
                     }}
                   >
                     {formatCurrency(rapport.paiements.mobileMoney)}
@@ -501,8 +482,7 @@ export function RapportZGenerator({ initialSessions }: RapportZGeneratorProps) {
                     size="2"
                     weight="medium"
                     style={{
-                      fontFamily:
-                        "var(--font-google-sans-code), ui-monospace, monospace",
+                      fontFamily: "var(--font-google-sans-code), ui-monospace, monospace",
                     }}
                   >
                     {formatCurrency(rapport.paiements.cheques)}
@@ -516,8 +496,7 @@ export function RapportZGenerator({ initialSessions }: RapportZGeneratorProps) {
                     size="2"
                     weight="medium"
                     style={{
-                      fontFamily:
-                        "var(--font-google-sans-code), ui-monospace, monospace",
+                      fontFamily: "var(--font-google-sans-code), ui-monospace, monospace",
                     }}
                   >
                     {formatCurrency(rapport.paiements.virements)}
@@ -531,8 +510,7 @@ export function RapportZGenerator({ initialSessions }: RapportZGeneratorProps) {
                     size="2"
                     weight="medium"
                     style={{
-                      fontFamily:
-                        "var(--font-google-sans-code), ui-monospace, monospace",
+                      fontFamily: "var(--font-google-sans-code), ui-monospace, monospace",
                     }}
                   >
                     {formatCurrency(rapport.paiements.compteClient)}
@@ -546,8 +524,7 @@ export function RapportZGenerator({ initialSessions }: RapportZGeneratorProps) {
                     size="2"
                     weight="medium"
                     style={{
-                      fontFamily:
-                        "var(--font-google-sans-code), ui-monospace, monospace",
+                      fontFamily: "var(--font-google-sans-code), ui-monospace, monospace",
                     }}
                   >
                     {formatCurrency(rapport.paiements.autres)}
@@ -563,8 +540,7 @@ export function RapportZGenerator({ initialSessions }: RapportZGeneratorProps) {
                   size="2"
                   weight="bold"
                   style={{
-                    fontFamily:
-                      "var(--font-google-sans-code), ui-monospace, monospace",
+                    fontFamily: "var(--font-google-sans-code), ui-monospace, monospace",
                   }}
                 >
                   {formatCurrency(rapport.paiements.total)}
@@ -574,9 +550,7 @@ export function RapportZGenerator({ initialSessions }: RapportZGeneratorProps) {
           </Box>
 
           {/* Ventes par type */}
-          {Object.entries(rapport.ventesParType).some(
-            ([, stats]) => stats.count > 0
-          ) && (
+          {Object.entries(rapport.ventesParType).some(([, stats]) => stats.count > 0) && (
             <>
               <Text size="3" weight="bold" mb="2">
                 Ventes par type
@@ -602,8 +576,7 @@ export function RapportZGenerator({ initialSessions }: RapportZGeneratorProps) {
                           size="2"
                           weight="medium"
                           style={{
-                            fontFamily:
-                              "var(--font-google-sans-code), ui-monospace, monospace",
+                            fontFamily: "var(--font-google-sans-code), ui-monospace, monospace",
                           }}
                         >
                           {formatCurrency(stats.total)}
@@ -634,8 +607,7 @@ export function RapportZGenerator({ initialSessions }: RapportZGeneratorProps) {
                   size="2"
                   weight="medium"
                   style={{
-                    fontFamily:
-                      "var(--font-google-sans-code), ui-monospace, monospace",
+                    fontFamily: "var(--font-google-sans-code), ui-monospace, monospace",
                   }}
                 >
                   {formatCurrency(rapport.tva.totalHT)}
@@ -647,8 +619,7 @@ export function RapportZGenerator({ initialSessions }: RapportZGeneratorProps) {
                   size="2"
                   weight="medium"
                   style={{
-                    fontFamily:
-                      "var(--font-google-sans-code), ui-monospace, monospace",
+                    fontFamily: "var(--font-google-sans-code), ui-monospace, monospace",
                   }}
                 >
                   {formatCurrency(rapport.tva.totalTVA)}
@@ -663,8 +634,7 @@ export function RapportZGenerator({ initialSessions }: RapportZGeneratorProps) {
                   size="2"
                   weight="bold"
                   style={{
-                    fontFamily:
-                      "var(--font-google-sans-code), ui-monospace, monospace",
+                    fontFamily: "var(--font-google-sans-code), ui-monospace, monospace",
                   }}
                 >
                   {formatCurrency(rapport.tva.totalTTC)}
@@ -703,8 +673,7 @@ export function RapportZGenerator({ initialSessions }: RapportZGeneratorProps) {
                 <Text
                   size="2"
                   style={{
-                    fontFamily:
-                      "var(--font-google-sans-code), ui-monospace, monospace",
+                    fontFamily: "var(--font-google-sans-code), ui-monospace, monospace",
                   }}
                 >
                   {formatCurrency(rapport.caisse.fondCaisse)}
@@ -715,8 +684,7 @@ export function RapportZGenerator({ initialSessions }: RapportZGeneratorProps) {
                 <Text
                   size="2"
                   style={{
-                    fontFamily:
-                      "var(--font-google-sans-code), ui-monospace, monospace",
+                    fontFamily: "var(--font-google-sans-code), ui-monospace, monospace",
                   }}
                 >
                   {formatCurrency(rapport.paiements.especes)}
@@ -731,8 +699,7 @@ export function RapportZGenerator({ initialSessions }: RapportZGeneratorProps) {
                   size="2"
                   weight="bold"
                   style={{
-                    fontFamily:
-                      "var(--font-google-sans-code), ui-monospace, monospace",
+                    fontFamily: "var(--font-google-sans-code), ui-monospace, monospace",
                   }}
                 >
                   {formatCurrency(rapport.caisse.especesAttendues)}
@@ -743,8 +710,7 @@ export function RapportZGenerator({ initialSessions }: RapportZGeneratorProps) {
                 <Text
                   size="2"
                   style={{
-                    fontFamily:
-                      "var(--font-google-sans-code), ui-monospace, monospace",
+                    fontFamily: "var(--font-google-sans-code), ui-monospace, monospace",
                   }}
                 >
                   {formatCurrency(rapport.caisse.especesComptees)}
@@ -754,18 +720,12 @@ export function RapportZGenerator({ initialSessions }: RapportZGeneratorProps) {
               <Flex justify="between" align="center">
                 <Flex align="center" gap="2">
                   {rapport.caisse.ecart === 0 ? (
-                    <CheckCircle
-                      size={16}
-                      style={{ color: "var(--green-9)" }}
-                    />
+                    <CheckCircle size={16} style={{ color: "var(--green-9)" }} />
                   ) : (
-                    <AlertTriangle
+                    <Warning
                       size={16}
                       style={{
-                        color:
-                          rapport.caisse.ecart > 0
-                            ? "var(--blue-9)"
-                            : "var(--red-9)",
+                        color: rapport.caisse.ecart > 0 ? "var(--blue-9)" : "var(--red-9)",
                       }}
                     />
                   )}
@@ -777,8 +737,7 @@ export function RapportZGenerator({ initialSessions }: RapportZGeneratorProps) {
                   size="3"
                   weight="bold"
                   style={{
-                    fontFamily:
-                      "var(--font-google-sans-code), ui-monospace, monospace",
+                    fontFamily: "var(--font-google-sans-code), ui-monospace, monospace",
                     color:
                       rapport.caisse.ecart === 0
                         ? "var(--green-9)"
@@ -805,18 +764,15 @@ export function RapportZGenerator({ initialSessions }: RapportZGeneratorProps) {
                 onClick={() => setShowTopProduits(!showTopProduits)}
               >
                 <Flex align="center" gap="2">
-                  <TrendingUp size={16} />
+                  <TrendUp size={16} />
                   <Text size="3" weight="bold">
                     Top produits
                   </Text>
                 </Flex>
-                {showTopProduits ? (
-                  <ChevronUp size={16} />
-                ) : (
-                  <ChevronDown size={16} />
-                )}
+                {showTopProduits ? <CaretUp size={16} /> : <CaretDown size={16} />}
               </Flex>
-              {showTopProduits ? <Box
+              {showTopProduits ? (
+                <Box
                   mb="4"
                   style={{
                     padding: 16,
@@ -845,8 +801,7 @@ export function RapportZGenerator({ initialSessions }: RapportZGeneratorProps) {
                           size="2"
                           weight="medium"
                           style={{
-                            fontFamily:
-                              "var(--font-google-sans-code), ui-monospace, monospace",
+                            fontFamily: "var(--font-google-sans-code), ui-monospace, monospace",
                           }}
                         >
                           {formatCurrency(produit.total)}
@@ -854,30 +809,33 @@ export function RapportZGenerator({ initialSessions }: RapportZGeneratorProps) {
                       </Flex>
                     ))}
                   </Flex>
-                </Box> : null}
+                </Box>
+              ) : null}
             </>
           )}
 
           {/* Notes de cloture */}
-          {rapport.notesCloture ? <Callout.Root color="gray" mb="4">
+          {rapport.notesCloture ? (
+            <Callout.Root color="gray" mb="4">
               <Callout.Text>
                 <Text weight="bold">Notes: </Text>
                 {rapport.notesCloture}
               </Callout.Text>
-            </Callout.Root> : null}
+            </Callout.Root>
+          ) : null}
 
           {/* Pied de page */}
           <Separator size="4" mb="3" />
           <Flex justify="between" align="center">
             <Text size="1" color="gray">
-              Document genere par Orema N+ POS - Ce document est un rapport
-              interne
+              Document genere par Orema N+ POS - Ce document est un rapport interne
             </Text>
             <Text size="1" color="gray">
               Imprime le {formatDate(new Date(), "datetime")}
             </Text>
           </Flex>
-        </Card> : null}
+        </Card>
+      ) : null}
     </Flex>
   );
 }

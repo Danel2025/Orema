@@ -5,30 +5,19 @@
  */
 
 import { useState } from "react";
-import {
-  Box,
-  Flex,
-  Heading,
-  Text,
-  TextField,
-  TextArea,
-  Button,
-  Card,
-} from "@radix-ui/themes";
-import {
-  BookOpen,
-  ArrowLeft,
-  Save,
-  Eye,
-  Sparkles,
-} from "lucide-react";
+import { Box, Flex, Heading, Text, TextField, TextArea, Button, Card } from "@radix-ui/themes";
+import { BookOpenText, ArrowLeft, FloppyDisk, Eye, Sparkle } from "@phosphor-icons/react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
 import { motion } from "motion/react";
-import { docCategorySchema, type DocCategoryFormData, generateSlug } from "@/schemas/content.schema";
+import {
+  docCategorySchema,
+  type DocCategoryFormData,
+  generateSlug,
+} from "@/schemas/content.schema";
 import { createDocCategory } from "@/actions/admin/documentation";
 import { IconPicker, ColorPicker, StatusSelect } from "@/components/admin/content";
 import * as LucideIcons from "lucide-react";
@@ -57,8 +46,17 @@ export default function NouvelleCategoriePage() {
     },
   });
 
-  const watchedValues = watch();
-  const PreviewIcon = (LucideIcons as unknown as Record<string, LucideIcon>)[watchedValues.icon] || BookOpen;
+  const [slug, title, description, icon, color, status] = watch([
+    "slug",
+    "title",
+    "description",
+    "icon",
+    "color",
+    "status",
+  ]);
+  const watchedValues = { slug, title, description, icon, color, status };
+  const PreviewIcon =
+    (LucideIcons as unknown as Record<string, LucideIcon>)[watchedValues.icon] || BookOpenText;
 
   // Auto-generate slug from title
   const handleTitleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -97,7 +95,7 @@ export default function NouvelleCategoriePage() {
         <Flex align="center" gap="4" mb="6">
           <Link href="/admin/contenu/documentation">
             <Button variant="ghost" size="2" style={{ cursor: "pointer" }}>
-              <ArrowLeft size={18} />
+              <ArrowLeft size={18} weight="bold" />
             </Button>
           </Link>
           <Box>
@@ -131,9 +129,11 @@ export default function NouvelleCategoriePage() {
                     {...register("title")}
                     onChange={handleTitleChange}
                   />
-                  {errors.title ? <Text size="1" color="red" mt="1">
+                  {errors.title ? (
+                    <Text size="1" color="red" mt="1">
                       {errors.title.message}
-                    </Text> : null}
+                    </Text>
+                  ) : null}
                 </Box>
 
                 {/* Slug */}
@@ -141,18 +141,18 @@ export default function NouvelleCategoriePage() {
                   <Text size="2" weight="medium" mb="2" style={{ display: "block" }}>
                     Slug (URL) <Text color="red">*</Text>
                   </Text>
-                  <TextField.Root
-                    size="3"
-                    placeholder="guide-demarrage"
-                    {...register("slug")}
-                  >
+                  <TextField.Root size="3" placeholder="guide-demarrage" {...register("slug")}>
                     <TextField.Slot side="left">
-                      <Text size="1" color="gray">/docs/</Text>
+                      <Text size="1" color="gray">
+                        /docs/
+                      </Text>
                     </TextField.Slot>
                   </TextField.Root>
-                  {errors.slug ? <Text size="1" color="red" mt="1">
+                  {errors.slug ? (
+                    <Text size="1" color="red" mt="1">
                       {errors.slug.message}
-                    </Text> : null}
+                    </Text>
+                  ) : null}
                   <Text size="1" color="gray" mt="1">
                     URL finale: /docs/{watchedValues.slug || "..."}
                   </Text>
@@ -169,9 +169,11 @@ export default function NouvelleCategoriePage() {
                     rows={3}
                     {...register("description")}
                   />
-                  {errors.description ? <Text size="1" color="red" mt="1">
+                  {errors.description ? (
+                    <Text size="1" color="red" mt="1">
                       {errors.description.message}
-                    </Text> : null}
+                    </Text>
+                  ) : null}
                 </Box>
 
                 {/* Icon & Color */}
@@ -236,7 +238,7 @@ export default function NouvelleCategoriePage() {
               {/* Preview Card */}
               <Card size="3">
                 <Flex align="center" gap="2" mb="4">
-                  <Eye size={16} style={{ color: "var(--gray-10)" }} />
+                  <Eye size={16} weight="duotone" style={{ color: "var(--gray-10)" }} />
                   <Text size="2" weight="medium">
                     Aperçu
                   </Text>
@@ -281,7 +283,7 @@ export default function NouvelleCategoriePage() {
                     disabled={isSubmitting}
                     style={{
                       width: "100%",
-                      background: "linear-gradient(135deg, var(--blue-9) 0%, var(--blue-10) 100%)",
+                      background: "var(--blue-9)",
                       cursor: isSubmitting ? "wait" : "pointer",
                     }}
                   >
@@ -289,7 +291,7 @@ export default function NouvelleCategoriePage() {
                       <>Création...</>
                     ) : (
                       <>
-                        <Sparkles size={18} />
+                        <Sparkle size={18} weight="bold" />
                         Créer la catégorie
                       </>
                     )}
@@ -312,7 +314,7 @@ export default function NouvelleCategoriePage() {
               {/* Tips */}
               <Card size="2">
                 <Flex align="center" gap="2" mb="2">
-                  <Sparkles size={14} style={{ color: "var(--violet-9)" }} />
+                  <Sparkle size={14} weight="duotone" style={{ color: "var(--violet-9)" }} />
                   <Text size="2" weight="medium">
                     Conseils
                   </Text>

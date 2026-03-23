@@ -2,87 +2,58 @@
 
 /**
  * Page Produits - Gestion des catégories et produits
+ * Utilise Radix UI Tabs pour l'accessibilité (role="tablist", focus clavier, aria-selected)
  */
 
-import { useState } from "react";
-import { Package, FolderOpen } from "lucide-react";
+import { Box, Flex, Heading, Text, Tabs } from "@radix-ui/themes";
+import { Package, FolderOpen } from "@phosphor-icons/react";
 import { CategoryList } from "@/components/categories";
 import { ProductList } from "@/components/produits";
-
-type Tab = "categories" | "produits";
+import { SeedDataPanel } from "@/components/produits/SeedDataPanel";
 
 export default function ProduitsPage() {
-  const [activeTab, setActiveTab] = useState<Tab>("produits");
-
-  const tabs: { id: Tab; label: string; icon: React.ReactNode }[] = [
-    { id: "produits", label: "Produits", icon: <Package size={18} /> },
-    { id: "categories", label: "Catégories", icon: <FolderOpen size={18} /> },
-  ];
-
   return (
-    <div>
+    <Box>
       {/* En-tête */}
-      <div style={{ marginBottom: 24 }}>
-        <h1
-          style={{
-            fontSize: 32,
-            fontWeight: 700,
-            color: "var(--gray-12)",
-            margin: 0,
-          }}
-        >
+      <Box mb="5">
+        <Heading as="h1" size="8" weight="bold">
           Produits
-        </h1>
-        <p
-          style={{
-            fontSize: 16,
-            color: "var(--gray-11)",
-            marginTop: 8,
-          }}
-        >
+        </Heading>
+        <Text as="p" size="3" color="gray" mt="2">
           Gérez vos produits et catégories
-        </p>
-      </div>
+        </Text>
+      </Box>
 
-      {/* Onglets */}
-      <div
-        style={{
-          display: "flex",
-          gap: 4,
-          marginBottom: 24,
-          borderBottom: "1px solid var(--gray-a6)",
-          paddingBottom: 0,
-        }}
-      >
-        {tabs.map((tab) => (
-          <button
-            key={tab.id}
-            onClick={() => setActiveTab(tab.id)}
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: 8,
-              padding: "12px 20px",
-              fontSize: 14,
-              fontWeight: activeTab === tab.id ? 600 : 500,
-              color: activeTab === tab.id ? "var(--accent-11)" : "var(--gray-11)",
-              backgroundColor: "transparent",
-              border: "none",
-              borderBottom: activeTab === tab.id ? "2px solid var(--accent-9)" : "2px solid transparent",
-              marginBottom: -1,
-              cursor: "pointer",
-              transition: "all 0.15s ease",
-            }}
-          >
-            {tab.icon}
-            {tab.label}
-          </button>
-        ))}
-      </div>
+      {/* Panneau de données modèles (visible uniquement pour les admins) */}
+      <SeedDataPanel />
 
-      {/* Contenu */}
-      {activeTab === "produits" && <ProductList />}
-      {activeTab === "categories" && <CategoryList />}
-    </div>
+      {/* Onglets avec accessibilité complète (role="tablist", aria-selected, navigation clavier) */}
+      <Tabs.Root defaultValue="produits">
+        <Tabs.List size="2">
+          <Tabs.Trigger value="produits" style={{ minHeight: 44 }}>
+            <Flex align="center" gap="2">
+              <Package size={18} aria-hidden="true" />
+              Produits
+            </Flex>
+          </Tabs.Trigger>
+          <Tabs.Trigger value="categories" style={{ minHeight: 44 }}>
+            <Flex align="center" gap="2">
+              <FolderOpen size={18} aria-hidden="true" />
+              Catégories
+            </Flex>
+          </Tabs.Trigger>
+        </Tabs.List>
+
+        <Box pt="5">
+          <Tabs.Content value="produits">
+            <ProductList />
+          </Tabs.Content>
+
+          <Tabs.Content value="categories">
+            <CategoryList />
+          </Tabs.Content>
+        </Box>
+      </Tabs.Root>
+    </Box>
   );
 }

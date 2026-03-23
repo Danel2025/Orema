@@ -17,19 +17,20 @@ export async function getSession(): Promise<SessionPayload | null> {
 
   // Validation que l'établissement existe
   const etablissement = await prisma.etablissement.findUnique({
-    where: { id: session.etablissementId }
-  })
+    where: { id: session.etablissementId },
+  });
 
   if (!etablissement) {
-    await deleteSessionCookie() // Nettoyage automatique
-    return null
+    await deleteSessionCookie(); // Nettoyage automatique
+    return null;
   }
 
-  return session
+  return session;
 }
 ```
 
 **Avantages** :
+
 - ✅ Détection automatique côté serveur
 - ✅ Nettoyage immédiat du cookie invalide
 - ✅ Pas besoin d'intervention manuelle
@@ -47,7 +48,7 @@ curl -X POST http://localhost:3000/api/clear-session
 
 ```typescript
 // Nettoyage explicite
-await fetch('/api/clear-session', { method: 'POST' })
+await fetch("/api/clear-session", { method: "POST" });
 ```
 
 ### 3. Protection contre les boucles de redirection
@@ -62,6 +63,7 @@ Script injecté dans le layout racine qui détecte les boucles :
 ```
 
 **Comment ça marche** :
+
 - Compte les redirections avec `sessionStorage`
 - Si > 5 redirections en 5 secondes → nettoyage
 - Appelle `/api/clear-session` puis redirige vers `/login`
@@ -72,7 +74,7 @@ Composant client-side pour surveiller les erreurs :
 
 ```tsx
 // app/layout.tsx ou app/(dashboard)/layout.tsx
-import { SessionValidator } from '@/components/session-validator'
+import { SessionValidator } from "@/components/session-validator";
 
 export default function Layout({ children }) {
   return (
@@ -80,11 +82,12 @@ export default function Layout({ children }) {
       <SessionValidator />
       {children}
     </>
-  )
+  );
 }
 ```
 
 **Fonctionnalités** :
+
 - Écoute les erreurs de navigation
 - Nettoie la session après 3 erreurs consécutives
 - Reset automatique après 10 secondes sans erreur
@@ -94,18 +97,14 @@ export default function Layout({ children }) {
 Hook pour nettoyer manuellement la session :
 
 ```tsx
-'use client'
+"use client";
 
-import { useClearSession } from '@/components/session-validator'
+import { useClearSession } from "@/components/session-validator";
 
 export function LogoutButton() {
-  const { clearSession } = useClearSession()
+  const { clearSession } = useClearSession();
 
-  return (
-    <button onClick={clearSession}>
-      Déconnexion
-    </button>
-  )
+  return <button onClick={clearSession}>Déconnexion</button>;
 }
 ```
 
@@ -114,40 +113,45 @@ export function LogoutButton() {
 Pour nettoyage côté serveur avec redirection :
 
 ```tsx
-import { clearSessionAction } from '@/app/actions/clear-session'
+import { clearSessionAction } from "@/app/actions/clear-session";
 
 export function LogoutForm() {
   return (
     <form action={clearSessionAction}>
       <button type="submit">Déconnexion</button>
     </form>
-  )
+  );
 }
 ```
 
 ## Méthodes de Nettoyage (par ordre de priorité)
 
 ### 1. Automatique (recommandé)
+
 La fonction `getSession()` détecte et nettoie automatiquement les sessions invalides.
 
 ### 2. Script de protection (layout)
+
 Le script dans `<head>` détecte les boucles de redirection et nettoie automatiquement.
 
 ### 3. Route API
+
 ```bash
 curl -X POST http://localhost:3000/api/clear-session
 ```
 
 ### 4. Server Action
+
 ```typescript
-import { clearSessionAction } from '@/app/actions/clear-session'
-await clearSessionAction()
+import { clearSessionAction } from "@/app/actions/clear-session";
+await clearSessionAction();
 ```
 
 ### 5. Client-side (fallback)
+
 ```javascript
-document.cookie = 'orema_session=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; SameSite=Lax'
-window.location.href = '/login'
+document.cookie = "orema_session=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; SameSite=Lax";
+window.location.href = "/login";
 ```
 
 ## Cas d'Usage

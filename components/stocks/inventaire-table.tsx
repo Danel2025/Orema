@@ -6,20 +6,8 @@
  */
 
 import { useState, useMemo } from "react";
-import {
-  Table,
-  Badge,
-  Flex,
-  Text,
-  TextField,
-  Select,
-  Box,
-} from "@radix-ui/themes";
-import {
-  Search,
-  ArrowUpDown,
-  Package,
-} from "lucide-react";
+import { Table, Badge, Flex, Text, TextField, Select, Box } from "@radix-ui/themes";
+import { MagnifyingGlass, ArrowsDownUp, Package } from "@phosphor-icons/react";
 import { formatCurrency } from "@/lib/design-system";
 
 export interface InventaireLigne {
@@ -41,11 +29,7 @@ interface InventaireTableProps {
 
 type SortField = "nom" | "stockTheorique" | "ecart" | "categorie";
 
-export function InventaireTable({
-  lignes,
-  categories,
-  onQuantiteChange,
-}: InventaireTableProps) {
+export function InventaireTable({ lignes, categories, onQuantiteChange }: InventaireTableProps) {
   const [search, setSearch] = useState("");
   const [categorieFilter, setCategorieFilter] = useState("all");
   const [sortField, setSortField] = useState<SortField>("nom");
@@ -67,10 +51,8 @@ export function InventaireTable({
   const filteredLignes = useMemo(() => {
     return lignes.filter((l) => {
       const matchSearch =
-        search === "" ||
-        l.produitNom.toLowerCase().includes(search.toLowerCase());
-      const matchCategorie =
-        categorieFilter === "all" || l.categorie.id === categorieFilter;
+        search === "" || l.produitNom.toLowerCase().includes(search.toLowerCase());
+      const matchCategorie = categorieFilter === "all" || l.categorie.id === categorieFilter;
       return matchSearch && matchCategorie;
     });
   }, [lignes, search, categorieFilter]);
@@ -122,7 +104,7 @@ export function InventaireTable({
             onChange={(e) => setSearch(e.target.value)}
           >
             <TextField.Slot>
-              <Search size={16} />
+              <MagnifyingGlass size={16} />
             </TextField.Slot>
           </TextField.Root>
         </Box>
@@ -133,7 +115,7 @@ export function InventaireTable({
           </Text>
           <Select.Root value={categorieFilter} onValueChange={setCategorieFilter}>
             <Select.Trigger placeholder="Toutes" style={{ width: "100%" }} />
-            <Select.Content>
+            <Select.Content position="popper">
               <Select.Item value="all">Toutes les categories</Select.Item>
               <Select.Separator />
               {categories.map((cat) => (
@@ -177,7 +159,7 @@ export function InventaireTable({
               >
                 <Flex align="center" gap="1">
                   Produit
-                  <ArrowUpDown size={14} style={{ opacity: 0.5 }} />
+                  <ArrowsDownUp size={14} style={{ opacity: 0.5 }} />
                 </Flex>
               </Table.ColumnHeaderCell>
               <Table.ColumnHeaderCell
@@ -186,7 +168,7 @@ export function InventaireTable({
               >
                 <Flex align="center" gap="1">
                   Categorie
-                  <ArrowUpDown size={14} style={{ opacity: 0.5 }} />
+                  <ArrowsDownUp size={14} style={{ opacity: 0.5 }} />
                 </Flex>
               </Table.ColumnHeaderCell>
               <Table.ColumnHeaderCell
@@ -195,7 +177,7 @@ export function InventaireTable({
               >
                 <Flex align="center" gap="1">
                   Stock theorique
-                  <ArrowUpDown size={14} style={{ opacity: 0.5 }} />
+                  <ArrowsDownUp size={14} style={{ opacity: 0.5 }} />
                 </Flex>
               </Table.ColumnHeaderCell>
               <Table.ColumnHeaderCell>Compte</Table.ColumnHeaderCell>
@@ -205,7 +187,7 @@ export function InventaireTable({
               >
                 <Flex align="center" gap="1">
                   Ecart
-                  <ArrowUpDown size={14} style={{ opacity: 0.5 }} />
+                  <ArrowsDownUp size={14} style={{ opacity: 0.5 }} />
                 </Flex>
               </Table.ColumnHeaderCell>
               <Table.ColumnHeaderCell>Valeur ecart</Table.ColumnHeaderCell>
@@ -216,13 +198,7 @@ export function InventaireTable({
             {sortedLignes.length === 0 ? (
               <Table.Row>
                 <Table.Cell colSpan={6}>
-                  <Flex
-                    align="center"
-                    justify="center"
-                    py="6"
-                    direction="column"
-                    gap="2"
-                  >
+                  <Flex align="center" justify="center" py="6" direction="column" gap="2">
                     <Package size={32} style={{ color: "var(--gray-8)" }} />
                     <Text color="gray" size="2">
                       Aucun produit trouve
@@ -274,9 +250,7 @@ export function InventaireTable({
                         min="0"
                         placeholder="Qte"
                         value={ligne.quantiteComptee}
-                        onChange={(e) =>
-                          onQuantiteChange(ligne.produitId, e.target.value)
-                        }
+                        onChange={(e) => onQuantiteChange(ligne.produitId, e.target.value)}
                         style={{
                           width: 100,
                           minHeight: 44,
@@ -286,9 +260,7 @@ export function InventaireTable({
                     <Table.Cell>
                       {ecart !== null && (
                         <Badge
-                          color={
-                            ecart === 0 ? "gray" : ecart > 0 ? "green" : "red"
-                          }
+                          color={ecart === 0 ? "gray" : ecart > 0 ? "green" : "red"}
                           variant="soft"
                           size="2"
                         >
@@ -304,8 +276,7 @@ export function InventaireTable({
                           color={valeurEcart > 0 ? "green" : "red"}
                           style={{
                             fontVariantNumeric: "tabular-nums",
-                            fontFamily:
-                              "var(--font-google-sans-code), monospace",
+                            fontFamily: "var(--font-google-sans-code), monospace",
                           }}
                         >
                           {valeurEcart >= 0 ? "+" : "-"}

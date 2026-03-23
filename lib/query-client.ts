@@ -7,11 +7,7 @@
  * @see https://tanstack.com/query/latest/docs/framework/react/guides/advanced-ssr
  */
 
-import {
-  QueryClient,
-  defaultShouldDehydrateQuery,
-  isServer,
-} from "@tanstack/react-query";
+import { QueryClient, defaultShouldDehydrateQuery, isServer } from "@tanstack/react-query";
 
 /**
  * Crée une nouvelle instance QueryClient avec les options optimisées pour SSR
@@ -30,8 +26,7 @@ function makeQueryClient() {
         // Inclure les queries en pending dans la déshydratation
         // pour supporter le streaming de Next.js
         shouldDehydrateQuery: (query) =>
-          defaultShouldDehydrateQuery(query) ||
-          query.state.status === "pending",
+          defaultShouldDehydrateQuery(query) || query.state.status === "pending",
         // Ne pas masquer les erreurs Next.js (détection de pages dynamiques)
         shouldRedactErrors: () => false,
       },

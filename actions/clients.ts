@@ -89,9 +89,14 @@ export async function getClients(options?: {
   limit?: number;
 }) {
   const user = await getCurrentUser();
-  if (!user || !user.etablissementId) return { clients: [], pagination: { page: 1, limit: 20, total: 0, totalPages: 0 } };
+  if (!user || !user.etablissementId)
+    return { clients: [], pagination: { page: 1, limit: 20, total: 0, totalPages: 0 } };
   const etablissementId = user.etablissementId;
-  const supabase = await createAuthenticatedClient({ userId: user.userId, etablissementId, role: user.role });
+  const supabase = await createAuthenticatedClient({
+    userId: user.userId,
+    etablissementId,
+    role: user.role,
+  });
   const page = options?.page || 1;
   const limit = options?.limit || 20;
 
@@ -101,6 +106,24 @@ export async function getClients(options?: {
     actif: options?.includeInactive ? undefined : true,
     search: options?.search,
   });
+
+  // Récupérer le count de ventes par client en une seule requête
+  const clientIds = result.data.map((c) => c.id);
+  const ventesCountMap = new Map<string, number>();
+
+  if (clientIds.length > 0) {
+    const { data: ventesData } = await supabase
+      .from("ventes")
+      .select("client_id")
+      .in("client_id", clientIds)
+      .eq("statut", "PAYEE");
+
+    for (const v of ventesData || []) {
+      if (v.client_id) {
+        ventesCountMap.set(v.client_id, (ventesCountMap.get(v.client_id) || 0) + 1);
+      }
+    }
+  }
 
   // Transformer pour correspondre au format attendu
   const clientsFormatted = result.data.map((c) => ({
@@ -118,7 +141,7 @@ export async function getClients(options?: {
     actif: c.actif,
     createdAt: new Date(c.created_at),
     updatedAt: new Date(c.updated_at),
-    _count: { ventes: 0 }, // TODO: implémenter le count si nécessaire
+    _count: { ventes: ventesCountMap.get(c.id) || 0 },
   }));
 
   return {
@@ -139,7 +162,11 @@ export async function getClientById(id: string): Promise<ClientWithStats | null>
   const user = await getCurrentUser();
   if (!user || !user.etablissementId) return null;
   const etablissementId = user.etablissementId;
-  const supabase = await createAuthenticatedClient({ userId: user.userId, etablissementId, role: user.role });
+  const supabase = await createAuthenticatedClient({
+    userId: user.userId,
+    etablissementId,
+    role: user.role,
+  });
 
   const client = await db.getClientById(supabase, id);
 
@@ -147,10 +174,20 @@ export async function getClientById(id: string): Promise<ClientWithStats | null>
     return null;
   }
 
-  // Calculer le total dépensé via les ventes
-  const ventesCount = await db.countVentes(supabase, etablissementId, {
-    statut: "PAYEE",
-  });
+  // Compter les ventes du client et calculer le total dépensé
+  const { count: ventesCount } = await supabase
+    .from("ventes")
+    .select("*", { count: "exact", head: true })
+    .eq("client_id", id)
+    .eq("statut", "PAYEE");
+
+  const { data: ventesTotaux } = await supabase
+    .from("ventes")
+    .select("total_final")
+    .eq("client_id", id)
+    .eq("statut", "PAYEE");
+
+  const totalDepense = (ventesTotaux || []).reduce((sum, v) => sum + Number(v.total_final), 0);
 
   return {
     id: client.id,
@@ -167,8 +204,8 @@ export async function getClientById(id: string): Promise<ClientWithStats | null>
     actif: client.actif,
     createdAt: new Date(client.created_at),
     updatedAt: new Date(client.updated_at),
-    _count: { ventes: ventesCount },
-    totalDepense: 0, // TODO: calculer via une query séparée
+    _count: { ventes: ventesCount ?? 0 },
+    totalDepense,
   };
 }
 
@@ -178,9 +215,14 @@ export async function getClientById(id: string): Promise<ClientWithStats | null>
 export async function createClient(data: ClientFormData) {
   try {
     const user = await getCurrentUser();
-    if (!user || !user.etablissementId) return { success: false, error: "Vous devez être connecté" };
+    if (!user || !user.etablissementId)
+      return { success: false, error: "Vous devez être connecté" };
     const etablissementId = user.etablissementId;
-    const supabase = await createAuthenticatedClient({ userId: user.userId, etablissementId, role: user.role });
+    const supabase = await createAuthenticatedClient({
+      userId: user.userId,
+      etablissementId,
+      role: user.role,
+    });
 
     // Validation Zod
     const validated = clientSchema.safeParse(data);
@@ -268,9 +310,14 @@ export async function createClient(data: ClientFormData) {
 export async function updateClient(id: string, data: ClientFormData) {
   try {
     const user = await getCurrentUser();
-    if (!user || !user.etablissementId) return { success: false, error: "Vous devez être connecté" };
+    if (!user || !user.etablissementId)
+      return { success: false, error: "Vous devez être connecté" };
     const etablissementId = user.etablissementId;
-    const supabase = await createAuthenticatedClient({ userId: user.userId, etablissementId, role: user.role });
+    const supabase = await createAuthenticatedClient({
+      userId: user.userId,
+      etablissementId,
+      role: user.role,
+    });
 
     // Validation Zod
     const validated = clientSchema.safeParse(data);
@@ -366,8 +413,13 @@ export async function updateClient(id: string, data: ClientFormData) {
 export async function deleteClient(id: string) {
   try {
     const user = await getCurrentUser();
-    if (!user || !user.etablissementId) return { success: false, error: "Vous devez être connecté" };
-    const supabase = await createAuthenticatedClient({ userId: user.userId, etablissementId: user.etablissementId, role: user.role });
+    if (!user || !user.etablissementId)
+      return { success: false, error: "Vous devez être connecté" };
+    const supabase = await createAuthenticatedClient({
+      userId: user.userId,
+      etablissementId: user.etablissementId,
+      role: user.role,
+    });
 
     // Verifier que le client existe (RLS filtre par établissement)
     const existing = await db.getClientById(supabase, id);
@@ -406,9 +458,14 @@ export async function deleteClient(id: string) {
 export async function rechargerComptePrepaye(data: RechargeCompteData) {
   try {
     const user = await getCurrentUser();
-    if (!user || !user.etablissementId) return { success: false, error: "Vous devez être connecté" };
+    if (!user || !user.etablissementId)
+      return { success: false, error: "Vous devez être connecté" };
     const etablissementId = user.etablissementId;
-    const supabase = await createAuthenticatedClient({ userId: user.userId, etablissementId, role: user.role });
+    const supabase = await createAuthenticatedClient({
+      userId: user.userId,
+      etablissementId,
+      role: user.role,
+    });
 
     // Validation Zod
     const validated = rechargeCompteSchema.safeParse(data);
@@ -464,7 +521,11 @@ export async function getHistoriqueComptePrepaye(clientId: string) {
   const user = await getCurrentUser();
   if (!user || !user.etablissementId) return [];
   const etablissementId = user.etablissementId;
-  const supabase = await createAuthenticatedClient({ userId: user.userId, etablissementId, role: user.role });
+  const supabase = await createAuthenticatedClient({
+    userId: user.userId,
+    etablissementId,
+    role: user.role,
+  });
 
   // Recuperer les ventes payees par compte client
   const ventes = await db.getVentes(supabase, etablissementId, {
@@ -513,7 +574,11 @@ export async function getHistoriqueFidelite(clientId: string) {
   const user = await getCurrentUser();
   if (!user || !user.etablissementId) return [];
   const etablissementId = user.etablissementId;
-  const supabase = await createAuthenticatedClient({ userId: user.userId, etablissementId, role: user.role });
+  const supabase = await createAuthenticatedClient({
+    userId: user.userId,
+    etablissementId,
+    role: user.role,
+  });
 
   // Recuperer les ventes payees du client
   const ventes = await db.getVentes(supabase, etablissementId, {
@@ -545,7 +610,11 @@ export async function ajouterPointsFidelite(clientId: string, montantVente: numb
   try {
     const user = await getCurrentUser();
     if (!user || !user.etablissementId) return { success: false, error: "Non authentifié" };
-    const supabase = await createAuthenticatedClient({ userId: user.userId, etablissementId: user.etablissementId, role: user.role });
+    const supabase = await createAuthenticatedClient({
+      userId: user.userId,
+      etablissementId: user.etablissementId,
+      role: user.role,
+    });
     await db.updateClientPoints(supabase, clientId, points);
 
     return { success: true, pointsAjoutes: points };
@@ -567,37 +636,62 @@ export async function getHistoriqueAchats(
   options?: { page?: number; limit?: number }
 ) {
   const user = await getCurrentUser();
-  if (!user || !user.etablissementId) return { ventes: [], pagination: { page: 1, limit: 20, total: 0, totalPages: 0 } };
+  if (!user || !user.etablissementId)
+    return { ventes: [], pagination: { page: 1, limit: 20, total: 0, totalPages: 0 } };
   const etablissementId = user.etablissementId;
-  const supabase = await createAuthenticatedClient({ userId: user.userId, etablissementId, role: user.role });
+  const supabase = await createAuthenticatedClient({
+    userId: user.userId,
+    etablissementId,
+    role: user.role,
+  });
   const page = options?.page || 1;
   const limit = options?.limit || 20;
 
-  const result = await db.getVentesPaginated(supabase, etablissementId, {
-    page,
-    pageSize: limit,
-    statut: "PAYEE",
-  });
+  // Requête directe avec filtre client_id dans Supabase (pas en JS)
+  const offset = (page - 1) * limit;
 
-  // Filtrer par client et formater
-  const ventesFormatted = result.data
-    .filter((v) => v.client_id === clientId)
-    .map((v) => ({
-      id: v.id,
-      numeroTicket: v.numero_ticket,
-      type: v.type,
-      totalFinal: v.total_final,
-      createdAt: new Date(v.created_at),
-      lignes: [], // TODO: charger les lignes si nécessaire
-    }));
+  const {
+    data: ventes,
+    count,
+    error,
+  } = await supabase
+    .from("ventes")
+    .select(
+      "id, numero_ticket, type, total_final, created_at, lignes_vente(quantite, total, produits(nom))",
+      { count: "exact" }
+    )
+    .eq("etablissement_id", etablissementId)
+    .eq("client_id", clientId)
+    .eq("statut", "PAYEE")
+    .order("created_at", { ascending: false })
+    .range(offset, offset + limit - 1);
+
+  if (error) {
+    console.error("Erreur getHistoriqueAchats:", error);
+    return { ventes: [], pagination: { page, limit, total: 0, totalPages: 0 } };
+  }
+
+  const total = count ?? 0;
+  const ventesFormatted = (ventes || []).map((v) => ({
+    id: v.id,
+    numeroTicket: v.numero_ticket,
+    type: v.type,
+    totalFinal: Number(v.total_final),
+    createdAt: new Date(v.created_at),
+    lignes: (v.lignes_vente || []).map((l: Record<string, unknown>) => ({
+      produit: { nom: (l.produits as { nom: string })?.nom || "Inconnu" },
+      quantite: l.quantite as number,
+      total: Number(l.total),
+    })),
+  }));
 
   return {
     ventes: ventesFormatted,
     pagination: {
-      page: result.page,
-      limit: result.pageSize,
-      total: result.count,
-      totalPages: result.totalPages,
+      page,
+      limit,
+      total,
+      totalPages: Math.ceil(total / limit),
     },
   };
 }
@@ -607,9 +701,14 @@ export async function getHistoriqueAchats(
  */
 export async function getStatistiquesClient(clientId: string) {
   const user = await getCurrentUser();
-  if (!user || !user.etablissementId) return { totalDepense: 0, nombreAchats: 0, panierMoyen: 0, produitsPreference: [] };
+  if (!user || !user.etablissementId)
+    return { totalDepense: 0, nombreAchats: 0, panierMoyen: 0, produitsPreference: [] };
   const etablissementId = user.etablissementId;
-  const supabase = await createAuthenticatedClient({ userId: user.userId, etablissementId, role: user.role });
+  const supabase = await createAuthenticatedClient({
+    userId: user.userId,
+    etablissementId,
+    role: user.role,
+  });
 
   // Récupérer les ventes du client
   const ventes = await db.getVentes(supabase, etablissementId, {
@@ -621,11 +720,40 @@ export async function getStatistiquesClient(clientId: string) {
   const nombreAchats = ventes.length;
   const panierMoyen = nombreAchats > 0 ? Math.round(totalDepense / nombreAchats) : 0;
 
+  // Récupérer les produits les plus achetés par ce client
+  const venteIds = ventes.map((v) => v.id);
+  let produitsPreference: { produitId: string; nom: string; quantiteTotale: number }[] = [];
+
+  if (venteIds.length > 0) {
+    const { data: lignes } = await supabase
+      .from("lignes_vente")
+      .select("produit_id, quantite, produits(nom)")
+      .in("vente_id", venteIds);
+
+    // Grouper par produit et sommer les quantités
+    const produitMap = new Map<string, { nom: string; quantiteTotale: number }>();
+    for (const l of lignes || []) {
+      const existing = produitMap.get(l.produit_id);
+      const nom = (l.produits as unknown as { nom: string })?.nom || "Inconnu";
+      if (existing) {
+        existing.quantiteTotale += l.quantite;
+      } else {
+        produitMap.set(l.produit_id, { nom, quantiteTotale: l.quantite });
+      }
+    }
+
+    // Trier par quantité décroissante et prendre le top 5
+    produitsPreference = Array.from(produitMap.entries())
+      .map(([produitId, data]) => ({ produitId, ...data }))
+      .sort((a, b) => b.quantiteTotale - a.quantiteTotale)
+      .slice(0, 5);
+  }
+
   return {
     totalDepense,
     nombreAchats,
     panierMoyen,
-    produitsPreference: [], // TODO: implémenter le groupBy
+    produitsPreference,
   };
 }
 
@@ -644,7 +772,11 @@ export async function searchClients(query: string) {
   const user = await getCurrentUser();
   if (!user || !user.etablissementId) return [];
   const etablissementId = user.etablissementId;
-  const supabase = await createAuthenticatedClient({ userId: user.userId, etablissementId, role: user.role });
+  const supabase = await createAuthenticatedClient({
+    userId: user.userId,
+    etablissementId,
+    role: user.role,
+  });
 
   const clients = await db.getClients(supabase, etablissementId, {
     actif: true,

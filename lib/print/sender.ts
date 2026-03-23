@@ -160,10 +160,7 @@ async function sendToNetworkPrinter(
  * Envoie a une imprimante USB
  * Note: Necessite un service local ou l'API Web Serial
  */
-async function sendToUSBPrinter(
-  printer: PrinterConfig,
-  data: Buffer
-): Promise<PrintResult> {
+async function sendToUSBPrinter(printer: PrinterConfig, data: Buffer): Promise<PrintResult> {
   // L'impression USB directe n'est pas possible depuis le navigateur
   // Options:
   // 1. Utiliser un service local (electron, tauri)
@@ -194,7 +191,7 @@ async function sendToUSBPrinter(
   } catch (error) {
     return {
       success: false,
-      error: `Erreur USB: ${error instanceof Error ? error.message : "Acces refuse"}`,
+      error: `Erreur USB: ${error instanceof Error ? error.message : "Accès refusé"}`,
       printerId: printer.id,
     };
   }
@@ -204,10 +201,7 @@ async function sendToUSBPrinter(
  * Envoie a une imprimante serie
  * Note: Necessite l'API Web Serial ou un service local
  */
-async function sendToSerialPrinter(
-  printer: PrinterConfig,
-  data: Buffer
-): Promise<PrintResult> {
+async function sendToSerialPrinter(printer: PrinterConfig, data: Buffer): Promise<PrintResult> {
   // L'impression serie necessite l'API Web Serial ou un service local
   return {
     success: false,
@@ -220,10 +214,7 @@ async function sendToSerialPrinter(
  * Envoie a une imprimante Bluetooth
  * Note: Necessite l'API Web Bluetooth ou un service local
  */
-async function sendToBluetoothPrinter(
-  printer: PrinterConfig,
-  data: Buffer
-): Promise<PrintResult> {
+async function sendToBluetoothPrinter(printer: PrinterConfig, data: Buffer): Promise<PrintResult> {
   // L'impression Bluetooth necessite l'API Web Bluetooth ou un service local
   return {
     success: false,
@@ -235,9 +226,7 @@ async function sendToBluetoothPrinter(
 /**
  * Teste la connexion a une imprimante
  */
-export async function testPrinterConnection(
-  printer: PrinterConfig
-): Promise<PrintResult> {
+export async function testPrinterConnection(printer: PrinterConfig): Promise<PrintResult> {
   switch (printer.typeConnexion) {
     case TYPE_CONNEXION.RESEAU:
       return testNetworkConnection(printer);
@@ -257,9 +246,7 @@ export async function testPrinterConnection(
 /**
  * Teste la connexion reseau a une imprimante
  */
-async function testNetworkConnection(
-  printer: PrinterConfig
-): Promise<PrintResult> {
+async function testNetworkConnection(printer: PrinterConfig): Promise<PrintResult> {
   if (!printer.adresseIP) {
     return {
       success: false,
@@ -319,9 +306,7 @@ async function testNetworkConnection(
 /**
  * Teste la connexion USB a une imprimante
  */
-async function testUSBConnection(
-  printer: PrinterConfig
-): Promise<PrintResult> {
+async function testUSBConnection(printer: PrinterConfig): Promise<PrintResult> {
   if (!printer.pathUSB) {
     return {
       success: false,
@@ -353,9 +338,7 @@ async function testUSBConnection(
 /**
  * Ouvre le tiroir caisse via l'imprimante
  */
-export async function openCashDrawer(
-  printer: PrinterConfig
-): Promise<PrintResult> {
+export async function openCashDrawer(printer: PrinterConfig): Promise<PrintResult> {
   // Commande ESC/POS pour ouvrir le tiroir caisse
   const OPEN_DRAWER = Buffer.from([0x1b, 0x70, 0x00, 0x19, 0xfa]);
 

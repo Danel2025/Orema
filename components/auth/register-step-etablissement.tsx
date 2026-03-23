@@ -1,12 +1,12 @@
-'use client'
+"use client";
 
 /**
  * Étape 2 du wizard d'inscription: Informations établissement
  */
 
-import { useForm } from 'react-hook-form'
-import { zodResolver } from '@hookform/resolvers/zod'
-import { Box, Button, Flex, Text, TextField, TextArea } from '@radix-ui/themes'
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { Box, Button, Flex, Text, TextField, TextArea } from "@radix-ui/themes";
 import {
   StoreIcon,
   PhoneIcon,
@@ -15,17 +15,17 @@ import {
   FileTextIcon,
   AlertCircleIcon,
   ArrowLeftIcon,
-} from 'lucide-react'
+} from "lucide-react";
 import {
   registerEtablissementSchema,
   type RegisterEtablissementInput,
-} from '@/schemas/register.schema'
+} from "@/schemas/register.schema";
 
 interface RegisterStepEtablissementProps {
-  onSubmit: (data: RegisterEtablissementInput) => void
-  onBack: () => void
-  userEmail?: string
-  isLoading?: boolean
+  onSubmit: (data: RegisterEtablissementInput) => void;
+  onBack: () => void;
+  userEmail?: string;
+  isLoading?: boolean;
 }
 
 export function RegisterStepEtablissement({
@@ -41,14 +41,14 @@ export function RegisterStepEtablissement({
   } = useForm<RegisterEtablissementInput>({
     resolver: zodResolver(registerEtablissementSchema),
     defaultValues: {
-      nom: '',
-      telephone: '',
-      adresse: '',
-      email: userEmail || '',
-      nif: '',
-      rccm: '',
+      nom: "",
+      telephone: "",
+      adresse: "",
+      email: userEmail || "",
+      nif: "",
+      rccm: "",
     },
-  })
+  });
 
   return (
     <form onSubmit={handleSubmit(onSubmit)}>
@@ -64,19 +64,21 @@ export function RegisterStepEtablissement({
             id="nom"
             type="text"
             placeholder="Restaurant Le Palmier"
-            {...register('nom')}
+            {...register("nom")}
             disabled={isLoading}
           >
             <TextField.Slot side="left">
               <StoreIcon size={16} />
             </TextField.Slot>
           </TextField.Root>
-          {errors.nom ? <Flex gap="1" align="center" mt="1">
+          {errors.nom ? (
+            <Flex gap="1" align="center" mt="1">
               <AlertCircleIcon size={14} color="var(--red-9)" />
               <Text size="1" color="red">
                 {errors.nom.message}
               </Text>
-            </Flex> : null}
+            </Flex>
+          ) : null}
         </Box>
 
         {/* Téléphone */}
@@ -90,19 +92,21 @@ export function RegisterStepEtablissement({
             id="telephone"
             type="tel"
             placeholder="+241 01 23 45 67"
-            {...register('telephone')}
+            {...register("telephone")}
             disabled={isLoading}
           >
             <TextField.Slot side="left">
               <PhoneIcon size={16} />
             </TextField.Slot>
           </TextField.Root>
-          {errors.telephone ? <Flex gap="1" align="center" mt="1">
+          {errors.telephone ? (
+            <Flex gap="1" align="center" mt="1">
               <AlertCircleIcon size={14} color="var(--red-9)" />
               <Text size="1" color="red">
                 {errors.telephone.message}
               </Text>
-            </Flex> : null}
+            </Flex>
+          ) : null}
         </Box>
 
         {/* Adresse */}
@@ -115,16 +119,18 @@ export function RegisterStepEtablissement({
           <TextArea
             id="adresse"
             placeholder="Quartier, Rue, Ville..."
-            {...register('adresse')}
+            {...register("adresse")}
             disabled={isLoading}
-            style={{ minHeight: '80px' }}
+            style={{ minHeight: "80px" }}
           />
-          {errors.adresse ? <Flex gap="1" align="center" mt="1">
+          {errors.adresse ? (
+            <Flex gap="1" align="center" mt="1">
               <AlertCircleIcon size={14} color="var(--red-9)" />
               <Text size="1" color="red">
                 {errors.adresse.message}
               </Text>
-            </Flex> : null}
+            </Flex>
+          ) : null}
         </Box>
 
         {/* Email établissement */}
@@ -138,19 +144,21 @@ export function RegisterStepEtablissement({
             id="email"
             type="email"
             placeholder="contact@monrestaurant.ga"
-            {...register('email')}
+            {...register("email")}
             disabled={isLoading}
           >
             <TextField.Slot side="left">
               <MailIcon size={16} />
             </TextField.Slot>
           </TextField.Root>
-          {errors.email ? <Flex gap="1" align="center" mt="1">
+          {errors.email ? (
+            <Flex gap="1" align="center" mt="1">
               <AlertCircleIcon size={14} color="var(--red-9)" />
               <Text size="1" color="red">
                 {errors.email.message}
               </Text>
-            </Flex> : null}
+            </Flex>
+          ) : null}
           <Text size="1" color="gray" mt="1">
             Laissez vide pour utiliser votre email personnel
           </Text>
@@ -169,19 +177,21 @@ export function RegisterStepEtablissement({
               id="nif"
               type="text"
               placeholder="Numéro fiscal"
-              {...register('nif')}
+              {...register("nif")}
               disabled={isLoading}
             >
               <TextField.Slot side="left">
                 <FileTextIcon size={16} />
               </TextField.Slot>
             </TextField.Root>
-            {errors.nif ? <Flex gap="1" align="center" mt="1">
+            {errors.nif ? (
+              <Flex gap="1" align="center" mt="1">
                 <AlertCircleIcon size={14} color="var(--red-9)" />
                 <Text size="1" color="red">
                   {errors.nif.message}
                 </Text>
-              </Flex> : null}
+              </Flex>
+            ) : null}
           </Box>
 
           {/* RCCM */}
@@ -195,24 +205,27 @@ export function RegisterStepEtablissement({
               id="rccm"
               type="text"
               placeholder="Registre commerce"
-              {...register('rccm')}
+              {...register("rccm")}
               disabled={isLoading}
             >
               <TextField.Slot side="left">
                 <FileTextIcon size={16} />
               </TextField.Slot>
             </TextField.Root>
-            {errors.rccm ? <Flex gap="1" align="center" mt="1">
+            {errors.rccm ? (
+              <Flex gap="1" align="center" mt="1">
                 <AlertCircleIcon size={14} color="var(--red-9)" />
                 <Text size="1" color="red">
                   {errors.rccm.message}
                 </Text>
-              </Flex> : null}
+              </Flex>
+            ) : null}
           </Box>
         </Flex>
 
-        <Text size="1" color="gray" style={{ marginTop: '-0.5rem' }}>
-          Ces informations sont optionnelles et peuvent être complétées plus tard dans les paramètres.
+        <Text size="1" color="gray" style={{ marginTop: "-0.5rem" }}>
+          Ces informations sont optionnelles et peuvent être complétées plus tard dans les
+          paramètres.
         </Text>
 
         {/* Boutons */}
@@ -223,7 +236,7 @@ export function RegisterStepEtablissement({
             size="3"
             onClick={onBack}
             disabled={isLoading}
-            style={{ flex: 1, cursor: isLoading ? 'not-allowed' : 'pointer' }}
+            style={{ flex: 1, cursor: isLoading ? "not-allowed" : "pointer" }}
           >
             <ArrowLeftIcon size={16} />
             Retour
@@ -232,12 +245,12 @@ export function RegisterStepEtablissement({
             type="submit"
             size="3"
             disabled={isLoading}
-            style={{ flex: 2, cursor: isLoading ? 'not-allowed' : 'pointer' }}
+            style={{ flex: 2, cursor: isLoading ? "not-allowed" : "pointer" }}
           >
-            {isLoading ? 'Création en cours...' : "Créer mon établissement"}
+            {isLoading ? "Création en cours..." : "Créer mon établissement"}
           </Button>
         </Flex>
       </Flex>
     </form>
-  )
+  );
 }

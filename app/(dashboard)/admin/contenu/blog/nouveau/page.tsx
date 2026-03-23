@@ -21,15 +21,7 @@ import {
   ScrollArea,
   Checkbox,
 } from "@radix-ui/themes";
-import {
-  ArrowLeft,
-  Newspaper,
-  Sparkles,
-  Plus,
-  User,
-  Tag,
-  Image as ImageIcon,
-} from "lucide-react";
+import { ArrowLeft, Newspaper, Sparkle, Plus, User, Tag, ImageSquare as ImageIcon } from "@phosphor-icons/react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useForm, Controller } from "react-hook-form";
@@ -51,12 +43,7 @@ import {
   createBlogAuthor,
   createBlogTag,
 } from "@/actions/admin/blog";
-import {
-  MarkdownEditor,
-  IconPicker,
-  ColorPicker,
-  StatusSelect,
-} from "@/components/admin/content";
+import { MarkdownEditor, IconPicker, ColorPicker, StatusSelect } from "@/components/admin/content";
 
 interface BlogCategory {
   id: string;
@@ -119,7 +106,17 @@ export default function NouveauBlogPage() {
     },
   });
 
-  const watchedValues = watch();
+  const [slug, content, status, categoryId, authorId, watchedTags, icon, color] = watch([
+    "slug",
+    "content",
+    "status",
+    "categoryId",
+    "authorId",
+    "tags",
+    "icon",
+    "color",
+  ]);
+  const watchedValues = { slug, content, status, categoryId, authorId, tags: watchedTags, icon, color };
 
   useEffect(() => {
     async function loadData() {
@@ -262,7 +259,7 @@ export default function NouveauBlogPage() {
         <Flex align="center" gap="4" mb="6">
           <Link href="/admin/contenu/blog">
             <Button variant="ghost" size="2" style={{ cursor: "pointer" }}>
-              <ArrowLeft size={18} />
+              <ArrowLeft size={18} weight="bold" />
             </Button>
           </Link>
           <Box
@@ -272,7 +269,7 @@ export default function NouveauBlogPage() {
               borderRadius: 8,
             }}
           >
-            <Newspaper size={20} style={{ color: "var(--violet-9)" }} />
+            <Newspaper size={20} weight="duotone" style={{ color: "var(--violet-9)" }} />
           </Box>
           <Box>
             <Heading size="5">Nouvel article</Heading>
@@ -306,9 +303,11 @@ export default function NouveauBlogPage() {
                       {...register("title")}
                       onChange={handleTitleChange}
                     />
-                    {errors.title ? <Text size="1" color="red" mt="1">
+                    {errors.title ? (
+                      <Text size="1" color="red" mt="1">
                         {errors.title.message}
-                      </Text> : null}
+                      </Text>
+                    ) : null}
                   </Box>
 
                   <Box>
@@ -321,12 +320,16 @@ export default function NouveauBlogPage() {
                       {...register("slug")}
                     >
                       <TextField.Slot side="left">
-                        <Text size="1" color="gray">/blog/</Text>
+                        <Text size="1" color="gray">
+                          /blog/
+                        </Text>
                       </TextField.Slot>
                     </TextField.Root>
-                    {errors.slug ? <Text size="1" color="red" mt="1">
+                    {errors.slug ? (
+                      <Text size="1" color="red" mt="1">
                         {errors.slug.message}
-                      </Text> : null}
+                      </Text>
+                    ) : null}
                   </Box>
 
                   <Box>
@@ -416,10 +419,7 @@ export default function NouveauBlogPage() {
                         name="featured"
                         control={control}
                         render={({ field }) => (
-                          <Switch
-                            checked={field.value}
-                            onCheckedChange={field.onChange}
-                          />
+                          <Switch checked={field.value} onCheckedChange={field.onChange} />
                         )}
                       />
                     </Flex>
@@ -446,10 +446,11 @@ export default function NouveauBlogPage() {
                         onClick={() => setShowAddCategory(!showAddCategory)}
                         style={{ cursor: "pointer" }}
                       >
-                        <Plus size={14} />
+                        <Plus size={14} weight="bold" />
                       </Button>
                     </Flex>
-                    {showAddCategory ? <Flex gap="2" mb="2">
+                    {showAddCategory ? (
+                      <Flex gap="2" mb="2">
                         <TextField.Root
                           size="2"
                           placeholder="Nouvelle catégorie"
@@ -465,16 +466,14 @@ export default function NouveauBlogPage() {
                         >
                           Ajouter
                         </Button>
-                      </Flex> : null}
+                      </Flex>
+                    ) : null}
                     <Select.Root
                       value={watchedValues.categoryId}
                       onValueChange={(val) => setValue("categoryId", val)}
                     >
-                      <Select.Trigger
-                        placeholder="Sélectionner..."
-                        style={{ width: "100%" }}
-                      />
-                      <Select.Content>
+                      <Select.Trigger placeholder="Sélectionner..." style={{ width: "100%" }} />
+                      <Select.Content position="popper">
                         {categories.map((cat) => (
                           <Select.Item key={cat.id} value={cat.id}>
                             {cat.name}
@@ -482,9 +481,11 @@ export default function NouveauBlogPage() {
                         ))}
                       </Select.Content>
                     </Select.Root>
-                    {errors.categoryId ? <Text size="1" color="red" mt="1">
+                    {errors.categoryId ? (
+                      <Text size="1" color="red" mt="1">
                         {errors.categoryId.message}
-                      </Text> : null}
+                      </Text>
+                    ) : null}
                   </Box>
 
                   {/* Author */}
@@ -500,10 +501,11 @@ export default function NouveauBlogPage() {
                         onClick={() => setShowAddAuthor(!showAddAuthor)}
                         style={{ cursor: "pointer" }}
                       >
-                        <Plus size={14} />
+                        <Plus size={14} weight="bold" />
                       </Button>
                     </Flex>
-                    {showAddAuthor ? <Flex gap="2" mb="2">
+                    {showAddAuthor ? (
+                      <Flex gap="2" mb="2">
                         <TextField.Root
                           size="2"
                           placeholder="Nom de l'auteur"
@@ -519,16 +521,14 @@ export default function NouveauBlogPage() {
                         >
                           Ajouter
                         </Button>
-                      </Flex> : null}
+                      </Flex>
+                    ) : null}
                     <Select.Root
                       value={watchedValues.authorId}
                       onValueChange={(val) => setValue("authorId", val)}
                     >
-                      <Select.Trigger
-                        placeholder="Sélectionner..."
-                        style={{ width: "100%" }}
-                      />
-                      <Select.Content>
+                      <Select.Trigger placeholder="Sélectionner..." style={{ width: "100%" }} />
+                      <Select.Content position="popper">
                         {authors.map((author) => (
                           <Select.Item key={author.id} value={author.id}>
                             {author.name}
@@ -536,9 +536,11 @@ export default function NouveauBlogPage() {
                         ))}
                       </Select.Content>
                     </Select.Root>
-                    {errors.authorId ? <Text size="1" color="red" mt="1">
+                    {errors.authorId ? (
+                      <Text size="1" color="red" mt="1">
                         {errors.authorId.message}
-                      </Text> : null}
+                      </Text>
+                    ) : null}
                   </Box>
                 </Flex>
               </Card>
@@ -556,10 +558,11 @@ export default function NouveauBlogPage() {
                     onClick={() => setShowAddTag(!showAddTag)}
                     style={{ cursor: "pointer" }}
                   >
-                    <Plus size={14} />
+                    <Plus size={14} weight="bold" />
                   </Button>
                 </Flex>
-                {showAddTag ? <Flex gap="2" mb="3">
+                {showAddTag ? (
+                  <Flex gap="2" mb="3">
                     <TextField.Root
                       size="2"
                       placeholder="Nouveau tag"
@@ -575,7 +578,8 @@ export default function NouveauBlogPage() {
                     >
                       Ajouter
                     </Button>
-                  </Flex> : null}
+                  </Flex>
+                ) : null}
                 <ScrollArea style={{ maxHeight: 150 }}>
                   <Flex direction="column" gap="2">
                     {tags.map((tag) => (
@@ -634,7 +638,7 @@ export default function NouveauBlogPage() {
                       {...register("featuredImage")}
                     >
                       <TextField.Slot>
-                        <ImageIcon size={14} />
+                        <ImageIcon size={14} weight="duotone" />
                       </TextField.Slot>
                     </TextField.Root>
                   </Box>
@@ -650,7 +654,7 @@ export default function NouveauBlogPage() {
                     disabled={isSubmitting}
                     style={{
                       width: "100%",
-                      background: "linear-gradient(135deg, var(--violet-9) 0%, var(--purple-9) 100%)",
+                      background: "var(--violet-9)",
                       cursor: isSubmitting ? "wait" : "pointer",
                     }}
                   >
@@ -658,7 +662,7 @@ export default function NouveauBlogPage() {
                       <>Création...</>
                     ) : (
                       <>
-                        <Sparkles size={18} />
+                        <Sparkle size={18} weight="bold" />
                         Créer l'article
                       </>
                     )}

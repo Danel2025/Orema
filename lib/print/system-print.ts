@@ -1,5 +1,3 @@
-"use client";
-
 /**
  * Module d'impression via le systeme (window.print)
  *
@@ -26,13 +24,9 @@
  * ```
  */
 
-import type {
-  TicketClientData,
-  BonPreparationData,
-  RapportZData,
-  PrintResult,
-} from "./types";
+import type { TicketClientData, BonPreparationData, RapportZData, AdditionData, PrintResult } from "./types";
 import { TYPE_VENTE_LABELS, PAIEMENT_LABELS } from "./types";
+import { escapeHtml } from "@/lib/utils/sanitize";
 
 /**
  * Options d'impression systeme
@@ -40,8 +34,6 @@ import { TYPE_VENTE_LABELS, PAIEMENT_LABELS } from "./types";
 export interface SystemPrintOptions {
   /** Largeur du ticket en mm (defaut: 80) */
   paperWidth?: 58 | 76 | 80;
-  /** Impression silencieuse sans dialogue (necessite Chrome kiosque) */
-  silent?: boolean;
   /** Delai avant impression en ms (defaut: 300, pour laisser le CSS se charger) */
   delay?: number;
 }
@@ -58,7 +50,7 @@ export async function printViaSystem(
   htmlContent: string,
   options: SystemPrintOptions = {}
 ): Promise<PrintResult> {
-  const { paperWidth = 80, silent = false, delay = 300 } = options;
+  const { paperWidth = 80, delay = 300 } = options;
 
   try {
     // Creer l'iframe cachee
@@ -399,7 +391,9 @@ export function generateTicketHTML(data: TicketClientData): string {
   }
 
   lines.push('<hr class="separator-double">');
-  lines.push(`<div class="grand-total"><span>TOTAL TTC</span><span>${fmt(data.totalFinal)} FCFA</span></div>`);
+  lines.push(
+    `<div class="grand-total"><span>TOTAL TTC</span><span>${fmt(data.totalFinal)} FCFA</span></div>`
+  );
   lines.push('<hr class="separator-double">');
 
   // ========== PAIEMENTS ==========
@@ -428,13 +422,138 @@ export function generateTicketHTML(data: TicketClientData): string {
   lines.push('<hr class="separator">');
   lines.push('<div class="footer">');
 
-  const message =
-    data.etablissement.messageTicket || "Merci de votre visite !\nA bientot !";
+  const message = data.etablissement.messageTicket || "Merci de votre visite !\nA bientot !";
   for (const line of message.split("\n")) {
     lines.push(`<div>${escapeHtml(line)}</div>`);
   }
 
   lines.push("</div>");
+  lines.push("</div>"); // .ticket
+
+  return lines.join("\n");
+}
+
+/**
+ * Genere le HTML d'une addition (pre-note pour le client)
+ */
+export function generateAdditionHTML(data: AdditionData): string {
+  const lines: string[] = [];
+
+  lines.push('<div class="ticket">');
+
+  // ========== EN-TETE ==========
+  lines.push('<div class="center">');
+  lines.push(`<div class="big">${escapeHtml(data.etablissement.nom.toUpperCase())}</div>`);
+
+  if (data.etablissement.adresse) {
+    lines.push(`<div>${escapeHtml(data.etablissement.adresse)}</div>`);
+  }
+  if (data.etablissement.telephone) {
+    lines.push(`<div>Tel: ${escapeHtml(data.etablissement.telephone)}</div>`);
+  }
+  if (data.etablissement.nif || data.etablissement.rccm) {
+    const fiscal: string[] = [];
+    if (data.etablissement.nif) fiscal.push(`NIF: ${data.etablissement.nif}`);
+    if (data.etablissement.rccm) fiscal.push(`RCCM: ${data.etablissement.rccm}`);
+    lines.push(`<div class="small">${escapeHtml(fiscal.join(" - "))}</div>`);
+  }
+  lines.push("</div>");
+
+  lines.push('<hr class="separator-double">');
+
+  lines.push('<div class="center bold" style="font-size:16px;margin:4px 0;">ADDITION</div>');
+
+  lines.push('<hr class="separator-double">');
+
+  // ========== INFOS ==========
+  lines.push(row("Date", fmtDateTime(data.dateAddition)));
+  lines.push(row("Type", TYPE_VENTE_LABELS[data.typeVente] || data.typeVente));
+  lines.push(row("Serveur", data.serveurNom));
+
+  if (data.tableNumero) {
+    let tableInfo = `Table ${data.tableNumero}`;
+    if (data.tableZone) tableInfo += ` (${data.tableZone})`;
+    lines.push(row("Table", tableInfo));
+  }
+  if (data.couverts) {
+    lines.push(row("Couverts", String(data.couverts)));
+  }
+  if (data.clientNom) {
+    lines.push(row("Client", data.clientNom));
+  }
+
+  lines.push('<hr class="separator">');
+
+  // ========== ARTICLES ==========
+  lines.push('<table class="items">');
+  lines.push("<thead><tr>");
+  lines.push('<th class="name">Article</th>');
+  lines.push('<th class="qty">Qte</th>');
+  lines.push('<th class="price">P.U.</th>');
+  lines.push('<th class="total">Total</th>');
+  lines.push("</tr></thead>");
+  lines.push("<tbody>");
+
+  for (const ligne of data.lignes) {
+    lines.push("<tr>");
+    lines.push(`<td class="name">${escapeHtml(ligne.produitNom)}</td>`);
+    lines.push(`<td class="qty">${ligne.quantite}</td>`);
+    lines.push(`<td class="price">${fmt(ligne.prixUnitaire)}</td>`);
+    lines.push(`<td class="total">${fmt(ligne.total)}</td>`);
+    lines.push("</tr>");
+
+    if (ligne.supplements && ligne.supplements.length > 0) {
+      for (const sup of ligne.supplements) {
+        lines.push("<tr>");
+        lines.push(`<td class="note" colspan="3">+ ${escapeHtml(sup.nom)}</td>`);
+        lines.push(`<td class="price">${fmt(sup.prix)}</td>`);
+        lines.push("</tr>");
+      }
+    }
+
+    if (ligne.notes) {
+      lines.push("<tr>");
+      lines.push(`<td class="note" colspan="4">&rarr; ${escapeHtml(ligne.notes)}</td>`);
+      lines.push("</tr>");
+    }
+  }
+
+  lines.push("</tbody></table>");
+
+  lines.push('<hr class="separator">');
+
+  // ========== TOTAUX ==========
+  lines.push(totalRow("Sous-total HT", `${fmt(data.sousTotal)} F`));
+  lines.push(totalRow("TVA", `${fmt(data.totalTva)} F`));
+
+  if (data.totalRemise > 0) {
+    let remiseLabel = "Remise";
+    if (data.remiseType === "POURCENTAGE" && data.remiseValeur) {
+      remiseLabel = `Remise (${data.remiseValeur}%)`;
+    }
+    lines.push(totalRow(remiseLabel, `-${fmt(data.totalRemise)} F`));
+  }
+
+  lines.push('<hr class="separator-double">');
+  lines.push(
+    `<div class="grand-total"><span>TOTAL TTC</span><span>${fmt(data.totalFinal)} FCFA</span></div>`
+  );
+  lines.push('<hr class="separator-double">');
+
+  // ========== LIVRAISON ==========
+  if (data.adresseLivraison) {
+    lines.push(row("Adresse", data.adresseLivraison));
+  }
+  if (data.telephoneLivraison) {
+    lines.push(row("Telephone", data.telephoneLivraison));
+  }
+
+  // ========== PIED DE PAGE ==========
+  lines.push('<div class="footer">');
+  lines.push("<div>--- Pre-note / Addition ---</div>");
+  lines.push("<div class=\"small\">Ce document n'est pas un recu de paiement</div>");
+  lines.push("</div>");
+
   lines.push("</div>"); // .ticket
 
   return lines.join("\n");
@@ -455,7 +574,9 @@ export function generateBonPreparationHTML(
   // En-tete
   lines.push(`<div class="center big">${title}</div>`);
   if (data.urgent) {
-    lines.push('<div class="center bold" style="font-size:16px;border:2px solid #000;padding:4px;margin:4px 0;">!!! URGENT !!!</div>');
+    lines.push(
+      '<div class="center bold" style="font-size:16px;border:2px solid #000;padding:4px;margin:4px 0;">!!! URGENT !!!</div>'
+    );
   }
 
   lines.push('<hr class="separator-double">');
@@ -606,10 +727,274 @@ function totalRow(label: string, value: string): string {
   return `<div class="total-row"><span>${escapeHtml(label)}</span><span>${escapeHtml(value)}</span></div>`;
 }
 
-function escapeHtml(text: string): string {
-  return text
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;");
+// escapeHtml importé depuis @/lib/utils/sanitize
+
+// ============================================
+// PAGE DE TEST UNIVERSELLE
+// ============================================
+
+/**
+ * Genere une page de test HTML imprimable sur tout type d'imprimante
+ * (jet d'encre, laser, thermique) via window.print().
+ *
+ * La page inclut :
+ * - En-tete avec le nom de l'etablissement
+ * - Titre "PAGE DE TEST"
+ * - Date et heure du test
+ * - Motif en damier pour verifier la qualite d'impression
+ * - Textes en differentes tailles
+ * - Tableau style ticket avec articles fictifs
+ * - Pied de page Orema N+
+ */
+export function generateTestPageHTML(etablissementNom: string): string {
+  const now = new Date();
+  const dateStr = fmtDate(now);
+  const timeStr = fmtTime(now);
+  const lines: string[] = [];
+
+  lines.push('<div class="ticket">');
+
+  // ========== BORDURE DECORATIVE HAUT ==========
+  lines.push('<div class="test-border-top">');
+  for (let i = 0; i < 4; i++) {
+    lines.push('<div class="test-border-row">');
+    for (let j = 0; j < 20; j++) {
+      const filled = (i + j) % 2 === 0;
+      lines.push(`<span class="test-square${filled ? " filled" : ""}"></span>`);
+    }
+    lines.push("</div>");
+  }
+  lines.push("</div>");
+
+  // ========== EN-TETE ==========
+  lines.push('<div class="center" style="margin:8px 0 4px;">');
+  lines.push(`<div class="big">${escapeHtml(etablissementNom.toUpperCase())}</div>`);
+  lines.push("</div>");
+
+  lines.push('<hr class="separator-double">');
+
+  lines.push('<div class="center" style="margin:6px 0;">');
+  lines.push('<div class="test-title">PAGE DE TEST</div>');
+  lines.push('<div class="test-subtitle">Test d\'impression systeme</div>');
+  lines.push("</div>");
+
+  lines.push('<hr class="separator-double">');
+
+  // ========== DATE ET HEURE ==========
+  lines.push(row("Date", dateStr));
+  lines.push(row("Heure", timeStr));
+  lines.push(row("Imprimante", "Systeme (window.print)"));
+
+  lines.push('<hr class="separator">');
+
+  // ========== TEST DE TAILLES DE TEXTE ==========
+  lines.push('<div class="center bold" style="margin:6px 0 4px;">TAILLES DE TEXTE</div>');
+  lines.push('<div style="font-size:8px;margin:2px 0;">8px - Le renard brun rapide saute par-dessus le chien paresseux</div>');
+  lines.push('<div style="font-size:10px;margin:2px 0;">10px - Le renard brun rapide saute</div>');
+  lines.push('<div style="font-size:12px;margin:2px 0;">12px - Le renard brun rapide</div>');
+  lines.push('<div style="font-size:14px;margin:2px 0;font-weight:bold;">14px gras - Montant total</div>');
+  lines.push('<div style="font-size:18px;margin:2px 0;font-weight:bold;">18px - 25 000 FCFA</div>');
+
+  lines.push('<hr class="separator">');
+
+  // ========== TEST CARACTERES SPECIAUX ==========
+  lines.push('<div class="center bold" style="margin:6px 0 4px;">CARACTERES SPECIAUX</div>');
+  lines.push('<div style="margin:2px 0;">Accents : e e a u i o c</div>');
+  lines.push('<div style="margin:2px 0;">Symboles : @ # % &amp; * + = / \\ | ~ ^</div>');
+  lines.push('<div style="margin:2px 0;">Monnaie : 15 000 FCFA | 250,00 EUR</div>');
+
+  lines.push('<hr class="separator">');
+
+  // ========== TABLEAU ARTICLES FICTIFS ==========
+  lines.push('<div class="center bold" style="margin:6px 0 4px;">TICKET EXEMPLE</div>');
+  lines.push('<table class="items">');
+  lines.push("<thead><tr>");
+  lines.push('<th class="name">Article</th>');
+  lines.push('<th class="qty">Qte</th>');
+  lines.push('<th class="price">P.U.</th>');
+  lines.push('<th class="total">Total</th>');
+  lines.push("</tr></thead>");
+  lines.push("<tbody>");
+
+  const sampleItems = [
+    { nom: "Poulet braise", qty: 2, pu: 5000 },
+    { nom: "Biere Regab 65cl", qty: 3, pu: 1500 },
+    { nom: "Riz sauce arachide", qty: 1, pu: 3500 },
+    { nom: "Jus de gingembre", qty: 2, pu: 1000 },
+    { nom: "Banane plantain frit", qty: 1, pu: 2000 },
+  ];
+
+  let sousTotal = 0;
+  for (const item of sampleItems) {
+    const total = item.qty * item.pu;
+    sousTotal += total;
+    lines.push("<tr>");
+    lines.push(`<td class="name">${item.nom}</td>`);
+    lines.push(`<td class="qty">${item.qty}</td>`);
+    lines.push(`<td class="price">${fmt(item.pu)}</td>`);
+    lines.push(`<td class="total">${fmt(total)}</td>`);
+    lines.push("</tr>");
+  }
+
+  lines.push("</tbody></table>");
+
+  lines.push('<hr class="separator">');
+
+  const tva = Math.round(sousTotal * 0.18);
+  const totalTTC = sousTotal + tva;
+
+  lines.push(totalRow("Sous-total HT", `${fmt(sousTotal)} F`));
+  lines.push(totalRow("TVA 18%", `${fmt(tva)} F`));
+
+  lines.push('<hr class="separator-double">');
+  lines.push(
+    `<div class="grand-total"><span>TOTAL TTC</span><span>${fmt(totalTTC)} FCFA</span></div>`
+  );
+  lines.push('<hr class="separator-double">');
+
+  // ========== MOTIF DAMIER QUALITE ==========
+  lines.push('<div class="center bold" style="margin:6px 0 4px;">TEST QUALITE IMPRESSION</div>');
+
+  lines.push('<div class="test-checkerboard">');
+  for (let i = 0; i < 6; i++) {
+    lines.push('<div class="test-checker-row">');
+    for (let j = 0; j < 16; j++) {
+      const filled = (i + j) % 2 === 0;
+      lines.push(`<span class="test-checker${filled ? " dark" : " light"}"></span>`);
+    }
+    lines.push("</div>");
+  }
+  lines.push("</div>");
+
+  // ========== LIGNES HORIZONTALES ==========
+  lines.push('<div style="margin:6px 0;">');
+  lines.push('<div class="center small" style="margin-bottom:3px;">Lignes fines a epaisses :</div>');
+  lines.push('<div style="border-top:1px solid #000;margin:3px 0;"></div>');
+  lines.push('<div style="border-top:2px solid #000;margin:3px 0;"></div>');
+  lines.push('<div style="border-top:3px solid #000;margin:3px 0;"></div>');
+  lines.push('<div style="border-top:1px dashed #000;margin:3px 0;"></div>');
+  lines.push('<div style="border-top:1px dotted #000;margin:3px 0;"></div>');
+  lines.push("</div>");
+
+  // ========== NIVEAUX DE GRIS ==========
+  lines.push('<div class="center small" style="margin:3px 0;">Niveaux de gris :</div>');
+  lines.push('<div class="test-grayscale">');
+  const grays = ["#000", "#333", "#666", "#999", "#ccc", "#eee"];
+  for (const g of grays) {
+    lines.push(`<span class="test-gray-block" style="background:${g};"></span>`);
+  }
+  lines.push("</div>");
+
+  lines.push('<hr class="separator">');
+
+  // ========== BORDURE DECORATIVE BAS ==========
+  lines.push('<div class="test-border-bottom">');
+  for (let i = 0; i < 4; i++) {
+    lines.push('<div class="test-border-row">');
+    for (let j = 0; j < 20; j++) {
+      const filled = (i + j) % 2 === 0;
+      lines.push(`<span class="test-square${filled ? " filled" : ""}"></span>`);
+    }
+    lines.push("</div>");
+  }
+  lines.push("</div>");
+
+  // ========== PIED DE PAGE ==========
+  lines.push('<div class="footer" style="margin-top:10px;">');
+  lines.push("<div class=\"bold\">Orema N+ - Systeme POS</div>");
+  lines.push(`<div>Test effectue le ${dateStr} a ${timeStr}</div>`);
+  lines.push("<div class=\"small\" style=\"margin-top:4px;\">Si cette page s'imprime correctement,</div>");
+  lines.push("<div class=\"small\">votre imprimante est prete a l'emploi.</div>");
+  lines.push("</div>");
+
+  lines.push("</div>"); // .ticket
+
+  // ========== STYLES SUPPLEMENTAIRES POUR LA PAGE DE TEST ==========
+  // On injecte un bloc <style> en haut du contenu qui sera insere dans le body
+  // par wrapWithPrintStyles. C'est supporte car le navigateur accepte <style> dans <body>.
+  const testStyles = `<style>
+  .test-title {
+    font-size: 22px;
+    font-weight: bold;
+    letter-spacing: 3px;
+    margin: 4px 0;
+  }
+  .test-subtitle {
+    font-size: 11px;
+    color: #555;
+    margin-bottom: 2px;
+  }
+  .test-border-top, .test-border-bottom {
+    margin: 0 0 4px;
+  }
+  .test-border-bottom {
+    margin: 4px 0 0;
+  }
+  .test-border-row {
+    display: flex;
+    justify-content: center;
+    gap: 0;
+  }
+  .test-square {
+    display: inline-block;
+    width: 3.2mm;
+    height: 3.2mm;
+    border: 0.5px solid #ccc;
+    flex-shrink: 0;
+  }
+  .test-square.filled {
+    background: #000;
+    border-color: #000;
+  }
+  .test-checkerboard {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin: 4px 0;
+  }
+  .test-checker-row {
+    display: flex;
+    gap: 0;
+  }
+  .test-checker {
+    display: inline-block;
+    width: 4mm;
+    height: 4mm;
+    flex-shrink: 0;
+  }
+  .test-checker.dark {
+    background: #000;
+  }
+  .test-checker.light {
+    background: #fff;
+    border: 0.5px solid #ddd;
+  }
+  .test-grayscale {
+    display: flex;
+    justify-content: center;
+    gap: 2px;
+    margin: 4px 0;
+  }
+  .test-gray-block {
+    display: inline-block;
+    width: 8mm;
+    height: 6mm;
+    border: 0.5px solid #ccc;
+    flex-shrink: 0;
+  }
+</style>`;
+
+  return testStyles + "\n" + lines.join("\n");
+}
+
+/**
+ * Imprime une page de test via le systeme (window.print).
+ * Utilise un format 80mm compatible avec toutes les imprimantes.
+ */
+export async function printSystemTest(
+  etablissementNom: string,
+  options?: Omit<SystemPrintOptions, "paperWidth">
+): Promise<PrintResult> {
+  const html = generateTestPageHTML(etablissementNom);
+  return printViaSystem(html, { ...options, paperWidth: 80 });
 }

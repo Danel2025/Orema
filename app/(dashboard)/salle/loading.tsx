@@ -6,7 +6,14 @@ export default function SalleLoading() {
   return (
     <div style={{ height: "100%", display: "flex", flexDirection: "column" }}>
       {/* Header skeleton */}
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 16 }}>
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "flex-start",
+          marginBottom: 16,
+        }}
+      >
         <div>
           <div
             style={{
@@ -68,7 +75,14 @@ export default function SalleLoading() {
       </div>
 
       {/* Filters & Legend skeleton */}
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          marginBottom: 16,
+        }}
+      >
         <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
           <div
             style={{

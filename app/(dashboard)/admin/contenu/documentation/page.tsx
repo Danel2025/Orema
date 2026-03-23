@@ -19,17 +19,22 @@ import {
 } from "@radix-ui/themes";
 import {
   Plus,
-  BookOpen,
+  BookOpenText,
   FileText,
   Eye,
-  EyeOff,
+  EyeSlash,
   Archive,
-  Trash2,
-  Edit,
-  MoreVertical,
+  Trash,
+  PencilSimple,
+  DotsThreeVertical,
   ArrowRight,
-  GripVertical,
-} from "lucide-react";
+  DotsSixVertical,
+  FolderOpen,
+  CheckCircle,
+  PencilLine,
+  Article,
+} from "@phosphor-icons/react";
+import { StatCard } from "@/components/composed";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { motion } from "motion/react";
@@ -137,12 +142,11 @@ export default function DocumentationPage() {
             <Box
               p="3"
               style={{
-                background: "linear-gradient(135deg, var(--blue-9) 0%, var(--blue-10) 100%)",
+                background: "var(--blue-9)",
                 borderRadius: 12,
-                boxShadow: "0 4px 16px var(--blue-a4)",
               }}
             >
-              <BookOpen size={24} style={{ color: "white" }} />
+              <BookOpenText size={24} weight="duotone" style={{ color: "white" }} />
             </Box>
             <Box>
               <Heading size="5">Documentation</Heading>
@@ -156,11 +160,11 @@ export default function DocumentationPage() {
             <Button
               size="3"
               style={{
-                background: "linear-gradient(135deg, var(--blue-9) 0%, var(--blue-10) 100%)",
+                background: "var(--blue-9)",
                 cursor: "pointer",
               }}
             >
-              <Plus size={18} />
+              <Plus size={18} weight="bold" />
               Nouvelle catégorie
             </Button>
           </Link>
@@ -173,38 +177,30 @@ export default function DocumentationPage() {
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.3, delay: 0.1 }}
       >
-        <Grid columns="4" gap="4" mb="6">
-          {[
-            { label: "Catégories", value: stats.total, color: "blue" },
-            { label: "Publiées", value: stats.published, color: "green" },
-            { label: "Brouillons", value: stats.draft, color: "gray" },
-            { label: "Articles total", value: stats.articles, color: "violet" },
-          ].map((stat) => (
-            <Box
-              key={stat.label}
-              p="4"
-              style={{
-                background: "var(--color-background)",
-                borderRadius: 12,
-                border: "1px solid var(--gray-a4)",
-              }}
-            >
-              <Text size="1" color="gray" style={{ display: "block" }}>
-                {stat.label}
-              </Text>
-              {isLoading ? (
-                <Skeleton style={{ width: 40, height: 32, marginTop: 4 }} />
-              ) : (
-                <Text
-                  size="6"
-                  weight="bold"
-                  style={{ color: `var(--${stat.color}-11)` }}
-                >
-                  {stat.value}
-                </Text>
-              )}
-            </Box>
-          ))}
+        <Grid columns={{ initial: "2", md: "4" }} gap="4" mb="6">
+          <StatCard
+            title="Catégories"
+            value={isLoading ? "..." : stats.total.toString()}
+            icon={FolderOpen}
+            color="blue"
+          />
+          <StatCard
+            title="Publiées"
+            value={isLoading ? "..." : stats.published.toString()}
+            icon={CheckCircle}
+            color="green"
+          />
+          <StatCard
+            title="Brouillons"
+            value={isLoading ? "..." : stats.draft.toString()}
+            icon={PencilLine}
+          />
+          <StatCard
+            title="Articles total"
+            value={isLoading ? "..." : stats.articles.toString()}
+            icon={Article}
+            color="violet"
+          />
         </Grid>
       </motion.div>
 
@@ -220,15 +216,12 @@ export default function DocumentationPage() {
           p="8"
           style={{
             background: "var(--color-background)",
-            borderRadius: 16,
+            borderRadius: 12,
             border: "1px solid var(--gray-a4)",
             textAlign: "center",
           }}
         >
-          <BookOpen
-            size={48}
-            style={{ color: "var(--gray-8)", marginBottom: 16 }}
-          />
+          <BookOpenText size={48} weight="duotone" style={{ color: "var(--gray-8)", marginBottom: 16 }} />
           <Heading size="4" mb="2" color="gray">
             Aucune catégorie
           </Heading>
@@ -237,7 +230,7 @@ export default function DocumentationPage() {
           </Text>
           <Link href="/admin/contenu/documentation/nouveau">
             <Button size="2">
-              <Plus size={16} />
+              <Plus size={16} weight="bold" />
               Créer une catégorie
             </Button>
           </Link>
@@ -245,7 +238,8 @@ export default function DocumentationPage() {
       ) : (
         <Grid columns={{ initial: "1", md: "2" }} gap="4">
           {categories.map((category, index) => {
-            const Icon = (LucideIcons as unknown as Record<string, LucideIcon>)[category.icon] || BookOpen;
+            const Icon =
+              (LucideIcons as unknown as Record<string, LucideIcon>)[category.icon] || BookOpenText;
             const statusColor = contentStatusColors[category.status];
 
             return (
@@ -258,7 +252,7 @@ export default function DocumentationPage() {
                 <Box
                   style={{
                     background: "var(--color-background)",
-                    borderRadius: 16,
+                    borderRadius: 12,
                     border: "1px solid var(--gray-a4)",
                     overflow: "hidden",
                   }}
@@ -267,7 +261,7 @@ export default function DocumentationPage() {
                   <Box
                     p="4"
                     style={{
-                      background: `linear-gradient(135deg, var(--${category.color}-a2) 0%, var(--${category.color}-a3) 100%)`,
+                      background: `var(--${category.color}-a2)`,
                       borderBottom: `1px solid var(--${category.color}-a4)`,
                     }}
                   >
@@ -278,7 +272,6 @@ export default function DocumentationPage() {
                           style={{
                             background: `var(--${category.color}-9)`,
                             borderRadius: 10,
-                            boxShadow: `0 4px 12px var(--${category.color}-a4)`,
                           }}
                         >
                           <Icon size={20} style={{ color: "white" }} />
@@ -303,7 +296,8 @@ export default function DocumentationPage() {
 
                   {/* Content */}
                   <Box p="4">
-                    {category.description ? <Text
+                    {category.description ? (
+                      <Text
                         size="2"
                         color="gray"
                         mb="3"
@@ -313,20 +307,24 @@ export default function DocumentationPage() {
                         }}
                       >
                         {category.description}
-                      </Text> : null}
+                      </Text>
+                    ) : null}
 
                     <Flex align="center" gap="4" mb="4">
                       <Flex align="center" gap="1">
-                        <FileText size={14} style={{ color: "var(--gray-9)" }} />
+                        <FileText size={14} weight="duotone" style={{ color: "var(--gray-9)" }} />
                         <Text size="2" color="gray">
                           {category.articleCount} article{category.articleCount !== 1 ? "s" : ""}
                         </Text>
                       </Flex>
-                      <Text size="2" color="gray">•</Text>
+                      <Text size="2" color="gray">
+                        •
+                      </Text>
                       <Flex align="center" gap="1">
-                        <Eye size={14} style={{ color: "var(--green-9)" }} />
+                        <Eye size={14} weight="duotone" style={{ color: "var(--green-9)" }} />
                         <Text size="2" color="gray">
-                          {category.publishedArticleCount} publié{category.publishedArticleCount !== 1 ? "s" : ""}
+                          {category.publishedArticleCount} publié
+                          {category.publishedArticleCount !== 1 ? "s" : ""}
                         </Text>
                       </Flex>
                     </Flex>
@@ -342,7 +340,7 @@ export default function DocumentationPage() {
                           color={category.color as "blue" | "violet" | "green"}
                           style={{ width: "100%", cursor: "pointer" }}
                         >
-                          <Eye size={14} />
+                          <Eye size={14} weight="bold" />
                           Voir les articles
                         </Button>
                       </Link>
@@ -355,7 +353,7 @@ export default function DocumentationPage() {
                           onClick={() => handleStatusChange(category.id, "PUBLISHED")}
                           style={{ cursor: "pointer" }}
                         >
-                          <Eye size={14} />
+                          <Eye size={14} weight="bold" />
                         </Button>
                       ) : category.status === "PUBLISHED" ? (
                         <Button
@@ -364,7 +362,7 @@ export default function DocumentationPage() {
                           onClick={() => handleStatusChange(category.id, "DRAFT")}
                           style={{ cursor: "pointer" }}
                         >
-                          <EyeOff size={14} />
+                          <EyeSlash size={14} weight="bold" />
                         </Button>
                       ) : null}
 
@@ -374,7 +372,7 @@ export default function DocumentationPage() {
                         onClick={() => setDeleteId(category.id)}
                         style={{ cursor: "pointer" }}
                       >
-                        <Trash2 size={14} />
+                        <Trash size={14} weight="bold" />
                       </Button>
                     </Flex>
                   </Box>
@@ -390,8 +388,8 @@ export default function DocumentationPage() {
         <AlertDialog.Content maxWidth="450px">
           <AlertDialog.Title>Supprimer la catégorie ?</AlertDialog.Title>
           <AlertDialog.Description size="2">
-            Cette action est irréversible. Tous les articles de cette catégorie
-            seront également supprimés.
+            Cette action est irréversible. Tous les articles de cette catégorie seront également
+            supprimés.
           </AlertDialog.Description>
 
           <Flex gap="3" mt="4" justify="end">
@@ -400,16 +398,17 @@ export default function DocumentationPage() {
                 Annuler
               </Button>
             </AlertDialog.Cancel>
-            <AlertDialog.Action>
-              <Button
-                variant="solid"
-                color="red"
-                onClick={handleDelete}
-                disabled={isDeleting}
-              >
-                {isDeleting ? "Suppression..." : "Supprimer"}
-              </Button>
-            </AlertDialog.Action>
+            <Button
+              variant="solid"
+              color="red"
+              disabled={isDeleting}
+              onClick={async (e) => {
+                e.preventDefault();
+                await handleDelete();
+              }}
+            >
+              {isDeleting ? "Suppression..." : "Supprimer"}
+            </Button>
           </Flex>
         </AlertDialog.Content>
       </AlertDialog.Root>

@@ -32,7 +32,7 @@ loader.load(
   "texture.jpg",
   (texture) => console.log("Loaded"),
   (progress) => console.log("Progress"),
-  (error) => console.error("Error"),
+  (error) => console.error("Error")
 );
 
 // Synchronous style (loads async internally)
@@ -312,11 +312,7 @@ material.map = renderTarget.texture;
 
 ```javascript
 const renderTarget = new THREE.WebGLRenderTarget(512, 512);
-renderTarget.depthTexture = new THREE.DepthTexture(
-  512,
-  512,
-  THREE.UnsignedShortType,
-);
+renderTarget.depthTexture = new THREE.DepthTexture(512, 512, THREE.UnsignedShortType);
 
 // Access depth
 const depthTexture = renderTarget.depthTexture;

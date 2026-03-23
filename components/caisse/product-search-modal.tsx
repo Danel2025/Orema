@@ -6,17 +6,9 @@
  */
 
 import { useState, useEffect, useRef, useCallback } from "react";
-import {
-  Dialog,
-  TextField,
-  Flex,
-  Text,
-  Kbd,
-  Box,
-  IconButton,
-} from "@radix-ui/themes";
+import { Dialog, TextField, Flex, Text, Kbd, Box, IconButton } from "@radix-ui/themes";
 import { ScrollArea } from "@/components/ui";
-import { Search, X, Package, Barcode } from "lucide-react";
+import { MagnifyingGlass, X, Package, Barcode } from "@phosphor-icons/react";
 import { useCartStore } from "@/stores/cart-store";
 import { formatCurrency } from "@/lib/utils";
 
@@ -76,75 +68,83 @@ export function ProductSearchModal({
     );
   });
 
-  // Reset search when modal opens
+  // Reset search when modal opens (derived-state pattern)
+  const prevOpenRef = useRef(false);
+  if (open && !prevOpenRef.current) {
+    setSearchQuery("");
+    setSelectedIndex(0);
+  }
+  prevOpenRef.current = open;
+
+  // Auto-focus input when modal opens
   useEffect(() => {
     if (open) {
-      setSearchQuery("");
-      setSelectedIndex(0);
-      // Focus input after modal animation
-      setTimeout(() => {
-        inputRef.current?.focus();
-      }, 100);
+      const timer = setTimeout(() => inputRef.current?.focus(), 100);
+      return () => clearTimeout(timer);
     }
   }, [open]);
 
-  // Reset selected index when results change
-  useEffect(() => {
+  // Reset selected index when results change (derived-state pattern)
+  const prevFilteredLengthRef = useRef(filteredProduits.length);
+  if (prevFilteredLengthRef.current !== filteredProduits.length) {
+    prevFilteredLengthRef.current = filteredProduits.length;
     setSelectedIndex(0);
-  }, [filteredProduits.length]);
+  }
 
   // Ajouter un produit au panier
-  const handleAddProduct = useCallback((prod: Produit) => {
-    const prix = toNumber(prod.prixVente);
-    const cat = categories.find((c) => c.id === prod.categorieId);
-    addItem({
-      produitId: prod.id,
-      prixUnitaire: prix,
-      categorieNom: cat?.nom,
-      produit: {
-        nom: prod.nom,
-        tauxTva: prod.tauxTva,
-      },
-    });
-    onOpenChange(false);
-  }, [addItem, onOpenChange, categories]);
+  const handleAddProduct = useCallback(
+    (prod: Produit) => {
+      const prix = toNumber(prod.prixVente);
+      const cat = categories.find((c) => c.id === prod.categorieId);
+      addItem({
+        produitId: prod.id,
+        prixUnitaire: prix,
+        categorieNom: cat?.nom,
+        produit: {
+          nom: prod.nom,
+          tauxTva: prod.tauxTva,
+        },
+      });
+      onOpenChange(false);
+    },
+    [addItem, onOpenChange, categories]
+  );
 
   // Gestion du clavier
-  const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
-    if (filteredProduits.length === 0) return;
+  const handleKeyDown = useCallback(
+    (e: React.KeyboardEvent) => {
+      if (filteredProduits.length === 0) return;
 
-    switch (e.key) {
-      case "ArrowDown":
-        e.preventDefault();
-        setSelectedIndex((prev) =>
-          prev < filteredProduits.length - 1 ? prev + 1 : prev
-        );
-        break;
-      case "ArrowUp":
-        e.preventDefault();
-        setSelectedIndex((prev) => (prev > 0 ? prev - 1 : prev));
-        break;
-      case "Enter":
-        e.preventDefault();
-        if (filteredProduits[selectedIndex]) {
-          handleAddProduct(filteredProduits[selectedIndex]);
-        }
-        break;
-    }
-  }, [filteredProduits, selectedIndex, handleAddProduct]);
+      switch (e.key) {
+        case "ArrowDown":
+          e.preventDefault();
+          setSelectedIndex((prev) => (prev < filteredProduits.length - 1 ? prev + 1 : prev));
+          break;
+        case "ArrowUp":
+          e.preventDefault();
+          setSelectedIndex((prev) => (prev > 0 ? prev - 1 : prev));
+          break;
+        case "Enter":
+          e.preventDefault();
+          if (filteredProduits[selectedIndex]) {
+            handleAddProduct(filteredProduits[selectedIndex]);
+          }
+          break;
+      }
+    },
+    [filteredProduits, selectedIndex, handleAddProduct]
+  );
 
   return (
     <Dialog.Root open={open} onOpenChange={onOpenChange}>
-      <Dialog.Content
-        maxWidth="500px"
-        aria-describedby={undefined}
-        onKeyDown={handleKeyDown}
-      >
+      <Dialog.Content maxWidth="500px" aria-describedby={undefined} onKeyDown={handleKeyDown}>
         <Dialog.Title>
           <Flex align="center" gap="2">
-            <Search size={20} />
+            <MagnifyingGlass size={20} />
             Rechercher un produit
-            <Kbd size="1" style={{ marginLeft: "auto" }}>F2</Kbd>
+            <Kbd size="1" style={{ marginLeft: "auto" }}>
+              F2
+            </Kbd>
           </Flex>
         </Dialog.Title>
 
@@ -157,9 +157,10 @@ export function ProductSearchModal({
             onChange={(e) => setSearchQuery(e.target.value)}
           >
             <TextField.Slot>
-              <Search size={16} />
+              <MagnifyingGlass size={16} />
             </TextField.Slot>
-            {searchQuery ? <TextField.Slot>
+            {searchQuery ? (
+              <TextField.Slot>
                 <IconButton
                   size="1"
                   variant="ghost"
@@ -168,7 +169,8 @@ export function ProductSearchModal({
                 >
                   <X size={14} />
                 </IconButton>
-              </TextField.Slot> : null}
+              </TextField.Slot>
+            ) : null}
           </TextField.Root>
         </Box>
 
@@ -182,7 +184,7 @@ export function ProductSearchModal({
               py="6"
               style={{ color: "var(--gray-10)" }}
             >
-              <Search size={32} style={{ opacity: 0.5, marginBottom: 12 }} />
+              <MagnifyingGlass size={32} style={{ opacity: 0.5, marginBottom: 12 }} />
               <Text size="2">Commencez a taper pour rechercher</Text>
             </Flex>
           ) : filteredProduits.length === 0 ? (
@@ -197,19 +199,13 @@ export function ProductSearchModal({
               <Text size="2">Aucun produit trouve</Text>
             </Flex>
           ) : (
-            <ScrollArea
-              type="auto"
-              scrollbars="vertical"
-              style={{ maxHeight: 300 }}
-            >
+            <ScrollArea type="auto" scrollbars="vertical" style={{ maxHeight: 300 }}>
               <Flex direction="column" gap="1">
                 {filteredProduits.slice(0, 20).map((prod, index) => {
                   const prix = toNumber(prod.prixVente);
                   const cat = categories.find((c) => c.id === prod.categorieId);
                   const rupture =
-                    prod.gererStock &&
-                    prod.stockActuel != null &&
-                    prod.stockActuel <= 0;
+                    prod.gererStock && prod.stockActuel != null && prod.stockActuel <= 0;
                   const isSelected = index === selectedIndex;
 
                   return (
@@ -221,12 +217,8 @@ export function ProductSearchModal({
                         borderRadius: 8,
                         cursor: rupture ? "not-allowed" : "pointer",
                         opacity: rupture ? 0.5 : 1,
-                        backgroundColor: isSelected
-                          ? "var(--accent-a3)"
-                          : "var(--gray-a2)",
-                        border: isSelected
-                          ? "1px solid var(--accent-7)"
-                          : "1px solid transparent",
+                        backgroundColor: isSelected ? "var(--accent-a3)" : "var(--gray-a2)",
+                        border: isSelected ? "1px solid var(--accent-7)" : "1px solid transparent",
                         transition: "all 0.1s ease",
                       }}
                     >
@@ -236,7 +228,8 @@ export function ProductSearchModal({
                             {prod.nom}
                           </Text>
                           <Flex align="center" gap="3">
-                            {cat ? <Flex align="center" gap="1">
+                            {cat ? (
+                              <Flex align="center" gap="1">
                                 <Box
                                   style={{
                                     width: 8,
@@ -248,16 +241,21 @@ export function ProductSearchModal({
                                 <Text size="1" color="gray">
                                   {cat.nom}
                                 </Text>
-                              </Flex> : null}
-                            {prod.codeBarre ? <Flex align="center" gap="1">
+                              </Flex>
+                            ) : null}
+                            {prod.codeBarre ? (
+                              <Flex align="center" gap="1">
                                 <Barcode size={12} style={{ color: "var(--gray-9)" }} />
                                 <Text size="1" color="gray">
                                   {prod.codeBarre}
                                 </Text>
-                              </Flex> : null}
-                            {prod.reference ? <Text size="1" color="gray">
+                              </Flex>
+                            ) : null}
+                            {prod.reference ? (
+                              <Text size="1" color="gray">
                                 Ref: {prod.reference}
-                              </Text> : null}
+                              </Text>
+                            ) : null}
                           </Flex>
                         </Flex>
                         <Flex direction="column" align="end" gap="1">
@@ -266,20 +264,21 @@ export function ProductSearchModal({
                             weight="bold"
                             style={{
                               color: "var(--accent-11)",
-                              fontFamily:
-                                "var(--font-google-sans-code), ui-monospace, monospace",
+                              fontFamily: "var(--font-google-sans-code), ui-monospace, monospace",
                             }}
                           >
                             {formatCurrency(prix)}
                           </Text>
-                          {rupture ? <Text size="1" color="red">
+                          {rupture ? (
+                            <Text size="1" color="red">
                               Rupture
-                            </Text> : null}
-                          {prod.gererStock &&
-                            prod.stockActuel != null &&
-                            prod.stockActuel > 0 ? <Text size="1" color="gray">
-                                Stock: {prod.stockActuel}
-                              </Text> : null}
+                            </Text>
+                          ) : null}
+                          {prod.gererStock && prod.stockActuel != null && prod.stockActuel > 0 ? (
+                            <Text size="1" color="gray">
+                              Stock: {prod.stockActuel}
+                            </Text>
+                          ) : null}
                         </Flex>
                       </Flex>
                     </Box>

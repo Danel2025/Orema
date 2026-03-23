@@ -13,20 +13,15 @@
 
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
-const allowedOrigin =
-  Deno.env.get("APP_ORIGIN") || Deno.env.get("NEXT_PUBLIC_APP_URL") || "*";
+const allowedOrigin = Deno.env.get("APP_ORIGIN") || Deno.env.get("NEXT_PUBLIC_APP_URL") || "*";
 
 const corsHeaders: Record<string, string> = {
   "Access-Control-Allow-Origin": allowedOrigin,
   "Access-Control-Allow-Methods": "POST, OPTIONS",
-  "Access-Control-Allow-Headers":
-    "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-function jsonResponse(
-  body: Record<string, unknown>,
-  status = 200
-): Response {
+function jsonResponse(body: Record<string, unknown>, status = 200): Response {
   return new Response(JSON.stringify(body), {
     status,
     headers: { ...corsHeaders, "Content-Type": "application/json" },

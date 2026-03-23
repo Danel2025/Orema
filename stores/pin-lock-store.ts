@@ -1,5 +1,5 @@
-import { create } from 'zustand'
-import { persist } from 'zustand/middleware'
+import { create } from "zustand";
+import { persist } from "zustand/middleware";
 
 /**
  * Store pour la gestion du verrouillage par PIN
@@ -12,31 +12,31 @@ import { persist } from 'zustand/middleware'
 
 interface PinLockState {
   /** La session est-elle verrouillée ? */
-  isLocked: boolean
+  isLocked: boolean;
 
   /** Timestamp du dernier déverrouillage */
-  lastUnlockedAt: number | null
+  lastUnlockedAt: number | null;
 
   /** ID de l'utilisateur pour lequel le lock s'applique */
-  lockedUserId: string | null
+  lockedUserId: string | null;
 
   /** Nombre de tentatives échouées */
-  failedAttempts: number
+  failedAttempts: number;
 
   /** Verrouiller la session */
-  lock: (userId: string) => void
+  lock: (userId: string) => void;
 
   /** Déverrouiller la session */
-  unlock: () => void
+  unlock: () => void;
 
   /** Incrémenter le compteur de tentatives échouées */
-  incrementFailedAttempts: () => void
+  incrementFailedAttempts: () => void;
 
   /** Réinitialiser le compteur de tentatives */
-  resetFailedAttempts: () => void
+  resetFailedAttempts: () => void;
 
   /** Vérifier si la session doit être verrouillée pour un user donné */
-  shouldLockForUser: (userId: string) => boolean
+  shouldLockForUser: (userId: string) => boolean;
 }
 
 export const usePinLockStore = create<PinLockState>()(
@@ -52,7 +52,7 @@ export const usePinLockStore = create<PinLockState>()(
           isLocked: true,
           lockedUserId: userId,
           failedAttempts: 0,
-        })
+        });
       },
 
       unlock: () => {
@@ -60,38 +60,38 @@ export const usePinLockStore = create<PinLockState>()(
           isLocked: false,
           lastUnlockedAt: Date.now(),
           failedAttempts: 0,
-        })
+        });
       },
 
       incrementFailedAttempts: () => {
         set((state) => ({
           failedAttempts: state.failedAttempts + 1,
-        }))
+        }));
       },
 
       resetFailedAttempts: () => {
-        set({ failedAttempts: 0 })
+        set({ failedAttempts: 0 });
       },
 
       shouldLockForUser: (userId: string) => {
-        const state = get()
+        const state = get();
 
         // Si le lock est pour un autre utilisateur, on doit reverrouiller
         if (state.lockedUserId && state.lockedUserId !== userId) {
-          return true
+          return true;
         }
 
         // Si déjà verrouillé, garder le verrouillage
         if (state.isLocked) {
-          return true
+          return true;
         }
 
         // Sinon, pas besoin de verrouiller
-        return false
+        return false;
       },
     }),
     {
-      name: 'orema-pin-lock',
+      name: "orema-pin-lock",
       // Ne pas persister isLocked (toujours verrouillé au démarrage)
       partialize: (state) => ({
         lockedUserId: state.lockedUserId,
@@ -100,10 +100,10 @@ export const usePinLockStore = create<PinLockState>()(
       // Au chargement, toujours forcer le verrouillage
       onRehydrateStorage: () => (state) => {
         if (state) {
-          state.isLocked = true
-          state.failedAttempts = 0
+          state.isLocked = true;
+          state.failedAttempts = 0;
         }
       },
     }
   )
-)
+);

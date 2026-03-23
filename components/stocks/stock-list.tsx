@@ -19,16 +19,16 @@ import {
   Tooltip,
 } from "@radix-ui/themes";
 import {
-  Search,
+  MagnifyingGlass,
   Package,
-  AlertTriangle,
+  Warning,
   XCircle,
   CheckCircle,
-  ArrowUpDown,
-  Download,
+  ArrowsDownUp,
+  DownloadSimple,
   Plus,
-  History,
-} from "lucide-react";
+  ClockCounterClockwise,
+} from "@phosphor-icons/react";
 import { formatCurrency } from "@/lib/design-system/currency";
 import type { ProduitAvecStatutStock, StockStatus } from "@/schemas/stock.schema";
 
@@ -52,7 +52,7 @@ const statusConfig: Record<
   ALERTE: {
     label: "Alerte",
     color: "violet",
-    icon: <AlertTriangle size={14} />,
+    icon: <Warning size={14} />,
   },
   RUPTURE: {
     label: "Rupture",
@@ -76,11 +76,8 @@ export function StockList({
 
   // Filtrer les produits
   const filteredProduits = produits.filter((p) => {
-    const matchSearch =
-      search === "" ||
-      p.nom.toLowerCase().includes(search.toLowerCase());
-    const matchCategorie =
-      categorieFilter === "all" || p.categorie.id === categorieFilter;
+    const matchSearch = search === "" || p.nom.toLowerCase().includes(search.toLowerCase());
+    const matchCategorie = categorieFilter === "all" || p.categorie.id === categorieFilter;
     const matchStatut = statutFilter === "all" || p.statut === statutFilter;
 
     return matchSearch && matchCategorie && matchStatut;
@@ -125,83 +122,51 @@ export function StockList({
 
   return (
     <Flex direction="column" gap="4">
-      {/* Statistiques rapides */}
-      <Flex gap="4" wrap="wrap">
-        <Box
-          style={{
-            padding: "12px 16px",
-            borderRadius: 8,
-            backgroundColor: "var(--gray-a3)",
-            flex: "1 1 150px",
-          }}
-        >
-          <Flex align="center" gap="2">
-            <Package size={18} style={{ color: "var(--gray-11)" }} />
-            <Text size="2" color="gray">
-              Total
-            </Text>
-          </Flex>
-          <Text size="5" weight="bold" style={{ fontVariantNumeric: "tabular-nums" }}>
+      {/* Résumé stock inline */}
+      <Flex
+        align="center"
+        gap="5"
+        py="2"
+        px="3"
+        style={{
+          backgroundColor: "var(--color-panel-solid)",
+          borderRadius: 8,
+          border: "1px solid var(--gray-a4)",
+        }}
+      >
+        <Flex align="center" gap="2">
+          <Package size={16} weight="duotone" style={{ color: "var(--gray-11)" }} />
+          <Text size="2" color="gray">Produits</Text>
+          <Text size="3" weight="bold" style={{ fontFamily: "var(--font-google-sans-code), monospace", fontVariantNumeric: "tabular-nums" }}>
             {stats.total}
           </Text>
-        </Box>
+        </Flex>
 
-        <Box
-          style={{
-            padding: "12px 16px",
-            borderRadius: 8,
-            backgroundColor: "var(--green-a3)",
-            flex: "1 1 150px",
-          }}
-        >
-          <Flex align="center" gap="2">
-            <CheckCircle size={18} style={{ color: "var(--green-9)" }} />
-            <Text size="2" color="green">
-              OK
-            </Text>
-          </Flex>
-          <Text size="5" weight="bold" color="green" style={{ fontVariantNumeric: "tabular-nums" }}>
+        <Box style={{ width: 1, height: 20, backgroundColor: "var(--gray-a4)" }} />
+
+        <Flex align="center" gap="2">
+          <Box style={{ width: 8, height: 8, borderRadius: "50%", backgroundColor: "var(--green-9)" }} />
+          <Text size="2" color="gray">En stock</Text>
+          <Text size="3" weight="bold" color="green" style={{ fontFamily: "var(--font-google-sans-code), monospace", fontVariantNumeric: "tabular-nums" }}>
             {stats.ok}
           </Text>
-        </Box>
+        </Flex>
 
-        <Box
-          style={{
-            padding: "12px 16px",
-            borderRadius: 8,
-            backgroundColor: "var(--accent-a3)",
-            flex: "1 1 150px",
-          }}
-        >
-          <Flex align="center" gap="2">
-            <AlertTriangle size={18} style={{ color: "var(--accent-9)" }} />
-            <Text size="2">
-              En alerte
-            </Text>
-          </Flex>
-          <Text size="5" weight="bold" style={{ fontVariantNumeric: "tabular-nums" }}>
+        <Flex align="center" gap="2">
+          <Box style={{ width: 8, height: 8, borderRadius: "50%", backgroundColor: "var(--orange-9)" }} />
+          <Text size="2" color="gray">Alerte</Text>
+          <Text size="3" weight="bold" style={{ color: "var(--orange-9)", fontFamily: "var(--font-google-sans-code), monospace", fontVariantNumeric: "tabular-nums" }}>
             {stats.alerte}
           </Text>
-        </Box>
+        </Flex>
 
-        <Box
-          style={{
-            padding: "12px 16px",
-            borderRadius: 8,
-            backgroundColor: "var(--red-a3)",
-            flex: "1 1 150px",
-          }}
-        >
-          <Flex align="center" gap="2">
-            <XCircle size={18} style={{ color: "var(--red-9)" }} />
-            <Text size="2" color="red">
-              Rupture
-            </Text>
-          </Flex>
-          <Text size="5" weight="bold" color="red" style={{ fontVariantNumeric: "tabular-nums" }}>
+        <Flex align="center" gap="2">
+          <Box style={{ width: 8, height: 8, borderRadius: "50%", backgroundColor: "var(--red-9)" }} />
+          <Text size="2" color="gray">Rupture</Text>
+          <Text size="3" weight="bold" color="red" style={{ fontFamily: "var(--font-google-sans-code), monospace", fontVariantNumeric: "tabular-nums" }}>
             {stats.rupture}
           </Text>
-        </Box>
+        </Flex>
       </Flex>
 
       {/* Filtres */}
@@ -216,7 +181,7 @@ export function StockList({
             onChange={(e) => setSearch(e.target.value)}
           >
             <TextField.Slot>
-              <Search size={16} />
+              <MagnifyingGlass size={16} />
             </TextField.Slot>
           </TextField.Root>
         </Box>
@@ -227,7 +192,7 @@ export function StockList({
           </Text>
           <Select.Root value={categorieFilter} onValueChange={setCategorieFilter}>
             <Select.Trigger placeholder="Toutes" style={{ width: "100%" }} />
-            <Select.Content>
+            <Select.Content position="popper">
               <Select.Item value="all">Toutes les catégories</Select.Item>
               <Select.Separator />
               {categories.map((cat) => (
@@ -255,7 +220,7 @@ export function StockList({
           </Text>
           <Select.Root value={statutFilter} onValueChange={setStatutFilter}>
             <Select.Trigger placeholder="Tous" style={{ width: "100%" }} />
-            <Select.Content>
+            <Select.Content position="popper">
               <Select.Item value="all">Tous les statuts</Select.Item>
               <Select.Separator />
               <Select.Item value="OK">
@@ -266,7 +231,7 @@ export function StockList({
               </Select.Item>
               <Select.Item value="ALERTE">
                 <Flex align="center" gap="2">
-                  <AlertTriangle size={14} style={{ color: "var(--accent-9)" }} />
+                  <Warning size={14} style={{ color: "var(--accent-9)" }} />
                   En alerte
                 </Flex>
               </Select.Item>
@@ -281,7 +246,7 @@ export function StockList({
         </Box>
 
         <Button variant="soft" color="gray" onClick={onExport}>
-          <Download size={16} />
+          <DownloadSimple size={16} />
           Exporter
         </Button>
       </Flex>
@@ -303,7 +268,7 @@ export function StockList({
               >
                 <Flex align="center" gap="1">
                   Produit
-                  <ArrowUpDown size={14} style={{ opacity: 0.5 }} />
+                  <ArrowsDownUp size={14} style={{ opacity: 0.5 }} />
                 </Flex>
               </Table.ColumnHeaderCell>
               <Table.ColumnHeaderCell>Catégorie</Table.ColumnHeaderCell>
@@ -313,7 +278,7 @@ export function StockList({
               >
                 <Flex align="center" gap="1">
                   Stock actuel
-                  <ArrowUpDown size={14} style={{ opacity: 0.5 }} />
+                  <ArrowsDownUp size={14} style={{ opacity: 0.5 }} />
                 </Flex>
               </Table.ColumnHeaderCell>
               <Table.ColumnHeaderCell>Stock min</Table.ColumnHeaderCell>
@@ -325,7 +290,7 @@ export function StockList({
               >
                 <Flex align="center" gap="1">
                   Statut
-                  <ArrowUpDown size={14} style={{ opacity: 0.5 }} />
+                  <ArrowsDownUp size={14} style={{ opacity: 0.5 }} />
                 </Flex>
               </Table.ColumnHeaderCell>
               <Table.ColumnHeaderCell>Valeur</Table.ColumnHeaderCell>
@@ -337,13 +302,7 @@ export function StockList({
             {sortedProduits.length === 0 ? (
               <Table.Row>
                 <Table.Cell colSpan={9}>
-                  <Flex
-                    align="center"
-                    justify="center"
-                    py="6"
-                    direction="column"
-                    gap="2"
-                  >
+                  <Flex align="center" justify="center" py="6" direction="column" gap="2">
                     <Package size={32} style={{ color: "var(--gray-8)" }} />
                     <Text color="gray" size="2">
                       Aucun produit trouvé
@@ -355,8 +314,7 @@ export function StockList({
               sortedProduits.map((produit) => {
                 const config = statusConfig[produit.statut];
                 const valeurStock =
-                  (produit.stockActuel || 0) *
-                  (produit.prixAchat || produit.prixVente);
+                  (produit.stockActuel || 0) * (produit.prixAchat || produit.prixVente);
 
                 return (
                   <Table.Row key={produit.id}>
@@ -385,8 +343,8 @@ export function StockList({
                             produit.statut === "RUPTURE"
                               ? "var(--red-9)"
                               : produit.statut === "ALERTE"
-                              ? "var(--accent-9)"
-                              : "inherit",
+                                ? "var(--accent-9)"
+                                : "inherit",
                         }}
                       >
                         {produit.stockActuel ?? 0}
@@ -432,7 +390,6 @@ export function StockList({
                           <IconButton
                             size="1"
                             variant="ghost"
-                           
                             onClick={() => onCreateMovement(produit.id, produit.nom)}
                           >
                             <Plus size={14} />
@@ -445,7 +402,7 @@ export function StockList({
                             color="gray"
                             onClick={() => onViewHistory(produit.id, produit.nom)}
                           >
-                            <History size={14} />
+                            <ClockCounterClockwise size={14} />
                           </IconButton>
                         </Tooltip>
                       </Flex>

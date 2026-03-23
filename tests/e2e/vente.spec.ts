@@ -1,329 +1,513 @@
 /**
- * Tests E2E - Flux de vente
+ * Tests E2E - Flux de vente (Caisse)
  *
  * Teste le parcours complet d'une vente:
- * - Selection de produits
- * - Gestion du panier
- * - Paiement (especes, mobile money, mixte)
- * - Impression du ticket
+ * - Redirection vers login si non authentifie
+ * - Affichage de la page caisse (session, produits, panier)
+ * - Selection de produits et gestion du panier
+ * - Modes de vente (direct, table, livraison, emporter)
+ * - Paiement et validation
  */
 
-import { test, expect } from '@playwright/test'
+import { test, expect } from "@playwright/test";
 
-test.describe('Interface de caisse - Selection produits', () => {
+// =============================================================================
+// TESTS SANS AUTHENTIFICATION
+// =============================================================================
+
+test.describe("Caisse - Acces sans authentification", () => {
+  test("redirige vers /login si non authentifie", async ({ page }) => {
+    await page.goto("/caisse");
+
+    // La page protegee doit rediriger vers /login
+    await expect(page).toHaveURL(/\/login/);
+  });
+});
+
+// =============================================================================
+// TESTS DE LA PAGE CAISSE (avec ou sans session)
+// =============================================================================
+
+test.describe("Caisse - Chargement de la page", () => {
   test.beforeEach(async ({ page }) => {
-    await page.goto('/caisse')
-    await page.waitForLoadState('networkidle')
-  })
+    await page.goto("/caisse");
+  });
 
-  test('affiche les categories de produits', async ({ page }) => {
-    // Verifier la presence des categories
-    const categoriesSection = page.locator('[data-testid="categories"]')
-    const categoryButtons = page.getByRole('button').filter({ hasText: /boissons|plats|desserts/i })
+  test("affiche un etat de chargement ou redirige vers login", async ({ page }) => {
+    // Soit on est redirige vers login (non authentifie)
+    // Soit on voit le chargement de la session
+    const isOnLogin = page.url().includes("/login");
 
-    // Au moins une categorie devrait etre visible
-    const visible = await categoriesSection.isVisible().catch(() => false) ||
-                    await categoryButtons.first().isVisible().catch(() => false)
-
-    // On ne fait pas d'assertion stricte car les donnees peuvent varier
-  })
-
-  test('filtre les produits par categorie', async ({ page }) => {
-    const categoryButton = page.getByRole('button', { name: /boissons/i })
-
-    if (await categoryButton.isVisible().catch(() => false)) {
-      await categoryButton.click()
-
-      // Les produits affiches devraient changer
-      await page.waitForTimeout(500)
+    if (isOnLogin) {
+      // Verification que la page login est fonctionnelle
+      await expect(page).toHaveURL(/\/login/);
+    } else {
+      // Si authentifie, on devrait voir le chargement ou la page caisse
+      const loadingOrCaisse = page
+        .getByText(/chargement/i)
+        .or(page.getByText(/caisse ferm/i))
+        .or(page.getByText(/vente directe/i));
+      await expect(loadingOrCaisse.first()).toBeVisible({ timeout: 15000 });
     }
-  })
+  });
 
-  test('affiche les produits avec prix', async ({ page }) => {
-    // Verifier que les produits affichent leur prix en FCFA
-    const priceText = page.getByText(/fcfa/i).first()
-
-    if (await priceText.isVisible().catch(() => false)) {
-      await expect(priceText).toContainText(/\d/)
+  test("affiche 'Caisse fermee' ou l'interface caisse quand authentifie", async ({ page }) => {
+    if (page.url().includes("/login")) {
+      test.skip();
+      return;
     }
-  })
 
-  test('permet de rechercher un produit', async ({ page }) => {
-    const searchInput = page.getByPlaceholder(/rechercher/i)
+    // Attendre la fin du chargement de la session
+    await page.waitForLoadState("networkidle");
 
-    if (await searchInput.isVisible().catch(() => false)) {
-      await searchInput.fill('poulet')
-      await page.waitForTimeout(300)
+    // Soit on voit "Caisse fermee" (pas de session ouverte)
+    // Soit on voit l'interface de caisse avec les types de vente
+    const caisseFermee = page.getByText("Caisse fermee");
+    const venteDirecteButton = page.getByRole("button", { name: /vente directe/i });
 
-      // Les resultats devraient se filtrer
-    }
-  })
-})
+    const isSessionClosed = await caisseFermee.isVisible().catch(() => false);
+    const isSessionOpen = await venteDirecteButton.isVisible().catch(() => false);
 
-test.describe('Panier', () => {
+    // L'un des deux doit etre vrai
+    expect(isSessionClosed || isSessionOpen).toBeTruthy();
+  });
+});
+
+// =============================================================================
+// TESTS - SESSION FERMEE (Caisse fermee)
+// =============================================================================
+
+test.describe("Caisse - Etat session fermee", () => {
   test.beforeEach(async ({ page }) => {
-    await page.goto('/caisse')
-    await page.waitForLoadState('networkidle')
-  })
-
-  test('ajoute un produit au panier', async ({ page }) => {
-    // Trouver un bouton de produit
-    const productButton = page.locator('[data-testid="product-card"]').first()
-
-    if (await productButton.isVisible().catch(() => false)) {
-      await productButton.click()
-
-      // Le panier devrait se mettre a jour
-      const cartCount = page.getByText(/article|produit/i)
-      // Verifier que le compteur augmente
+    await page.goto("/caisse");
+    if (page.url().includes("/login")) {
+      test.skip();
+      return;
     }
-  })
+    await page.waitForLoadState("networkidle");
+  });
 
-  test('modifie la quantite dans le panier', async ({ page }) => {
-    // Ajouter un produit d'abord
-    const productButton = page.locator('[data-testid="product-card"]').first()
+  test("affiche le bouton 'Ouvrir la caisse' quand pas de session", async ({ page }) => {
+    const caisseFermee = page.getByText("Caisse fermee");
+    const isSessionClosed = await caisseFermee.isVisible().catch(() => false);
 
-    if (await productButton.isVisible().catch(() => false)) {
-      await productButton.click()
-      await page.waitForTimeout(300)
-
-      // Trouver les boutons +/-
-      const increaseButton = page.getByRole('button', { name: '+' })
-      const decreaseButton = page.getByRole('button', { name: '-' })
-
-      if (await increaseButton.isVisible().catch(() => false)) {
-        await increaseButton.click()
-        // La quantite devrait passer a 2
-      }
+    if (!isSessionClosed) {
+      test.skip();
+      return;
     }
-  })
 
-  test('supprime un produit du panier', async ({ page }) => {
-    const productButton = page.locator('[data-testid="product-card"]').first()
+    // Le bouton "Ouvrir la caisse" doit etre visible
+    const ouvrirButton = page.getByRole("button", { name: /ouvrir la caisse/i });
+    await expect(ouvrirButton).toBeVisible();
+  });
 
-    if (await productButton.isVisible().catch(() => false)) {
-      await productButton.click()
-      await page.waitForTimeout(300)
+  test("affiche un message explicatif quand caisse fermee", async ({ page }) => {
+    const caisseFermee = page.getByText("Caisse fermee");
+    const isSessionClosed = await caisseFermee.isVisible().catch(() => false);
 
-      // Trouver le bouton supprimer
-      const deleteButton = page.getByRole('button', { name: /supprimer|retirer/i })
-      if (await deleteButton.isVisible().catch(() => false)) {
-        await deleteButton.click()
-        // Le panier devrait etre vide
-      }
+    if (!isSessionClosed) {
+      test.skip();
+      return;
     }
-  })
 
-  test('affiche le total avec TVA', async ({ page }) => {
-    // Verifier l'affichage du total
-    const totalDisplay = page.getByText(/total|ttc/i)
+    // Le message doit expliquer la situation
+    await expect(
+      page.getByText(/aucune session de caisse/i)
+    ).toBeVisible();
+  });
+});
 
-    if (await totalDisplay.isVisible().catch(() => false)) {
-      await expect(totalDisplay).toContainText(/fcfa|\d/)
-    }
-  })
+// =============================================================================
+// TESTS - INTERFACE DE CAISSE ACTIVE
+// =============================================================================
 
-  test('vide le panier entierement', async ({ page }) => {
-    // Ajouter des produits puis vider
-    const productButton = page.locator('[data-testid="product-card"]').first()
-
-    if (await productButton.isVisible().catch(() => false)) {
-      await productButton.click()
-      await page.waitForTimeout(300)
-
-      const clearButton = page.getByRole('button', { name: /vider|effacer/i })
-      if (await clearButton.isVisible().catch(() => false)) {
-        await clearButton.click()
-        // Le panier devrait etre vide
-      }
-    }
-  })
-})
-
-test.describe('Paiement', () => {
+test.describe("Caisse - Interface active (types de vente)", () => {
   test.beforeEach(async ({ page }) => {
-    await page.goto('/caisse')
-    await page.waitForLoadState('networkidle')
-  })
-
-  test('affiche les modes de paiement', async ({ page }) => {
-    // Les modes de paiement peuvent etre dans un dialogue ou directement visibles
-    const paymentModes = [
-      page.getByText(/especes/i),
-      page.getByText(/carte/i),
-      page.getByText(/airtel|moov/i),
-    ]
-
-    // Verifier qu'au moins un mode est visible
-    let modeVisible = false
-    for (const mode of paymentModes) {
-      if (await mode.isVisible().catch(() => false)) {
-        modeVisible = true
-        break
-      }
+    await page.goto("/caisse");
+    if (page.url().includes("/login")) {
+      test.skip();
+      return;
     }
-  })
+    await page.waitForLoadState("networkidle");
 
-  test('paiement en especes avec calcul du rendu', async ({ page }) => {
+    // Skip si caisse fermee
+    const caisseFermee = page.getByText("Caisse fermee");
+    const isSessionClosed = await caisseFermee.isVisible().catch(() => false);
+    if (isSessionClosed) {
+      test.skip();
+      return;
+    }
+  });
+
+  test("affiche les 4 modes de vente", async ({ page }) => {
+    // Les 4 boutons de mode de vente avec aria-label
+    await expect(page.getByRole("button", { name: /vente directe/i })).toBeVisible();
+    await expect(page.getByRole("button", { name: /service.*table/i })).toBeVisible();
+    await expect(page.getByRole("button", { name: /livraison/i })).toBeVisible();
+    await expect(page.getByRole("button", { name: /emporter/i })).toBeVisible();
+  });
+
+  test("le mode 'Vente directe' est selectionne par defaut", async ({ page }) => {
+    // Le bouton "Vente directe" doit avoir un style actif (texte visible)
+    const directButton = page.getByRole("button", { name: /vente directe/i });
+    await expect(directButton).toBeVisible();
+
+    // Le texte "Vente directe" doit etre affiche dans le bouton actif
+    const directText = directButton.locator("span", { hasText: /vente directe/i });
+    await expect(directText).toBeVisible();
+  });
+
+  test("affiche le bouton de recherche produit", async ({ page }) => {
+    const searchButton = page.getByRole("button", { name: /rechercher un produit/i });
+    await expect(searchButton).toBeVisible();
+  });
+
+  test("affiche le bouton commandes en attente", async ({ page }) => {
+    const pendingButton = page.getByRole("button", { name: /commandes en attente/i });
+    await expect(pendingButton).toBeVisible();
+  });
+
+  test("affiche le statut de session ou bouton ouvrir caisse", async ({ page }) => {
+    // Soit le bouton "Ouvrir la caisse" (pas de session)
+    // Soit les infos de session (nombre de ventes, CA)
+    const ouvrirCaisseBtn = page.getByRole("button", { name: /ouvrir la caisse/i });
+    const sessionInfo = page.getByText(/ventes/i);
+
+    const hasOuvrir = await ouvrirCaisseBtn.isVisible().catch(() => false);
+    const hasSession = await sessionInfo.isVisible().catch(() => false);
+
+    expect(hasOuvrir || hasSession).toBeTruthy();
+  });
+});
+
+// =============================================================================
+// TESTS - GRILLE DE PRODUITS
+// =============================================================================
+
+test.describe("Caisse - Grille de produits", () => {
+  test.beforeEach(async ({ page }) => {
+    await page.goto("/caisse");
+    if (page.url().includes("/login")) {
+      test.skip();
+      return;
+    }
+    await page.waitForLoadState("networkidle");
+
+    // Skip si caisse fermee
+    const caisseFermee = page.getByText("Caisse fermee");
+    if (await caisseFermee.isVisible().catch(() => false)) {
+      test.skip();
+      return;
+    }
+  });
+
+  test("affiche la barre de recherche de produit", async ({ page }) => {
+    const searchInput = page.getByLabel(/rechercher un produit/i);
+    await expect(searchInput).toBeVisible();
+    await expect(searchInput).toHaveAttribute("placeholder", /rechercher un produit/i);
+  });
+
+  test("affiche les onglets de categories", async ({ page }) => {
+    // Au moins un onglet de categorie devrait exister (boutons dans la barre)
+    // Les categories sont des <button> dans un conteneur scrollable
+    const categoryButtons = page
+      .locator("button")
+      .filter({ hasNot: page.locator('[aria-label]') });
+
+    // On verifie qu'il y a des elements visibles dans la zone de contenu
+    // Le chargement affiche les produits ou "Aucun produit trouve"
+    const hasProducts = page.getByText(/fcfa/i).first();
+    const emptyState = page.getByText(/aucun produit trouv/i);
+
+    const productsVisible = await hasProducts.isVisible().catch(() => false);
+    const emptyVisible = await emptyState.isVisible().catch(() => false);
+
+    // L'un des deux doit etre vrai
+    expect(productsVisible || emptyVisible).toBeTruthy();
+  });
+
+  test("les produits affichent leur prix en FCFA", async ({ page }) => {
+    const priceElements = page.getByText(/fcfa/i);
+    const count = await priceElements.count();
+
+    if (count > 0) {
+      // Au moins un prix est affiche avec le format FCFA
+      await expect(priceElements.first()).toBeVisible();
+      await expect(priceElements.first()).toContainText(/\d/);
+    } else {
+      // Pas de produits - l'etat vide doit etre affiche
+      await expect(page.getByText(/aucun produit/i)).toBeVisible();
+    }
+  });
+
+  test("la recherche filtre les produits", async ({ page }) => {
+    const searchInput = page.getByLabel(/rechercher un produit/i);
+    await expect(searchInput).toBeVisible();
+
+    // Taper un texte de recherche qui ne correspond a rien
+    await searchInput.fill("zzzznonexistent");
+
+    // Doit afficher "Aucun produit trouve"
+    await expect(page.getByText(/aucun produit trouv/i)).toBeVisible();
+  });
+});
+
+// =============================================================================
+// TESTS - PANIER
+// =============================================================================
+
+test.describe("Caisse - Panier", () => {
+  test.beforeEach(async ({ page }) => {
+    await page.goto("/caisse");
+    if (page.url().includes("/login")) {
+      test.skip();
+      return;
+    }
+    await page.waitForLoadState("networkidle");
+
+    // Skip si caisse fermee
+    const caisseFermee = page.getByText("Caisse fermee");
+    if (await caisseFermee.isVisible().catch(() => false)) {
+      test.skip();
+      return;
+    }
+  });
+
+  test("affiche le panier avec le titre 'Panier'", async ({ page }) => {
+    await expect(page.getByText("Panier")).toBeVisible();
+  });
+
+  test("affiche le message 'Le panier est vide' quand aucun article", async ({ page }) => {
+    // Si le panier est vide, le message doit etre affiche
+    const emptyMessage = page.getByText(/le panier est vide/i);
+    const hasItems = page.getByText(/fcfa/i);
+
+    const isEmpty = await emptyMessage.isVisible().catch(() => false);
+    const hasCartItems = await hasItems.count() > 0;
+
+    // Si le panier est vide, le message doit etre present
+    if (isEmpty) {
+      await expect(emptyMessage).toBeVisible();
+      await expect(page.getByText(/cliquez sur un produit/i)).toBeVisible();
+    }
+    // Sinon, des articles sont affiches - valide aussi
+    expect(isEmpty || hasCartItems).toBeTruthy();
+  });
+
+  test("affiche les totaux quand le panier a des articles", async ({ page }) => {
+    // Essayer de cliquer sur le premier produit visible
+    const firstProduct = page.locator("button").filter({ hasText: /fcfa/i }).first();
+    const productVisible = await firstProduct.isVisible().catch(() => false);
+
+    if (!productVisible) {
+      test.skip();
+      return;
+    }
+
+    await firstProduct.click();
+
+    // Les totaux doivent apparaitre
+    await expect(page.getByText("Sous-total")).toBeVisible();
+    await expect(page.getByText("TVA")).toBeVisible();
+    await expect(page.getByText("Total")).toBeVisible();
+  });
+
+  test("permet d'ajouter un produit au panier", async ({ page }) => {
+    const firstProduct = page.locator("button").filter({ hasText: /fcfa/i }).first();
+    const productVisible = await firstProduct.isVisible().catch(() => false);
+
+    if (!productVisible) {
+      test.skip();
+      return;
+    }
+
+    // Compter les articles avant
+    const emptyBefore = await page.getByText(/le panier est vide/i).isVisible().catch(() => false);
+
+    await firstProduct.click();
+
+    // Apres le clic, le panier ne doit plus etre vide
+    if (emptyBefore) {
+      await expect(page.getByText(/le panier est vide/i)).not.toBeVisible();
+    }
+
+    // Le bouton "Encaisser" doit apparaitre
+    const encaisserButton = page.getByRole("button", { name: /encaisser/i });
+    await expect(encaisserButton).toBeVisible();
+  });
+
+  test("permet de modifier la quantite d'un article", async ({ page }) => {
     // Ajouter un produit
-    const productButton = page.locator('[data-testid="product-card"]').first()
+    const firstProduct = page.locator("button").filter({ hasText: /fcfa/i }).first();
+    const productVisible = await firstProduct.isVisible().catch(() => false);
 
-    if (await productButton.isVisible().catch(() => false)) {
-      await productButton.click()
-      await page.waitForTimeout(300)
-
-      // Cliquer sur payer
-      const payButton = page.getByRole('button', { name: /payer|valider/i })
-      if (await payButton.isVisible().catch(() => false)) {
-        await payButton.click()
-
-        // Selectionner especes
-        const cashButton = page.getByRole('button', { name: /especes/i })
-        if (await cashButton.isVisible().catch(() => false)) {
-          await cashButton.click()
-
-          // Saisir le montant recu
-          const receivedInput = page.getByLabel(/montant.*recu|recu/i)
-          if (await receivedInput.isVisible().catch(() => false)) {
-            await receivedInput.fill('10000')
-
-            // Le rendu devrait etre calcule
-            const changeDisplay = page.getByText(/rendu|monnaie/i)
-            if (await changeDisplay.isVisible().catch(() => false)) {
-              await expect(changeDisplay).toContainText(/fcfa|\d/)
-            }
-          }
-        }
-      }
+    if (!productVisible) {
+      test.skip();
+      return;
     }
-  })
 
-  test('paiement Mobile Money avec reference', async ({ page }) => {
-    const productButton = page.locator('[data-testid="product-card"]').first()
+    await firstProduct.click();
 
-    if (await productButton.isVisible().catch(() => false)) {
-      await productButton.click()
-      await page.waitForTimeout(300)
+    // Les boutons +/- doivent etre visibles
+    const decreaseButton = page.getByRole("button", { name: /diminuer la quantit/i }).first();
+    const increaseButton = page.getByRole("button", { name: /augmenter la quantit/i }).first();
 
-      const payButton = page.getByRole('button', { name: /payer|valider/i })
-      if (await payButton.isVisible().catch(() => false)) {
-        await payButton.click()
+    await expect(decreaseButton).toBeVisible();
+    await expect(increaseButton).toBeVisible();
 
-        // Selectionner Mobile Money
-        const mobileButton = page.getByRole('button', { name: /airtel|moov/i })
-        if (await mobileButton.isVisible().catch(() => false)) {
-          await mobileButton.click()
+    // Cliquer sur + pour augmenter
+    await increaseButton.click();
 
-          // Saisir la reference de transaction
-          const refInput = page.getByLabel(/reference|transaction/i)
-          if (await refInput.isVisible().catch(() => false)) {
-            await refInput.fill('TX123456789')
-          }
-        }
-      }
+    // La quantite doit etre 2 maintenant (affichee entre les boutons)
+    // On verifie que le total change (au moins le sous-total est visible)
+    await expect(page.getByText("Sous-total")).toBeVisible();
+  });
+
+  test("permet de supprimer un article du panier", async ({ page }) => {
+    // Ajouter un produit
+    const firstProduct = page.locator("button").filter({ hasText: /fcfa/i }).first();
+    const productVisible = await firstProduct.isVisible().catch(() => false);
+
+    if (!productVisible) {
+      test.skip();
+      return;
     }
-  })
 
-  test('suggestions de montants arrondis', async ({ page }) => {
-    // Verifier que des suggestions de montants sont proposees
-    const productButton = page.locator('[data-testid="product-card"]').first()
+    await firstProduct.click();
 
-    if (await productButton.isVisible().catch(() => false)) {
-      await productButton.click()
-      await page.waitForTimeout(300)
+    // Le bouton supprimer (Trash icon) doit etre visible
+    const deleteButton = page.getByRole("button", { name: /supprimer l'article/i }).first();
+    await expect(deleteButton).toBeVisible();
 
-      const payButton = page.getByRole('button', { name: /payer|valider/i })
-      if (await payButton.isVisible().catch(() => false)) {
-        await payButton.click()
+    // Supprimer l'article
+    await deleteButton.click();
 
-        // Les boutons de montants arrondis
-        const roundedButtons = page.getByRole('button').filter({ hasText: /000\s*fcfa/i })
-        const count = await roundedButtons.count()
-        // Il devrait y avoir plusieurs suggestions
-      }
+    // Le panier doit etre vide
+    await expect(page.getByText(/le panier est vide/i)).toBeVisible();
+  });
+
+  test("permet de vider le panier entierement", async ({ page }) => {
+    // Ajouter un produit
+    const firstProduct = page.locator("button").filter({ hasText: /fcfa/i }).first();
+    const productVisible = await firstProduct.isVisible().catch(() => false);
+
+    if (!productVisible) {
+      test.skip();
+      return;
     }
-  })
-})
 
-test.describe('Ticket de caisse', () => {
-  test('affiche le resume avant validation', async ({ page }) => {
-    await page.goto('/caisse')
-    await page.waitForLoadState('networkidle')
+    await firstProduct.click();
 
-    // Ajouter un produit et payer
-    const productButton = page.locator('[data-testid="product-card"]').first()
+    // Le bouton "Vider" apparait dans le header du panier
+    const viderButton = page.getByRole("button", { name: /vider le panier/i });
+    await expect(viderButton).toBeVisible();
 
-    if (await productButton.isVisible().catch(() => false)) {
-      await productButton.click()
-      await page.waitForTimeout(300)
+    await viderButton.click();
 
-      // Le resume devrait montrer les lignes
-      const orderSummary = page.locator('[data-testid="order-summary"]')
-      // Verifier la presence des elements
+    // Le panier doit etre vide
+    await expect(page.getByText(/le panier est vide/i)).toBeVisible();
+  });
+
+  test("affiche le bouton 'Ajouter une remise globale' quand panier non vide", async ({ page }) => {
+    const firstProduct = page.locator("button").filter({ hasText: /fcfa/i }).first();
+    const productVisible = await firstProduct.isVisible().catch(() => false);
+
+    if (!productVisible) {
+      test.skip();
+      return;
     }
-  })
 
-  test('genere un numero de ticket unique', async ({ page }) => {
-    // Apres validation d'une vente, un numero devrait etre genere
-    // Format: YYYYMMDD00001
-  })
+    await firstProduct.click();
 
-  test('permet d imprimer le ticket', async ({ page }) => {
-    // Verifier la presence du bouton d'impression
-    await page.goto('/caisse')
+    // Le bouton de remise globale doit etre visible
+    await expect(page.getByText(/ajouter une remise globale/i)).toBeVisible();
+  });
 
-    const printButton = page.getByRole('button', { name: /imprimer/i })
-    // Le bouton peut etre visible apres une vente
-  })
-})
+  test("affiche le bouton 'Diviser l'addition' quand panier non vide", async ({ page }) => {
+    const firstProduct = page.locator("button").filter({ hasText: /fcfa/i }).first();
+    const productVisible = await firstProduct.isVisible().catch(() => false);
 
-test.describe('Types de vente', () => {
+    if (!productVisible) {
+      test.skip();
+      return;
+    }
+
+    await firstProduct.click();
+
+    await expect(page.getByRole("button", { name: /diviser l'addition/i })).toBeVisible();
+  });
+});
+
+// =============================================================================
+// TESTS - ENCAISSEMENT
+// =============================================================================
+
+test.describe("Caisse - Encaissement", () => {
   test.beforeEach(async ({ page }) => {
-    await page.goto('/caisse')
-    await page.waitForLoadState('networkidle')
-  })
-
-  test('permet de selectionner le type de vente', async ({ page }) => {
-    // Verifier la presence des types
-    const saleTypes = [
-      page.getByRole('button', { name: /direct/i }),
-      page.getByRole('button', { name: /table/i }),
-      page.getByRole('button', { name: /livraison/i }),
-      page.getByRole('button', { name: /emporter/i }),
-    ]
-
-    let typeVisible = false
-    for (const type of saleTypes) {
-      if (await type.isVisible().catch(() => false)) {
-        typeVisible = true
-        break
-      }
+    await page.goto("/caisse");
+    if (page.url().includes("/login")) {
+      test.skip();
+      return;
     }
-  })
+    await page.waitForLoadState("networkidle");
 
-  test('vente sur table - selectionner une table', async ({ page }) => {
-    const tableButton = page.getByRole('button', { name: /table/i })
-
-    if (await tableButton.isVisible().catch(() => false)) {
-      await tableButton.click()
-
-      // Un selecteur de tables devrait apparaitre
-      const tableSelector = page.locator('[data-testid="table-selector"]')
-      // Verifier les tables disponibles
+    // Skip si caisse fermee
+    const caisseFermee = page.getByText("Caisse fermee");
+    if (await caisseFermee.isVisible().catch(() => false)) {
+      test.skip();
+      return;
     }
-  })
+  });
 
-  test('livraison - saisir l adresse', async ({ page }) => {
-    const deliveryButton = page.getByRole('button', { name: /livraison/i })
+  test("le bouton Encaisser ouvre le modal de paiement", async ({ page }) => {
+    // Ajouter un produit
+    const firstProduct = page.locator("button").filter({ hasText: /fcfa/i }).first();
+    const productVisible = await firstProduct.isVisible().catch(() => false);
 
-    if (await deliveryButton.isVisible().catch(() => false)) {
-      await deliveryButton.click()
-
-      // Un champ d'adresse devrait apparaitre
-      const addressInput = page.getByLabel(/adresse/i)
-      if (await addressInput.isVisible().catch(() => false)) {
-        await addressInput.fill('Quartier Louis, Libreville')
-      }
+    if (!productVisible) {
+      test.skip();
+      return;
     }
-  })
-})
+
+    await firstProduct.click();
+
+    // Cliquer sur Encaisser
+    const encaisserButton = page.getByRole("button", { name: /encaisser/i });
+    await expect(encaisserButton).toBeVisible();
+    await encaisserButton.click();
+
+    // Le modal de paiement doit s'ouvrir
+    // Le composant CaissePayment devrait etre visible
+    const paymentModal = page.getByText(/esp[eè]ces/i).or(page.getByText(/paiement/i));
+    await expect(paymentModal.first()).toBeVisible({ timeout: 5000 });
+  });
+});
+
+// =============================================================================
+// TESTS - RACCOURCIS CLAVIER
+// =============================================================================
+
+test.describe("Caisse - Raccourcis clavier", () => {
+  test.beforeEach(async ({ page }) => {
+    await page.goto("/caisse");
+    if (page.url().includes("/login")) {
+      test.skip();
+      return;
+    }
+    await page.waitForLoadState("networkidle");
+
+    const caisseFermee = page.getByText("Caisse fermee");
+    if (await caisseFermee.isVisible().catch(() => false)) {
+      test.skip();
+      return;
+    }
+  });
+
+  test("F2 ouvre la recherche de produit", async ({ page }) => {
+    await page.keyboard.press("F2");
+
+    // Le modal de recherche produit doit s'ouvrir
+    const searchModal = page.locator('[role="dialog"]');
+    await expect(searchModal).toBeVisible({ timeout: 3000 });
+  });
+});

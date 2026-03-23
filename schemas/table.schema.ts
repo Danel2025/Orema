@@ -106,6 +106,20 @@ export const tableStatutSchema = z.object({
 export type TableStatutData = z.infer<typeof tableStatutSchema>;
 
 /**
+ * Schema pour le transfert de table
+ */
+export const tableTransferSchema = z.object({
+  fromTableId: z.string().uuid("ID de table source invalide"),
+  toTableId: z.string().uuid("ID de table destination invalide"),
+  markSourceAsClean: z.boolean().optional().default(false),
+}).refine((data) => data.fromTableId !== data.toTableId, {
+  message: "La table source et la table de destination doivent être différentes",
+  path: ["toTableId"],
+});
+
+export type TableTransferData = z.infer<typeof tableTransferSchema>;
+
+/**
  * Schema pour le filtrage des tables
  */
 export const tableFilterSchema = z.object({

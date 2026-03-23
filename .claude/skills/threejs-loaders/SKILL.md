@@ -79,7 +79,7 @@ loader.load(
   (error) => {
     // onError
     console.error("Error loading texture", error);
-  },
+  }
 );
 
 // Synchronous (returns texture, loads async)
@@ -232,9 +232,7 @@ import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 import { DRACOLoader } from "three/addons/loaders/DRACOLoader.js";
 
 const dracoLoader = new DRACOLoader();
-dracoLoader.setDecoderPath(
-  "https://www.gstatic.com/draco/versioned/decoders/1.5.6/",
-);
+dracoLoader.setDecoderPath("https://www.gstatic.com/draco/versioned/decoders/1.5.6/");
 dracoLoader.preload();
 
 const gltfLoader = new GLTFLoader();
@@ -252,9 +250,7 @@ import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 import { KTX2Loader } from "three/addons/loaders/KTX2Loader.js";
 
 const ktx2Loader = new KTX2Loader();
-ktx2Loader.setTranscoderPath(
-  "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/libs/basis/",
-);
+ktx2Loader.setTranscoderPath("https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/libs/basis/");
 ktx2Loader.detectSupport(renderer);
 
 const gltfLoader = new GLTFLoader();
@@ -422,7 +418,7 @@ function loadRGBE(url) {
         resolve(texture);
       },
       undefined,
-      reject,
+      reject
     );
   });
 }
@@ -606,7 +602,7 @@ async function loadWithTimeout(url, timeout = 30000) {
 // Progressive loading with placeholder
 const placeholder = new THREE.Mesh(
   new THREE.BoxGeometry(1, 1, 1),
-  new THREE.MeshBasicMaterial({ wireframe: true }),
+  new THREE.MeshBasicMaterial({ wireframe: true })
 );
 scene.add(placeholder);
 

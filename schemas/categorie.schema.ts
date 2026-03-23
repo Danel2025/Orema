@@ -5,6 +5,37 @@
 import { z } from "zod";
 
 /**
+ * Type pour la destination de préparation
+ */
+export type DestinationPreparation = "AUTO" | "CUISINE" | "BAR" | "AUCUNE";
+
+/**
+ * Options de destination de préparation pour l'UI
+ */
+export const destinationOptions = [
+  {
+    value: "AUTO" as const,
+    label: "Automatique",
+    description: "Détection par nom de catégorie",
+  },
+  {
+    value: "CUISINE" as const,
+    label: "Cuisine",
+    description: "Envoyé à l'écran et imprimante cuisine",
+  },
+  {
+    value: "BAR" as const,
+    label: "Bar",
+    description: "Envoyé à l'écran et imprimante bar",
+  },
+  {
+    value: "AUCUNE" as const,
+    label: "Aucune",
+    description: "Pas de bon de préparation",
+  },
+];
+
+/**
  * Couleurs disponibles pour les catégories
  */
 export const categorieColors = [
@@ -66,9 +97,18 @@ export const categorieSchema = z.object({
     .optional()
     .nullable()
     .transform((val) => (val === "" ? null : val))
-    .refine((val) => val === null || val === undefined || /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(val), {
-      message: "L'identifiant de l'imprimante doit être un UUID valide",
-    }),
+    .refine(
+      (val) =>
+        val === null ||
+        val === undefined ||
+        /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(val),
+      {
+        message: "L'identifiant de l'imprimante doit être un UUID valide",
+      }
+    ),
+  destinationPreparation: z
+    .enum(["AUTO", "CUISINE", "BAR", "AUCUNE"])
+    .default("AUTO"),
 });
 
 export type CategorieFormData = z.infer<typeof categorieSchema>;

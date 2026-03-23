@@ -8,15 +8,7 @@
 import { useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { DropdownMenu } from "@radix-ui/themes";
-import {
-  User,
-  Settings,
-  LogOut,
-  UserCircle,
-  Building2,
-  Shield,
-  ChevronDown,
-} from "lucide-react";
+import { User, Settings, LogOut, UserCircle, Building2, Shield, ChevronDown } from "lucide-react";
 import { logoutSupabase } from "@/actions/auth-supabase";
 import { useAuth } from "@/lib/auth/context";
 import { useMounted } from "@/hooks/use-mounted";
@@ -269,7 +261,8 @@ export function UserMenu() {
           </div>
 
           {/* Établissement */}
-          {user.etablissementNom ? <div
+          {user.etablissementNom ? (
+            <div
               style={{
                 display: "flex",
                 alignItems: "center",
@@ -281,7 +274,8 @@ export function UserMenu() {
             >
               <Building2 size={12} />
               {user.etablissementNom}
-            </div> : null}
+            </div>
+          ) : null}
         </div>
 
         {/* Options du menu */}

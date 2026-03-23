@@ -9,7 +9,6 @@ import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
   Box,
-  Card,
   Flex,
   Text,
   TextField,
@@ -20,15 +19,15 @@ import {
 } from "@radix-ui/themes";
 import {
   Package,
-  AlertTriangle,
-  Mail,
+  Warning,
+  EnvelopeSimple,
   Calculator,
-  Save,
-  Loader2,
-  CheckCircle2,
-  AlertCircle,
+  FloppyDisk,
+  CircleNotch,
+  CheckCircle,
+  WarningCircle,
   Info,
-} from "lucide-react";
+} from "@phosphor-icons/react";
 import { toast } from "sonner";
 
 import { updateStockSettings } from "@/actions/parametres";
@@ -71,7 +70,7 @@ export function StockSettings({ initialData }: StockSettingsProps) {
 
       if (result.success) {
         setSaveStatus("success");
-        toast.success("Parametres de stock enregistres");
+        toast.success("Paramètres de stock enregistrés");
         setTimeout(() => setSaveStatus("idle"), 3000);
       } else {
         setSaveStatus("error");
@@ -91,7 +90,7 @@ export function StockSettings({ initialData }: StockSettingsProps) {
         {/* Information */}
         <Callout.Root color="blue" size="2">
           <Callout.Icon>
-            <Info size={18} />
+            <Info size={18} weight="duotone" />
           </Callout.Icon>
           <Callout.Text>
             <Text weight="bold">Gestion des stocks</Text>
@@ -101,10 +100,10 @@ export function StockSettings({ initialData }: StockSettingsProps) {
         </Callout.Root>
 
         {/* Seuils d'alerte */}
-        <Card size="3">
+        <Box style={{ border: "1px solid var(--gray-a6)", borderRadius: 8 }} p="4">
           <Flex direction="column" gap="4">
             <Flex align="center" gap="2">
-              <AlertTriangle size={20} style={{ color: "var(--accent-9)" }} />
+              <Warning size={20} weight="duotone" style={{ color: "var(--accent-9)" }} />
               <Text size="4" weight="bold">
                 Seuils d'alerte
               </Text>
@@ -122,9 +121,11 @@ export function StockSettings({ initialData }: StockSettingsProps) {
                   size="3"
                   placeholder="10"
                 />
-                {errors.seuilAlerteStockBas ? <Text size="1" color="red" mt="1">
+                {errors.seuilAlerteStockBas ? (
+                  <Text size="1" color="red" mt="1">
                     {errors.seuilAlerteStockBas.message}
-                  </Text> : null}
+                  </Text>
+                ) : null}
                 <Text size="1" color="gray" mt="1">
                   Alerte quand le stock passe sous ce niveau
                 </Text>
@@ -141,9 +142,11 @@ export function StockSettings({ initialData }: StockSettingsProps) {
                   size="3"
                   placeholder="5"
                 />
-                {errors.seuilCritiqueStock ? <Text size="1" color="red" mt="1">
+                {errors.seuilCritiqueStock ? (
+                  <Text size="1" color="red" mt="1">
                     {errors.seuilCritiqueStock.message}
-                  </Text> : null}
+                  </Text>
+                ) : null}
                 <Text size="1" color="gray" mt="1">
                   Alerte critique quand le stock est tres bas
                 </Text>
@@ -200,13 +203,13 @@ export function StockSettings({ initialData }: StockSettingsProps) {
               </Flex>
             </Box>
           </Flex>
-        </Card>
+        </Box>
 
         {/* Notifications par email */}
-        <Card size="3">
+        <Box style={{ border: "1px solid var(--gray-a6)", borderRadius: 8 }} p="4">
           <Flex direction="column" gap="4">
             <Flex align="center" gap="2">
-              <Mail size={20} style={{ color: "var(--accent-9)" }} />
+              <EnvelopeSimple size={20} weight="duotone" style={{ color: "var(--accent-9)" }} />
               <Text size="4" weight="bold">
                 Notifications par email
               </Text>
@@ -225,16 +228,13 @@ export function StockSettings({ initialData }: StockSettingsProps) {
                       Envoyer un email quand le stock passe sous les seuils configures
                     </Text>
                   </Flex>
-                  <Switch
-                    size="3"
-                    checked={field.value}
-                    onCheckedChange={field.onChange}
-                  />
+                  <Switch size="3" checked={field.value} onCheckedChange={field.onChange} />
                 </Flex>
               )}
             />
 
-            {alerteEmail ? <Box>
+            {alerteEmail ? (
+              <Box>
                 <Text as="label" size="2" weight="medium" mb="2">
                   Email de notification
                 </Text>
@@ -245,21 +245,24 @@ export function StockSettings({ initialData }: StockSettingsProps) {
                   placeholder="gestionnaire@example.com"
                 >
                   <TextField.Slot side="left">
-                    <Mail size={16} />
+                    <EnvelopeSimple size={16} />
                   </TextField.Slot>
                 </TextField.Root>
-                {errors.emailAlerteStock ? <Text size="1" color="red" mt="1">
+                {errors.emailAlerteStock ? (
+                  <Text size="1" color="red" mt="1">
                     {errors.emailAlerteStock.message}
-                  </Text> : null}
-              </Box> : null}
+                  </Text>
+                ) : null}
+              </Box>
+            ) : null}
           </Flex>
-        </Card>
+        </Box>
 
         {/* Methode de valuation */}
-        <Card size="3">
+        <Box style={{ border: "1px solid var(--gray-a6)", borderRadius: 8 }} p="4">
           <Flex direction="column" gap="4">
             <Flex align="center" gap="2">
-              <Calculator size={20} style={{ color: "var(--accent-9)" }} />
+              <Calculator size={20} weight="duotone" style={{ color: "var(--accent-9)" }} />
               <Text size="4" weight="bold">
                 Methode de valuation
               </Text>
@@ -275,7 +278,7 @@ export function StockSettings({ initialData }: StockSettingsProps) {
                   </Text>
                   <Select.Root value={field.value} onValueChange={field.onChange}>
                     <Select.Trigger style={{ width: "100%" }} />
-                    <Select.Content>
+                    <Select.Content position="popper">
                       {methodeValuationOptions.map((option) => (
                         <Select.Item key={option.value} value={option.value}>
                           {option.label}
@@ -309,13 +312,13 @@ export function StockSettings({ initialData }: StockSettingsProps) {
               </Flex>
             </Box>
           </Flex>
-        </Card>
+        </Box>
 
         {/* Bouton de sauvegarde */}
         <Flex justify="end" gap="3" align="center">
           {saveStatus === "success" && (
             <Flex align="center" gap="2">
-              <CheckCircle2 size={16} className="text-green-500" />
+              <CheckCircle size={16} weight="fill" className="text-green-500" />
               <Text size="2" color="green">
                 Enregistre
               </Text>
@@ -323,18 +326,14 @@ export function StockSettings({ initialData }: StockSettingsProps) {
           )}
           {saveStatus === "error" && (
             <Flex align="center" gap="2">
-              <AlertCircle size={16} className="text-red-500" />
+              <WarningCircle size={16} weight="fill" className="text-red-500" />
               <Text size="2" color="red">
                 Erreur d'enregistrement
               </Text>
             </Flex>
           )}
           <Button type="submit" size="3" disabled={isLoading}>
-            {isLoading ? (
-              <Loader2 size={16} className="animate-spin" />
-            ) : (
-              <Save size={16} />
-            )}
+            {isLoading ? <CircleNotch size={16} className="animate-spin" /> : <FloppyDisk size={16} />}
             Enregistrer les parametres de stock
           </Button>
         </Flex>

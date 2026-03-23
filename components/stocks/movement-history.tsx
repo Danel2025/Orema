@@ -6,29 +6,19 @@
  */
 
 import { useState, useEffect, useCallback } from "react";
-import {
-  Dialog,
-  Flex,
-  Text,
-  Select,
-  Box,
-  Button,
-  Table,
-  Badge,
-  TextField,
-} from "@radix-ui/themes";
+import { Dialog, Flex, Text, Select, Box, Button, Table, Badge, TextField } from "@radix-ui/themes";
 import { ScrollArea } from "@/components/ui";
 import {
-  History,
-  ArrowDownCircle,
-  ArrowUpCircle,
-  RotateCcw,
-  Trash2,
-  ClipboardList,
-  Calendar,
-  Filter,
-  RefreshCw,
-} from "lucide-react";
+  ClockCounterClockwise,
+  ArrowCircleDown,
+  ArrowCircleUp,
+  ArrowCounterClockwise,
+  Trash,
+  ClipboardText,
+  CalendarBlank,
+  Funnel,
+  ArrowsClockwise,
+} from "@phosphor-icons/react";
 import { getMovementHistory } from "@/actions/stocks";
 import type { MouvementStockAvecProduit, TypeMouvementType } from "@/schemas/stock.schema";
 import { format } from "date-fns";
@@ -51,23 +41,28 @@ const typeConfig: Record<
 > = {
   ENTREE: {
     label: "Entrée",
-    icon: <ArrowDownCircle size={14} />,
+    icon: <ArrowCircleDown size={14} />,
     color: "green",
   },
   SORTIE: {
     label: "Sortie",
-    icon: <ArrowUpCircle size={14} />,
+    icon: <ArrowCircleUp size={14} />,
     color: "red",
   },
   AJUSTEMENT: {
     label: "Ajustement",
-    icon: <RotateCcw size={14} />,
+    icon: <ArrowCounterClockwise size={14} />,
     color: "blue",
   },
   PERTE: {
     label: "Perte",
-    icon: <Trash2 size={14} />,
+    icon: <Trash size={14} />,
     color: "violet",
+  },
+  INVENTAIRE: {
+    label: "Inventaire",
+    icon: <ClipboardText size={14} />,
+    color: "blue",
   },
 };
 
@@ -125,14 +120,12 @@ export function MovementHistory({
       <Dialog.Content maxWidth="800px" style={{ maxHeight: "80vh" }}>
         <Dialog.Title>
           <Flex align="center" gap="2">
-            <History size={20} />
+            <ClockCounterClockwise size={20} />
             Historique des mouvements
           </Flex>
         </Dialog.Title>
         <Dialog.Description size="2" mb="4">
-          {produitNom
-            ? `Mouvements de stock pour: ${produitNom}`
-            : "Tous les mouvements de stock"}
+          {produitNom ? `Mouvements de stock pour: ${produitNom}` : "Tous les mouvements de stock"}
         </Dialog.Description>
 
         {/* Filtres */}
@@ -143,15 +136,13 @@ export function MovementHistory({
             </Text>
             <Select.Root value={typeFilter} onValueChange={setTypeFilter}>
               <Select.Trigger style={{ width: "100%" }} />
-              <Select.Content>
+              <Select.Content position="popper">
                 <Select.Item value="all">Tous les types</Select.Item>
                 <Select.Separator />
                 {Object.entries(typeConfig).map(([key, config]) => (
                   <Select.Item key={key} value={key}>
                     <Flex align="center" gap="2">
-                      <Box style={{ color: `var(--${config.color}-9)` }}>
-                        {config.icon}
-                      </Box>
+                      <Box style={{ color: `var(--${config.color}-9)` }}>{config.icon}</Box>
                       {config.label}
                     </Flex>
                   </Select.Item>
@@ -170,7 +161,7 @@ export function MovementHistory({
               onChange={(e) => setDateFrom(e.target.value)}
             >
               <TextField.Slot>
-                <Calendar size={14} />
+                <CalendarBlank size={14} />
               </TextField.Slot>
             </TextField.Root>
           </Box>
@@ -179,24 +170,20 @@ export function MovementHistory({
             <Text as="label" size="1" weight="medium" mb="1">
               Au
             </Text>
-            <TextField.Root
-              type="date"
-              value={dateTo}
-              onChange={(e) => setDateTo(e.target.value)}
-            >
+            <TextField.Root type="date" value={dateTo} onChange={(e) => setDateTo(e.target.value)}>
               <TextField.Slot>
-                <Calendar size={14} />
+                <CalendarBlank size={14} />
               </TextField.Slot>
             </TextField.Root>
           </Box>
 
           <Flex gap="2">
             <Button variant="soft" color="gray" onClick={handleResetFilters}>
-              <Filter size={14} />
+              <Funnel size={14} />
               Réinitialiser
             </Button>
             <Button variant="soft" onClick={handleRefresh} disabled={isLoading}>
-              <RefreshCw size={14} className={isLoading ? "animate-spin" : ""} />
+              <ArrowsClockwise size={14} className={isLoading ? "animate-spin" : ""} />
               Actualiser
             </Button>
           </Flex>
@@ -237,14 +224,8 @@ export function MovementHistory({
                 ) : mouvements.length === 0 ? (
                   <Table.Row>
                     <Table.Cell colSpan={produitId ? 7 : 8}>
-                      <Flex
-                        align="center"
-                        justify="center"
-                        py="6"
-                        direction="column"
-                        gap="2"
-                      >
-                        <History size={32} style={{ color: "var(--gray-8)" }} />
+                      <Flex align="center" justify="center" py="6" direction="column" gap="2">
+                        <ClockCounterClockwise size={32} style={{ color: "var(--gray-8)" }} />
                         <Text color="gray" size="2">
                           Aucun mouvement trouvé
                         </Text>
@@ -294,8 +275,8 @@ export function MovementHistory({
                                 ecart > 0
                                   ? "var(--green-9)"
                                   : ecart < 0
-                                  ? "var(--red-9)"
-                                  : "inherit",
+                                    ? "var(--red-9)"
+                                    : "inherit",
                             }}
                           >
                             {ecart >= 0 ? "+" : ""}

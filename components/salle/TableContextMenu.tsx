@@ -11,22 +11,19 @@ import {
   ShoppingCart,
   Eye,
   Receipt,
-  ArrowRightLeft,
-  Sparkles,
-  CheckCircle2,
+  ArrowsLeftRight,
+  Sparkle,
+  CheckCircle,
   Clock,
-  ChefHat,
-  Trash2,
-  Edit2,
+  CookingPot,
+  Trash,
+  PencilSimple,
   Users,
-} from "lucide-react";
+} from "@phosphor-icons/react";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 import { updateTableStatut } from "@/actions/tables";
-import {
-  STATUT_TABLE_LABELS,
-  type StatutTableType,
-} from "@/schemas/table.schema";
+import { STATUT_TABLE_LABELS, type StatutTableType } from "@/schemas/table.schema";
 import { TransferTableModal } from "./TransferTableModal";
 
 interface VenteEnCours {
@@ -135,26 +132,32 @@ export function TableContextMenu({
             </ContextMenu.Item>
           ) : (
             <>
-              {venteEnCours ? <ContextMenu.Item onClick={handleViewOrder}>
+              {venteEnCours ? (
+                <ContextMenu.Item onClick={handleViewOrder}>
                   <Eye size={14} />
                   Voir la commande ({venteEnCours._count.lignes} articles)
-                </ContextMenu.Item> : null}
+                </ContextMenu.Item>
+              ) : null}
 
-              {statut !== "ADDITION" && venteEnCours ? <ContextMenu.Item onClick={handleRequestBill}>
+              {statut !== "ADDITION" && venteEnCours ? (
+                <ContextMenu.Item onClick={handleRequestBill}>
                   <Receipt size={14} />
                   Demander l'addition
-                </ContextMenu.Item> : null}
+                </ContextMenu.Item>
+              ) : null}
 
-              {venteEnCours ? <ContextMenu.Item onClick={handleOpenTransferModal}>
-                  <ArrowRightLeft size={14} />
+              {venteEnCours ? (
+                <ContextMenu.Item onClick={handleOpenTransferModal}>
+                  <ArrowsLeftRight size={14} />
                   Transferer la table
-                </ContextMenu.Item> : null}
+                </ContextMenu.Item>
+              ) : null}
             </>
           )}
 
           {statut === "A_NETTOYER" && (
             <ContextMenu.Item onClick={handleMarkClean}>
-              <Sparkles size={14} />
+              <Sparkle size={14} />
               Marquer comme nettoyee
             </ContextMenu.Item>
           )}
@@ -172,7 +175,7 @@ export function TableContextMenu({
                 onClick={() => handleStatusChange("LIBRE")}
                 disabled={statut === "LIBRE" || isPending}
               >
-                <CheckCircle2 size={14} style={{ color: "#22c55e" }} />
+                <CheckCircle size={14} style={{ color: "#22c55e" }} />
                 Libre
               </ContextMenu.Item>
               <ContextMenu.Item
@@ -186,7 +189,7 @@ export function TableContextMenu({
                 onClick={() => handleStatusChange("EN_PREPARATION")}
                 disabled={statut === "EN_PREPARATION" || isPending}
               >
-                <ChefHat size={14} style={{ color: "#3b82f6" }} />
+                <CookingPot size={14} style={{ color: "#3b82f6" }} />
                 En preparation
               </ContextMenu.Item>
               <ContextMenu.Item
@@ -200,8 +203,7 @@ export function TableContextMenu({
                 onClick={() => handleStatusChange("A_NETTOYER")}
                 disabled={statut === "A_NETTOYER" || isPending}
               >
-                <Sparkles size={14} style={{ color: "#ef4444" }} />
-                A nettoyer
+                <Sparkle size={14} style={{ color: "#ef4444" }} />A nettoyer
               </ContextMenu.Item>
             </ContextMenu.SubContent>
           </ContextMenu.Sub>
@@ -209,19 +211,19 @@ export function TableContextMenu({
           <ContextMenu.Separator />
 
           {/* Actions d'edition */}
-          {onEdit ? <ContextMenu.Item onClick={onEdit}>
-              <Edit2 size={14} />
+          {onEdit ? (
+            <ContextMenu.Item onClick={onEdit}>
+              <PencilSimple size={14} />
               Modifier la table
-            </ContextMenu.Item> : null}
+            </ContextMenu.Item>
+          ) : null}
 
-          {onDelete ? <ContextMenu.Item
-              color="red"
-              onClick={onDelete}
-              disabled={!!venteEnCours}
-            >
-              <Trash2 size={14} />
+          {onDelete ? (
+            <ContextMenu.Item color="red" onClick={onDelete} disabled={!!venteEnCours}>
+              <Trash size={14} />
               Supprimer la table
-            </ContextMenu.Item> : null}
+            </ContextMenu.Item>
+          ) : null}
         </ContextMenu.Content>
       </ContextMenu.Root>
 

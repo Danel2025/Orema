@@ -359,11 +359,7 @@ Drag objects directly.
 import { DragControls } from "three/addons/controls/DragControls.js";
 
 const draggableObjects = [mesh1, mesh2, mesh3];
-const dragControls = new DragControls(
-  draggableObjects,
-  camera,
-  renderer.domElement,
-);
+const dragControls = new DragControls(draggableObjects, camera, renderer.domElement);
 
 dragControls.addEventListener("dragstart", (event) => {
   orbitControls.enabled = false;
@@ -425,7 +421,7 @@ document.addEventListener("pointerdown", (event) => {
   selectionBox.startPoint.set(
     (event.clientX / window.innerWidth) * 2 - 1,
     -(event.clientY / window.innerHeight) * 2 + 1,
-    0.5,
+    0.5
   );
 });
 
@@ -434,7 +430,7 @@ document.addEventListener("pointermove", (event) => {
     selectionBox.endPoint.set(
       (event.clientX / window.innerWidth) * 2 - 1,
       -(event.clientY / window.innerHeight) * 2 + 1,
-      0.5,
+      0.5
     );
   }
 });
@@ -443,7 +439,7 @@ document.addEventListener("pointerup", (event) => {
   selectionBox.endPoint.set(
     (event.clientX / window.innerWidth) * 2 - 1,
     -(event.clientY / window.innerHeight) * 2 + 1,
-    0.5,
+    0.5
   );
 
   const selected = selectionBox.select();
@@ -475,8 +471,7 @@ function onMouseMove(event) {
   if (intersects.length > 0) {
     hoveredObject = intersects[0].object;
     if (!hoveredObject.userData.originalColor) {
-      hoveredObject.userData.originalColor =
-        hoveredObject.material.color.getHex();
+      hoveredObject.userData.originalColor = hoveredObject.material.color.getHex();
     }
     hoveredObject.material.color.set(0xff6600);
     document.body.style.cursor = "pointer";
@@ -541,7 +536,7 @@ function screenToWorld(screenX, screenY, camera, targetZ = 0) {
   const vector = new THREE.Vector3(
     (screenX / window.innerWidth) * 2 - 1,
     -(screenY / window.innerHeight) * 2 + 1,
-    0.5,
+    0.5
   );
 
   vector.unproject(camera);
@@ -647,7 +642,7 @@ interaction.addClickable(mesh, (intersect) => {
 const complexMesh = loadedModel;
 const collisionMesh = new THREE.Mesh(
   new THREE.BoxGeometry(1, 1, 1),
-  new THREE.MeshBasicMaterial({ visible: false }),
+  new THREE.MeshBasicMaterial({ visible: false })
 );
 collisionMesh.userData.target = complexMesh;
 clickables.push(collisionMesh);

@@ -5,20 +5,25 @@ Guide de démarrage rapide pour utiliser le design system.
 ## Accès Rapide
 
 ### Page de Démonstration
+
 ```
 http://localhost:3000/design-system
 ```
+
 Voir tous les composants en action avec exemples interactifs.
 
 ### Dashboard
+
 ```
 http://localhost:3000/
 ```
+
 Nouveau dashboard utilisant le design system complet.
 
 ## Import des Composants
 
 ### Composants UI de Base
+
 ```tsx
 import {
   Box,
@@ -36,21 +41,19 @@ import {
 ```
 
 ### Composants Composés
+
 ```tsx
-import {
-  StatCard,
-  StatusBadge,
-  EmptyState,
-  DashboardCard,
-} from "@/components/composed";
+import { StatCard, StatusBadge, EmptyState, DashboardCard } from "@/components/composed";
 ```
 
 ### Icônes
+
 ```tsx
 import { ShoppingCart, Package, Users } from "lucide-react";
 ```
 
 ### Utilitaires
+
 ```tsx
 import { formatCurrency, formatCurrencyShort } from "@/lib/design-system";
 ```
@@ -58,6 +61,7 @@ import { formatCurrency, formatCurrencyShort } from "@/lib/design-system";
 ## Exemples Courants
 
 ### Grid de Stats
+
 ```tsx
 <Grid columns={{ initial: "1", sm: "2", lg: "4" }} gap="4">
   <StatCard
@@ -66,16 +70,12 @@ import { formatCurrency, formatCurrencyShort } from "@/lib/design-system";
     icon={ShoppingCart}
     color="orange"
   />
-  <StatCard
-    title="Produits"
-    value={productCount.toString()}
-    icon={Package}
-    color="blue"
-  />
+  <StatCard title="Produits" value={productCount.toString()} icon={Package} color="blue" />
 </Grid>
 ```
 
 ### Card Dashboard
+
 ```tsx
 <DashboardCard
   title="Ventes récentes"
@@ -83,8 +83,8 @@ import { formatCurrency, formatCurrencyShort } from "@/lib/design-system";
   icon={ShoppingCart}
   action={{
     icon: ExternalLink,
-    onClick: () => router.push('/ventes'),
-    label: "Voir toutes les ventes"
+    onClick: () => router.push("/ventes"),
+    label: "Voir toutes les ventes",
   }}
 >
   {sales.length > 0 ? (
@@ -96,7 +96,7 @@ import { formatCurrency, formatCurrencyShort } from "@/lib/design-system";
       description="Commencez par enregistrer une vente."
       action={{
         label: "Nouvelle vente",
-        onClick: () => router.push('/caisse')
+        onClick: () => router.push("/caisse"),
       }}
     />
   )}
@@ -104,6 +104,7 @@ import { formatCurrency, formatCurrencyShort } from "@/lib/design-system";
 ```
 
 ### Boutons et Badges
+
 ```tsx
 <Flex gap="3" align="center">
   <Button color="orange" variant="solid">
@@ -117,6 +118,7 @@ import { formatCurrency, formatCurrencyShort } from "@/lib/design-system";
 ```
 
 ### Prix FCFA
+
 ```tsx
 <Text size="6" weight="bold" className="font-mono">
   {formatCurrency(amount)}
@@ -126,6 +128,7 @@ import { formatCurrency, formatCurrencyShort } from "@/lib/design-system";
 ## Couleurs Disponibles
 
 ### Composants
+
 - `orange` - Accent principal
 - `blue` - Informations
 - `green` - Succès
@@ -135,6 +138,7 @@ import { formatCurrency, formatCurrencyShort } from "@/lib/design-system";
 - `purple`, `pink`, `cyan`, `teal`, `indigo`
 
 ### Variants
+
 - `solid` - Fond plein
 - `soft` - Fond léger
 - `outline` - Bordure seule
@@ -143,6 +147,7 @@ import { formatCurrency, formatCurrencyShort } from "@/lib/design-system";
 ## Sizes
 
 ### Text & Heading
+
 - `1` (12px) - Extra small
 - `2` (14px) - Small
 - `3` (16px) - Medium (défaut)
@@ -151,12 +156,14 @@ import { formatCurrency, formatCurrencyShort } from "@/lib/design-system";
 - `6-9` - Très grandes tailles
 
 ### Buttons
+
 - `1` - Small (32px)
 - `2` - Medium (40px) - défaut
 - `3` - Large (48px)
 - `4` - Extra large (56px)
 
 ### Spacing (gap, p, m)
+
 - `1` (4px)
 - `2` (8px)
 - `3` (12px)
@@ -183,6 +190,7 @@ import { formatCurrency, formatCurrencyShort } from "@/lib/design-system";
 ## Status Types
 
 ### StatusBadge
+
 - `active` - Vert "Actif"
 - `inactive` - Gris "Inactif"
 - `pending` - Ambre "En attente"
@@ -198,11 +206,13 @@ import { formatCurrency, formatCurrencyShort } from "@/lib/design-system";
 ## Documentation Complète
 
 ### Fichiers à Consulter
+
 - `DESIGN_SYSTEM.md` - Documentation complète du design system
 - `DESIGN_SYSTEM_CHANGELOG.md` - Historique des changements
 - `components/README.md` - Architecture des composants
 
 ### Ressources Externes
+
 - [Radix UI Themes](https://www.radix-ui.com/themes/docs)
 - [Lucide Icons](https://lucide.dev)
 - [Radix Colors](https://www.radix-ui.com/colors)
@@ -210,11 +220,13 @@ import { formatCurrency, formatCurrencyShort } from "@/lib/design-system";
 ## Tips & Tricks
 
 ### 1. Utiliser les CSS Variables Radix
+
 ```tsx
 <Box style={{ backgroundColor: 'var(--orange-3)', color: 'var(--orange-11)' }}>
 ```
 
 ### 2. Font Mono pour Prix
+
 ```tsx
 <Text className="font-mono" size="5" weight="bold">
   {formatCurrency(price)}
@@ -222,6 +234,7 @@ import { formatCurrency, formatCurrencyShort } from "@/lib/design-system";
 ```
 
 ### 3. Touch Targets (POS)
+
 ```tsx
 <IconButton style={{ minWidth: 44, minHeight: 44 }}>
   <Icon size={20} />
@@ -229,6 +242,7 @@ import { formatCurrency, formatCurrencyShort } from "@/lib/design-system";
 ```
 
 ### 4. Grid Responsive Rapide
+
 ```tsx
 <Grid columns={{ initial: "1", lg: "3" }} gap="4">
   {/* Mobile: 1 colonne, Desktop: 3 colonnes */}
@@ -236,17 +250,20 @@ import { formatCurrency, formatCurrencyShort } from "@/lib/design-system";
 ```
 
 ### 5. Empty State Pattern
+
 ```tsx
-{data.length === 0 ? (
-  <EmptyState
-    icon={Icon}
-    title="Aucune donnée"
-    description="Message d'aide"
-    action={{ label: "Action", onClick: handler }}
-  />
-) : (
-  <DataList data={data} />
-)}
+{
+  data.length === 0 ? (
+    <EmptyState
+      icon={Icon}
+      title="Aucune donnée"
+      description="Message d'aide"
+      action={{ label: "Action", onClick: handler }}
+    />
+  ) : (
+    <DataList data={data} />
+  );
+}
 ```
 
 ## Checklist Nouvelle Feature
@@ -278,6 +295,7 @@ pnpm dev
 ## Support
 
 Pour toute question sur le design system:
+
 1. Consulter `/design-system` (exemples visuels)
 2. Lire `DESIGN_SYSTEM.md` (doc complète)
 3. Regarder `app/(dashboard)/page.tsx` (exemple d'utilisation)

@@ -5,7 +5,7 @@
  * Permet de voir, payer ou annuler les commandes en attente
  */
 
-import { useState, useEffect } from "react";
+import { useState, useRef } from "react";
 import {
   Dialog,
   Flex,
@@ -24,13 +24,18 @@ import {
   Clock,
   CreditCard,
   X,
-  UtensilsCrossed,
+  ForkKnife,
   Truck,
   ShoppingBag,
   User,
-  Ban,
+  Prohibit,
   Eye,
-} from "lucide-react";
+  Timer,
+  CookingPot,
+  CheckCircle,
+  ArrowRight,
+} from "@phosphor-icons/react";
+import type { StatutPreparation } from "@/lib/db/types";
 import { formatCurrency } from "@/lib/utils";
 import { formatDistanceToNow } from "date-fns";
 import { fr } from "date-fns/locale";
@@ -45,6 +50,7 @@ interface VenteEnAttente {
     id: string;
     quantite: number;
     produit: { id: string; nom: string };
+    statut_preparation?: StatutPreparation | null;
   }>;
   table?: { id: string; numero: string; zone?: { nom: string } | null } | null;
   client?: { id: string; nom: string; prenom?: string | null; telephone?: string | null } | null;
@@ -75,13 +81,13 @@ export function PendingOrdersModal({
   const [activeTab, setActiveTab] = useState<TabValue>("all");
   const [confirmAnnuler, setConfirmAnnuler] = useState<string | null>(null);
 
-  // Reset state when modal opens
-  useEffect(() => {
-    if (open) {
-      setActiveTab("all");
-      setConfirmAnnuler(null);
-    }
-  }, [open]);
+  // Reset state when modal opens (derived-state pattern)
+  const prevOpenRef = useRef(false);
+  if (open && !prevOpenRef.current) {
+    setActiveTab("all");
+    setConfirmAnnuler(null);
+  }
+  prevOpenRef.current = open;
 
   // Filtrer les ventes selon l'onglet
   const filteredVentes = ventesEnAttente.filter((vente) => {
@@ -100,7 +106,7 @@ export function PendingOrdersModal({
   const getTypeIcon = (type: string) => {
     switch (type) {
       case "TABLE":
-        return <UtensilsCrossed size={16} />;
+        return <ForkKnife size={16} />;
       case "LIVRAISON":
         return <Truck size={16} />;
       case "EMPORTER":
@@ -121,6 +127,45 @@ export function PendingOrdersModal({
       default:
         return type;
     }
+  };
+
+  // --- Statut de préparation ---
+  const PREPARATION_ORDER: Record<string, number> = {
+    EN_ATTENTE: 0,
+    EN_PREPARATION: 1,
+    PRETE: 2,
+    SERVIE: 3,
+  };
+
+  const getPreparationStatusConfig = (statut: string) => {
+    switch (statut) {
+      case "EN_ATTENTE":
+        return { color: "amber" as const, label: "En attente", icon: <Timer size={12} weight="bold" /> };
+      case "EN_PREPARATION":
+        return { color: "blue" as const, label: "En préparation", icon: <CookingPot size={12} weight="bold" /> };
+      case "PRETE":
+        return { color: "green" as const, label: "Prête", icon: <CheckCircle size={12} weight="bold" /> };
+      case "SERVIE":
+        return { color: "gray" as const, label: "Servie", icon: <ArrowRight size={12} weight="bold" /> };
+      default:
+        return { color: "gray" as const, label: statut, icon: null };
+    }
+  };
+
+  /** Retourne le statut dominant (le moins avancé) parmi les lignes */
+  const getDominantStatus = (lignes: VenteEnAttente["lignes"]): string => {
+    if (lignes.length === 0) return "EN_ATTENTE";
+    let minOrder = Infinity;
+    let dominant = "EN_ATTENTE";
+    for (const ligne of lignes) {
+      const s = ligne.statut_preparation || "EN_ATTENTE";
+      const order = PREPARATION_ORDER[s] ?? 0;
+      if (order < minOrder) {
+        minOrder = order;
+        dominant = s;
+      }
+    }
+    return dominant;
   };
 
   const handleAnnuler = (venteId: string) => {
@@ -153,11 +198,9 @@ export function PendingOrdersModal({
 
         <Tabs.Root value={activeTab} onValueChange={(v) => setActiveTab(v as TabValue)}>
           <Tabs.List>
-            <Tabs.Trigger value="all">
-              Toutes {counts.all > 0 && `(${counts.all})`}
-            </Tabs.Trigger>
+            <Tabs.Trigger value="all">Toutes {counts.all > 0 && `(${counts.all})`}</Tabs.Trigger>
             <Tabs.Trigger value="TABLE">
-              <UtensilsCrossed size={14} style={{ marginRight: 4 }} />
+              <ForkKnife size={14} style={{ marginRight: 4 }} />
               Tables {counts.TABLE > 0 && `(${counts.TABLE})`}
             </Tabs.Trigger>
             <Tabs.Trigger value="LIVRAISON">
@@ -186,44 +229,70 @@ export function PendingOrdersModal({
               ) : (
                 <Flex direction="column" gap="3">
                   {filteredVentes.map((vente) => {
-                    const totalFinal = typeof vente.totalFinal === "number"
-                      ? vente.totalFinal
-                      : Number(vente.totalFinal);
-                    const createdAt = typeof vente.createdAt === "string"
-                      ? new Date(vente.createdAt)
-                      : vente.createdAt;
+                    const totalFinal =
+                      typeof vente.totalFinal === "number"
+                        ? vente.totalFinal
+                        : Number(vente.totalFinal);
+                    const createdAt =
+                      typeof vente.createdAt === "string"
+                        ? new Date(vente.createdAt)
+                        : vente.createdAt;
 
                     return (
                       <Card key={vente.id}>
                         <Flex justify="between" align="start">
                           <Flex direction="column" gap="1">
                             {/* Header: Type + Numéro */}
-                            <Flex align="center" gap="2">
-                              <Badge color={
-                                vente.type === "TABLE" ? "blue" :
-                                vente.type === "LIVRAISON" ? "green" : "violet"
-                              }>
+                            <Flex align="center" gap="2" wrap="wrap">
+                              <Badge
+                                color={
+                                  vente.type === "TABLE"
+                                    ? "blue"
+                                    : vente.type === "LIVRAISON"
+                                      ? "green"
+                                      : "violet"
+                                }
+                              >
                                 {getTypeIcon(vente.type)}
                                 <Text size="1" ml="1">
                                   {vente.type === "TABLE" && vente.table
                                     ? `Table ${vente.table.numero}`
-                                    : getTypeLabel(vente.type)
-                                  }
+                                    : getTypeLabel(vente.type)}
                                 </Text>
                               </Badge>
                               <Text size="2" weight="bold">
                                 #{vente.numeroTicket}
                               </Text>
+                              {(() => {
+                                const dominant = getDominantStatus(vente.lignes);
+                                const config = getPreparationStatusConfig(dominant);
+                                const isPrete = dominant === "PRETE";
+                                return (
+                                  <Badge
+                                    color={config.color}
+                                    variant="soft"
+                                    size="1"
+                                    style={isPrete ? {
+                                      animation: "pulse-preparation 2s ease-in-out infinite",
+                                    } : undefined}
+                                  >
+                                    {config.icon}
+                                    <Text size="1" ml="1">{config.label}</Text>
+                                  </Badge>
+                                );
+                              })()}
                             </Flex>
 
                             {/* Client si présent */}
-                            {vente.client ? <Flex align="center" gap="1">
+                            {vente.client ? (
+                              <Flex align="center" gap="1">
                                 <User size={12} color="var(--gray-9)" />
                                 <Text size="1" color="gray">
                                   {vente.client.nom}
                                   {vente.client.prenom ? ` ${vente.client.prenom}` : null}
                                 </Text>
-                              </Flex> : null}
+                              </Flex>
+                            ) : null}
 
                             {/* Infos: articles + temps */}
                             <Flex align="center" gap="3">
@@ -281,14 +350,10 @@ export function PendingOrdersModal({
                                       color="red"
                                       onClick={() => handleAnnuler(vente.id)}
                                     >
-                                      <Ban size={14} />
+                                      <Prohibit size={14} />
                                     </IconButton>
                                   </Tooltip>
-                                  <Button
-                                    size="1"
-                                    color="green"
-                                    onClick={() => onPayer(vente)}
-                                  >
+                                  <Button size="1" color="green" onClick={() => onPayer(vente)}>
                                     <CreditCard size={14} />
                                     Payer
                                   </Button>

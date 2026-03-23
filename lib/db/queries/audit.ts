@@ -2,19 +2,15 @@
  * Requêtes Supabase pour les logs d'audit
  */
 
-import type { DbClient } from '../client'
+import type { DbClient } from "../client";
 import type {
   AuditLog,
   AuditLogInsert,
   ActionAudit,
   PaginationOptions,
   PaginatedResult,
-} from '../types'
-import {
-  getPaginationParams,
-  createPaginatedResult,
-  getErrorMessage,
-} from '../utils'
+} from "../types";
+import { getPaginationParams, createPaginatedResult, getErrorMessage } from "../utils";
 
 /**
  * Récupère les logs d'audit d'un établissement
@@ -23,51 +19,51 @@ export async function getAuditLogs(
   client: DbClient,
   etablissementId: string,
   options?: {
-    action?: ActionAudit
-    utilisateurId?: string
-    entite?: string
-    entiteId?: string
-    dateDebut?: string
-    dateFin?: string
+    action?: ActionAudit;
+    utilisateurId?: string;
+    entite?: string;
+    entiteId?: string;
+    dateDebut?: string;
+    dateFin?: string;
   }
 ): Promise<AuditLog[]> {
   let query = client
-    .from('audit_logs')
-    .select('*')
-    .eq('etablissement_id', etablissementId)
-    .order('created_at', { ascending: false })
+    .from("audit_logs")
+    .select("*")
+    .eq("etablissement_id", etablissementId)
+    .order("created_at", { ascending: false });
 
   if (options?.action) {
-    query = query.eq('action', options.action)
+    query = query.eq("action", options.action);
   }
 
   if (options?.utilisateurId) {
-    query = query.eq('utilisateur_id', options.utilisateurId)
+    query = query.eq("utilisateur_id", options.utilisateurId);
   }
 
   if (options?.entite) {
-    query = query.eq('entite', options.entite)
+    query = query.eq("entite", options.entite);
   }
 
   if (options?.entiteId) {
-    query = query.eq('entite_id', options.entiteId)
+    query = query.eq("entite_id", options.entiteId);
   }
 
   if (options?.dateDebut) {
-    query = query.gte('created_at', options.dateDebut)
+    query = query.gte("created_at", options.dateDebut);
   }
 
   if (options?.dateFin) {
-    query = query.lte('created_at', options.dateFin)
+    query = query.lte("created_at", options.dateFin);
   }
 
-  const { data, error } = await query
+  const { data, error } = await query;
 
   if (error) {
-    throw new Error(getErrorMessage(error))
+    throw new Error(getErrorMessage(error));
   }
 
-  return data ?? []
+  return data ?? [];
 }
 
 /**
@@ -77,69 +73,62 @@ export async function getAuditLogsPaginated(
   client: DbClient,
   etablissementId: string,
   options?: PaginationOptions & {
-    action?: ActionAudit
-    utilisateurId?: string
-    entite?: string
-    dateDebut?: string
-    dateFin?: string
+    action?: ActionAudit;
+    utilisateurId?: string;
+    entite?: string;
+    dateDebut?: string;
+    dateFin?: string;
   }
 ): Promise<PaginatedResult<AuditLog>> {
-  const { offset, limit, page, pageSize } = getPaginationParams(options)
+  const { offset, limit, page, pageSize } = getPaginationParams(options);
 
   let query = client
-    .from('audit_logs')
-    .select('*', { count: 'exact' })
-    .eq('etablissement_id', etablissementId)
-    .order('created_at', { ascending: false })
-    .range(offset, offset + limit - 1)
+    .from("audit_logs")
+    .select("*", { count: "exact" })
+    .eq("etablissement_id", etablissementId)
+    .order("created_at", { ascending: false })
+    .range(offset, offset + limit - 1);
 
   if (options?.action) {
-    query = query.eq('action', options.action)
+    query = query.eq("action", options.action);
   }
 
   if (options?.utilisateurId) {
-    query = query.eq('utilisateur_id', options.utilisateurId)
+    query = query.eq("utilisateur_id", options.utilisateurId);
   }
 
   if (options?.entite) {
-    query = query.eq('entite', options.entite)
+    query = query.eq("entite", options.entite);
   }
 
   if (options?.dateDebut) {
-    query = query.gte('created_at', options.dateDebut)
+    query = query.gte("created_at", options.dateDebut);
   }
 
   if (options?.dateFin) {
-    query = query.lte('created_at', options.dateFin)
+    query = query.lte("created_at", options.dateFin);
   }
 
-  const { data, error, count } = await query
+  const { data, error, count } = await query;
 
   if (error) {
-    throw new Error(getErrorMessage(error))
+    throw new Error(getErrorMessage(error));
   }
 
-  return createPaginatedResult((data ?? []) as AuditLog[], count ?? 0, { page, pageSize })
+  return createPaginatedResult((data ?? []) as AuditLog[], count ?? 0, { page, pageSize });
 }
 
 /**
  * Crée un log d'audit
  */
-export async function createAuditLog(
-  client: DbClient,
-  data: AuditLogInsert
-): Promise<AuditLog> {
-  const { data: log, error } = await client
-    .from('audit_logs')
-    .insert(data)
-    .select()
-    .single()
+export async function createAuditLog(client: DbClient, data: AuditLogInsert): Promise<AuditLog> {
+  const { data: log, error } = await client.from("audit_logs").insert(data).select().single();
 
   if (error) {
-    throw new Error(getErrorMessage(error))
+    throw new Error(getErrorMessage(error));
   }
 
-  return log
+  return log;
 }
 
 /**
@@ -151,12 +140,12 @@ export async function logAuditAction(
   action: ActionAudit,
   entite: string,
   options?: {
-    utilisateurId?: string
-    entiteId?: string
-    description?: string
-    ancienneValeur?: unknown
-    nouvelleValeur?: unknown
-    adresseIp?: string
+    utilisateurId?: string;
+    entiteId?: string;
+    description?: string;
+    ancienneValeur?: unknown;
+    nouvelleValeur?: unknown;
+    adresseIp?: string;
   }
 ): Promise<AuditLog> {
   return createAuditLog(client, {
@@ -166,14 +155,10 @@ export async function logAuditAction(
     utilisateur_id: options?.utilisateurId,
     entite_id: options?.entiteId,
     description: options?.description,
-    ancienne_valeur: options?.ancienneValeur
-      ? JSON.stringify(options.ancienneValeur)
-      : null,
-    nouvelle_valeur: options?.nouvelleValeur
-      ? JSON.stringify(options.nouvelleValeur)
-      : null,
+    ancienne_valeur: options?.ancienneValeur ? JSON.stringify(options.ancienneValeur) : null,
+    nouvelle_valeur: options?.nouvelleValeur ? JSON.stringify(options.nouvelleValeur) : null,
     adresse_ip: options?.adresseIp,
-  })
+  });
 }
 
 /**
@@ -185,12 +170,12 @@ export async function logLogin(
   utilisateurId: string,
   adresseIp?: string
 ): Promise<AuditLog> {
-  return logAuditAction(client, etablissementId, 'LOGIN', 'utilisateur', {
+  return logAuditAction(client, etablissementId, "LOGIN", "utilisateur", {
     utilisateurId,
     entiteId: utilisateurId,
-    description: 'Connexion réussie',
+    description: "Connexion réussie",
     adresseIp,
-  })
+  });
 }
 
 /**
@@ -202,12 +187,12 @@ export async function logLogout(
   utilisateurId: string,
   adresseIp?: string
 ): Promise<AuditLog> {
-  return logAuditAction(client, etablissementId, 'LOGOUT', 'utilisateur', {
+  return logAuditAction(client, etablissementId, "LOGOUT", "utilisateur", {
     utilisateurId,
     entiteId: utilisateurId,
-    description: 'Déconnexion',
+    description: "Déconnexion",
     adresseIp,
-  })
+  });
 }
 
 /**
@@ -220,12 +205,12 @@ export async function logCaisseOuverture(
   sessionCaisseId: string,
   fondCaisse: number
 ): Promise<AuditLog> {
-  return logAuditAction(client, etablissementId, 'CAISSE_OUVERTURE', 'session_caisse', {
+  return logAuditAction(client, etablissementId, "CAISSE_OUVERTURE", "session_caisse", {
     utilisateurId,
     entiteId: sessionCaisseId,
     description: `Ouverture de caisse avec fond de ${fondCaisse} FCFA`,
     nouvelleValeur: { fond_caisse: fondCaisse },
-  })
+  });
 }
 
 /**
@@ -237,18 +222,18 @@ export async function logCaisseCloture(
   utilisateurId: string,
   sessionCaisseId: string,
   totaux: {
-    totalVentes: number
-    totalEspeces: number
-    especesComptees: number
-    ecart: number
+    totalVentes: number;
+    totalEspeces: number;
+    especesComptees: number;
+    ecart: number;
   }
 ): Promise<AuditLog> {
-  return logAuditAction(client, etablissementId, 'CAISSE_CLOTURE', 'session_caisse', {
+  return logAuditAction(client, etablissementId, "CAISSE_CLOTURE", "session_caisse", {
     utilisateurId,
     entiteId: sessionCaisseId,
     description: `Clôture de caisse - Total: ${totaux.totalVentes} FCFA, Écart: ${totaux.ecart} FCFA`,
     nouvelleValeur: totaux,
-  })
+  });
 }
 
 /**
@@ -261,11 +246,11 @@ export async function logAnnulationVente(
   venteId: string,
   motif?: string
 ): Promise<AuditLog> {
-  return logAuditAction(client, etablissementId, 'ANNULATION_VENTE', 'vente', {
+  return logAuditAction(client, etablissementId, "ANNULATION_VENTE", "vente", {
     utilisateurId,
     entiteId: venteId,
-    description: motif ?? 'Annulation de vente',
-  })
+    description: motif ?? "Annulation de vente",
+  });
 }
 
 /**
@@ -276,18 +261,19 @@ export async function logRemiseAppliquee(
   etablissementId: string,
   utilisateurId: string,
   venteId: string,
-  remise: { type: 'POURCENTAGE' | 'MONTANT_FIXE'; valeur: number; montant: number }
+  remise: { type: "POURCENTAGE" | "MONTANT_FIXE"; valeur: number; montant: number }
 ): Promise<AuditLog> {
-  const description = remise.type === 'POURCENTAGE'
-    ? `Remise de ${remise.valeur}% appliquée (${remise.montant} FCFA)`
-    : `Remise de ${remise.montant} FCFA appliquée`
+  const description =
+    remise.type === "POURCENTAGE"
+      ? `Remise de ${remise.valeur}% appliquée (${remise.montant} FCFA)`
+      : `Remise de ${remise.montant} FCFA appliquée`;
 
-  return logAuditAction(client, etablissementId, 'REMISE_APPLIQUEE', 'vente', {
+  return logAuditAction(client, etablissementId, "REMISE_APPLIQUEE", "vente", {
     utilisateurId,
     entiteId: venteId,
     description,
     nouvelleValeur: remise,
-  })
+  });
 }
 
 /**
@@ -299,23 +285,20 @@ export async function countAuditLogsByAction(
   dateDebut?: string,
   dateFin?: string
 ): Promise<Record<ActionAudit, number>> {
-  let query = client
-    .from('audit_logs')
-    .select('action')
-    .eq('etablissement_id', etablissementId)
+  let query = client.from("audit_logs").select("action").eq("etablissement_id", etablissementId);
 
   if (dateDebut) {
-    query = query.gte('created_at', dateDebut)
+    query = query.gte("created_at", dateDebut);
   }
 
   if (dateFin) {
-    query = query.lte('created_at', dateFin)
+    query = query.lte("created_at", dateFin);
   }
 
-  const { data, error } = await query
+  const { data, error } = await query;
 
   if (error) {
-    throw new Error(getErrorMessage(error))
+    throw new Error(getErrorMessage(error));
   }
 
   const counts: Record<ActionAudit, number> = {
@@ -328,11 +311,11 @@ export async function countAuditLogsByAction(
     CAISSE_CLOTURE: 0,
     ANNULATION_VENTE: 0,
     REMISE_APPLIQUEE: 0,
-  }
+  };
 
   for (const log of data ?? []) {
-    counts[log.action as ActionAudit]++
+    counts[log.action as ActionAudit]++;
   }
 
-  return counts
+  return counts;
 }

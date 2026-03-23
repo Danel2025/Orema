@@ -12,26 +12,21 @@
  */
 
 import { useState, useEffect, useCallback } from "react";
-import {
-  Button,
-  DropdownMenu,
-  IconButton,
-  Tooltip,
-  Spinner,
-} from "@radix-ui/themes";
+import { Button, DropdownMenu, IconButton, Tooltip, Spinner } from "@radix-ui/themes";
 import {
   Printer,
   Receipt,
   FileText,
-  ChefHat,
+  CookingPot,
   Wine,
   TestTube,
-  ChevronDown,
-  Loader2,
-  CheckCircle2,
+  CaretDown,
+  SpinnerGap,
+  CheckCircle,
   XCircle,
-} from "lucide-react";
+} from "@phosphor-icons/react";
 import { toast } from "sonner";
+import { printViaSystem } from "@/lib/print/system-print";
 
 /**
  * Types de documents imprimables
@@ -61,6 +56,8 @@ interface PrintButtonProps {
 
 /**
  * Envoie une requete d'impression a l'API
+ * Gere automatiquement le fallback vers impression systeme (window.print)
+ * quand l'imprimante est de type SYSTEME
  */
 async function sendPrintRequest(
   type: PrintDocType,
@@ -79,7 +76,15 @@ async function sendPrintRequest(
     }),
   });
 
-  return response.json();
+  const result = await response.json();
+
+  // Fallback impression systeme : l'API a detecte une imprimante SYSTEME
+  // et renvoie le HTML a imprimer via window.print()
+  if (result.useSystemPrint && result.htmlContent) {
+    return printViaSystem(result.htmlContent);
+  }
+
+  return result;
 }
 
 export function PrintButton({
@@ -131,8 +136,7 @@ export function PrintButton({
           onPrintError?.(result.error || "Erreur inconnue");
         }
       } catch (error) {
-        const errorMsg =
-          error instanceof Error ? error.message : "Erreur de communication";
+        const errorMsg = error instanceof Error ? error.message : "Erreur de communication";
         toast.error(errorMsg);
         onPrintError?.(errorMsg);
       } finally {
@@ -162,44 +166,26 @@ export function PrintButton({
     return (
       <DropdownMenu.Root>
         <DropdownMenu.Trigger>
-          <IconButton
-            variant={variant}
-            color={color}
-            size={size}
-            disabled={disabled || isPrinting}
-          >
-            {isPrinting ? (
-              <Loader2 size={16} className="animate-spin" />
-            ) : (
-              <Printer size={16} />
-            )}
+          <IconButton variant={variant} color={color} size={size} disabled={disabled || isPrinting}>
+            {isPrinting ? <SpinnerGap size={16} className="animate-spin" /> : <Printer size={16} />}
           </IconButton>
         </DropdownMenu.Trigger>
 
         <DropdownMenu.Content>
           {/* Ticket client */}
-          <DropdownMenu.Item
-            onClick={() => handlePrint("ticket")}
-            disabled={!venteId}
-          >
+          <DropdownMenu.Item onClick={() => handlePrint("ticket")} disabled={!venteId}>
             <Receipt size={14} />
             Ticket client (F8)
           </DropdownMenu.Item>
 
           {/* Bon cuisine */}
-          <DropdownMenu.Item
-            onClick={() => handlePrint("cuisine")}
-            disabled={!venteId}
-          >
-            <ChefHat size={14} />
+          <DropdownMenu.Item onClick={() => handlePrint("cuisine")} disabled={!venteId}>
+            <CookingPot size={14} />
             Bon cuisine
           </DropdownMenu.Item>
 
           {/* Bon bar */}
-          <DropdownMenu.Item
-            onClick={() => handlePrint("bar")}
-            disabled={!venteId}
-          >
+          <DropdownMenu.Item onClick={() => handlePrint("bar")} disabled={!venteId}>
             <Wine size={14} />
             Bon bar
           </DropdownMenu.Item>
@@ -207,10 +193,7 @@ export function PrintButton({
           <DropdownMenu.Separator />
 
           {/* Rapport Z */}
-          <DropdownMenu.Item
-            onClick={() => handlePrint("rapport-z")}
-            disabled={!sessionId}
-          >
+          <DropdownMenu.Item onClick={() => handlePrint("rapport-z")} disabled={!sessionId}>
             <FileText size={14} />
             Rapport Z
           </DropdownMenu.Item>
@@ -232,46 +215,28 @@ export function PrintButton({
     <Tooltip content="Imprimer (F8)">
       <DropdownMenu.Root>
         <DropdownMenu.Trigger>
-          <Button
-            variant={variant}
-            color={color}
-            size={size}
-            disabled={disabled || isPrinting}
-          >
-            {isPrinting ? (
-              <Loader2 size={16} className="animate-spin" />
-            ) : (
-              <Printer size={16} />
-            )}
+          <Button variant={variant} color={color} size={size} disabled={disabled || isPrinting}>
+            {isPrinting ? <SpinnerGap size={16} className="animate-spin" /> : <Printer size={16} />}
             Imprimer
-            <ChevronDown size={14} />
+            <CaretDown size={14} />
           </Button>
         </DropdownMenu.Trigger>
 
         <DropdownMenu.Content align="end">
           {/* Ticket client */}
-          <DropdownMenu.Item
-            onClick={() => handlePrint("ticket")}
-            disabled={!venteId}
-          >
+          <DropdownMenu.Item onClick={() => handlePrint("ticket")} disabled={!venteId}>
             <Receipt size={14} />
             Ticket client (F8)
           </DropdownMenu.Item>
 
           {/* Bon cuisine */}
-          <DropdownMenu.Item
-            onClick={() => handlePrint("cuisine")}
-            disabled={!venteId}
-          >
-            <ChefHat size={14} />
+          <DropdownMenu.Item onClick={() => handlePrint("cuisine")} disabled={!venteId}>
+            <CookingPot size={14} />
             Bon cuisine
           </DropdownMenu.Item>
 
           {/* Bon bar */}
-          <DropdownMenu.Item
-            onClick={() => handlePrint("bar")}
-            disabled={!venteId}
-          >
+          <DropdownMenu.Item onClick={() => handlePrint("bar")} disabled={!venteId}>
             <Wine size={14} />
             Bon bar
           </DropdownMenu.Item>
@@ -279,10 +244,7 @@ export function PrintButton({
           <DropdownMenu.Separator />
 
           {/* Rapport Z */}
-          <DropdownMenu.Item
-            onClick={() => handlePrint("rapport-z")}
-            disabled={!sessionId}
-          >
+          <DropdownMenu.Item onClick={() => handlePrint("rapport-z")} disabled={!sessionId}>
             <FileText size={14} />
             Rapport Z
           </DropdownMenu.Item>
@@ -330,8 +292,7 @@ export function PrintTicketButton({
         onPrintError?.(result.error || "Erreur inconnue");
       }
     } catch (error) {
-      const errorMsg =
-        error instanceof Error ? error.message : "Erreur de communication";
+      const errorMsg = error instanceof Error ? error.message : "Erreur de communication";
       toast.error(errorMsg);
       onPrintError?.(errorMsg);
     } finally {
@@ -361,11 +322,7 @@ export function PrintTicketButton({
         disabled={disabled || isPrinting || !venteId}
         onClick={handlePrint}
       >
-        {isPrinting ? (
-          <Loader2 size={16} className="animate-spin" />
-        ) : (
-          <Printer size={16} />
-        )}
+        {isPrinting ? <SpinnerGap size={16} className="animate-spin" /> : <Printer size={16} />}
         Imprimer ticket
       </Button>
     </Tooltip>
@@ -402,8 +359,7 @@ export function PrintRapportZButton({
         onPrintError?.(result.error || "Erreur inconnue");
       }
     } catch (error) {
-      const errorMsg =
-        error instanceof Error ? error.message : "Erreur de communication";
+      const errorMsg = error instanceof Error ? error.message : "Erreur de communication";
       toast.error(errorMsg);
       onPrintError?.(errorMsg);
     } finally {
@@ -420,11 +376,7 @@ export function PrintRapportZButton({
         disabled={disabled || isPrinting || !sessionId}
         onClick={handlePrint}
       >
-        {isPrinting ? (
-          <Loader2 size={16} className="animate-spin" />
-        ) : (
-          <FileText size={16} />
-        )}
+        {isPrinting ? <SpinnerGap size={16} className="animate-spin" /> : <FileText size={16} />}
         Imprimer rapport Z
       </Button>
     </Tooltip>
@@ -478,11 +430,7 @@ export function TestPrintButton({
         disabled={disabled || isPrinting}
         onClick={handleTest}
       >
-        {isPrinting ? (
-          <Loader2 size={14} className="animate-spin" />
-        ) : (
-          <TestTube size={14} />
-        )}
+        {isPrinting ? <SpinnerGap size={14} className="animate-spin" /> : <TestTube size={14} />}
       </IconButton>
     </Tooltip>
   );

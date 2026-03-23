@@ -18,8 +18,8 @@ export function cn(...inputs: ClassValue[]) {
  */
 export const TVA_RATES = {
   STANDARD: 18, // Taux normal
-  REDUIT: 10,   // Taux reduit (alimentation de base, etc.)
-  EXONERE: 0,   // Exonere de TVA
+  REDUIT: 10, // Taux reduit (alimentation de base, etc.)
+  EXONERE: 0, // Exonere de TVA
 } as const;
 
 /**
@@ -68,11 +68,13 @@ export function formatCurrency(amount: number | string): string {
     return "0 FCFA";
   }
 
-  return new Intl.NumberFormat("fr-GA", {
-    style: "decimal",
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 0,
-  }).format(num) + " FCFA";
+  return (
+    new Intl.NumberFormat("fr-GA", {
+      style: "decimal",
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0,
+    }).format(num) + " FCFA"
+  );
 }
 
 /**

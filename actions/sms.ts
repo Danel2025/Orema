@@ -71,10 +71,7 @@ function validerTelephone(telephone: string): {
   }
 
   // Vérification souple du format gabonais
-  if (
-    !GABON_PHONE_REGEX.test(cleaned) &&
-    !/^0?\d{7,8}$/.test(digits)
-  ) {
+  if (!GABON_PHONE_REGEX.test(cleaned) && !/^0?\d{7,8}$/.test(digits)) {
     return {
       valide: false,
       erreur: "Format de numéro gabonais invalide",
@@ -100,9 +97,7 @@ function validerTelephone(telephone: string): {
  * });
  * ```
  */
-export async function envoyerSMS(
-  params: EnvoyerSMSParams
-): Promise<SMSResult> {
+export async function envoyerSMS(params: EnvoyerSMSParams): Promise<SMSResult> {
   const user = await getCurrentUser();
 
   if (!user) {
@@ -137,9 +132,7 @@ export async function envoyerSMS(
       return { success: false, error: data.error || "Échec d'envoi" };
     }
 
-    console.info(
-      `[SMS] Envoyé: ${params.type} -> ${params.telephone} (${data?.messageId})`
-    );
+    console.info(`[SMS] Envoyé: ${params.type} -> ${params.telephone} (${data?.messageId})`);
 
     return {
       success: true,
@@ -249,11 +242,7 @@ export async function envoyerConfirmationReservation(
 ): Promise<SMSResult> {
   return envoyerSMS({
     telephone,
-    message: confirmationReservation(
-      details.date,
-      details.heure,
-      details.nombrePersonnes
-    ),
+    message: confirmationReservation(details.date, details.heure, details.nombrePersonnes),
     type: "CUSTOM",
     metadata: details,
   });
@@ -262,10 +251,7 @@ export async function envoyerConfirmationReservation(
 /**
  * Envoie un SMS personnalisé (texte libre).
  */
-export async function envoyerSMSPersonnalise(
-  telephone: string,
-  texte: string
-): Promise<SMSResult> {
+export async function envoyerSMSPersonnalise(telephone: string, texte: string): Promise<SMSResult> {
   return envoyerSMS({
     telephone,
     message: messagePersonnalise(texte),

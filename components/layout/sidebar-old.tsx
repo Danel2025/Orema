@@ -108,11 +108,7 @@ export function Sidebar() {
                   boxShadow: "var(--shadow-3)",
                 }}
               >
-                <Heart
-                  size={24}
-                  fill="white"
-                  style={{ color: "white" }}
-                />
+                <Heart size={24} fill="white" style={{ color: "white" }} />
               </Box>
               <Flex direction="column" gap="0">
                 <Text size="4" weight="bold" style={{ color: "var(--gray-12)" }}>
@@ -154,9 +150,7 @@ export function Sidebar() {
                       display: "flex",
                       alignItems: "center",
                       gap: "12px",
-                      backgroundColor: isActive
-                        ? "var(--accent-9)"
-                        : "transparent",
+                      backgroundColor: isActive ? "var(--accent-9)" : "transparent",
                       color: isActive ? "white" : "var(--gray-11)",
                       fontWeight: isActive ? 600 : 500,
                       fontSize: "14px",
@@ -193,9 +187,11 @@ export function Sidebar() {
                     >
                       {item.label}
                     </Text>
-                    {item.badge ? <Badge color="red" variant="solid" size="1">
+                    {item.badge ? (
+                      <Badge color="red" variant="solid" size="1">
                         Hot
-                      </Badge> : null}
+                      </Badge>
+                    ) : null}
                   </Link>
                 );
               })}

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Receipt } from "lucide-react";
+import { Receipt } from "@phosphor-icons/react";
 import { cn } from "@/lib/utils";
 import {
   STATUT_TABLE_LABELS,
@@ -12,7 +12,10 @@ import {
 /**
  * Styles de couleur pour chaque statut
  */
-const STATUS_STYLES: Record<StatutTableType, { bg: string; border: string; text: string; badgeBg: string }> = {
+const STATUS_STYLES: Record<
+  StatutTableType,
+  { bg: string; border: string; text: string; badgeBg: string }
+> = {
   LIBRE: { bg: "#dcfce7", border: "#22c55e", text: "#166534", badgeBg: "#bbf7d0" },
   OCCUPEE: { bg: "#fef9c3", border: "#eab308", text: "#854d0e", badgeBg: "#fef08a" },
   EN_PREPARATION: { bg: "#dbeafe", border: "#3b82f6", text: "#1e40af", badgeBg: "#bfdbfe" },
@@ -95,7 +98,7 @@ export function TableItem({
       onMouseLeave={() => setIsHovered(false)}
       className={cn(
         "absolute select-none",
-        isSelected && "ring-[3px] ring-offset-2 ring-[var(--accent-9)]"
+        isSelected && "ring-[3px] ring-[var(--accent-9)] ring-offset-2"
       )}
       style={{
         left: positionX,
@@ -104,22 +107,23 @@ export function TableItem({
         height: hauteur,
         minWidth: 80,
         minHeight: 80,
-        padding: 12,
+        padding: forme === "RONDE" ? 8 : 12,
         display: "flex",
         flexDirection: "column",
         alignItems: "center",
         justifyContent: "center",
-        gap: 4,
+        gap: 2,
+        overflow: "hidden",
         backgroundColor: statusStyle.bg,
         border: `2px solid ${statusStyle.border}`,
         borderRadius: getBorderRadius(),
         boxShadow: isDragging
           ? "0 8px 24px rgba(0,0,0,0.3)"
           : isSelected
-          ? "0 4px 12px rgba(0,0,0,0.2)"
-          : isHovered
-          ? "0 6px 16px rgba(0,0,0,0.15)"
-          : "0 1px 3px rgba(0,0,0,0.1)",
+            ? "0 4px 12px rgba(0,0,0,0.2)"
+            : isHovered
+              ? "0 6px 16px rgba(0,0,0,0.15)"
+              : "0 1px 3px rgba(0,0,0,0.1)",
         transform: (() => {
           const parts: string[] = [];
           if (rotation !== 0) parts.push(`rotate(${rotation}deg)`);
@@ -129,11 +133,7 @@ export function TableItem({
         })(),
         transformOrigin: "center center",
         transition: "box-shadow 0.15s, transform 0.15s, opacity 0.15s",
-        cursor: isDragging
-          ? "grabbing"
-          : isEditMode
-          ? isHovered ? "grab" : "default"
-          : "pointer",
+        cursor: isDragging ? "grabbing" : isEditMode ? (isHovered ? "grab" : "default") : "pointer",
         opacity: isDragging ? 0.7 : 1,
       }}
     >
@@ -159,49 +159,59 @@ export function TableItem({
           opacity: 0.75,
         }}
       >
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-          <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/>
-          <circle cx="9" cy="7" r="4"/>
-          <path d="M22 21v-2a4 4 0 0 0-3-3.87"/>
-          <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+        <svg
+          width="14"
+          height="14"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        >
+          <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
+          <circle cx="9" cy="7" r="4" />
+          <path d="M22 21v-2a4 4 0 0 0-3-3.87" />
+          <path d="M16 3.13a4 4 0 0 1 0 7.75" />
         </svg>
         <span style={{ fontSize: 12, fontWeight: 500 }}>{capacite}</span>
       </div>
 
-      {/* Badge statut (affiché si pas libre) */}
-      {statut !== "LIBRE" && (
+      {/* Badge statut — masqué quand il y a un montant de vente (la couleur suffit) */}
+      {statut !== "LIBRE" && !venteEnCours && (
         <span
           style={{
-            marginTop: 4,
-            padding: "2px 8px",
-            fontSize: 10,
+            padding: "1px 6px",
+            fontSize: 9,
             fontWeight: 600,
             color: statusStyle.text,
             backgroundColor: statusStyle.badgeBg,
             borderRadius: 4,
             textTransform: "capitalize",
+            whiteSpace: "nowrap",
           }}
         >
           {statusLabel}
         </span>
       )}
 
-      {/* Montant de la vente en cours */}
-      {venteEnCours ? <div
+      {/* Montant de la vente en cours (remplace le badge statut) */}
+      {venteEnCours ? (
+        <div
           style={{
             display: "flex",
             alignItems: "center",
-            gap: 4,
-            marginTop: 4,
+            gap: 3,
             color: "#ea580c",
+            whiteSpace: "nowrap",
           }}
         >
-          <Receipt size={12} />
-          <span style={{ fontSize: 11, fontWeight: 600 }}>
+          <Receipt size={10} />
+          <span style={{ fontSize: 10, fontWeight: 600 }}>
             {formatPrice(venteEnCours.totalFinal)} F
           </span>
-        </div> : null}
-
+        </div>
+      ) : null}
     </div>
   );
 }

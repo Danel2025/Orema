@@ -2,9 +2,9 @@
  * API Route pour tester la connexion à une imprimante
  */
 
-import type { NextRequest} from "next/server";
+import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
-import { getSession } from "@/lib/auth/session";
+import { getCurrentUser } from "@/lib/auth";
 
 interface TestConnectionBody {
   typeConnexion: "USB" | "RESEAU" | "SERIE" | "BLUETOOTH";
@@ -15,8 +15,8 @@ interface TestConnectionBody {
 
 export async function POST(request: NextRequest) {
   try {
-    const session = await getSession();
-    if (!session) {
+    const user = await getCurrentUser();
+    if (!user) {
       return NextResponse.json({ success: false, error: "Non authentifie" }, { status: 401 });
     }
 
@@ -39,29 +39,35 @@ export async function POST(request: NextRequest) {
           error: "La connexion Bluetooth n'est pas encore supportée",
         });
       default:
-        return NextResponse.json({
-          success: false,
-          error: "Type de connexion non reconnu",
-        }, { status: 400 });
+        return NextResponse.json(
+          {
+            success: false,
+            error: "Type de connexion non reconnu",
+          },
+          { status: 400 }
+        );
     }
   } catch (error) {
     console.error("[API Test Connection] Erreur:", error);
-    return NextResponse.json({
-      success: false,
-      error: error instanceof Error ? error.message : "Erreur interne",
-    }, { status: 500 });
+    return NextResponse.json(
+      {
+        success: false,
+        error: error instanceof Error ? error.message : "Erreur interne",
+      },
+      { status: 500 }
+    );
   }
 }
 
-async function testNetworkConnection(
-  ip: string | undefined,
-  port: number
-): Promise<NextResponse> {
+async function testNetworkConnection(ip: string | undefined, port: number): Promise<NextResponse> {
   if (!ip) {
-    return NextResponse.json({
-      success: false,
-      error: "Adresse IP requise",
-    }, { status: 400 });
+    return NextResponse.json(
+      {
+        success: false,
+        error: "Adresse IP requise",
+      },
+      { status: 400 }
+    );
   }
 
   // Valider le format de l'IP
@@ -130,14 +136,15 @@ async function testNetworkConnection(
   }
 }
 
-async function testUSBConnection(
-  path: string | undefined
-): Promise<NextResponse> {
+async function testUSBConnection(path: string | undefined): Promise<NextResponse> {
   if (!path) {
-    return NextResponse.json({
-      success: false,
-      error: "Chemin USB requis",
-    }, { status: 400 });
+    return NextResponse.json(
+      {
+        success: false,
+        error: "Chemin USB requis",
+      },
+      { status: 400 }
+    );
   }
 
   try {

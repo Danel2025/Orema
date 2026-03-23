@@ -16,7 +16,8 @@ import { promises as fs } from "fs";
  * Regex de validation stricte pour les chemins de peripheriques
  */
 const COM_PORT_REGEX = /^COM\d{1,3}$/i;
-const DEV_PATH_REGEX = /^\/dev\/(ttyUSB\d{1,3}|ttyACM\d{1,3}|usb\/lp\d{1,3}|cu\.(usbserial|usbmodem)[\w.-]*)$/;
+const DEV_PATH_REGEX =
+  /^\/dev\/(ttyUSB\d{1,3}|ttyACM\d{1,3}|usb\/lp\d{1,3}|cu\.(usbserial|usbmodem)[\w.-]*)$/;
 
 /**
  * Peripherique USB detecte
@@ -120,11 +121,11 @@ async function detectCOMPortsWindows(): Promise<DetectedUSBDevice[]> {
         // Le port est valide par COM_PORT_REGEX, mais on utilise execFileSync
         // avec arguments en tableau pour defense en profondeur
         const wmiCommand = `Get-WmiObject Win32_PnPEntity | Where-Object { $_.Name -like '*${port}*' } | Select-Object -First 1 -ExpandProperty Name`;
-        const wmiOutput = execFileSync(
-          "powershell",
-          ["-NoProfile", "-Command", wmiCommand],
-          { encoding: "utf-8", timeout: 5000, windowsHide: true }
-        );
+        const wmiOutput = execFileSync("powershell", ["-NoProfile", "-Command", wmiCommand], {
+          encoding: "utf-8",
+          timeout: 5000,
+          windowsHide: true,
+        });
         const description = wmiOutput.trim();
         if (description) {
           device.description = description;
@@ -297,13 +298,12 @@ async function detectUSBPortsMacOS(): Promise<DetectedUSBDevice[]> {
  */
 export async function testUSBDevice(devicePath: string): Promise<boolean> {
   // Valider que le chemin correspond a un peripherique connu
-  if (!devicePath || typeof devicePath !== 'string') {
+  if (!devicePath || typeof devicePath !== "string") {
     return false;
   }
 
   // Verifier que le chemin est un peripherique autorise (COM sous Windows, /dev/ sous Linux/macOS)
-  const isValidDevicePath =
-    COM_PORT_REGEX.test(devicePath) || DEV_PATH_REGEX.test(devicePath);
+  const isValidDevicePath = COM_PORT_REGEX.test(devicePath) || DEV_PATH_REGEX.test(devicePath);
 
   if (!isValidDevicePath) {
     return false;

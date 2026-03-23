@@ -1,19 +1,9 @@
 "use client";
 
-import {
-  Box,
-  Container,
-  Heading,
-  Text,
-  Flex,
-  Grid,
-  Separator,
-  Skeleton,
-} from "@radix-ui/themes";
+import { Box, Container, Heading, Text, Flex, Grid, Separator, Skeleton } from "@radix-ui/themes";
 import { MarkdownRenderer } from "@/components/public/markdown-renderer";
 import { motion } from "motion/react";
-import type {
-  LucideIcon} from "lucide-react";
+import type { LucideIcon } from "lucide-react";
 import {
   ChevronRight,
   ChevronLeft,
@@ -132,9 +122,7 @@ export default function DocsArticlePage() {
   const currentIndex = relatedArticles.findIndex((a) => a.slug === articleSlug);
   const prevArticle = currentIndex > 0 ? relatedArticles[currentIndex - 1] : null;
   const nextArticle =
-    currentIndex < relatedArticles.length - 1
-      ? relatedArticles[currentIndex + 1]
-      : null;
+    currentIndex < relatedArticles.length - 1 ? relatedArticles[currentIndex + 1] : null;
 
   return (
     <Box style={{ background: "var(--gray-1)" }}>
@@ -190,10 +178,7 @@ export default function DocsArticlePage() {
                 borderRadius: 12,
               }}
             >
-              <CategoryIcon
-                size={24}
-                style={{ color: `var(--${category.color}-9)` }}
-              />
+              <CategoryIcon size={24} style={{ color: `var(--${category.color}-9)` }} />
             </Box>
             <Box>
               <Text size="1" color="gray">
@@ -262,22 +247,22 @@ export default function DocsArticlePage() {
 
         {/* Article content */}
         <article aria-label={article.title}>
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.3, duration: 0.5 }}
-        >
-          <Box
-            p={{ initial: "5", sm: "8" }}
-            style={{
-              background: "var(--color-background)",
-              borderRadius: 20,
-              border: "1px solid var(--gray-a4)",
-            }}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.3, duration: 0.5 }}
           >
-            <MarkdownRenderer content={article.content} accentColor={category.color} />
-          </Box>
-        </motion.div>
+            <Box
+              p={{ initial: "5", sm: "8" }}
+              style={{
+                background: "var(--color-background)",
+                borderRadius: 20,
+                border: "1px solid var(--gray-a4)",
+              }}
+            >
+              <MarkdownRenderer content={article.content} accentColor={category.color} />
+            </Box>
+          </motion.div>
         </article>
 
         {/* Feedback */}
@@ -298,7 +283,12 @@ export default function DocsArticlePage() {
             <Text size="3" weight="medium" mb="4" style={{ display: "block" }}>
               Cet article vous a-t-il été utile ?
             </Text>
-            <Flex gap="3" justify="center" role="group" aria-label="Cet article vous a-t-il été utile ?">
+            <Flex
+              gap="3"
+              justify="center"
+              role="group"
+              aria-label="Cet article vous a-t-il été utile ?"
+            >
               <button
                 aria-label="Oui, cet article m'a été utile"
                 aria-pressed={feedbackGiven === "up"}
@@ -310,10 +300,7 @@ export default function DocsArticlePage() {
                   padding: "12px 24px",
                   borderRadius: 9999,
                   border: "none",
-                  background:
-                    feedbackGiven === "up"
-                      ? "var(--green-9)"
-                      : "var(--gray-a3)",
+                  background: feedbackGiven === "up" ? "var(--green-9)" : "var(--gray-a3)",
                   color: feedbackGiven === "up" ? "white" : "var(--gray-11)",
                   fontSize: 14,
                   fontWeight: 500,
@@ -335,10 +322,7 @@ export default function DocsArticlePage() {
                   padding: "12px 24px",
                   borderRadius: 9999,
                   border: "none",
-                  background:
-                    feedbackGiven === "down"
-                      ? "var(--red-9)"
-                      : "var(--gray-a3)",
+                  background: feedbackGiven === "down" ? "var(--red-9)" : "var(--gray-a3)",
                   color: feedbackGiven === "down" ? "white" : "var(--gray-11)",
                   fontSize: 14,
                   fontWeight: 500,
@@ -350,9 +334,11 @@ export default function DocsArticlePage() {
                 Non
               </button>
             </Flex>
-            {feedbackGiven ? <Text size="2" color="gray" mt="3" style={{ display: "block" }}>
+            {feedbackGiven ? (
+              <Text size="2" color="gray" mt="3" style={{ display: "block" }}>
                 Merci pour votre retour !
-              </Text> : null}
+              </Text>
+            ) : null}
           </Box>
         </motion.div>
 
@@ -365,7 +351,8 @@ export default function DocsArticlePage() {
           transition={{ delay: 0.6, duration: 0.5 }}
         >
           <Grid columns={{ initial: "1", sm: "2" }} gap="4">
-            {prevArticle ? <Link
+            {prevArticle ? (
+              <Link
                 href={`/docs/${categorySlug}/${prevArticle.slug}`}
                 style={{ textDecoration: "none" }}
               >
@@ -385,10 +372,7 @@ export default function DocsArticlePage() {
                   }}
                 >
                   <Flex align="center" gap="3">
-                    <ChevronLeft
-                      size={20}
-                      style={{ color: "var(--gray-10)" }}
-                    />
+                    <ChevronLeft size={20} style={{ color: "var(--gray-10)" }} />
                     <Box>
                       <Text size="1" color="gray" style={{ display: "block" }}>
                         Article précédent
@@ -399,8 +383,10 @@ export default function DocsArticlePage() {
                     </Box>
                   </Flex>
                 </Box>
-              </Link> : null}
-            {nextArticle ? <Link
+              </Link>
+            ) : null}
+            {nextArticle ? (
+              <Link
                 href={`/docs/${categorySlug}/${nextArticle.slug}`}
                 style={{
                   textDecoration: "none",
@@ -431,13 +417,11 @@ export default function DocsArticlePage() {
                         {nextArticle.title}
                       </Text>
                     </Box>
-                    <ChevronRight
-                      size={20}
-                      style={{ color: "var(--gray-10)" }}
-                    />
+                    <ChevronRight size={20} style={{ color: "var(--gray-10)" }} />
                   </Flex>
                 </Box>
-              </Link> : null}
+              </Link>
+            ) : null}
           </Grid>
         </motion.div>
 

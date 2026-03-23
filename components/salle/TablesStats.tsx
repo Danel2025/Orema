@@ -2,14 +2,14 @@
 
 import {
   Users,
-  LayoutGrid,
-  CheckCircle2,
+  SquaresFour,
+  CheckCircle,
   Clock,
-  ChefHat,
+  CookingPot,
   Receipt,
-  Sparkles,
-  type LucideIcon,
-} from "lucide-react";
+  Sparkle,
+  type Icon,
+} from "@phosphor-icons/react";
 
 interface TablesStatsProps {
   stats: {
@@ -29,17 +29,53 @@ interface StatItem {
   value: number;
   color: string;
   bgColor: string;
-  icon: LucideIcon;
+  icon: Icon;
 }
 
 export function TablesStats({ stats }: TablesStatsProps) {
   const items: StatItem[] = [
-    { label: "Total", value: stats.total, color: "#6b7280", bgColor: "rgba(107, 114, 128, 0.1)", icon: LayoutGrid },
-    { label: "Libres", value: stats.libres, color: "#22c55e", bgColor: "rgba(34, 197, 94, 0.1)", icon: CheckCircle2 },
-    { label: "Occupées", value: stats.occupees, color: "#eab308", bgColor: "rgba(234, 179, 8, 0.1)", icon: Clock },
-    { label: "En préparation", value: stats.enPreparation, color: "#3b82f6", bgColor: "rgba(59, 130, 246, 0.1)", icon: ChefHat },
-    { label: "Addition", value: stats.additionDemandee, color: "#f97316", bgColor: "rgba(249, 115, 22, 0.1)", icon: Receipt },
-    { label: "À nettoyer", value: stats.aNettoyer, color: "#ef4444", bgColor: "rgba(239, 68, 68, 0.1)", icon: Sparkles },
+    {
+      label: "Total",
+      value: stats.total,
+      color: "#6b7280",
+      bgColor: "rgba(107, 114, 128, 0.1)",
+      icon: SquaresFour,
+    },
+    {
+      label: "Libres",
+      value: stats.libres,
+      color: "#22c55e",
+      bgColor: "rgba(34, 197, 94, 0.1)",
+      icon: CheckCircle,
+    },
+    {
+      label: "Occupées",
+      value: stats.occupees,
+      color: "#eab308",
+      bgColor: "rgba(234, 179, 8, 0.1)",
+      icon: Clock,
+    },
+    {
+      label: "En préparation",
+      value: stats.enPreparation,
+      color: "#3b82f6",
+      bgColor: "rgba(59, 130, 246, 0.1)",
+      icon: CookingPot,
+    },
+    {
+      label: "Addition",
+      value: stats.additionDemandee,
+      color: "#f97316",
+      bgColor: "rgba(249, 115, 22, 0.1)",
+      icon: Receipt,
+    },
+    {
+      label: "À nettoyer",
+      value: stats.aNettoyer,
+      color: "#ef4444",
+      bgColor: "rgba(239, 68, 68, 0.1)",
+      icon: Sparkle,
+    },
   ];
 
   return (

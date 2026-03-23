@@ -9,10 +9,4 @@ export { Pricing } from "./pricing";
 export { Testimonials } from "./testimonials";
 export { FAQ } from "./faq";
 export { Footer } from "./footer";
-export {
-  FadeIn,
-  StaggerContainer,
-  StaggerItem,
-  ScaleOnHover,
-  CountUp,
-} from "./motion-wrapper";
+export { FadeIn, StaggerContainer, StaggerItem, ScaleOnHover, CountUp } from "./motion-wrapper";

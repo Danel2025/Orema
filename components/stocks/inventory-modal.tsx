@@ -20,14 +20,7 @@ import {
   Checkbox,
 } from "@radix-ui/themes";
 import { ScrollArea } from "@/components/ui";
-import {
-  ClipboardList,
-  AlertCircle,
-  CheckCircle,
-  ArrowRight,
-  Download,
-  Save,
-} from "lucide-react";
+import { ClipboardText, WarningCircle, CheckCircle, ArrowRight, DownloadSimple, FloppyDisk } from "@phosphor-icons/react";
 import { getInventoryProducts, submitInventory, getStockCategories } from "@/actions/stocks";
 import { toast } from "sonner";
 
@@ -205,7 +198,7 @@ export function InventoryModal({ open, onOpenChange, onSuccess }: InventoryModal
       <Dialog.Content maxWidth="900px" style={{ maxHeight: "85vh" }}>
         <Dialog.Title>
           <Flex align="center" gap="2">
-            <ClipboardList size={20} />
+            <ClipboardText size={20} />
             Inventaire
           </Flex>
         </Dialog.Title>
@@ -224,7 +217,7 @@ export function InventoryModal({ open, onOpenChange, onSuccess }: InventoryModal
                 </Text>
                 <Select.Root value={selectedCategorie} onValueChange={setSelectedCategorie}>
                   <Select.Trigger placeholder="Toutes les catégories" style={{ width: "100%" }} />
-                  <Select.Content>
+                  <Select.Content position="popper">
                     <Select.Item value="all">Toutes les catégories</Select.Item>
                     <Select.Separator />
                     {categories.map((cat) => (
@@ -246,12 +239,14 @@ export function InventoryModal({ open, onOpenChange, onSuccess }: InventoryModal
                 </Select.Root>
               </Box>
 
-              {error ? <Callout.Root color="red" size="1">
+              {error ? (
+                <Callout.Root color="red" size="1">
                   <Callout.Icon>
-                    <AlertCircle size={16} />
+                    <WarningCircle size={16} />
                   </Callout.Icon>
                   <Callout.Text>{error}</Callout.Text>
-                </Callout.Root> : null}
+                </Callout.Root>
+              ) : null}
             </Flex>
 
             <Flex gap="3" mt="4" justify="end">
@@ -349,9 +344,7 @@ export function InventoryModal({ open, onOpenChange, onSuccess }: InventoryModal
                                 min="0"
                                 placeholder="Quantité"
                                 value={line.quantiteReelle}
-                                onChange={(e) =>
-                                  updateQuantite(line.produitId, e.target.value)
-                                }
+                                onChange={(e) => updateQuantite(line.produitId, e.target.value)}
                                 style={{ width: 100 }}
                               />
                             </Table.Cell>
@@ -374,12 +367,14 @@ export function InventoryModal({ open, onOpenChange, onSuccess }: InventoryModal
                 </Box>
               </ScrollArea>
 
-              {error ? <Callout.Root color="violet" size="1">
+              {error ? (
+                <Callout.Root color="violet" size="1">
                   <Callout.Icon>
-                    <AlertCircle size={16} />
+                    <WarningCircle size={16} />
                   </Callout.Icon>
                   <Callout.Text>{error}</Callout.Text>
-                </Callout.Root> : null}
+                </Callout.Root>
+              ) : null}
             </Flex>
 
             <Flex gap="3" mt="4" justify="between">
@@ -451,8 +446,8 @@ export function InventoryModal({ open, onOpenChange, onSuccess }: InventoryModal
                       totalEcart === 0
                         ? "var(--gray-a3)"
                         : totalEcart > 0
-                        ? "var(--green-a3)"
-                        : "var(--red-a3)",
+                          ? "var(--green-a3)"
+                          : "var(--red-a3)",
                   }}
                 >
                   <Text
@@ -543,13 +538,7 @@ export function InventoryModal({ open, onOpenChange, onSuccess }: InventoryModal
                   </Box>
                 </ScrollArea>
               ) : (
-                <Flex
-                  direction="column"
-                  align="center"
-                  justify="center"
-                  py="6"
-                  gap="2"
-                >
+                <Flex direction="column" align="center" justify="center" py="6" gap="2">
                   <CheckCircle size={32} style={{ color: "var(--green-9)" }} />
                   <Text color="green" weight="medium">
                     Aucun écart détecté
@@ -557,12 +546,14 @@ export function InventoryModal({ open, onOpenChange, onSuccess }: InventoryModal
                 </Flex>
               )}
 
-              {error ? <Callout.Root color="red" size="1">
+              {error ? (
+                <Callout.Root color="red" size="1">
                   <Callout.Icon>
-                    <AlertCircle size={16} />
+                    <WarningCircle size={16} />
                   </Callout.Icon>
                   <Callout.Text>{error}</Callout.Text>
-                </Callout.Root> : null}
+                </Callout.Root>
+              ) : null}
             </Flex>
 
             <Flex gap="3" mt="4" justify="between">
@@ -576,7 +567,7 @@ export function InventoryModal({ open, onOpenChange, onSuccess }: InventoryModal
                   </Button>
                 </Dialog.Close>
                 <Button onClick={handleSubmit} disabled={isLoading} color="green">
-                  <Save size={14} />
+                  <FloppyDisk size={14} />
                   {isLoading ? "Enregistrement..." : "Valider l'inventaire"}
                 </Button>
               </Flex>

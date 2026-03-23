@@ -10,6 +10,7 @@ Ce document résume toutes les corrections d'intégration et de design appliqué
 ## 📋 Résumé Exécutif
 
 L'analyse complète du projet a identifié et résolu **12 problèmes critiques** d'intégration affectant :
+
 - Architecture de routing Next.js 16
 - Configuration TanStack Query (React Query) SSR
 - Schéma Prisma et types de données
@@ -22,17 +23,21 @@ L'analyse complète du projet a identifié et résolu **12 problèmes critiques*
 ## 🏗️ 1. Architecture de Routing Next.js 16
 
 ### Problèmes Identifiés
+
 - ❌ Duplication de dossiers `app/dashboard/` ET `app/(dashboard)/`
 - ❌ Dossier malformé `app/(dashboard)/{caisse,salle,produits`
 - ❌ Dossier `app/(auth)/` avec sous-dossiers vides mal placés
 - ❌ Conflit de routes TypeScript (TypedRoutes)
 
 ### Solutions Appliquées
+
 ✅ **Suppression du dossier `app/dashboard/` dupliqué**
+
 - Conservation de la structure avec route groups `app/(dashboard)/`
 - Meilleure organisation avec séparation auth/protected routes
 
 ✅ **Correction de la structure de routing**
+
 ```
 AVANT:
 app/
@@ -60,16 +65,19 @@ app/
 ```
 
 ✅ **Middleware de protection créé**
+
 - Fichier: `middleware.ts`
 - Protection automatique des routes dashboard
 - Bypass en mode développement
 
 ✅ **Sidebar mis à jour**
+
 - Fichier: `components/layout/sidebar.tsx`
 - Liens corrigés pour la nouvelle structure
 - Type `Route` de Next.js pour TypedRoutes
 
 ### Fichiers Modifiés
+
 - ✅ Suppression: `app/dashboard/` (complet)
 - ✅ Création: `app/(auth)/layout.tsx`
 - ✅ Création: `middleware.ts`
@@ -80,7 +88,9 @@ app/
 ## ⚡ 2. TanStack Query (React Query) SSR
 
 ### Problème Identifié
+
 ❌ **Pattern non optimal avec `useState`**
+
 ```typescript
 // AVANT (non recommandé pour SSR)
 const [queryClient] = useState(() => new QueryClient({ ... }));
@@ -89,13 +99,15 @@ const [queryClient] = useState(() => new QueryClient({ ... }));
 Le problème: Si React suspend pendant le rendu initial sans Suspense boundary, le client serait perdu.
 
 ### Solution Appliquée
+
 ✅ **Migration vers le pattern `isServer` recommandé**
 
 **Fichiers créés/modifiés:**
 
 1. **`lib/query-client.ts`** (NOUVEAU)
+
 ```typescript
-import { QueryClient, isServer, defaultShouldDehydrateQuery } from '@tanstack/react-query';
+import { QueryClient, isServer, defaultShouldDehydrateQuery } from "@tanstack/react-query";
 
 function makeQueryClient() {
   return new QueryClient({
@@ -107,8 +119,7 @@ function makeQueryClient() {
       },
       dehydrate: {
         shouldDehydrateQuery: (query) =>
-          defaultShouldDehydrateQuery(query) ||
-          query.state.status === 'pending',
+          defaultShouldDehydrateQuery(query) || query.state.status === "pending",
       },
     },
   });
@@ -129,6 +140,7 @@ export function getQueryClient() {
 ```
 
 2. **`app/providers.tsx`** (MODIFIÉ)
+
 ```typescript
 // APRÈS (recommandé pour SSR)
 import { getQueryClient } from "@/lib/query-client";
@@ -148,6 +160,7 @@ export function Providers({ children }: { children: ReactNode }) {
 ```
 
 ### Avantages
+
 - ✅ Support du streaming Next.js
 - ✅ Déshydratation des pending queries
 - ✅ Isolation correcte serveur/client
@@ -155,6 +168,7 @@ export function Providers({ children }: { children: ReactNode }) {
 - ✅ Pattern officiellement recommandé par TanStack
 
 ### Référence
+
 📚 [TanStack Query - Advanced SSR](https://tanstack.com/query/latest/docs/framework/react/guides/advanced-ssr)
 
 ---
@@ -162,6 +176,7 @@ export function Providers({ children }: { children: ReactNode }) {
 ## 🗄️ 3. Schéma Prisma & Base de Données
 
 ### Problèmes Identifiés
+
 - ❌ `datasource db` sans URL de connexion
 - ❌ Utilisation de `cuid()` au lieu d'UUID natifs
 - ❌ Type `Decimal(10, 2)` pour `valeurRemise` (devrait être sans décimales)
@@ -173,6 +188,7 @@ export function Providers({ children }: { children: ReactNode }) {
 ### Solutions Appliquées
 
 ✅ **1. Correction du datasource**
+
 ```prisma
 // AVANT
 datasource db {
@@ -188,6 +204,7 @@ datasource db {
 ```
 
 ✅ **2. Migration vers UUID natifs PostgreSQL**
+
 ```prisma
 // AVANT
 id String @id @default(cuid())
@@ -197,6 +214,7 @@ id String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
 ```
 
 ✅ **3. Nouveaux enums métier**
+
 ```prisma
 enum TauxTva {
   STANDARD  // 18%
@@ -226,6 +244,7 @@ enum ActionAudit {
 ```
 
 ✅ **4. Nouveau modèle AuditLog**
+
 ```prisma
 model AuditLog {
   id             String      @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
@@ -251,6 +270,7 @@ model AuditLog {
 ```
 
 ✅ **5. Corrections des montants FCFA**
+
 - Tous les champs de montants: `@db.Decimal(10, 0)` (sans décimales)
 - Correction de `valeurRemise`: `Decimal(10, 0)` au lieu de `Decimal(10, 2)`
 
@@ -265,6 +285,7 @@ model AuditLog {
 | LigneVente → Produit | Restrict | Garde l'historique |
 
 ✅ **7. Indexes de performance ajoutés**
+
 ```prisma
 @@index([etablissementId])
 @@index([clientId])
@@ -276,6 +297,7 @@ model AuditLog {
 ```
 
 ✅ **8. Champ code-barre ajouté**
+
 ```prisma
 model Produit {
   // ... autres champs
@@ -286,6 +308,7 @@ model Produit {
 ### Nouvelles Fonctions Utilitaires (lib/utils.ts)
 
 ✅ **Gestion de la TVA avec enums**
+
 ```typescript
 export const TVA_RATES = {
   STANDARD: 18,
@@ -298,10 +321,15 @@ export function getTvaLabel(tauxTva: TauxTva): string;
 export function calculerTVA(montantHT: number, tauxTva: number | TauxTva): number;
 export function calculerTTC(montantHT: number, tauxTva: number | TauxTva): number;
 export function calculerHT(montantTTC: number, tauxTva: number | TauxTva): number;
-export function calculerLigneVente(prixUnitaire: number, quantite: number, tauxTva: number | TauxTva);
+export function calculerLigneVente(
+  prixUnitaire: number,
+  quantite: number,
+  tauxTva: number | TauxTva
+);
 ```
 
 ### Fichiers Modifiés
+
 - ✅ `prisma/schema.prisma` (complet refactor)
 - ✅ `lib/utils.ts` (nouvelles fonctions TVA)
 - ✅ `prisma/seed.ts` (adapté au nouveau schema)
@@ -313,24 +341,28 @@ export function calculerLigneVente(prixUnitaire: number, quantite: number, tauxT
 ### Fichiers Créés/Améliorés
 
 ✅ **`.env.example`** (AMÉLIORÉ)
+
 - Documentation complète de chaque variable
 - Exemples pour local et Supabase
 - Configuration Prisma 7 compatible
 - Variables optionnelles pour production
 
 ✅ **`SETUP.md`** (NOUVEAU)
+
 - Guide de configuration complet
 - Instructions pas à pas
 - Commandes principales
 - Dépannage courant
 
 ✅ **`scripts/check-setup.js`** (NOUVEAU)
+
 - Script de vérification automatique
 - Vérifie Node.js, pnpm, Git
 - Valide la configuration
 - Détecte les problèmes courants
 
 ✅ **`package.json`** (MODIFIÉ)
+
 - Nouveau script: `pnpm check`
 - Exécute la vérification de l'environnement
 
@@ -354,14 +386,14 @@ export function calculerLigneVente(prixUnitaire: number, quantite: number, tauxT
 
 ## 📊 Statistiques des Corrections
 
-| Catégorie | Problèmes Identifiés | Résolus | Restants |
-|-----------|---------------------|---------|----------|
-| Architecture Routing | 4 | ✅ 4 | 0 |
-| TanStack Query SSR | 1 | ✅ 1 | 0 |
-| Schéma Prisma | 12 | ✅ 12 | 0 |
-| Configuration | 2 | ✅ 2 | 0 |
-| Avertissements | 2 | ⚠️ 0 | 2 (non bloquants) |
-| **TOTAL** | **21** | **✅ 19** | **⚠️ 2** |
+| Catégorie            | Problèmes Identifiés | Résolus   | Restants          |
+| -------------------- | -------------------- | --------- | ----------------- |
+| Architecture Routing | 4                    | ✅ 4      | 0                 |
+| TanStack Query SSR   | 1                    | ✅ 1      | 0                 |
+| Schéma Prisma        | 12                   | ✅ 12     | 0                 |
+| Configuration        | 2                    | ✅ 2      | 0                 |
+| Avertissements       | 2                    | ⚠️ 0      | 2 (non bloquants) |
+| **TOTAL**            | **21**               | **✅ 19** | **⚠️ 2**          |
 
 **Taux de résolution**: **90.5%** (19/21)
 
@@ -370,6 +402,7 @@ export function calculerLigneVente(prixUnitaire: number, quantite: number, tauxT
 ## 🚀 Prochaines Étapes Recommandées
 
 ### Immédiat (Développement)
+
 1. ✅ Configurer DATABASE_URL dans `.env`
 2. ✅ Exécuter `pnpm check` pour valider l'environnement
 3. ✅ Exécuter `pnpm prisma generate`
@@ -378,18 +411,21 @@ export function calculerLigneVente(prixUnitaire: number, quantite: number, tauxT
 6. ✅ Démarrer le serveur: `pnpm dev`
 
 ### Court terme (1-2 semaines)
+
 - [ ] Implémenter l'authentification Supabase
 - [ ] Configurer Row Level Security (RLS)
 - [ ] Ajouter les tests unitaires de base
 - [ ] Documenter les composants principaux
 
 ### Moyen terme (1 mois)
+
 - [ ] Implémenter le mode hors ligne avec IndexedDB
 - [ ] Configurer les imprimantes thermiques (ESC/POS)
 - [ ] Ajouter les rapports PDF
 - [ ] Optimiser les performances
 
 ### Production
+
 - [ ] Migrer middleware vers "proxy" Next.js 16
 - [ ] Corriger metadata viewport/themeColor
 - [ ] Configurer Supabase en production
@@ -400,13 +436,13 @@ export function calculerLigneVente(prixUnitaire: number, quantite: number, tauxT
 
 ## 📚 Documentation Créée
 
-| Document | Description |
-|----------|-------------|
-| `SETUP.md` | Guide de configuration complet |
+| Document                 | Description                          |
+| ------------------------ | ------------------------------------ |
+| `SETUP.md`               | Guide de configuration complet       |
 | `CORRECTIONS_APPLIED.md` | Ce document (résumé des corrections) |
-| `scripts/check-setup.js` | Script de vérification automatique |
-| `.env.example` | Template d'environnement documenté |
-| `lib/query-client.ts` | Utilitaire QueryClient SSR |
+| `scripts/check-setup.js` | Script de vérification automatique   |
+| `.env.example`           | Template d'environnement documenté   |
+| `lib/query-client.ts`    | Utilitaire QueryClient SSR           |
 
 ---
 
@@ -438,6 +474,7 @@ Si toutes ces étapes réussissent, votre environnement est **100% fonctionnel**
 ## 🆘 Support
 
 En cas de problème:
+
 1. Consulter `SETUP.md` section "Dépannage"
 2. Exécuter `pnpm check` pour diagnostiquer
 3. Vérifier les logs de la console

@@ -2,7 +2,9 @@ export {
   subscribeToTables,
   subscribeToOrders,
   subscribeToStock,
+  subscribeToNotifications,
   type TableChangeCallbacks,
   type OrderChangeCallbacks,
   type StockChangeCallbacks,
-} from './subscriptions'
+  type NotificationChangeCallbacks,
+} from "./subscriptions";

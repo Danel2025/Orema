@@ -1,4 +1,4 @@
-import { defineConfig, devices } from '@playwright/test'
+import { defineConfig, devices } from "@playwright/test";
 
 /**
  * Configuration Playwright pour les tests E2E
@@ -7,7 +7,7 @@ import { defineConfig, devices } from '@playwright/test'
 
 export default defineConfig({
   // Dossier des tests E2E
-  testDir: './tests/e2e',
+  testDir: "./tests/e2e",
 
   // Execution en parallele
   fullyParallel: true,
@@ -22,24 +22,21 @@ export default defineConfig({
   workers: process.env.CI ? 1 : undefined,
 
   // Reporter
-  reporter: [
-    ['html', { outputFolder: 'playwright-report' }],
-    ['list'],
-  ],
+  reporter: [["html", { outputFolder: "playwright-report" }], ["list"]],
 
   // Configuration globale des tests
   use: {
     // URL de base (serveur de dev Next.js)
-    baseURL: 'http://localhost:3000',
+    baseURL: "http://localhost:3000",
 
     // Collecter les traces en cas d'echec
-    trace: 'on-first-retry',
+    trace: "on-first-retry",
 
     // Screenshots en cas d'echec
-    screenshot: 'only-on-failure',
+    screenshot: "only-on-failure",
 
     // Videos en cas d'echec
-    video: 'on-first-retry',
+    video: "on-first-retry",
 
     // Timeout pour les actions
     actionTimeout: 10000,
@@ -51,10 +48,10 @@ export default defineConfig({
     ignoreHTTPSErrors: true,
 
     // Locale francais (Gabon)
-    locale: 'fr-GA',
+    locale: "fr-GA",
 
     // Timezone Gabon
-    timezoneId: 'Africa/Libreville',
+    timezoneId: "Africa/Libreville",
   },
 
   // Timeout global des tests
@@ -69,47 +66,47 @@ export default defineConfig({
   projects: [
     // Tests sur Chrome (principal pour POS)
     {
-      name: 'chromium',
+      name: "chromium",
       use: {
-        ...devices['Desktop Chrome'],
+        ...devices["Desktop Chrome"],
         viewport: { width: 1280, height: 800 },
       },
     },
 
     // Tests sur Firefox
     {
-      name: 'firefox',
+      name: "firefox",
       use: {
-        ...devices['Desktop Firefox'],
+        ...devices["Desktop Firefox"],
         viewport: { width: 1280, height: 800 },
       },
     },
 
     // Tests sur tablette (usage courant en restauration)
     {
-      name: 'tablet',
+      name: "tablet",
       use: {
-        ...devices['iPad Pro 11'],
+        ...devices["iPad Pro 11"],
       },
     },
 
     // Tests sur mobile (pour les livreurs)
     {
-      name: 'mobile',
+      name: "mobile",
       use: {
-        ...devices['Pixel 7'],
+        ...devices["Pixel 7"],
       },
     },
   ],
 
   // Serveur de developpement
   webServer: {
-    command: 'npm run dev',
-    url: 'http://localhost:3000',
+    command: "npm run dev",
+    url: "http://localhost:3000",
     reuseExistingServer: !process.env.CI,
     timeout: 120000,
   },
 
   // Dossier de sortie
-  outputDir: 'test-results',
-})
+  outputDir: "test-results",
+});

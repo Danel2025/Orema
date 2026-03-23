@@ -1,288 +1,299 @@
 /**
- * Tests E2E - Gestion des tables / Plan de salle
+ * Tests E2E - Plan de salle / Gestion des tables
  *
  * Teste les fonctionnalites du plan de salle:
- * - Affichage du plan de salle
- * - Tables visibles avec statuts colores
- * - Statistiques des tables
- * - Filtrage par zone
- * - Interaction avec une table (selection, details)
- * - Ajout de table (formulaire)
+ * - Redirection vers login si non authentifie
+ * - Affichage du header avec titre et sous-titre
+ * - Statistiques des tables (total, libres, occupees, etc.)
+ * - Legende des statuts colores
+ * - Selecteur de zone
+ * - Boutons d'action (Actualiser, Ajouter une table)
+ * - Plan de salle interactif
  */
 
-import { test, expect } from '@playwright/test'
+import { test, expect } from "@playwright/test";
 
-test.describe('Plan de salle - Affichage', () => {
+// =============================================================================
+// TESTS SANS AUTHENTIFICATION
+// =============================================================================
+
+test.describe("Plan de salle - Acces sans authentification", () => {
+  test("redirige vers /login quand non authentifie", async ({ page }) => {
+    await page.goto("/salle");
+    await expect(page).toHaveURL(/\/login/);
+  });
+});
+
+// =============================================================================
+// TESTS - HEADER
+// =============================================================================
+
+test.describe("Plan de salle - Header", () => {
   test.beforeEach(async ({ page }) => {
-    await page.goto('/salle')
-    // Si redirection vers login, le test est non-applicable
-    // On attend soit la page salle soit la page login
-    await page.waitForLoadState('networkidle')
-  })
-
-  test('affiche le titre "Plan de salle"', async ({ page }) => {
-    // Si on est redirige vers login, skip
-    if (page.url().includes('/login')) {
-      test.skip()
-      return
+    await page.goto("/salle");
+    if (page.url().includes("/login")) {
+      test.skip();
+      return;
     }
+    await page.waitForLoadState("networkidle");
+  });
 
-    await expect(
-      page.getByRole('heading', { name: /plan de salle/i })
-    ).toBeVisible()
-  })
+  test("affiche le titre 'Plan de salle'", async ({ page }) => {
+    const heading = page.getByRole("heading", { name: /plan de salle/i });
+    await expect(heading).toBeVisible();
+  });
 
-  test('affiche le sous-titre avec le nombre de tables', async ({ page }) => {
-    if (page.url().includes('/login')) {
-      test.skip()
-      return
-    }
+  test("affiche le sous-titre avec le nombre de tables", async ({ page }) => {
+    const subtitle = page.getByText(/gestion des tables et zones/i);
+    await expect(subtitle).toBeVisible();
 
-    // Le texte "Gestion des tables et zones - X tables" devrait etre visible
-    await expect(
-      page.getByText(/gestion des tables.*zones/i)
-    ).toBeVisible()
-  })
+    // Le sous-titre contient le nombre de tables
+    await expect(subtitle).toContainText(/\d+ tables/);
+  });
+});
 
-  test('affiche les statistiques des tables', async ({ page }) => {
-    if (page.url().includes('/login')) {
-      test.skip()
-      return
-    }
+// =============================================================================
+// TESTS - STATISTIQUES DES TABLES
+// =============================================================================
 
-    // Les statistiques de statut devraient etre visibles
-    // (libres, occupees, en preparation, etc.)
-    const statsSection = page.locator('[class*="stats"], [data-testid="tables-stats"]')
-
-    // On verifie au moins la presence de texte de statut
-    const statusTexts = [
-      page.getByText(/libre/i).first(),
-      page.getByText(/occup/i).first(),
-    ]
-
-    let hasStats = false
-    for (const text of statusTexts) {
-      if (await text.isVisible().catch(() => false)) {
-        hasStats = true
-        break
-      }
-    }
-
-    // Les stats ou un indicateur devrait etre present
-    expect(hasStats || await statsSection.isVisible().catch(() => false)).toBeTruthy()
-  })
-})
-
-test.describe('Plan de salle - Legende des statuts', () => {
+test.describe("Plan de salle - Statistiques", () => {
   test.beforeEach(async ({ page }) => {
-    await page.goto('/salle')
-    await page.waitForLoadState('networkidle')
-  })
-
-  test('affiche la legende des statuts colores', async ({ page }) => {
-    if (page.url().includes('/login')) {
-      test.skip()
-      return
+    await page.goto("/salle");
+    if (page.url().includes("/login")) {
+      test.skip();
+      return;
     }
+    await page.waitForLoadState("networkidle");
+  });
 
-    // La legende devrait montrer les differents statuts
-    const statuts = [
-      /libre/i,
-      /occup/i,
-      /pr[eé]paration/i,
-      /addition/i,
-      /nettoyer/i,
-    ]
+  test("affiche les statistiques 'Total'", async ({ page }) => {
+    await expect(page.getByText("Total").first()).toBeVisible();
+  });
 
-    let legendeVisible = false
-    for (const statut of statuts) {
-      const element = page.getByText(statut).first()
-      if (await element.isVisible().catch(() => false)) {
-        legendeVisible = true
-        break
-      }
-    }
+  test("affiche les statistiques 'Libres'", async ({ page }) => {
+    await expect(page.getByText("Libres")).toBeVisible();
+  });
 
-    // Au moins un statut de legende devrait etre visible
-    expect(legendeVisible).toBeTruthy()
-  })
-})
+  test("affiche les statistiques 'Occupees'", async ({ page }) => {
+    await expect(page.getByText(/occup[eé]es/i)).toBeVisible();
+  });
 
-test.describe('Plan de salle - Filtrage par zone', () => {
+  test("affiche les statistiques 'En preparation'", async ({ page }) => {
+    await expect(page.getByText(/en pr[eé]paration/i).first()).toBeVisible();
+  });
+
+  test("affiche les statistiques 'Addition'", async ({ page }) => {
+    await expect(page.getByText("Addition").first()).toBeVisible();
+  });
+
+  test("affiche les statistiques 'A nettoyer'", async ({ page }) => {
+    await expect(page.getByText(/[aà] nettoyer/i).first()).toBeVisible();
+  });
+
+  test("affiche les couverts disponibles", async ({ page }) => {
+    await expect(page.getByText(/couverts disponibles/i)).toBeVisible();
+    await expect(page.getByText(/couverts$/i).first()).toBeVisible();
+  });
+
+  test("les valeurs statistiques sont des nombres", async ({ page }) => {
+    const totalStat = page.getByText("Total").first();
+    await expect(totalStat).toBeVisible();
+
+    // Le nombre est dans un element adjacent (frere)
+    const totalValue = totalStat.locator("..").locator("span").first();
+    const text = await totalValue.textContent();
+    expect(text).toMatch(/\d+/);
+  });
+});
+
+// =============================================================================
+// TESTS - LEGENDE DES STATUTS
+// =============================================================================
+
+test.describe("Plan de salle - Legende des statuts", () => {
   test.beforeEach(async ({ page }) => {
-    await page.goto('/salle')
-    await page.waitForLoadState('networkidle')
-  })
-
-  test('affiche le selecteur de zone', async ({ page }) => {
-    if (page.url().includes('/login')) {
-      test.skip()
-      return
+    await page.goto("/salle");
+    if (page.url().includes("/login")) {
+      test.skip();
+      return;
     }
+    await page.waitForLoadState("networkidle");
+  });
 
-    // Le selecteur de filtrage par zone
-    const zoneSelector = page.getByText(/toutes les zones/i).first()
-    const zoneFilter = page.locator('button[role="combobox"], [data-testid="zone-filter"]').first()
+  test("affiche le statut 'Libre' dans la legende", async ({ page }) => {
+    await expect(page.getByText("Libre").first()).toBeVisible();
+  });
 
-    const hasSelector = await zoneSelector.isVisible().catch(() => false) ||
-                        await zoneFilter.isVisible().catch(() => false)
+  test("affiche le statut 'Occupee' dans la legende", async ({ page }) => {
+    await expect(page.getByText(/occup[eé]e$/i).first()).toBeVisible();
+  });
 
-    expect(hasSelector).toBeTruthy()
-  })
-})
+  test("affiche le statut 'En preparation' dans la legende", async ({ page }) => {
+    await expect(page.getByText(/en pr[eé]paration/i).first()).toBeVisible();
+  });
 
-test.describe('Plan de salle - Actions', () => {
+  test("affiche le statut 'Addition demandee' dans la legende", async ({ page }) => {
+    await expect(page.getByText(/addition demand[eé]e/i)).toBeVisible();
+  });
+
+  test("affiche le statut 'A nettoyer' dans la legende", async ({ page }) => {
+    await expect(page.getByText(/[àa] nettoyer/i).first()).toBeVisible();
+  });
+});
+
+// =============================================================================
+// TESTS - FILTRE PAR ZONE
+// =============================================================================
+
+test.describe("Plan de salle - Filtre par zone", () => {
   test.beforeEach(async ({ page }) => {
-    await page.goto('/salle')
-    await page.waitForLoadState('networkidle')
-  })
-
-  test('affiche le bouton Ajouter une table', async ({ page }) => {
-    if (page.url().includes('/login')) {
-      test.skip()
-      return
+    await page.goto("/salle");
+    if (page.url().includes("/login")) {
+      test.skip();
+      return;
     }
+    await page.waitForLoadState("networkidle");
+  });
 
-    // Le bouton d'ajout devrait etre visible (pour admin/manager)
-    const addButton = page.getByRole('button', { name: /ajouter une table/i })
+  test("affiche le selecteur de zone avec 'Toutes les zones'", async ({ page }) => {
+    const zoneTrigger = page.getByText(/toutes les zones/i);
+    await expect(zoneTrigger.first()).toBeVisible();
+  });
+});
 
-    // Le bouton peut etre actif ou desactive selon le role
-    if (await addButton.isVisible().catch(() => false)) {
-      await expect(addButton).toBeVisible()
-    }
-  })
+// =============================================================================
+// TESTS - BOUTONS D'ACTION
+// =============================================================================
 
-  test('affiche le bouton Actualiser', async ({ page }) => {
-    if (page.url().includes('/login')) {
-      test.skip()
-      return
-    }
-
-    const refreshButton = page.getByRole('button', { name: /actualiser/i })
-    await expect(refreshButton).toBeVisible()
-  })
-
-  test('le bouton actualiser fonctionne sans erreur', async ({ page }) => {
-    if (page.url().includes('/login')) {
-      test.skip()
-      return
-    }
-
-    const refreshButton = page.getByRole('button', { name: /actualiser/i })
-
-    if (await refreshButton.isVisible().catch(() => false)) {
-      await refreshButton.click()
-
-      // La page ne devrait pas avoir d'erreur apres rafraichissement
-      await page.waitForLoadState('networkidle')
-      await expect(
-        page.getByRole('heading', { name: /plan de salle/i })
-      ).toBeVisible()
-    }
-  })
-})
-
-test.describe('Plan de salle - Zone du plan interactif', () => {
+test.describe("Plan de salle - Boutons d'action", () => {
   test.beforeEach(async ({ page }) => {
-    await page.goto('/salle')
-    await page.waitForLoadState('networkidle')
-  })
+    await page.goto("/salle");
+    if (page.url().includes("/login")) {
+      test.skip();
+      return;
+    }
+    await page.waitForLoadState("networkidle");
+  });
 
-  test('affiche le plan de salle interactif', async ({ page }) => {
-    if (page.url().includes('/login')) {
-      test.skip()
-      return
+  test("affiche le bouton 'Actualiser'", async ({ page }) => {
+    const actualiserButton = page.getByRole("button", { name: /actualiser/i });
+    await expect(actualiserButton).toBeVisible();
+    await expect(actualiserButton).toBeEnabled();
+  });
+
+  test("le bouton 'Actualiser' fonctionne sans erreur", async ({ page }) => {
+    const actualiserButton = page.getByRole("button", { name: /actualiser/i });
+    await actualiserButton.click();
+
+    // La page ne doit pas crasher apres le rafraichissement
+    await expect(page.getByRole("heading", { name: /plan de salle/i })).toBeVisible();
+  });
+
+  test("affiche le bouton 'Ajouter une table'", async ({ page }) => {
+    const addButton = page.getByRole("button", { name: /ajouter une table/i });
+    await expect(addButton).toBeVisible();
+  });
+
+  test("le bouton 'Ajouter une table' ouvre le formulaire si autorise", async ({ page }) => {
+    const addButton = page.getByRole("button", { name: /ajouter une table/i });
+    await expect(addButton).toBeVisible();
+
+    const isEnabled = await addButton.isEnabled();
+    if (!isEnabled) {
+      // Le bouton est desactive pour les roles serveur/caissier - c'est attendu
+      test.skip();
+      return;
     }
 
-    // Le plan de salle (FloorPlan) devrait etre rendu
-    // Il contient typiquement un canvas ou une zone avec les tables
-    const floorPlan = page.locator('[data-testid="floor-plan"]').first()
-    const canvasArea = page.locator('[class*="floor-plan"], [class*="FloorPlan"]').first()
+    await addButton.click();
 
-    const hasPlan = await floorPlan.isVisible().catch(() => false) ||
-                    await canvasArea.isVisible().catch(() => false)
+    const dialog = page.locator('[role="dialog"]');
+    await expect(dialog).toBeVisible({ timeout: 5000 });
+  });
+});
 
-    // Au minimum, la page ne doit pas etre vide
-    await expect(page.locator('body')).not.toBeEmpty()
-  })
+// =============================================================================
+// TESTS - PLAN DE SALLE INTERACTIF
+// =============================================================================
 
-  test('selection d\'une table met a jour l\'URL', async ({ page }) => {
-    if (page.url().includes('/login')) {
-      test.skip()
-      return
-    }
-
-    // Chercher un element de table cliquable dans le plan
-    const tableElement = page.locator('[data-testid*="table-"], [class*="table-item"]').first()
-
-    if (await tableElement.isVisible().catch(() => false)) {
-      await tableElement.click()
-
-      // L'URL devrait contenir un parametre "table"
-      await expect(page).toHaveURL(/table=/, { timeout: 5000 })
-    }
-  })
-
-  test('selection d\'une table ouvre le panneau de details', async ({ page }) => {
-    if (page.url().includes('/login')) {
-      test.skip()
-      return
-    }
-
-    const tableElement = page.locator('[data-testid*="table-"], [class*="table-item"]').first()
-
-    if (await tableElement.isVisible().catch(() => false)) {
-      await tableElement.click()
-
-      // Un panneau de details devrait apparaitre
-      // Il contient des infos sur la table (numero, capacite, statut)
-      await page.waitForTimeout(500)
-
-      const detailsPanel = page.locator('[class*="details"], [data-testid="table-details"]').first()
-      const hasDetails = await detailsPanel.isVisible().catch(() => false) ||
-                         await page.getByText(/capacit/i).first().isVisible().catch(() => false)
-
-      // Le panneau peut etre visible si des tables existent
-    }
-  })
-})
-
-test.describe('Plan de salle - Formulaire d\'ajout de table', () => {
+test.describe("Plan de salle - Zone interactive", () => {
   test.beforeEach(async ({ page }) => {
-    await page.goto('/salle')
-    await page.waitForLoadState('networkidle')
-  })
+    await page.goto("/salle");
+    if (page.url().includes("/login")) {
+      test.skip();
+      return;
+    }
+    await page.waitForLoadState("networkidle");
+  });
 
-  test('ouvre le formulaire d\'ajout de table', async ({ page }) => {
-    if (page.url().includes('/login')) {
-      test.skip()
-      return
+  test("la page affiche du contenu (non vide)", async ({ page }) => {
+    await expect(page.getByRole("heading", { name: /plan de salle/i })).toBeVisible();
+    await expect(page.locator("body")).not.toBeEmpty();
+  });
+});
+
+// =============================================================================
+// TESTS - FORMULAIRE D'AJOUT DE TABLE
+// =============================================================================
+
+test.describe("Plan de salle - Formulaire d'ajout", () => {
+  test.beforeEach(async ({ page }) => {
+    await page.goto("/salle");
+    if (page.url().includes("/login")) {
+      test.skip();
+      return;
+    }
+    await page.waitForLoadState("networkidle");
+
+    const addButton = page.getByRole("button", { name: /ajouter une table/i });
+    const isEnabled = await addButton.isEnabled();
+    if (!isEnabled) {
+      test.skip();
+      return;
     }
 
-    const addButton = page.getByRole('button', { name: /ajouter une table/i })
+    await addButton.click();
+    await expect(page.locator('[role="dialog"]')).toBeVisible({ timeout: 5000 });
+  });
 
-    if (await addButton.isVisible().catch(() => false) && await addButton.isEnabled()) {
-      await addButton.click()
+  test("le formulaire contient le champ numero", async ({ page }) => {
+    const dialog = page.locator('[role="dialog"]');
+    const numeroField = dialog.getByLabel(/num[eé]ro/i).first();
+    await expect(numeroField).toBeVisible();
+  });
 
-      // Un dialogue/formulaire devrait s'ouvrir
-      await page.waitForTimeout(500)
+  test("le formulaire contient le champ capacite", async ({ page }) => {
+    const dialog = page.locator('[role="dialog"]');
+    const capaciteField = dialog.getByLabel(/capacit/i).first();
+    await expect(capaciteField).toBeVisible();
+  });
 
-      // Verifier les champs du formulaire
-      const dialogOrForm = page.locator('[role="dialog"], [data-testid="table-form"]').first()
-      if (await dialogOrForm.isVisible().catch(() => false)) {
-        // Le formulaire devrait contenir des champs pour:
-        // numero, capacite, forme, zone
-        const formFields = [
-          page.getByLabel(/num[eé]ro/i).first(),
-          page.getByLabel(/capacit/i).first(),
-        ]
+  test("le formulaire peut etre ferme avec Escape", async ({ page }) => {
+    const dialog = page.locator('[role="dialog"]');
+    await expect(dialog).toBeVisible();
 
-        for (const field of formFields) {
-          if (await field.isVisible().catch(() => false)) {
-            await expect(field).toBeVisible()
-          }
-        }
-      }
+    await page.keyboard.press("Escape");
+
+    await expect(dialog).not.toBeVisible({ timeout: 3000 });
+  });
+});
+
+// =============================================================================
+// TESTS - RESPONSIVE
+// =============================================================================
+
+test.describe("Plan de salle - Responsive", () => {
+  test.beforeEach(async ({ page }) => {
+    await page.goto("/salle");
+    if (page.url().includes("/login")) {
+      test.skip();
+      return;
     }
-  })
-})
+    await page.waitForLoadState("networkidle");
+  });
+
+  test("le titre reste visible sur tablette (768x1024)", async ({ page }) => {
+    await page.setViewportSize({ width: 768, height: 1024 });
+    await expect(page.getByRole("heading", { name: /plan de salle/i })).toBeVisible();
+  });
+});

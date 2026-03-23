@@ -6,13 +6,7 @@
  */
 
 import { useState } from "react";
-import {
-  Box,
-  Flex,
-  Text,
-  Popover,
-  Grid,
-} from "@radix-ui/themes";
+import { Box, Flex, Text, Popover, Grid } from "@radix-ui/themes";
 import { Check, ChevronDown, Palette } from "lucide-react";
 import { contentColors } from "@/schemas/content.schema";
 
@@ -23,21 +17,18 @@ interface ColorPickerProps {
   error?: string;
 }
 
-export function ColorPicker({
-  value,
-  onChange,
-  label,
-  error,
-}: ColorPickerProps) {
+export function ColorPicker({ value, onChange, label, error }: ColorPickerProps) {
   const [open, setOpen] = useState(false);
 
   const currentColor = contentColors.find((c) => c.value === value) || contentColors[0];
 
   return (
     <Box>
-      {label ? <Text size="2" weight="medium" mb="2" style={{ display: "block" }}>
+      {label ? (
+        <Text size="2" weight="medium" mb="2" style={{ display: "block" }}>
           {label}
-        </Text> : null}
+        </Text>
+      ) : null}
 
       <Popover.Root open={open} onOpenChange={setOpen}>
         <Popover.Trigger>
@@ -77,10 +68,7 @@ export function ColorPicker({
           </Flex>
         </Popover.Trigger>
 
-        <Popover.Content
-          style={{ width: 280, padding: 0 }}
-          align="start"
-        >
+        <Popover.Content style={{ width: 280, padding: 0 }} align="start">
           {/* Header */}
           <Flex align="center" gap="2" p="3" style={{ borderBottom: "1px solid var(--gray-a4)" }}>
             <Palette size={16} style={{ color: "var(--gray-10)" }} />
@@ -135,9 +123,7 @@ export function ColorPicker({
                         display: "flex",
                         alignItems: "center",
                         justifyContent: "center",
-                        boxShadow: isSelected
-                          ? `0 4px 12px var(--${color.value}-a5)`
-                          : "none",
+                        boxShadow: isSelected ? `0 4px 12px var(--${color.value}-a5)` : "none",
                         transition: "all 0.15s ease",
                       }}
                     >
@@ -202,9 +188,11 @@ export function ColorPicker({
         </Popover.Content>
       </Popover.Root>
 
-      {error ? <Text size="1" color="red" mt="1">
+      {error ? (
+        <Text size="1" color="red" mt="1">
           {error}
-        </Text> : null}
+        </Text>
+      ) : null}
     </Box>
   );
 }

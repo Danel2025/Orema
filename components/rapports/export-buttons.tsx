@@ -7,7 +7,7 @@
 
 import { useState } from "react";
 import { Button, DropdownMenu, Flex, Text } from "@radix-ui/themes";
-import { Download, FileText, FileSpreadsheet, File, Loader2 } from "lucide-react";
+import { DownloadSimple, FileText, FileXls, File, CircleNotch } from "@phosphor-icons/react";
 import { toast } from "sonner";
 
 type ExportFormat = "pdf" | "excel" | "csv";
@@ -64,11 +64,7 @@ export function ExportButtons({
     <DropdownMenu.Root>
       <DropdownMenu.Trigger>
         <Button variant="soft" disabled={isExporting !== null}>
-          {isExporting ? (
-            <Loader2 size={16} className="animate-spin" />
-          ) : (
-            <Download size={16} />
-          )}
+          {isExporting ? <CircleNotch size={16} className="animate-spin" /> : <DownloadSimple size={16} />}
           Exporter
           <DropdownMenu.TriggerIcon />
         </Button>
@@ -84,7 +80,7 @@ export function ExportButtons({
 
         <DropdownMenu.Item onClick={() => handleExport("excel")}>
           <Flex align="center" gap="2">
-            <FileSpreadsheet size={16} style={{ color: "var(--green-9)" }} />
+            <FileXls size={16} style={{ color: "var(--green-9)" }} />
             <Text>Exporter en Excel</Text>
           </Flex>
         </DropdownMenu.Item>
@@ -118,7 +114,11 @@ function exportToCSV(data: Record<string, unknown>[], filename: string) {
           const value = row[header];
           // Echapper les guillemets et entourer les valeurs contenant des virgules
           const stringValue = String(value ?? "");
-          if (stringValue.includes(";") || stringValue.includes('"') || stringValue.includes("\n")) {
+          if (
+            stringValue.includes(";") ||
+            stringValue.includes('"') ||
+            stringValue.includes("\n")
+          ) {
             return `"${stringValue.replace(/"/g, '""')}"`;
           }
           return stringValue;
@@ -135,11 +135,7 @@ function exportToCSV(data: Record<string, unknown>[], filename: string) {
 /**
  * Export en Excel (utilise xlsx si disponible)
  */
-async function exportToExcel(
-  data: Record<string, unknown>[],
-  filename: string,
-  title: string
-) {
+async function exportToExcel(data: Record<string, unknown>[], filename: string, title: string) {
   try {
     // Import dynamique de xlsx
     const XLSX = await import("xlsx");
@@ -167,13 +163,18 @@ async function exportToExcel(
 }
 
 /**
+ * Echappe les caracteres HTML speciaux pour prevenir les injections XSS
+ */
+function escapeHtml(str: string): string {
+  const div = document.createElement("div");
+  div.textContent = str;
+  return div.innerHTML;
+}
+
+/**
  * Export en PDF (utilise html2pdf si disponible)
  */
-async function exportToPDF(
-  data: Record<string, unknown>[],
-  filename: string,
-  title: string
-) {
+async function exportToPDF(data: Record<string, unknown>[], filename: string, title: string) {
   try {
     // Import dynamique de html2pdf
     const html2pdf = (await import("html2pdf.js")).default;
@@ -182,20 +183,20 @@ async function exportToPDF(
     const headers = Object.keys(data[0]);
     const tableHTML = `
       <div style="font-family: Arial, sans-serif; padding: 20px;">
-        <h1 style="color: #f97316; margin-bottom: 20px;">${title}</h1>
+        <h1 style="color: #f97316; margin-bottom: 20px;">${escapeHtml(title)}</h1>
         <p style="color: #666; margin-bottom: 20px;">
-          Genere le ${new Date().toLocaleDateString("fr-GA", {
+          Genere le ${escapeHtml(new Date().toLocaleDateString("fr-GA", {
             day: "2-digit",
             month: "long",
             year: "numeric",
             hour: "2-digit",
             minute: "2-digit",
-          })}
+          }))}
         </p>
         <table style="width: 100%; border-collapse: collapse; font-size: 12px;">
           <thead>
             <tr style="background-color: #f97316; color: white;">
-              ${headers.map((h) => `<th style="padding: 8px; text-align: left; border: 1px solid #ddd;">${h}</th>`).join("")}
+              ${headers.map((h) => `<th style="padding: 8px; text-align: left; border: 1px solid #ddd;">${escapeHtml(h)}</th>`).join("")}
             </tr>
           </thead>
           <tbody>
@@ -205,8 +206,7 @@ async function exportToPDF(
               <tr style="background-color: ${i % 2 === 0 ? "#fff" : "#f9f9f9"};">
                 ${headers
                   .map(
-                    (h) =>
-                      `<td style="padding: 8px; border: 1px solid #ddd;">${row[h] ?? ""}</td>`
+                    (h) => `<td style="padding: 8px; border: 1px solid #ddd;">${escapeHtml(String(row[h] ?? ""))}</td>`
                   )
                   .join("")}
               </tr>
@@ -249,7 +249,7 @@ async function exportToPDF(
       <!DOCTYPE html>
       <html>
       <head>
-        <title>${title}</title>
+        <title>${escapeHtml(title)}</title>
         <style>
           body { font-family: Arial, sans-serif; padding: 20px; }
           h1 { color: #f97316; }
@@ -263,14 +263,14 @@ async function exportToPDF(
         </style>
       </head>
       <body>
-        <h1>${title}</h1>
-        <p>Genere le ${new Date().toLocaleDateString("fr-GA")}</p>
+        <h1>${escapeHtml(title)}</h1>
+        <p>Genere le ${escapeHtml(new Date().toLocaleDateString("fr-GA"))}</p>
         <table>
           <thead>
-            <tr>${headers.map((h) => `<th>${h}</th>`).join("")}</tr>
+            <tr>${headers.map((h) => `<th>${escapeHtml(h)}</th>`).join("")}</tr>
           </thead>
           <tbody>
-            ${data.map((row) => `<tr>${headers.map((h) => `<td>${row[h] ?? ""}</td>`).join("")}</tr>`).join("")}
+            ${data.map((row) => `<tr>${headers.map((h) => `<td>${escapeHtml(String(row[h] ?? ""))}</td>`).join("")}</tr>`).join("")}
           </tbody>
         </table>
         <button onclick="window.print()" style="margin-top: 20px; padding: 10px 20px; background: #f97316; color: white; border: none; cursor: pointer;">

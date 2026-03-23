@@ -96,9 +96,9 @@ export async function getEtablissement(): Promise<Etablissement> {
   const supabase = createServiceClient();
 
   const { data: e, error } = await supabase
-    .from('etablissements')
-    .select('*')
-    .eq('id', session.etablissementId)
+    .from("etablissements")
+    .select("*")
+    .eq("id", session.etablissementId)
     .single();
 
   if (error || !e) {

@@ -8,11 +8,6 @@
 import type { BonCuisineData } from "../types";
 import { generateBonCuisineCommands } from "./bon-cuisine";
 
- 
-export function generateBonBarCommands(
-  printer: any,
-  data: BonCuisineData,
-  width: number
-): void {
+export function generateBonBarCommands(printer: any, data: BonCuisineData, width: number): void {
   generateBonCuisineCommands(printer, data, width, "BAR");
 }

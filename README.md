@@ -25,30 +25,35 @@ Le systeme prend en charge les specificites du marche local : devise FCFA (XAF),
 ## Fonctionnalites
 
 ### Module Caisse
+
 - Vente directe, service en salle, livraison, a emporter
 - Paiements multiples (especes, carte, Mobile Money, compte client, mixte)
 - Impression tickets thermiques et bons de cuisine
 - Mode hors-ligne avec synchronisation automatique
 
 ### Gestion de salle
+
 - Plan de salle interactif avec drag & drop
 - Statut des tables en temps reel
 - Transfert de table et division d'addition
 - Zones configurables
 
 ### Produits & Stocks
+
 - Catalogue avec categories, supplements et produits composites
 - Gestion des stocks avec deduction automatique
 - Import/export CSV
 - Support codes-barres
 
 ### Rapports
+
 - Rapport Z (cloture de caisse)
 - Statistiques de ventes par periode
 - Analyse des produits les plus vendus et heures de pointe
 - Export PDF, Excel, CSV
 
 ### Administration
+
 - Gestion des employes avec roles (Admin, Manager, Caissier, Serveur)
 - Permissions granulaires par role
 - Connexion rapide par code PIN
@@ -88,18 +93,18 @@ Le systeme prend en charge les specificites du marche local : devise FCFA (XAF),
 
 ## Stack technique
 
-| Categorie | Technologies |
-|-----------|-------------|
-| **Framework** | Next.js 16 (App Router, Turbopack) |
-| **UI** | React 19, Radix UI Themes 3, Tailwind CSS 4 |
-| **Langage** | TypeScript 5 (strict) |
-| **Base de donnees** | PostgreSQL via Supabase |
-| **Authentification** | Supabase Auth + PIN codes (hashes) |
-| **Etat global** | Zustand 5 |
-| **Etat serveur** | TanStack Query 5 |
-| **Formulaires** | React Hook Form + Zod |
-| **Impression** | ESC/POS (USB, reseau, serie) |
-| **Tests** | Vitest (unitaires), Playwright (E2E) |
+| Categorie            | Technologies                                |
+| -------------------- | ------------------------------------------- |
+| **Framework**        | Next.js 16 (App Router, Turbopack)          |
+| **UI**               | React 19, Radix UI Themes 3, Tailwind CSS 4 |
+| **Langage**          | TypeScript 5 (strict)                       |
+| **Base de donnees**  | PostgreSQL via Supabase                     |
+| **Authentification** | Supabase Auth + PIN codes (hashes)          |
+| **Etat global**      | Zustand 5                                   |
+| **Etat serveur**     | TanStack Query 5                            |
+| **Formulaires**      | React Hook Form + Zod                       |
+| **Impression**       | ESC/POS (USB, reseau, serie)                |
+| **Tests**            | Vitest (unitaires), Playwright (E2E)        |
 
 ## Installation
 
@@ -203,25 +208,25 @@ gabon-pos/
 
 ## Configuration metier
 
-| Parametre | Valeur |
-|-----------|--------|
-| **Devise** | XAF / FCFA (sans decimales) |
-| **TVA standard** | 18% |
-| **TVA reduite** | 10% |
-| **Timezone** | Africa/Libreville |
-| **Langue** | Francais |
-| **Mobile Money** | Airtel Money, Moov Money |
+| Parametre         | Valeur                          |
+| ----------------- | ------------------------------- |
+| **Devise**        | XAF / FCFA (sans decimales)     |
+| **TVA standard**  | 18%                             |
+| **TVA reduite**   | 10%                             |
+| **Timezone**      | Africa/Libreville               |
+| **Langue**        | Francais                        |
+| **Mobile Money**  | Airtel Money, Moov Money        |
 | **Format ticket** | YYYYMMDD00001 (sequentiel/jour) |
 
 ## Roles utilisateurs
 
-| Role | Acces |
-|------|-------|
-| **Super Admin** | Acces complet, gestion multi-etablissements |
-| **Admin** | Configuration etablissement, employes, rapports |
-| **Manager** | Produits, stocks, rapports, cloture de caisse |
-| **Caissier** | Caisse, encaissements, consultation rapports |
-| **Serveur** | Prise de commande, gestion tables |
+| Role            | Acces                                           |
+| --------------- | ----------------------------------------------- |
+| **Super Admin** | Acces complet, gestion multi-etablissements     |
+| **Admin**       | Configuration etablissement, employes, rapports |
+| **Manager**     | Produits, stocks, rapports, cloture de caisse   |
+| **Caissier**    | Caisse, encaissements, consultation rapports    |
+| **Serveur**     | Prise de commande, gestion tables               |
 
 ## Contribuer
 

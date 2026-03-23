@@ -27,9 +27,7 @@ export const venteSchema = z.object({
 
   clientId: z.string().optional(),
 
-  lignes: z
-    .array(ligneVenteSchema)
-    .min(1, "Au moins un produit doit être ajouté à la vente"),
+  lignes: z.array(ligneVenteSchema).min(1, "Au moins un produit doit être ajouté à la vente"),
 
   remise: remiseSchema.optional(),
 

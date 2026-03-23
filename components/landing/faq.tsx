@@ -2,40 +2,50 @@
 
 import { useState } from "react";
 import { Box, Container, Flex, Heading, Text } from "@radix-ui/themes";
-import { CaretDown, Question } from "@phosphor-icons/react";
+import { CaretDown } from "@phosphor-icons/react";
 import { motion, AnimatePresence } from "motion/react";
 import { FadeIn, StaggerContainer, StaggerItem } from "./motion-wrapper";
 
 const faqs = [
   {
+    question: "Que comprend le plan Essentiel ?",
+    answer:
+      "Le plan Essentiel est entièrement gratuit et comprend 1 utilisateur, la gestion des ventes et encaissements, le rapport de clôture journalier (rapport Z), le mode hors-ligne et le support par email. C'est idéal pour démarrer une petite activité commerciale.",
+  },
+  {
     question: "Oréma N+ fonctionne-t-il sans connexion internet ?",
     answer:
-      "Oui ! Notre mode hors-ligne vous permet de continuer à vendre même sans internet. Toutes vos transactions sont sauvegardées localement et synchronisées automatiquement dès que la connexion revient. Vous ne perdez jamais de données.",
+      "Oui. Le mode hors-ligne vous permet de continuer à encaisser même sans internet. Toutes les transactions sont sauvegardées localement et synchronisées automatiquement dès que la connexion revient. Aucune donnée n'est perdue.",
   },
   {
     question: "Quels modes de paiement sont supportés ?",
     answer:
-      "Oréma N+ supporte les espèces, cartes bancaires, Airtel Money, Moov Money, comptes clients avec crédit, chèques et virements bancaires. Vous pouvez même accepter plusieurs modes de paiement pour une seule transaction.",
+      "Espèces, cartes bancaires, Airtel Money, Moov Money, comptes clients avec crédit, chèques et virements bancaires. Vous pouvez aussi combiner plusieurs modes de paiement sur une même transaction (paiement mixte).",
   },
   {
-    question: "Puis-je utiliser ma propre imprimante ?",
+    question: "Quelles imprimantes sont compatibles ?",
     answer:
-      "Oréma N+ est compatible avec la plupart des imprimantes thermiques ESC/POS via USB, réseau local ou Bluetooth. Nous recommandons les modèles Epson TM-T20 ou Star TSP100 pour une performance optimale.",
+      "Oréma N+ est compatible avec la plupart des imprimantes thermiques ESC/POS via USB, réseau local ou Bluetooth. Nous recommandons les modèles Epson TM-T20 ou Star TSP100. Le système gère aussi le routage multi-imprimantes (cuisine, bar, caisse).",
   },
   {
     question: "Combien de temps prend la mise en place ?",
     answer:
-      "La configuration de base prend environ 15 minutes. Notre équipe peut vous accompagner pour l'import de vos produits, la configuration des imprimantes et la formation de votre personnel si nécessaire.",
+      "La configuration de base prend environ 15 minutes : création du compte, ajout des produits et paramétrage de l'imprimante. Notre équipe peut vous accompagner pour l'import de votre catalogue existant et la formation du personnel.",
   },
   {
     question: "Mes données sont-elles sécurisées ?",
     answer:
-      "Absolument. Vos données sont chiffrées en transit et au repos. Nous utilisons Supabase pour l'hébergement avec des sauvegardes automatiques quotidiennes. Vos données restent votre propriété.",
+      "Oui. Vos données sont chiffrées en transit (TLS) et au repos. L'hébergement est assuré par Supabase avec des sauvegardes automatiques quotidiennes. Vos données restent votre propriété et vous pouvez les exporter à tout moment.",
   },
   {
-    question: "Puis-je changer de forfait à tout moment ?",
+    question: "Puis-je changer de forfait en cours de mois ?",
     answer:
-      "Oui, vous pouvez upgrader ou downgrader votre forfait à tout moment. Les changements prennent effet immédiatement et sont proratisés pour le mois en cours.",
+      "Oui, vous pouvez passer d'un plan à un autre à tout moment. Les changements prennent effet immédiatement. En cas d'upgrade, le montant est proratisé pour le mois en cours. En cas de downgrade, le nouveau tarif s'applique au cycle suivant.",
+  },
+  {
+    question: "Proposez-vous une assistance sur site à Libreville ?",
+    answer:
+      "Oui, pour les plans Pro et Business. Notre équipe technique basée à Libreville peut intervenir pour l'installation, la configuration des imprimantes et la formation de votre équipe. Contactez-nous pour planifier une intervention.",
   },
 ];
 
@@ -60,11 +70,13 @@ function FAQItem({
     >
       <button
         onClick={onClick}
+        aria-expanded={isOpen}
         style={{
           display: "flex",
           width: "100%",
           alignItems: "center",
           justifyContent: "space-between",
+          gap: 16,
           padding: "20px 0",
           textAlign: "left",
           background: "transparent",
@@ -75,19 +87,25 @@ function FAQItem({
         <Text
           size="3"
           weight="medium"
-          style={{ color: isOpen ? "var(--accent-11)" : "var(--gray-12)" }}
+          style={{
+            color: isOpen ? "var(--gray-12)" : "var(--gray-11)",
+            transition: "color 0.2s ease",
+          }}
         >
           {question}
         </Text>
         <motion.div
           animate={{ rotate: isOpen ? 180 : 0 }}
-          transition={{ duration: 0.3 }}
-          style={{ marginLeft: 16, flexShrink: 0 }}
+          transition={{ duration: 0.2 }}
+          style={{ flexShrink: 0 }}
         >
           <CaretDown
-            size={20}
+            size={16}
             weight="bold"
-            style={{ color: isOpen ? "var(--accent-9)" : "var(--gray-10)" }}
+            style={{
+              color: isOpen ? "var(--accent-9)" : "var(--gray-8)",
+              transition: "color 0.2s ease",
+            }}
           />
         </motion.div>
       </button>
@@ -97,11 +115,17 @@ function FAQItem({
             initial={{ height: 0, opacity: 0 }}
             animate={{ height: "auto", opacity: 1 }}
             exit={{ height: 0, opacity: 0 }}
-            transition={{ duration: 0.3, ease: [0.04, 0.62, 0.23, 0.98] }}
+            transition={{ duration: 0.25, ease: [0.04, 0.62, 0.23, 0.98] }}
             style={{ overflow: "hidden" }}
           >
             <div style={{ paddingBottom: 20 }}>
-              <Text size="2" color="gray" style={{ lineHeight: 1.8 }}>
+              <Text
+                size="2"
+                style={{
+                  color: "var(--gray-10)",
+                  lineHeight: 1.8,
+                }}
+              >
                 {answer}
               </Text>
             </div>
@@ -115,38 +139,22 @@ export function FAQ() {
   const [openIndex, setOpenIndex] = useState<number | null>(0);
 
   return (
-    <Box
-      id="faq"
-      py="9"
-      style={{ background: "var(--color-background)" }}
-    >
+    <Box id="faq" py="9" style={{ background: "var(--color-background)" }}>
       <Container size="3">
         {/* Header */}
         <FadeIn>
-          <Flex direction="column" align="center" gap="4" mb="8">
-            <Box
-              className="rounded-full"
+          <Flex direction="column" align="center" gap="3" mb="8">
+            <Text
+              size="2"
+              weight="medium"
               style={{
-                background: "var(--cyan-a3)",
-                border: "1px solid var(--cyan-a5)",
-                padding: "8px 18px",
+                color: "var(--accent-11)",
+                letterSpacing: "0.05em",
+                textTransform: "uppercase",
               }}
             >
-              <Flex align="center" gap="2">
-                <Question
-                  size={14}
-                  weight="bold"
-                  style={{ color: "var(--cyan-9)", flexShrink: 0 }}
-                />
-                <Text
-                  size="2"
-                  weight="medium"
-                  style={{ color: "var(--cyan-11)" }}
-                >
-                  FAQ
-                </Text>
-              </Flex>
-            </Box>
+              FAQ
+            </Text>
 
             <Heading size="8" align="center">
               Questions fréquentes
@@ -155,17 +163,15 @@ export function FAQ() {
             <Text
               size="3"
               align="center"
-              color="gray"
-              className="max-w-lg"
+              style={{ color: "var(--gray-10)", maxWidth: 460 }}
             >
-              Tout ce que vous devez savoir sur Oréma N+. Vous ne trouvez pas
-              votre réponse ? Contactez notre équipe.
+              Tout ce que vous devez savoir sur Oréma N+.
             </Text>
           </Flex>
         </FadeIn>
 
         {/* FAQ List */}
-        <StaggerContainer staggerDelay={0.1}>
+        <StaggerContainer staggerDelay={0.06}>
           <div
             style={{
               borderTop: "1px solid var(--gray-a4)",
@@ -188,56 +194,51 @@ export function FAQ() {
         </StaggerContainer>
 
         {/* Contact CTA */}
-        <FadeIn delay={0.3}>
-          <Box
+        <FadeIn delay={0.2}>
+          <Flex
+            direction="column"
+            align="center"
+            gap="3"
+            mt="8"
+            py="6"
+            px="6"
             style={{
-              marginTop: 48,
-              padding: 32,
-              borderRadius: 16,
-              textAlign: "center",
-              background:
-                "linear-gradient(135deg, var(--gray-a2) 0%, var(--gray-a3) 100%)",
+              borderRadius: 12,
+              background: "var(--gray-a2)",
               border: "1px solid var(--gray-a4)",
+              textAlign: "center",
             }}
           >
-            <Flex direction="column" align="center" gap="3">
-              <Box
-                style={{
-                  width: 48,
-                  height: 48,
-                  background: "var(--accent-a3)",
-                  borderRadius: "50%",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                }}
-              >
-                <Question
-                  size={24}
-                  weight="bold"
-                  style={{ color: "var(--accent-9)" }}
-                />
-              </Box>
-              <Heading size="4">Vous avez d&apos;autres questions ?</Heading>
-              <Text size="2" color="gray">
-                Notre équipe est disponible pour vous aider du lundi au samedi,
-                de 8h à 20h.
-              </Text>
-              <motion.a
-                href="#contact"
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
-                className="mt-2 inline-flex items-center gap-2 rounded-lg font-medium text-white"
-                style={{
-                  background:
-                    "var(--accent-9)",
-                  padding: "14px 24px",
-                }}
-              >
-                Nous contacter
-              </motion.a>
-            </Flex>
-          </Box>
+            <Heading size="4">Une autre question ?</Heading>
+            <Text size="2" style={{ color: "var(--gray-10)" }}>
+              Notre équipe est disponible du lundi au samedi, de 8h à 20h.
+            </Text>
+            <a
+              href="#contact"
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                gap: 6,
+                marginTop: 4,
+                padding: "10px 20px",
+                borderRadius: 8,
+                fontWeight: 600,
+                fontSize: 14,
+                color: "white",
+                background: "var(--accent-9)",
+                textDecoration: "none",
+                transition: "background-color 0.2s ease",
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.backgroundColor = "var(--accent-10)";
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.backgroundColor = "var(--accent-9)";
+              }}
+            >
+              Nous contacter
+            </a>
+          </Flex>
         </FadeIn>
       </Container>
     </Box>

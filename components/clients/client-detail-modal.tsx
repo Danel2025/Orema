@@ -18,17 +18,7 @@ import {
   Spinner,
 } from "@radix-ui/themes";
 import { ScrollArea } from "@/components/ui";
-import {
-  User,
-  Phone,
-  Mail,
-  MapPin,
-  Calendar,
-  Edit,
-  Wallet,
-  Star,
-  ShoppingBag,
-} from "lucide-react";
+import { User, Phone, Mail, MapPin, Calendar, Edit, Wallet, Star, ShoppingBag } from "lucide-react";
 import { formatCurrency, formatDate } from "@/lib/utils";
 import {
   getClientById,
@@ -68,13 +58,7 @@ export function ClientDetailModal({
 
     setIsLoading(true);
     try {
-      const [
-        clientData,
-        statsData,
-        achatsData,
-        fideliteData,
-        prepaidData,
-      ] = await Promise.all([
+      const [clientData, statsData, achatsData, fideliteData, prepaidData] = await Promise.all([
         getClientById(clientId),
         getStatistiquesClient(clientId),
         getHistoriqueAchats(clientId, { page: achatsPage }),
@@ -127,35 +111,39 @@ export function ClientDetailModal({
                 </Dialog.Description>
               </Flex>
               <Flex align="center" gap="2">
-                <Badge
-                  size="2"
-                  color={client.actif ? "green" : "gray"}
-                  variant="soft"
-                >
+                <Badge size="2" color={client.actif ? "green" : "gray"} variant="soft">
                   {client.actif ? "Actif" : "Inactif"}
                 </Badge>
-                {onEdit ? <Button variant="soft" size="2" onClick={onEdit}>
+                {onEdit ? (
+                  <Button variant="soft" size="2" onClick={onEdit}>
                     <Edit size={14} />
                     Modifier
-                  </Button> : null}
+                  </Button>
+                ) : null}
               </Flex>
             </Flex>
 
             {/* Informations principales */}
             <Card variant="surface" mb="4">
               <Flex gap="4" wrap="wrap">
-                {client.telephone ? <Flex align="center" gap="2">
+                {client.telephone ? (
+                  <Flex align="center" gap="2">
                     <Phone size={14} className="text-gray-500" />
                     <Text size="2">{client.telephone}</Text>
-                  </Flex> : null}
-                {client.email ? <Flex align="center" gap="2">
+                  </Flex>
+                ) : null}
+                {client.email ? (
+                  <Flex align="center" gap="2">
                     <Mail size={14} className="text-gray-500" />
                     <Text size="2">{client.email}</Text>
-                  </Flex> : null}
-                {client.adresse ? <Flex align="center" gap="2">
+                  </Flex>
+                ) : null}
+                {client.adresse ? (
+                  <Flex align="center" gap="2">
                     <MapPin size={14} className="text-gray-500" />
                     <Text size="2">{client.adresse}</Text>
-                  </Flex> : null}
+                  </Flex>
+                ) : null}
               </Flex>
             </Card>
 
@@ -218,7 +206,6 @@ export function ClientDetailModal({
                     <Text
                       size="4"
                       weight="bold"
-                     
                       style={{ fontFamily: "var(--font-google-sans-code)" }}
                     >
                       {formatCurrency(client.totalDepense)}

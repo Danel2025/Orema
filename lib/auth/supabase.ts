@@ -3,67 +3,73 @@
  * Migré vers Supabase
  */
 
-import { redirect } from 'next/navigation'
-import { createClient as createAuthClient, createServiceClient } from '@/lib/supabase/server'
+import { redirect } from "next/navigation";
+import { createClient as createAuthClient, createServiceClient } from "@/lib/supabase/server";
 
-type Role = 'SUPER_ADMIN' | 'ADMIN' | 'MANAGER' | 'CAISSIER' | 'SERVEUR'
+type Role = "SUPER_ADMIN" | "ADMIN" | "MANAGER" | "CAISSIER" | "SERVEUR";
 
 export interface AuthUser {
-  authId: string
-  userId: string
-  email: string
-  nom: string
-  prenom: string
-  role: Role
+  authId: string;
+  userId: string;
+  email: string;
+  nom: string;
+  prenom: string;
+  role: Role;
   /** ID de l'établissement (peut être null pour SUPER_ADMIN global) */
-  etablissementId: string | null
-  etablissementNom?: string
+  etablissementId: string | null;
+  etablissementNom?: string;
   /** Routes personnalisées autorisées (override les permissions du rôle pour les non-admins) */
-  allowedRoutes?: string[]
+  allowedRoutes?: string[];
 }
 
 export async function getSupabaseUser() {
   try {
-    const supabase = await createAuthClient()
-    const { data: { user }, error } = await supabase.auth.getUser()
+    const supabase = await createAuthClient();
+    const {
+      data: { user },
+      error,
+    } = await supabase.auth.getUser();
     // Silently handle expected auth errors (session expired, missing, or invalid refresh token)
     if (error) {
       const isExpectedError =
-        error.message === 'Auth session missing!' ||
-        error.message.includes('Refresh Token') ||
-        error.code === 'refresh_token_not_found'
+        error.message === "Auth session missing!" ||
+        error.message.includes("Refresh Token") ||
+        error.code === "refresh_token_not_found";
       if (!isExpectedError) {
-        console.error('[getSupabaseUser] Erreur Supabase:', error.message)
+        console.error("[getSupabaseUser] Erreur Supabase:", error.message);
       }
-      return null
+      return null;
     }
-    return user
+    return user;
   } catch (error) {
-    console.error('[getSupabaseUser] Exception:', error)
-    return null
+    console.error("[getSupabaseUser] Exception:", error);
+    return null;
   }
 }
 
 export async function getCurrentUser(): Promise<AuthUser | null> {
   try {
     // Utiliser le service client pour bypasser les RLS
-    const supabase = createServiceClient()
+    const supabase = createServiceClient();
 
     // PRIORITÉ 1: Vérifier la session PIN (JWT custom) en premier
     // Car si l'utilisateur s'est connecté par PIN, c'est cette session qui compte
-    const { getSession: getLegacySession } = await import('./session')
-    const legacySession = await getLegacySession()
+    const { getSession: getLegacySession } = await import("./session");
+    const legacySession = await getLegacySession();
 
     if (legacySession) {
       const { data: utilisateur } = await supabase
-        .from('utilisateurs')
-        .select('id, email, nom, prenom, role, actif, etablissement_id, allowed_routes, etablissements(id, nom)')
-        .eq('id', legacySession.userId)
-        .single()
+        .from("utilisateurs")
+        .select(
+          "id, email, nom, prenom, role, actif, etablissement_id, allowed_routes, etablissements(id, nom)"
+        )
+        .eq("id", legacySession.userId)
+        .single();
 
       if (utilisateur?.actif) {
         // Récupérer allowed_routes (routes individuelles par utilisateur)
-        const allowedRoutes = (utilisateur.allowed_routes as string[] | null | undefined) ?? undefined
+        const allowedRoutes =
+          (utilisateur.allowed_routes as string[] | null | undefined) ?? undefined;
         return {
           authId: legacySession.userId,
           userId: utilisateur.id,
@@ -72,25 +78,28 @@ export async function getCurrentUser(): Promise<AuthUser | null> {
           prenom: utilisateur.prenom,
           role: utilisateur.role as Role,
           etablissementId: utilisateur.etablissement_id,
-          etablissementNom: (utilisateur.etablissements as { nom: string })?.nom,
+          etablissementNom: (utilisateur.etablissements as unknown as { nom: string })?.nom,
           allowedRoutes,
-        }
+        };
       }
     }
 
     // PRIORITÉ 2: Vérifier Supabase Auth
-    const supabaseUser = await getSupabaseUser()
+    const supabaseUser = await getSupabaseUser();
 
     if (supabaseUser?.email) {
       const { data: utilisateur } = await supabase
-        .from('utilisateurs')
-        .select('id, email, nom, prenom, role, actif, etablissement_id, allowed_routes, etablissements(id, nom)')
-        .eq('email', supabaseUser.email)
-        .single()
+        .from("utilisateurs")
+        .select(
+          "id, email, nom, prenom, role, actif, etablissement_id, allowed_routes, etablissements(id, nom)"
+        )
+        .eq("email", supabaseUser.email)
+        .single();
 
       if (utilisateur?.actif) {
         // Récupérer allowed_routes (routes individuelles par utilisateur)
-        const allowedRoutes = (utilisateur.allowed_routes as string[] | null | undefined) ?? undefined
+        const allowedRoutes =
+          (utilisateur.allowed_routes as string[] | null | undefined) ?? undefined;
         return {
           authId: supabaseUser.id,
           userId: utilisateur.id,
@@ -99,62 +108,62 @@ export async function getCurrentUser(): Promise<AuthUser | null> {
           prenom: utilisateur.prenom,
           role: utilisateur.role as Role,
           etablissementId: utilisateur.etablissement_id,
-          etablissementNom: (utilisateur.etablissements as { nom: string })?.nom,
+          etablissementNom: (utilisateur.etablissements as unknown as { nom: string })?.nom,
           allowedRoutes,
-        }
+        };
       }
     }
 
-    return null
+    return null;
   } catch (error) {
-    console.error('[getCurrentUser] Erreur:', error)
-    return null
+    console.error("[getCurrentUser] Erreur:", error);
+    return null;
   }
 }
 
 export async function requireAuth(): Promise<AuthUser> {
-  const user = await getCurrentUser()
-  if (!user) throw new Error('Non authentifié')
-  return user
+  const user = await getCurrentUser();
+  if (!user) throw new Error("Non authentifié");
+  return user;
 }
 
 export async function requireRole(role: Role): Promise<AuthUser> {
-  const user = await requireAuth()
-  if (user.role !== role) throw new Error('Permissions insuffisantes')
-  return user
+  const user = await requireAuth();
+  if (user.role !== role) throw new Error("Permissions insuffisantes");
+  return user;
 }
 
 export async function requireAnyRole(roles: Role[]): Promise<AuthUser> {
-  const user = await requireAuth()
-  if (!roles.includes(user.role)) throw new Error('Permissions insuffisantes')
-  return user
+  const user = await requireAuth();
+  if (!roles.includes(user.role)) throw new Error("Permissions insuffisantes");
+  return user;
 }
 
 export async function getEtablissementId(): Promise<string> {
-  const user = await requireAuth()
+  const user = await requireAuth();
   if (!user.etablissementId) {
-    throw new Error('Aucun établissement associé à cet utilisateur')
+    throw new Error("Aucun établissement associé à cet utilisateur");
   }
-  return user.etablissementId
+  return user.etablissementId;
 }
 
 export async function isAuthenticated(): Promise<boolean> {
-  const user = await getCurrentUser()
-  return user !== null
+  const user = await getCurrentUser();
+  return user !== null;
 }
 
 export async function hasRole(role: Role): Promise<boolean> {
-  const user = await getCurrentUser()
-  return user?.role === role
+  const user = await getCurrentUser();
+  return user?.role === role;
 }
 
 export async function hasAnyRole(roles: Role[]): Promise<boolean> {
-  const user = await getCurrentUser()
-  return user ? roles.includes(user.role) : false
+  const user = await getCurrentUser();
+  return user ? roles.includes(user.role) : false;
 }
 
 export async function signOut(): Promise<never> {
-  const supabase = await createAuthClient()
-  await supabase.auth.signOut()
-  redirect('/login')
+  const supabase = await createAuthClient();
+  await supabase.auth.signOut();
+  redirect("/login");
 }

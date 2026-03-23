@@ -4,23 +4,25 @@
  */
 
 import { Flex, Text, Heading, Button } from "@/components/ui";
-import type { LucideIcon } from "lucide-react";
-import type { ReactNode } from "react";
+import type { ReactNode, ComponentType } from "react";
 
 export interface EmptyStateProps {
-  icon: LucideIcon;
+  icon: ComponentType<{ style?: React.CSSProperties; size?: number; className?: string }>;
   title: string;
   description: string;
   /** Action sous forme d'objet ou de composant React */
-  action?: {
-    label: string;
-    onClick: () => void;
-  } | ReactNode;
+  action?:
+    | {
+        label: string;
+        onClick: () => void;
+      }
+    | ReactNode;
 }
 
 export function EmptyState({ icon: Icon, title, description, action }: EmptyStateProps) {
   // Determiner si action est un objet ou un ReactNode
-  const isActionObject = action && typeof action === 'object' && 'label' in action && 'onClick' in action;
+  const isActionObject =
+    action && typeof action === "object" && "label" in action && "onClick" in action;
 
   return (
     <Flex

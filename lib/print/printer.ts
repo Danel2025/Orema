@@ -95,9 +95,7 @@ export function createPrinter(config: PrinterConfig) {
 /**
  * Vérifie si l'imprimante est connectée
  */
-export async function checkPrinterConnection(
-  config: PrinterConfig
-): Promise<boolean> {
+export async function checkPrinterConnection(config: PrinterConfig): Promise<boolean> {
   try {
     const printer = createPrinter(config);
     const isConnected = await printer.isPrinterConnected();

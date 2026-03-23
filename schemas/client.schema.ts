@@ -3,12 +3,10 @@ import { z } from "zod";
 /**
  * Helper pour les chaines optionnelles
  */
-const optionalString = z
-  .union([z.string(), z.null(), z.undefined()])
-  .transform((val) => {
-    if (val === null || val === undefined || val === "") return undefined;
-    return val.trim();
-  });
+const optionalString = z.union([z.string(), z.null(), z.undefined()]).transform((val) => {
+  if (val === null || val === undefined || val === "") return undefined;
+  return val.trim();
+});
 
 /**
  * Helper pour les emails optionnels
@@ -49,17 +47,17 @@ const optionalPhone = z
  */
 const nonNegativeAmount = z.coerce
   .number()
-  .int("Le montant doit etre un entier (FCFA)")
-  .min(0, "Le montant ne peut pas etre negatif");
+  .int("Le montant doit être un entier (FCFA)")
+  .min(0, "Le montant ne peut pas être négatif");
 
 /**
- * Schema Zod pour la creation/edition d'un client
+ * Schema Zod pour la création/édition d'un client
  */
 export const clientSchema = z.object({
   nom: z
     .string()
-    .min(2, "Le nom doit contenir au moins 2 caracteres")
-    .max(100, "Le nom ne peut pas depasser 100 caracteres")
+    .min(2, "Le nom doit contenir au moins 2 caractères")
+    .max(100, "Le nom ne peut pas dépasser 100 caractères")
     .transform((val) => val.trim()),
 
   prenom: optionalString,
@@ -76,7 +74,7 @@ export const clientSchema = z.object({
   // Notes internes
   notes: optionalString,
 
-  // Autorisation de credit
+  // Autorisation de crédit
   creditAutorise: z.boolean().default(false),
 
   limitCredit: z
@@ -88,7 +86,7 @@ export const clientSchema = z.object({
       return num;
     })
     .refine((val) => val === undefined || (Number.isInteger(val) && val >= 0), {
-      message: "La limite de credit doit etre un entier positif ou nul",
+      message: "La limite de crédit doit être un entier positif ou nul",
     }),
 
   actif: z.boolean().default(true),
@@ -97,12 +95,12 @@ export const clientSchema = z.object({
 export type ClientFormData = z.infer<typeof clientSchema>;
 
 /**
- * Schema pour le rechargement du compte prepaye
+ * Schema pour le rechargement du compte prépayé
  */
 export const rechargeCompteSchema = z.object({
   clientId: z.string().uuid("ID client invalide"),
   montant: nonNegativeAmount.refine((val) => val > 0, {
-    message: "Le montant doit etre superieur a 0",
+    message: "Le montant doit être supérieur à 0",
   }),
   reference: optionalString,
   notes: optionalString,

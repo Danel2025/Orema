@@ -6,16 +6,8 @@
  */
 
 import { useState, useEffect, useRef } from "react";
-import {
-  Dialog,
-  TextField,
-  Flex,
-  Text,
-  Button,
-  SegmentedControl,
-  Box,
-} from "@radix-ui/themes";
-import { Percent, DollarSign, Tag } from "lucide-react";
+import { Dialog, TextField, Flex, Text, Button, SegmentedControl, Box } from "@radix-ui/themes";
+import { Percent, CurrencyDollar, Tag } from "@phosphor-icons/react";
 import { useCartStore } from "@/stores/cart-store";
 import { formatCurrency } from "@/lib/utils";
 import type { CartItem, CartItemRemise } from "@/types";
@@ -31,11 +23,7 @@ interface DiscountModalProps {
   selectedItem?: CartItem;
 }
 
-export function DiscountModal({
-  open,
-  onOpenChange,
-  selectedItem,
-}: DiscountModalProps) {
+export function DiscountModal({ open, onOpenChange, selectedItem }: DiscountModalProps) {
   const [scope, setScope] = useState<RemiseScope>(selectedItem ? "ligne" : "panier");
   const [remiseType, setRemiseType] = useState<RemiseType>("POURCENTAGE");
   const [remiseValue, setRemiseValue] = useState("");
@@ -43,17 +31,22 @@ export function DiscountModal({
 
   const { applyRemise, applyItemRemise, sousTotal } = useCartStore();
 
-  // Reset form when modal opens
+  // Reset form when modal opens (derived-state pattern)
+  const prevOpenRef = useRef(false);
+  if (open && !prevOpenRef.current) {
+    setScope(selectedItem ? "ligne" : "panier");
+    setRemiseType("POURCENTAGE");
+    setRemiseValue("");
+  }
+  prevOpenRef.current = open;
+
+  // Auto-focus input when modal opens
   useEffect(() => {
     if (open) {
-      setScope(selectedItem ? "ligne" : "panier");
-      setRemiseType("POURCENTAGE");
-      setRemiseValue("");
-      setTimeout(() => {
-        inputRef.current?.focus();
-      }, 100);
+      const timer = setTimeout(() => inputRef.current?.focus(), 100);
+      return () => clearTimeout(timer);
     }
-  }, [open, selectedItem]);
+  }, [open]);
 
   // Calculer l'apercu de la remise
   const calculatePreview = () => {
@@ -130,7 +123,8 @@ export function DiscountModal({
         </Dialog.Description>
 
         {/* Scope: Ligne ou Panier (uniquement si un item est selectionne) */}
-        {selectedItem ? <Box mb="4">
+        {selectedItem ? (
+          <Box mb="4">
             <Text as="label" size="2" weight="medium" mb="2" style={{ display: "block" }}>
               Appliquer sur
             </Text>
@@ -141,7 +135,8 @@ export function DiscountModal({
               <SegmentedControl.Item value="ligne">Cette ligne</SegmentedControl.Item>
               <SegmentedControl.Item value="panier">Tout le panier</SegmentedControl.Item>
             </SegmentedControl.Root>
-          </Box> : null}
+          </Box>
+        ) : null}
 
         {/* Type de remise */}
         <Box mb="4">
@@ -160,7 +155,7 @@ export function DiscountModal({
             </SegmentedControl.Item>
             <SegmentedControl.Item value="MONTANT_FIXE">
               <Flex align="center" gap="1">
-                <DollarSign size={14} />
+                <CurrencyDollar size={14} />
                 Montant fixe
               </Flex>
             </SegmentedControl.Item>
@@ -194,7 +189,8 @@ export function DiscountModal({
         </Box>
 
         {/* Apercu */}
-        {preview ? <Box
+        {preview ? (
+          <Box
             p="3"
             mb="4"
             style={{
@@ -235,11 +231,7 @@ export function DiscountModal({
                   -{formatCurrency(preview.remise)}
                 </Text>
               </Flex>
-              <Box
-                mt="1"
-                pt="1"
-                style={{ borderTop: "1px solid var(--green-a6)" }}
-              >
+              <Box mt="1" pt="1" style={{ borderTop: "1px solid var(--green-a6)" }}>
                 <Flex justify="between">
                   <Text size="2" weight="medium">
                     Apres remise
@@ -257,27 +249,27 @@ export function DiscountModal({
                 </Flex>
               </Box>
             </Flex>
-          </Box> : null}
+          </Box>
+        ) : null}
 
         {/* Actions */}
         <Flex gap="3" mt="4" justify="end">
-          {selectedItem?.remiseLigne ? <Button
+          {selectedItem?.remiseLigne ? (
+            <Button
               variant="soft"
               color="red"
               onClick={handleClearLineRemise}
               style={{ marginRight: "auto" }}
             >
               Supprimer remise
-            </Button> : null}
+            </Button>
+          ) : null}
           <Dialog.Close>
             <Button variant="soft" color="gray">
               Annuler
             </Button>
           </Dialog.Close>
-          <Button
-            onClick={handleApply}
-            disabled={!preview || preview.remise <= 0}
-          >
+          <Button onClick={handleApply} disabled={!preview || preview.remise <= 0}>
             Appliquer
           </Button>
         </Flex>

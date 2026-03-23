@@ -1,42 +1,37 @@
-import { defineConfig } from 'vitest/config'
-import react from '@vitejs/plugin-react'
-import path from 'path'
+import { defineConfig } from "vitest/config";
+import react from "@vitejs/plugin-react";
+import path from "path";
 
 export default defineConfig({
   plugins: [react()],
   test: {
     // Environnement de test
-    environment: 'jsdom',
+    environment: "jsdom",
 
     // Fichiers a inclure/exclure
-    include: ['tests/**/*.{test,spec}.{ts,tsx}'],
-    exclude: ['**/node_modules/**', '**/dist/**', '**/e2e/**'],
+    include: ["tests/**/*.{test,spec}.{ts,tsx}"],
+    exclude: ["**/node_modules/**", "**/dist/**", "**/e2e/**"],
 
     // APIs globals (describe, it, expect, etc.)
     globals: true,
 
     // Fichiers de setup
-    setupFiles: ['./tests/setup.ts'],
+    setupFiles: ["./tests/setup.ts"],
 
     // Configuration de couverture
     coverage: {
-      provider: 'v8',
+      provider: "v8",
       enabled: false, // Activer avec --coverage
-      reporter: ['text', 'json', 'html', 'lcov'],
-      reportsDirectory: './coverage',
+      reporter: ["text", "json", "html", "lcov"],
+      reportsDirectory: "./coverage",
       include: [
-        'lib/**/*.ts',
-        'actions/**/*.ts',
-        'schemas/**/*.ts',
-        'stores/**/*.ts',
-        'components/**/*.tsx',
+        "lib/**/*.ts",
+        "actions/**/*.ts",
+        "schemas/**/*.ts",
+        "stores/**/*.ts",
+        "components/**/*.tsx",
       ],
-      exclude: [
-        '**/*.test.ts',
-        '**/*.spec.ts',
-        '**/index.ts',
-        '**/*.d.ts',
-      ],
+      exclude: ["**/*.test.ts", "**/*.spec.ts", "**/index.ts", "**/*.d.ts"],
       thresholds: {
         // Seuils de couverture
         lines: 70,
@@ -51,7 +46,7 @@ export default defineConfig({
     hookTimeout: 10000,
 
     // Reporters
-    reporters: ['default'],
+    reporters: ["default"],
 
     // Options de mocking
     clearMocks: true,
@@ -64,11 +59,11 @@ export default defineConfig({
     },
 
     // Pool (threads pour performance)
-    pool: 'threads',
+    pool: "threads",
   },
   resolve: {
     alias: {
-      '@': path.resolve(__dirname, './'),
+      "@": path.resolve(__dirname, "./"),
     },
   },
-})
+});

@@ -12,27 +12,30 @@
  * - Saisie référence et téléphone pour paiements électroniques
  */
 
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
+import { FocusScope } from "@radix-ui/react-focus-scope";
 import {
   X,
-  Banknote,
+  Money,
   CreditCard,
-  Smartphone,
+  DeviceMobile,
   Wallet,
   Check,
-  Loader2,
-  Building2,
+  SpinnerGap,
+  Buildings,
   FileText,
   Plus,
-  Trash2,
+  Trash,
   ArrowRight,
-  ChevronLeft,
+  CaretLeft,
   Phone,
   Hash,
-  AlertCircle,
-} from "lucide-react";
+  WarningCircle,
+} from "@phosphor-icons/react";
+import { toast } from "sonner";
 import { useCartStore } from "@/stores/cart-store";
 import { formatCurrency, calculerRenduMonnaie, suggererMontantsArrondis } from "@/lib/utils";
+import { useAutoPrint } from "@/lib/print/hooks";
 
 // Types de paiement disponibles
 type ModePaiement =
@@ -93,7 +96,7 @@ const PAYMENT_METHODS: {
     id: "ESPECES",
     label: "Espèces",
     shortLabel: "Espèces",
-    icon: <Banknote size={22} />,
+    icon: <Money size={22} />,
     color: "green",
   },
   {
@@ -109,7 +112,7 @@ const PAYMENT_METHODS: {
     id: "AIRTEL_MONEY",
     label: "Airtel Money",
     shortLabel: "Airtel",
-    icon: <Smartphone size={22} />,
+    icon: <DeviceMobile size={22} />,
     color: "red",
     needsReference: true,
     needsPhone: true,
@@ -119,7 +122,7 @@ const PAYMENT_METHODS: {
     id: "MOOV_MONEY",
     label: "Moov Money",
     shortLabel: "Moov",
-    icon: <Smartphone size={22} />,
+    icon: <DeviceMobile size={22} />,
     color: "cyan",
     needsReference: true,
     needsPhone: true,
@@ -138,7 +141,7 @@ const PAYMENT_METHODS: {
     id: "VIREMENT",
     label: "Virement",
     shortLabel: "Virement",
-    icon: <Building2 size={22} />,
+    icon: <Buildings size={22} />,
     color: "purple",
     needsReference: true,
     referencePlaceholder: "Référence virement",
@@ -167,6 +170,12 @@ const NUMPAD_KEYS = ["1", "2", "3", "4", "5", "6", "7", "8", "9", "C", "0", "⌫
 
 export function CaissePayment({ onClose, onPaymentComplete, venteEnAttente }: CaissePaymentProps) {
   const { totalFinal: cartTotal, items, client: cartClient } = useCartStore();
+
+  // Auto-impression après paiement (fire-and-forget)
+  const { autoPrint } = useAutoPrint({
+    onSuccess: () => toast.success("Impression envoyée"),
+    onError: (errors) => toast.error("Erreur impression: " + errors.join(", ")),
+  });
 
   // Si on paie une commande en attente, utiliser ses données, sinon utiliser le panier
   const totalFinal = venteEnAttente?.totalFinal ?? cartTotal;
@@ -281,6 +290,11 @@ export function CaissePayment({ onClose, onPaymentComplete, venteEnAttente }: Ca
     // Simuler un délai pour le traitement
     await new Promise((resolve) => setTimeout(resolve, 500));
 
+    // Auto-impression fire-and-forget (ne bloque pas le flux de paiement)
+    if (venteEnAttente?.id) {
+      autoPrint(venteEnAttente.id);
+    }
+
     if (selectedMethod === "MIXTE") {
       onPaymentComplete({
         modePaiement: "MIXTE",
@@ -309,8 +323,10 @@ export function CaissePayment({ onClose, onPaymentComplete, venteEnAttente }: Ca
         return;
       }
 
-      // Entrée pour valider
+      // Entrée pour valider (sauf si le focus est dans un input texte)
       if (e.key === "Enter" && canPay) {
+        const target = e.target as HTMLElement;
+        if (target.tagName === "INPUT" && (target as HTMLInputElement).type !== "button") return;
         handlePayment();
         return;
       }
@@ -332,15 +348,17 @@ export function CaissePayment({ onClose, onPaymentComplete, venteEnAttente }: Ca
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [canPay, handleNumpadKey, onClose]);
 
-  // Reset quand on change de mode
-  useEffect(() => {
+  // Reset quand on change de mode (derived-state pattern)
+  const prevMethodRef = useRef(selectedMethod);
+  if (prevMethodRef.current !== selectedMethod) {
+    prevMethodRef.current = selectedMethod;
     setMontantSaisi("");
     setReference("");
     setTelephone("");
     setPaiementsPartiels([]);
     setMixteMode("select");
     setMixteSelectedMethod(null);
-  }, [selectedMethod]);
+  }
 
   return (
     <div
@@ -356,7 +374,12 @@ export function CaissePayment({ onClose, onPaymentComplete, venteEnAttente }: Ca
       }}
       onClick={onClose}
     >
+      <FocusScope trapped asChild>
       <div
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="payment-title"
+        tabIndex={-1}
         style={{
           backgroundColor: "var(--color-panel-solid)",
           borderRadius: 16,
@@ -367,6 +390,7 @@ export function CaissePayment({ onClose, onPaymentComplete, venteEnAttente }: Ca
           display: "flex",
           flexDirection: "column",
           boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.25)",
+          outline: "none",
         }}
         onClick={(e) => e.stopPropagation()}
       >
@@ -383,6 +407,7 @@ export function CaissePayment({ onClose, onPaymentComplete, venteEnAttente }: Ca
         >
           <div>
             <h2
+              id="payment-title"
               style={{
                 fontSize: 18,
                 fontWeight: 600,
@@ -422,9 +447,10 @@ export function CaissePayment({ onClose, onPaymentComplete, venteEnAttente }: Ca
 
           <button
             onClick={onClose}
+            aria-label="Fermer le paiement"
             style={{
-              width: 36,
-              height: 36,
+              width: 44,
+              height: 44,
               borderRadius: 8,
               border: "none",
               backgroundColor: "var(--gray-a4)",
@@ -452,7 +478,16 @@ export function CaissePayment({ onClose, onPaymentComplete, venteEnAttente }: Ca
               backgroundColor: "var(--gray-a2)",
             }}
           >
-            <div style={{ fontSize: 11, fontWeight: 600, color: "var(--gray-10)", marginBottom: 8, textTransform: "uppercase", letterSpacing: "0.5px" }}>
+            <div
+              style={{
+                fontSize: 11,
+                fontWeight: 600,
+                color: "var(--gray-10)",
+                marginBottom: 8,
+                textTransform: "uppercase",
+                letterSpacing: "0.5px",
+              }}
+            >
               Mode de paiement
             </div>
             <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
@@ -466,16 +501,25 @@ export function CaissePayment({ onClose, onPaymentComplete, venteEnAttente }: Ca
                     gap: 10,
                     padding: "10px 12px",
                     borderRadius: 8,
-                    border: selectedMethod === method.id ? `2px solid var(--${method.color}-9)` : "1px solid transparent",
-                    backgroundColor: selectedMethod === method.id ? `var(--${method.color}-a3)` : "transparent",
-                    color: selectedMethod === method.id ? `var(--${method.color}-11)` : "var(--gray-11)",
+                    border:
+                      selectedMethod === method.id
+                        ? `2px solid var(--${method.color}-9)`
+                        : "1px solid transparent",
+                    backgroundColor:
+                      selectedMethod === method.id ? `var(--${method.color}-a3)` : "transparent",
+                    color:
+                      selectedMethod === method.id ? `var(--${method.color}-11)` : "var(--gray-11)",
                     cursor: "pointer",
                     transition: "all 0.1s ease",
                     textAlign: "left",
                   }}
                 >
-                  <span style={{ opacity: selectedMethod === method.id ? 1 : 0.7 }}>{method.icon}</span>
-                  <span style={{ fontSize: 13, fontWeight: selectedMethod === method.id ? 600 : 500 }}>
+                  <span style={{ opacity: selectedMethod === method.id ? 1 : 0.7 }}>
+                    {method.icon}
+                  </span>
+                  <span
+                    style={{ fontSize: 13, fontWeight: selectedMethod === method.id ? 600 : 500 }}
+                  >
                     {method.shortLabel}
                   </span>
                 </button>
@@ -498,7 +542,9 @@ export function CaissePayment({ onClose, onPaymentComplete, venteEnAttente }: Ca
                       marginBottom: 16,
                     }}
                   >
-                    <div style={{ fontSize: 12, color: "var(--gray-10)", marginBottom: 4 }}>Montant reçu</div>
+                    <div style={{ fontSize: 12, color: "var(--gray-10)", marginBottom: 4 }}>
+                      Montant reçu
+                    </div>
                     <div
                       style={{
                         fontSize: 36,
@@ -514,7 +560,9 @@ export function CaissePayment({ onClose, onPaymentComplete, venteEnAttente }: Ca
 
                   {/* Suggestions de montants */}
                   <div style={{ marginBottom: 16 }}>
-                    <div style={{ fontSize: 12, color: "var(--gray-10)", marginBottom: 8 }}>Montant exact ou arrondi</div>
+                    <div style={{ fontSize: 12, color: "var(--gray-10)", marginBottom: 8 }}>
+                      Montant exact ou arrondi
+                    </div>
                     <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
                       {montantsSuggeres.map((montant) => (
                         <button
@@ -525,8 +573,14 @@ export function CaissePayment({ onClose, onPaymentComplete, venteEnAttente }: Ca
                             fontSize: 13,
                             fontWeight: 600,
                             borderRadius: 6,
-                            border: montant === totalFinal ? "2px solid var(--green-9)" : "1px solid var(--gray-a6)",
-                            backgroundColor: montant === totalFinal ? "var(--green-a3)" : "var(--color-panel-solid)",
+                            border:
+                              montant === totalFinal
+                                ? "2px solid var(--green-9)"
+                                : "1px solid var(--gray-a6)",
+                            backgroundColor:
+                              montant === totalFinal
+                                ? "var(--green-a3)"
+                                : "var(--color-panel-solid)",
                             color: montant === totalFinal ? "var(--green-11)" : "var(--gray-12)",
                             cursor: "pointer",
                             fontFamily: "var(--font-google-sans-code), ui-monospace, monospace",
@@ -540,7 +594,9 @@ export function CaissePayment({ onClose, onPaymentComplete, venteEnAttente }: Ca
 
                   {/* Boutons coupures rapides */}
                   <div style={{ marginBottom: 16 }}>
-                    <div style={{ fontSize: 12, color: "var(--gray-10)", marginBottom: 8 }}>Ajouter une coupure</div>
+                    <div style={{ fontSize: 12, color: "var(--gray-10)", marginBottom: 8 }}>
+                      Ajouter une coupure
+                    </div>
                     <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 6 }}>
                       {QUICK_AMOUNTS.map((coupure) => (
                         <button
@@ -566,20 +622,35 @@ export function CaissePayment({ onClose, onPaymentComplete, venteEnAttente }: Ca
 
                   {/* Clavier numérique */}
                   <div>
-                    <div style={{ fontSize: 12, color: "var(--gray-10)", marginBottom: 8 }}>Clavier</div>
+                    <div style={{ fontSize: 12, color: "var(--gray-10)", marginBottom: 8 }}>
+                      Clavier
+                    </div>
                     <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 6 }}>
                       {NUMPAD_KEYS.map((key) => (
                         <button
                           key={key}
                           onClick={() => handleNumpadKey(key)}
+                          aria-label={
+                            key === "C" ? "Effacer tout" : key === "⌫" ? "Effacer le dernier chiffre" : `Touche ${key}`
+                          }
                           style={{
                             padding: "14px",
                             fontSize: key === "C" || key === "⌫" ? 14 : 18,
                             fontWeight: 600,
                             borderRadius: 8,
                             border: "none",
-                            backgroundColor: key === "C" ? "var(--red-a4)" : key === "⌫" ? "var(--amber-a4)" : "var(--gray-a4)",
-                            color: key === "C" ? "var(--red-11)" : key === "⌫" ? "var(--purple-11)" : "var(--gray-12)",
+                            backgroundColor:
+                              key === "C"
+                                ? "var(--red-a4)"
+                                : key === "⌫"
+                                  ? "var(--amber-a4)"
+                                  : "var(--gray-a4)",
+                            color:
+                              key === "C"
+                                ? "var(--red-11)"
+                                : key === "⌫"
+                                  ? "var(--purple-11)"
+                                  : "var(--gray-12)",
                             cursor: "pointer",
                           }}
                         >
@@ -600,8 +671,17 @@ export function CaissePayment({ onClose, onPaymentComplete, venteEnAttente }: Ca
                         border: "1px solid var(--green-a6)",
                       }}
                     >
-                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
-                        <span style={{ fontSize: 14, fontWeight: 600, color: "var(--green-11)" }}>Monnaie à rendre</span>
+                      <div
+                        style={{
+                          display: "flex",
+                          justifyContent: "space-between",
+                          alignItems: "center",
+                          marginBottom: 12,
+                        }}
+                      >
+                        <span style={{ fontSize: 14, fontWeight: 600, color: "var(--green-11)" }}>
+                          Monnaie à rendre
+                        </span>
                         <span
                           style={{
                             fontSize: 24,
@@ -617,7 +697,16 @@ export function CaissePayment({ onClose, onPaymentComplete, venteEnAttente }: Ca
                       {/* Détail des coupures */}
                       {coupuresRendu.length > 0 && (
                         <div>
-                          <div style={{ fontSize: 11, color: "var(--green-10)", marginBottom: 6, textTransform: "uppercase" }}>Détail</div>
+                          <div
+                            style={{
+                              fontSize: 11,
+                              color: "var(--green-10)",
+                              marginBottom: 6,
+                              textTransform: "uppercase",
+                            }}
+                          >
+                            Détail
+                          </div>
                           <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
                             {coupuresRendu.map((c, i) => (
                               <span
@@ -632,7 +721,8 @@ export function CaissePayment({ onClose, onPaymentComplete, venteEnAttente }: Ca
                                   fontSize: 12,
                                   fontWeight: 500,
                                   color: "var(--green-11)",
-                                  fontFamily: "var(--font-google-sans-code), ui-monospace, monospace",
+                                  fontFamily:
+                                    "var(--font-google-sans-code), ui-monospace, monospace",
                                 }}
                               >
                                 {c.quantite} × {c.label}
@@ -663,7 +753,13 @@ export function CaissePayment({ onClose, onPaymentComplete, venteEnAttente }: Ca
                     }}
                   >
                     <div style={{ marginBottom: 8 }}>{currentMethod?.icon}</div>
-                    <div style={{ fontSize: 14, color: `var(--${currentMethod?.color}-11)`, marginBottom: 4 }}>
+                    <div
+                      style={{
+                        fontSize: 14,
+                        color: `var(--${currentMethod?.color}-11)`,
+                        marginBottom: 4,
+                      }}
+                    >
                       Paiement par {currentMethod?.label}
                     </div>
                     <div
@@ -679,9 +775,21 @@ export function CaissePayment({ onClose, onPaymentComplete, venteEnAttente }: Ca
                   </div>
 
                   {/* Numéro de téléphone (Mobile Money) */}
-                  {currentMethod?.needsPhone ? <div style={{ marginBottom: 16 }}>
-                      <label style={{ display: "block", fontSize: 13, fontWeight: 500, color: "var(--gray-11)", marginBottom: 8 }}>
-                        <Phone size={14} style={{ display: "inline", marginRight: 6, verticalAlign: "middle" }} />
+                  {currentMethod?.needsPhone ? (
+                    <div style={{ marginBottom: 16 }}>
+                      <label
+                        style={{
+                          display: "block",
+                          fontSize: 13,
+                          fontWeight: 500,
+                          color: "var(--gray-11)",
+                          marginBottom: 8,
+                        }}
+                      >
+                        <Phone
+                          size={14}
+                          style={{ display: "inline", marginRight: 6, verticalAlign: "middle" }}
+                        />
                         Numéro de téléphone
                       </label>
                       <input
@@ -700,12 +808,25 @@ export function CaissePayment({ onClose, onPaymentComplete, venteEnAttente }: Ca
                           outline: "none",
                         }}
                       />
-                    </div> : null}
+                    </div>
+                  ) : null}
 
                   {/* Référence */}
-                  {currentMethod?.needsReference ? <div>
-                      <label style={{ display: "block", fontSize: 13, fontWeight: 500, color: "var(--gray-11)", marginBottom: 8 }}>
-                        <Hash size={14} style={{ display: "inline", marginRight: 6, verticalAlign: "middle" }} />
+                  {currentMethod?.needsReference ? (
+                    <div>
+                      <label
+                        style={{
+                          display: "block",
+                          fontSize: 13,
+                          fontWeight: 500,
+                          color: "var(--gray-11)",
+                          marginBottom: 8,
+                        }}
+                      >
+                        <Hash
+                          size={14}
+                          style={{ display: "inline", marginRight: 6, verticalAlign: "middle" }}
+                        />
                         {currentMethod.referencePlaceholder}
                       </label>
                       <input
@@ -725,7 +846,8 @@ export function CaissePayment({ onClose, onPaymentComplete, venteEnAttente }: Ca
                         }}
                         autoFocus
                       />
-                    </div> : null}
+                    </div>
+                  ) : null}
                 </div>
               )}
 
@@ -742,7 +864,14 @@ export function CaissePayment({ onClose, onPaymentComplete, venteEnAttente }: Ca
                       }}
                     >
                       <Wallet size={32} style={{ color: "var(--accent-11)", marginBottom: 8 }} />
-                      <div style={{ fontSize: 16, fontWeight: 600, color: "var(--accent-11)", marginBottom: 4 }}>
+                      <div
+                        style={{
+                          fontSize: 16,
+                          fontWeight: 600,
+                          color: "var(--accent-11)",
+                          marginBottom: 4,
+                        }}
+                      >
                         {client.nom} {client.prenom}
                       </div>
                       <div style={{ fontSize: 13, color: "var(--accent-10)", marginBottom: 16 }}>
@@ -771,8 +900,18 @@ export function CaissePayment({ onClose, onPaymentComplete, venteEnAttente }: Ca
                         textAlign: "center",
                       }}
                     >
-                      <AlertCircle size={32} style={{ color: "var(--purple-11)", marginBottom: 12 }} />
-                      <div style={{ fontSize: 15, fontWeight: 600, color: "var(--purple-11)", marginBottom: 8 }}>
+                      <WarningCircle
+                        size={32}
+                        style={{ color: "var(--purple-11)", marginBottom: 12 }}
+                      />
+                      <div
+                        style={{
+                          fontSize: 15,
+                          fontWeight: 600,
+                          color: "var(--purple-11)",
+                          marginBottom: 8,
+                        }}
+                      >
                         Aucun client sélectionné
                       </div>
                       <div style={{ fontSize: 13, color: "var(--amber-10)" }}>
@@ -795,15 +934,33 @@ export function CaissePayment({ onClose, onPaymentComplete, venteEnAttente }: Ca
                       marginBottom: 16,
                     }}
                   >
-                    <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 8 }}>
+                    <div
+                      style={{ display: "flex", justifyContent: "space-between", marginBottom: 8 }}
+                    >
                       <span style={{ fontSize: 13, color: "var(--gray-10)" }}>Total à payer</span>
-                      <span style={{ fontSize: 15, fontWeight: 600, color: "var(--gray-12)", fontFamily: "var(--font-google-sans-code)" }}>
+                      <span
+                        style={{
+                          fontSize: 15,
+                          fontWeight: 600,
+                          color: "var(--gray-12)",
+                          fontFamily: "var(--font-google-sans-code)",
+                        }}
+                      >
                         {formatCurrency(totalFinal)}
                       </span>
                     </div>
-                    <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 8 }}>
+                    <div
+                      style={{ display: "flex", justifyContent: "space-between", marginBottom: 8 }}
+                    >
                       <span style={{ fontSize: 13, color: "var(--gray-10)" }}>Déjà payé</span>
-                      <span style={{ fontSize: 15, fontWeight: 600, color: "var(--green-11)", fontFamily: "var(--font-google-sans-code)" }}>
+                      <span
+                        style={{
+                          fontSize: 15,
+                          fontWeight: 600,
+                          color: "var(--green-11)",
+                          fontFamily: "var(--font-google-sans-code)",
+                        }}
+                      >
                         {formatCurrency(totalPaiementsPartiels)}
                       </span>
                     </div>
@@ -815,7 +972,9 @@ export function CaissePayment({ onClose, onPaymentComplete, venteEnAttente }: Ca
                         borderTop: "1px solid var(--gray-a6)",
                       }}
                     >
-                      <span style={{ fontSize: 14, fontWeight: 600, color: "var(--gray-12)" }}>Reste à payer</span>
+                      <span style={{ fontSize: 14, fontWeight: 600, color: "var(--gray-12)" }}>
+                        Reste à payer
+                      </span>
                       <span
                         style={{
                           fontSize: 18,
@@ -832,7 +991,9 @@ export function CaissePayment({ onClose, onPaymentComplete, venteEnAttente }: Ca
                   {/* Liste des paiements partiels */}
                   {paiementsPartiels.length > 0 && (
                     <div style={{ marginBottom: 16 }}>
-                      <div style={{ fontSize: 12, color: "var(--gray-10)", marginBottom: 8 }}>Paiements enregistrés</div>
+                      <div style={{ fontSize: 12, color: "var(--gray-10)", marginBottom: 8 }}>
+                        Paiements enregistrés
+                      </div>
                       <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
                         {paiementsPartiels.map((p, index) => {
                           const method = PAYMENT_METHODS.find((m) => m.id === p.mode);
@@ -851,12 +1012,22 @@ export function CaissePayment({ onClose, onPaymentComplete, venteEnAttente }: Ca
                               <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
                                 {method?.icon}
                                 <div>
-                                  <div style={{ fontSize: 13, fontWeight: 600, color: `var(--${method?.color}-11)` }}>
+                                  <div
+                                    style={{
+                                      fontSize: 13,
+                                      fontWeight: 600,
+                                      color: `var(--${method?.color}-11)`,
+                                    }}
+                                  >
                                     {method?.label}
                                   </div>
-                                  {p.reference ? <div style={{ fontSize: 11, color: `var(--${method?.color}-10)` }}>
+                                  {p.reference ? (
+                                    <div
+                                      style={{ fontSize: 11, color: `var(--${method?.color}-10)` }}
+                                    >
                                       Réf: {p.reference}
-                                    </div> : null}
+                                    </div>
+                                  ) : null}
                                 </div>
                               </div>
                               <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
@@ -872,9 +1043,10 @@ export function CaissePayment({ onClose, onPaymentComplete, venteEnAttente }: Ca
                                 </span>
                                 <button
                                   onClick={() => handleRemovePartialPayment(index)}
+                                  aria-label={`Supprimer le paiement ${method?.label}`}
                                   style={{
-                                    width: 28,
-                                    height: 28,
+                                    width: 44,
+                                    height: 44,
                                     borderRadius: 6,
                                     border: "none",
                                     backgroundColor: "var(--red-a4)",
@@ -885,7 +1057,7 @@ export function CaissePayment({ onClose, onPaymentComplete, venteEnAttente }: Ca
                                     justifyContent: "center",
                                   }}
                                 >
-                                  <Trash2 size={14} />
+                                  <Trash size={14} />
                                 </button>
                               </div>
                             </div>
@@ -900,8 +1072,16 @@ export function CaissePayment({ onClose, onPaymentComplete, venteEnAttente }: Ca
                     <div>
                       {mixteMode === "select" ? (
                         <div>
-                          <div style={{ fontSize: 12, color: "var(--gray-10)", marginBottom: 8 }}>Ajouter un paiement</div>
-                          <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: 6 }}>
+                          <div style={{ fontSize: 12, color: "var(--gray-10)", marginBottom: 8 }}>
+                            Ajouter un paiement
+                          </div>
+                          <div
+                            style={{
+                              display: "grid",
+                              gridTemplateColumns: "repeat(2, 1fr)",
+                              gap: 6,
+                            }}
+                          >
                             {PAYMENT_METHODS.filter((m) => m.id !== "MIXTE").map((method) => (
                               <button
                                 key={method.id}
@@ -951,14 +1131,23 @@ export function CaissePayment({ onClose, onPaymentComplete, venteEnAttente }: Ca
                               fontSize: 13,
                             }}
                           >
-                            <ChevronLeft size={16} />
+                            <CaretLeft size={16} />
                             Retour
                           </button>
 
                           {/* Saisie du montant pour le paiement partiel */}
                           <div style={{ marginBottom: 12 }}>
-                            <label style={{ display: "block", fontSize: 13, fontWeight: 500, color: "var(--gray-11)", marginBottom: 8 }}>
-                              Montant ({PAYMENT_METHODS.find((m) => m.id === mixteSelectedMethod)?.label})
+                            <label
+                              style={{
+                                display: "block",
+                                fontSize: 13,
+                                fontWeight: 500,
+                                color: "var(--gray-11)",
+                                marginBottom: 8,
+                              }}
+                            >
+                              Montant (
+                              {PAYMENT_METHODS.find((m) => m.id === mixteSelectedMethod)?.label})
                             </label>
                             <input
                               type="number"
@@ -999,15 +1188,28 @@ export function CaissePayment({ onClose, onPaymentComplete, venteEnAttente }: Ca
                           </div>
 
                           {/* Référence si nécessaire */}
-                          {PAYMENT_METHODS.find((m) => m.id === mixteSelectedMethod)?.needsReference ? <div style={{ marginBottom: 12 }}>
-                              <label style={{ display: "block", fontSize: 13, fontWeight: 500, color: "var(--gray-11)", marginBottom: 8 }}>
+                          {PAYMENT_METHODS.find((m) => m.id === mixteSelectedMethod)
+                            ?.needsReference ? (
+                            <div style={{ marginBottom: 12 }}>
+                              <label
+                                style={{
+                                  display: "block",
+                                  fontSize: 13,
+                                  fontWeight: 500,
+                                  color: "var(--gray-11)",
+                                  marginBottom: 8,
+                                }}
+                              >
                                 Référence
                               </label>
                               <input
                                 type="text"
                                 value={reference}
                                 onChange={(e) => setReference(e.target.value)}
-                                placeholder={PAYMENT_METHODS.find((m) => m.id === mixteSelectedMethod)?.referencePlaceholder}
+                                placeholder={
+                                  PAYMENT_METHODS.find((m) => m.id === mixteSelectedMethod)
+                                    ?.referencePlaceholder
+                                }
                                 style={{
                                   width: "100%",
                                   padding: "10px 12px",
@@ -1019,7 +1221,8 @@ export function CaissePayment({ onClose, onPaymentComplete, venteEnAttente }: Ca
                                   outline: "none",
                                 }}
                               />
-                            </div> : null}
+                            </div>
+                          ) : null}
 
                           <button
                             onClick={handleAddPartialPayment}
@@ -1031,7 +1234,8 @@ export function CaissePayment({ onClose, onPaymentComplete, venteEnAttente }: Ca
                               fontWeight: 600,
                               borderRadius: 8,
                               border: "none",
-                              backgroundColor: montantSaisiNum > 0 ? "var(--accent-9)" : "var(--gray-a6)",
+                              backgroundColor:
+                                montantSaisiNum > 0 ? "var(--accent-9)" : "var(--gray-a6)",
                               color: montantSaisiNum > 0 ? "white" : "var(--gray-10)",
                               cursor: montantSaisiNum > 0 ? "pointer" : "not-allowed",
                               display: "flex",
@@ -1098,7 +1302,7 @@ export function CaissePayment({ onClose, onPaymentComplete, venteEnAttente }: Ca
               >
                 {isProcessing ? (
                   <>
-                    <Loader2 size={18} className="animate-spin" />
+                    <SpinnerGap size={18} className="animate-spin" />
                     Traitement...
                   </>
                 ) : (
@@ -1112,6 +1316,7 @@ export function CaissePayment({ onClose, onPaymentComplete, venteEnAttente }: Ca
           </div>
         </div>
       </div>
+      </FocusScope>
     </div>
   );
 }

@@ -12,7 +12,10 @@ interface StatusLegendProps {
  * Utilisation de styles inline car les classes CSS personnalisées
  * peuvent ne pas être chargées correctement avec Tailwind v4.
  */
-const STATUS_STYLES: Record<keyof typeof StatutTable, { bg: string; border: string; darkBg: string }> = {
+const STATUS_STYLES: Record<
+  keyof typeof StatutTable,
+  { bg: string; border: string; darkBg: string }
+> = {
   LIBRE: { bg: "#dcfce7", border: "#22c55e", darkBg: "#052e16" },
   OCCUPEE: { bg: "#fef9c3", border: "#eab308", darkBg: "#422006" },
   EN_PREPARATION: { bg: "#dbeafe", border: "#3b82f6", darkBg: "#172554" },
@@ -47,7 +50,7 @@ export function StatusLegend({ compact = false }: StatusLegendProps) {
         return (
           <Flex key={statut} align="center" gap="2">
             <div
-              className="w-4 h-4 rounded shrink-0"
+              className="h-4 w-4 shrink-0 rounded"
               style={{
                 backgroundColor: style.bg,
                 border: `2px solid ${style.border}`,

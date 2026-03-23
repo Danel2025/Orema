@@ -15,7 +15,7 @@ export const etablissementSchema = z.object({
   nom: z
     .string()
     .min(2, "Le nom doit contenir au moins 2 caracteres")
-    .max(100, "Le nom ne peut pas depasser 100 caracteres"),
+    .max(100, "Le nom ne peut pas dépasser 100 caracteres"),
   adresse: z.string().max(255).optional().nullable(),
   telephone: z
     .string()
@@ -32,20 +32,25 @@ export const etablissementSchema = z.object({
     .transform((val) => (val === "" ? null : val)),
   nif: z
     .string()
-    .max(50, "Le NIF ne peut pas depasser 50 caracteres")
+    .max(50, "Le NIF ne peut pas dépasser 50 caracteres")
     .optional()
     .nullable()
     .transform((val) => (val === "" ? null : val)),
   rccm: z
     .string()
-    .max(50, "Le RCCM ne peut pas depasser 50 caracteres")
+    .max(50, "Le RCCM ne peut pas dépasser 50 caracteres")
     .optional()
     .nullable()
     .transform((val) => (val === "" ? null : val)),
-  logo: z.string().url().optional().nullable().or(z.literal("")),
+  logo: z
+    .string()
+    .optional()
+    .nullable()
+    .or(z.literal(""))
+    .transform((val) => (val === "" ? null : val)),
   messageTicket: z
     .string()
-    .max(500, "Le message ne peut pas depasser 500 caracteres")
+    .max(500, "Le message ne peut pas dépasser 500 caracteres")
     .optional()
     .nullable(),
 });
@@ -62,12 +67,12 @@ export type EtablissementFormData = z.infer<typeof etablissementSchema>;
 export const fiscalSchema = z.object({
   tauxTvaStandard: z.coerce
     .number()
-    .min(0, "Le taux doit etre positif")
-    .max(100, "Le taux ne peut pas depasser 100%"),
+    .min(0, "Le taux doit être positif")
+    .max(100, "Le taux ne peut pas dépasser 100%"),
   tauxTvaReduit: z.coerce
     .number()
-    .min(0, "Le taux doit etre positif")
-    .max(100, "Le taux ne peut pas depasser 100%"),
+    .min(0, "Le taux doit être positif")
+    .max(100, "Le taux ne peut pas dépasser 100%"),
   afficherTvaSurTicket: z.boolean().default(true),
 });
 
@@ -81,11 +86,11 @@ export type FiscalFormData = z.infer<typeof fiscalSchema>;
  * Types de connexion imprimante
  */
 export const typeConnexionOptions = [
-  { value: "SYSTEME", label: "Imprimante systeme" },
-  { value: "RESEAU", label: "Reseau (IP)" },
-  { value: "USB", label: "USB" },
-  { value: "SERIE", label: "Port Serie" },
-  { value: "BLUETOOTH", label: "Bluetooth" },
+  { value: "SYSTEME", label: "Systeme (recommande — toutes imprimantes)" },
+  { value: "RESEAU", label: "Reseau (IP directe — imprimantes thermiques)" },
+  { value: "USB", label: "USB (ESC/POS — imprimantes thermiques)" },
+  { value: "SERIE", label: "Port Serie (ESC/POS — via Web Serial)" },
+  { value: "BLUETOOTH", label: "Bluetooth (BLE — imprimantes thermiques)" },
 ] as const;
 
 /**
@@ -113,7 +118,7 @@ export const imprimanteSchema = z
     nom: z
       .string()
       .min(2, "Le nom doit contenir au moins 2 caracteres")
-      .max(50, "Le nom ne peut pas depasser 50 caracteres"),
+      .max(50, "Le nom ne peut pas dépasser 50 caracteres"),
     type: z.enum(["TICKET", "CUISINE", "BAR"]),
     typeConnexion: z.enum(["USB", "RESEAU", "SERIE", "BLUETOOTH", "SYSTEME"]),
     adresseIp: z
@@ -121,13 +126,7 @@ export const imprimanteSchema = z
       .optional()
       .nullable()
       .transform((val) => (val === "" ? null : val)),
-    port: z.coerce
-      .number()
-      .int()
-      .min(1)
-      .max(65535)
-      .optional()
-      .nullable(),
+    port: z.coerce.number().int().min(1).max(65535).optional().nullable(),
     pathUsb: z
       .string()
       .optional()
@@ -176,17 +175,9 @@ export const zoneLivraisonSchema = z.object({
   nom: z
     .string()
     .min(2, "Le nom doit contenir au moins 2 caracteres")
-    .max(100, "Le nom ne peut pas depasser 100 caracteres"),
-  frais: z.coerce
-    .number()
-    .int()
-    .min(0, "Les frais doivent etre positifs"),
-  delaiEstime: z.coerce
-    .number()
-    .int()
-    .min(0, "Le delai doit etre positif")
-    .optional()
-    .nullable(),
+    .max(100, "Le nom ne peut pas dépasser 100 caracteres"),
+  frais: z.coerce.number().int().min(0, "Les frais doivent être positifs"),
+  delaiEstime: z.coerce.number().int().min(0, "Le délai doit être positif").optional().nullable(),
   actif: z.boolean().default(true),
 });
 
@@ -272,18 +263,25 @@ export const modePaiementOptions = [
 export const caisseVentesSchema = z.object({
   modeVenteDefaut: z.enum(["DIRECT", "TABLE", "LIVRAISON", "EMPORTER"]).default("DIRECT"),
   confirmationVente: z.boolean().default(false),
-  montantMinimumVente: z.coerce
-    .number()
-    .int()
-    .min(0, "Le montant doit etre positif"),
+  montantMinimumVente: z.coerce.number().int().min(0, "Le montant doit être positif"),
   remiseMaxAutorisee: z.coerce
     .number()
-    .min(0, "La remise doit etre positive")
-    .max(100, "La remise ne peut pas depasser 100%"),
+    .min(0, "La remise doit être positive")
+    .max(100, "La remise ne peut pas dépasser 100%"),
   impressionAutoTicket: z.boolean().default(true),
-  modesPaiementActifs: z.array(
-    z.enum(["ESPECES", "CARTE_BANCAIRE", "AIRTEL_MONEY", "MOOV_MONEY", "CHEQUE", "VIREMENT", "COMPTE_CLIENT"])
-  ).min(1, "Au moins un mode de paiement doit etre actif"),
+  modesPaiementActifs: z
+    .array(
+      z.enum([
+        "ESPECES",
+        "CARTE_BANCAIRE",
+        "AIRTEL_MONEY",
+        "MOOV_MONEY",
+        "CHEQUE",
+        "VIREMENT",
+        "COMPTE_CLIENT",
+      ])
+    )
+    .min(1, "Au moins un mode de paiement doit être actif"),
 });
 
 export type CaisseVentesFormData = z.infer<typeof caisseVentesSchema>;
@@ -303,31 +301,24 @@ export const methodeValuationOptions = [
 /**
  * Schema pour les parametres de stock
  */
-export const stockSettingsSchema = z.object({
-  seuilAlerteStockBas: z.coerce
-    .number()
-    .int()
-    .min(0, "Le seuil doit etre positif"),
-  seuilCritiqueStock: z.coerce
-    .number()
-    .int()
-    .min(0, "Le seuil doit etre positif"),
-  alerteStockEmail: z.boolean().default(false),
-  emailAlerteStock: z
-    .string()
-    .email("Email invalide")
-    .optional()
-    .nullable()
-    .or(z.literal(""))
-    .transform((val) => (val === "" ? null : val)),
-  methodeValuationStock: z.enum(["FIFO", "LIFO"]).default("FIFO"),
-}).refine(
-  (data) => data.seuilCritiqueStock <= data.seuilAlerteStockBas,
-  {
-    message: "Le seuil critique doit etre inferieur ou egal au seuil d'alerte",
+export const stockSettingsSchema = z
+  .object({
+    seuilAlerteStockBas: z.coerce.number().int().min(0, "Le seuil doit être positif"),
+    seuilCritiqueStock: z.coerce.number().int().min(0, "Le seuil doit être positif"),
+    alerteStockEmail: z.boolean().default(false),
+    emailAlerteStock: z
+      .string()
+      .email("Email invalide")
+      .optional()
+      .nullable()
+      .or(z.literal(""))
+      .transform((val) => (val === "" ? null : val)),
+    methodeValuationStock: z.enum(["FIFO", "LIFO"]).default("FIFO"),
+  })
+  .refine((data) => data.seuilCritiqueStock <= data.seuilAlerteStockBas, {
+    message: "Le seuil critique doit être inférieur ou égal au seuil d'alerte",
     path: ["seuilCritiqueStock"],
-  }
-);
+  });
 
 export type StockSettingsFormData = z.infer<typeof stockSettingsSchema>;
 
@@ -343,22 +334,16 @@ export const fideliteSettingsSchema = z.object({
   tauxPointsFidelite: z.coerce
     .number()
     .int()
-    .min(1, "Le taux doit etre au moins 1")
-    .max(100, "Le taux ne peut pas depasser 100"),
-  valeurPointFidelite: z.coerce
-    .number()
-    .int()
-    .min(1, "La valeur doit etre au moins 1 FCFA"),
+    .min(1, "Le taux doit être au moins 1")
+    .max(100, "Le taux ne peut pas dépasser 100"),
+  valeurPointFidelite: z.coerce.number().int().min(1, "La valeur doit être au moins 1 FCFA"),
   creditClientActif: z.boolean().default(false),
-  limiteCreditDefaut: z.coerce
-    .number()
-    .int()
-    .min(0, "La limite doit etre positive"),
+  limiteCreditDefaut: z.coerce.number().int().min(0, "La limite doit être positive"),
   dureeValiditeSolde: z.coerce
     .number()
     .int()
-    .min(1, "La duree doit etre au moins 1 jour")
-    .max(3650, "La duree ne peut pas depasser 10 ans"),
+    .min(1, "La durée doit être au moins 1 jour")
+    .max(3650, "La durée ne peut pas dépasser 10 ans"),
 });
 
 export type FideliteSettingsFormData = z.infer<typeof fideliteSettingsSchema>;
@@ -399,7 +384,7 @@ export const securiteSettingsSchema = z.object({
     .number()
     .int()
     .min(4, "Le PIN doit faire au moins 4 chiffres")
-    .max(8, "Le PIN ne peut pas depasser 8 chiffres"),
+    .max(8, "Le PIN ne peut pas dépasser 8 chiffres"),
   tentativesLoginMax: z.coerce
     .number()
     .int()
@@ -416,9 +401,21 @@ export const securiteSettingsSchema = z.object({
     .min(5, "Minimum 5 minutes")
     .max(480, "Maximum 8 heures (480 minutes)"),
   auditActif: z.boolean().default(true),
-  actionsALogger: z.array(
-    z.enum(["CREATE", "UPDATE", "DELETE", "LOGIN", "LOGOUT", "CAISSE_OUVERTURE", "CAISSE_CLOTURE", "ANNULATION_VENTE", "REMISE_APPLIQUEE"])
-  ).min(1, "Au moins une action doit etre loggee"),
+  actionsALogger: z
+    .array(
+      z.enum([
+        "CREATE",
+        "UPDATE",
+        "DELETE",
+        "LOGIN",
+        "LOGOUT",
+        "CAISSE_OUVERTURE",
+        "CAISSE_CLOTURE",
+        "ANNULATION_VENTE",
+        "REMISE_APPLIQUEE",
+      ])
+    )
+    .min(1, "Au moins une action doit être loggée"),
 });
 
 export type SecuriteSettingsFormData = z.infer<typeof securiteSettingsSchema>;
@@ -462,7 +459,9 @@ export const planSalleSettingsSchema = z.object({
   couleurTablePrepa: z.string().regex(hexColorRegex, "Couleur invalide"),
   couleurTableAddition: z.string().regex(hexColorRegex, "Couleur invalide"),
   couleurTableNettoyer: z.string().regex(hexColorRegex, "Couleur invalide"),
-  affichageTable: z.enum(["NOM", "NUMERO", "CAPACITE", "NOM_NUMERO", "NUMERO_CAPACITE"]).default("NUMERO"),
+  affichageTable: z
+    .enum(["NOM", "NUMERO", "CAPACITE", "NOM_NUMERO", "NUMERO_CAPACITE"])
+    .default("NUMERO"),
   grilleActivee: z.boolean().default(true),
   tailleGrille: z.coerce
     .number()
@@ -531,34 +530,43 @@ export const resetDataCategories = [
   },
 ] as const;
 
-export type ResetDataCategoryKey = typeof resetDataCategories[number]["key"];
+export type ResetDataCategoryKey = (typeof resetDataCategories)[number]["key"];
 
 /**
  * Schema pour les options de remise a zero
  */
-export const resetDataOptionsSchema = z.object({
-  ventes: z.boolean().default(false),
-  clients: z.boolean().default(false),
-  produits: z.boolean().default(false),
-  stocks: z.boolean().default(false),
-  tables: z.boolean().default(false),
-  imprimantes: z.boolean().default(false),
-  utilisateurs: z.boolean().default(false),
-  auditLogs: z.boolean().default(false),
-  confirmationText: z.string().refine(
-    (val) => val === "CONFIRMER LA SUPPRESSION",
-    { message: "Vous devez taper exactement 'CONFIRMER LA SUPPRESSION'" }
-  ),
-}).refine(
-  (data) => {
-    // Au moins une categorie doit etre selectionnee
-    return data.ventes || data.clients || data.produits || data.stocks ||
-           data.tables || data.imprimantes || data.utilisateurs || data.auditLogs;
-  },
-  {
-    message: "Vous devez selectionner au moins une categorie de donnees a supprimer",
-  }
-);
+export const resetDataOptionsSchema = z
+  .object({
+    ventes: z.boolean().default(false),
+    clients: z.boolean().default(false),
+    produits: z.boolean().default(false),
+    stocks: z.boolean().default(false),
+    tables: z.boolean().default(false),
+    imprimantes: z.boolean().default(false),
+    utilisateurs: z.boolean().default(false),
+    auditLogs: z.boolean().default(false),
+    confirmationText: z.string().refine((val) => val === "CONFIRMER LA SUPPRESSION", {
+      message: "Vous devez taper exactement 'CONFIRMER LA SUPPRESSION'",
+    }),
+  })
+  .refine(
+    (data) => {
+      // Au moins une categorie doit être selectionnee
+      return (
+        data.ventes ||
+        data.clients ||
+        data.produits ||
+        data.stocks ||
+        data.tables ||
+        data.imprimantes ||
+        data.utilisateurs ||
+        data.auditLogs
+      );
+    },
+    {
+      message: "Vous devez selectionner au moins une categorie de donnees a supprimer",
+    }
+  );
 
 export type ResetDataOptions = z.infer<typeof resetDataOptionsSchema>;
 
@@ -571,12 +579,16 @@ export type ResetDataOptions = z.infer<typeof resetDataOptionsSchema>;
  */
 export const typeFactureOptions = [
   { value: "TICKET_SIMPLE", label: "Ticket simple", description: "Ticket de caisse compact" },
-  { value: "FACTURE_DETAILLEE", label: "Facture détaillée", description: "Facture complète avec TVA" },
+  {
+    value: "FACTURE_DETAILLEE",
+    label: "Facture détaillée",
+    description: "Facture complète avec TVA",
+  },
   { value: "PRO_FORMA", label: "Pro-forma", description: "Devis avant achat" },
   { value: "NOTE_ADDITION", label: "Note d'addition", description: "Pré-note pour table" },
 ] as const;
 
-export type TypeFacture = typeof typeFactureOptions[number]["value"];
+export type TypeFacture = (typeof typeFactureOptions)[number]["value"];
 
 /**
  * Styles de séparateur pour les tickets
@@ -589,7 +601,7 @@ export const styleSeparateurOptions = [
   { value: "AUCUN", label: "Aucun", char: "" },
 ] as const;
 
-export type StyleSeparateur = typeof styleSeparateurOptions[number]["value"];
+export type StyleSeparateur = (typeof styleSeparateurOptions)[number]["value"];
 
 /**
  * Options de copies (1 à 5)
@@ -607,7 +619,9 @@ export const copiesOptions = [
  */
 export const parametresFactureSchema = z.object({
   // Type par défaut
-  typeFactureDefaut: z.enum(["TICKET_SIMPLE", "FACTURE_DETAILLEE", "PRO_FORMA", "NOTE_ADDITION"]).default("TICKET_SIMPLE"),
+  typeFactureDefaut: z
+    .enum(["TICKET_SIMPLE", "FACTURE_DETAILLEE", "PRO_FORMA", "NOTE_ADDITION"])
+    .default("TICKET_SIMPLE"),
 
   // Options globales
   afficherLogo: z.boolean().default(true),
@@ -626,10 +640,30 @@ export const parametresFactureSchema = z.object({
   enteteNoteAddition: z.string().max(100).default("ADDITION").optional().nullable(),
 
   // Pieds de page par type
-  piedPageTicketSimple: z.string().max(200).default("Merci de votre visite !").optional().nullable(),
-  piedPageFactureDetaillee: z.string().max(200).default("Conditions de paiement : comptant").optional().nullable(),
-  piedPageProForma: z.string().max(200).default("Ce document n'est pas une facture").optional().nullable(),
-  piedPageNoteAddition: z.string().max(200).default("Merci de régler à la caisse").optional().nullable(),
+  piedPageTicketSimple: z
+    .string()
+    .max(200)
+    .default("Merci de votre visite !")
+    .optional()
+    .nullable(),
+  piedPageFactureDetaillee: z
+    .string()
+    .max(200)
+    .default("Conditions de paiement : comptant")
+    .optional()
+    .nullable(),
+  piedPageProForma: z
+    .string()
+    .max(200)
+    .default("Ce document n'est pas une facture")
+    .optional()
+    .nullable(),
+  piedPageNoteAddition: z
+    .string()
+    .max(200)
+    .default("Merci de régler à la caisse")
+    .optional()
+    .nullable(),
 
   // Nombre de copies par type
   copiesTicketSimple: z.coerce.number().int().min(1).max(5).default(1),

@@ -5,36 +5,23 @@
  */
 
 import { useState } from "react";
-import { useForm } from "react-hook-form";
+import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import {
-  Box,
-  Card,
-  Flex,
-  Text,
-  TextField,
-  Switch,
-  Button,
-  Callout,
-  Badge,
-} from "@radix-ui/themes";
+import { Box, Flex, Text, TextField, Switch, Button, Callout, Badge } from "@radix-ui/themes";
 import {
   Calculator,
   Percent,
   Receipt,
-  Save,
-  Loader2,
-  CheckCircle2,
-  AlertCircle,
+  FloppyDisk,
+  CircleNotch,
+  CheckCircle,
+  WarningCircle,
   Info,
-} from "lucide-react";
+} from "@phosphor-icons/react";
 import { toast } from "sonner";
 
 import { updateFiscalSettings } from "@/actions/parametres";
-import {
-  fiscalSchema,
-  type FiscalFormData,
-} from "@/schemas/parametres.schema";
+import { fiscalSchema, type FiscalFormData } from "@/schemas/parametres.schema";
 
 interface FiscalSettingsProps {
   initialData: {
@@ -47,14 +34,13 @@ interface FiscalSettingsProps {
 export function FiscalSettings({ initialData }: FiscalSettingsProps) {
   const [isLoading, setIsLoading] = useState(false);
   const [saveStatus, setSaveStatus] = useState<"idle" | "success" | "error">("idle");
-  const [afficherTva, setAfficherTva] = useState(initialData.afficherTvaSurTicket);
 
   const {
     register,
     handleSubmit,
+    control,
     formState: { errors, isDirty },
     watch,
-   
   } = useForm<FiscalFormData>({
     resolver: zodResolver(fiscalSchema) as any,
     defaultValues: {
@@ -66,20 +52,18 @@ export function FiscalSettings({ initialData }: FiscalSettingsProps) {
 
   const tauxStandard = watch("tauxTvaStandard");
   const tauxReduit = watch("tauxTvaReduit");
+  const afficherTva = watch("afficherTvaSurTicket");
 
   const onSubmit = async (data: FiscalFormData) => {
     setIsLoading(true);
     setSaveStatus("idle");
 
     try {
-      const result = await updateFiscalSettings({
-        ...data,
-        afficherTvaSurTicket: afficherTva,
-      });
+      const result = await updateFiscalSettings(data);
 
       if (result.success) {
         setSaveStatus("success");
-        toast.success("Parametres fiscaux enregistres");
+        toast.success("Paramètres fiscaux enregistrés");
         setTimeout(() => setSaveStatus("idle"), 3000);
       } else {
         setSaveStatus("error");
@@ -99,21 +83,21 @@ export function FiscalSettings({ initialData }: FiscalSettingsProps) {
         {/* Information sur la TVA au Gabon */}
         <Callout.Root color="blue" size="2">
           <Callout.Icon>
-            <Info size={18} />
+            <Info size={18} weight="regular" />
           </Callout.Icon>
           <Callout.Text>
             <Text weight="bold">TVA au Gabon</Text>
             <br />
-            Le taux standard est de 18%. Un taux reduit de 10% s'applique a certains produits
-            de premiere necessite. Certains produits sont exoneres (0%).
+            Le taux standard est de 18%. Un taux reduit de 10% s'applique a certains produits de
+            premiere necessite. Certains produits sont exoneres (0%).
           </Callout.Text>
         </Callout.Root>
 
         {/* Taux de TVA */}
-        <Card size="3">
+        <Box style={{ border: "1px solid var(--gray-a6)", borderRadius: 8 }} p="4">
           <Flex direction="column" gap="4">
             <Flex align="center" gap="2">
-              <Calculator size={20} style={{ color: "var(--accent-9)" }} />
+              <Calculator size={20} weight="duotone" style={{ color: "var(--accent-9)" }} />
               <Text size="4" weight="bold">
                 Taux de TVA
               </Text>
@@ -125,9 +109,7 @@ export function FiscalSettings({ initialData }: FiscalSettingsProps) {
                   <Text as="label" size="2" weight="medium">
                     Taux standard
                   </Text>
-                  <Badge size="1">
-                    Par defaut
-                  </Badge>
+                  <Badge size="1">Par defaut</Badge>
                 </Flex>
                 <TextField.Root
                   {...register("tauxTvaStandard")}
@@ -141,9 +123,11 @@ export function FiscalSettings({ initialData }: FiscalSettingsProps) {
                     <Percent size={16} />
                   </TextField.Slot>
                 </TextField.Root>
-                {errors.tauxTvaStandard ? <Text size="1" color="red" mt="1">
+                {errors.tauxTvaStandard ? (
+                  <Text size="1" color="red" mt="1">
                     {errors.tauxTvaStandard.message}
-                  </Text> : null}
+                  </Text>
+                ) : null}
                 <Text size="1" color="gray" mt="1">
                   Applique a la majorite des produits et services
                 </Text>
@@ -165,9 +149,11 @@ export function FiscalSettings({ initialData }: FiscalSettingsProps) {
                     <Percent size={16} />
                   </TextField.Slot>
                 </TextField.Root>
-                {errors.tauxTvaReduit ? <Text size="1" color="red" mt="1">
+                {errors.tauxTvaReduit ? (
+                  <Text size="1" color="red" mt="1">
                     {errors.tauxTvaReduit.message}
-                  </Text> : null}
+                  </Text>
+                ) : null}
                 <Text size="1" color="gray" mt="1">
                   Pour les produits de premiere necessite
                 </Text>
@@ -222,13 +208,13 @@ export function FiscalSettings({ initialData }: FiscalSettingsProps) {
               </Flex>
             </Box>
           </Flex>
-        </Card>
+        </Box>
 
         {/* Options d'affichage */}
-        <Card size="3">
+        <Box style={{ border: "1px solid var(--gray-a6)", borderRadius: 8 }} p="4">
           <Flex direction="column" gap="4">
             <Flex align="center" gap="2">
-              <Receipt size={20} style={{ color: "var(--accent-9)" }} />
+              <Receipt size={20} weight="duotone" style={{ color: "var(--accent-9)" }} />
               <Text size="4" weight="bold">
                 Affichage sur les tickets
               </Text>
@@ -243,11 +229,16 @@ export function FiscalSettings({ initialData }: FiscalSettingsProps) {
                   Affiche le montant HT, la TVA et le TTC sur chaque ticket
                 </Text>
               </Flex>
-              <Switch
-                size="3"
-                checked={afficherTva}
-                onCheckedChange={setAfficherTva}
-               
+              <Controller
+                name="afficherTvaSurTicket"
+                control={control}
+                render={({ field }) => (
+                  <Switch
+                    size="3"
+                    checked={field.value}
+                    onCheckedChange={(checked) => field.onChange(checked)}
+                  />
+                )}
               />
             </Flex>
 
@@ -269,10 +260,12 @@ export function FiscalSettings({ initialData }: FiscalSettingsProps) {
                   <Text size="1">Sous-total HT</Text>
                   <Text size="1">10 000 FCFA</Text>
                 </Flex>
-                {afficherTva ? <Flex justify="between">
+                {afficherTva ? (
+                  <Flex justify="between">
                     <Text size="1">TVA ({tauxStandard}%)</Text>
-                    <Text size="1">{Math.round(10000 * tauxStandard / 100)} FCFA</Text>
-                  </Flex> : null}
+                    <Text size="1">{Math.round((10000 * tauxStandard) / 100)} FCFA</Text>
+                  </Flex>
+                ) : null}
                 <Box
                   style={{
                     borderTop: "1px dashed var(--gray-6)",
@@ -286,7 +279,7 @@ export function FiscalSettings({ initialData }: FiscalSettingsProps) {
                     </Text>
                     <Text size="2" weight="bold">
                       {afficherTva
-                        ? `${10000 + Math.round(10000 * tauxStandard / 100)} FCFA`
+                        ? `${10000 + Math.round((10000 * tauxStandard) / 100)} FCFA`
                         : "11 800 FCFA"}
                     </Text>
                   </Flex>
@@ -294,13 +287,13 @@ export function FiscalSettings({ initialData }: FiscalSettingsProps) {
               </Flex>
             </Box>
           </Flex>
-        </Card>
+        </Box>
 
         {/* Bouton de sauvegarde */}
         <Flex justify="end" gap="3" align="center">
           {saveStatus === "success" && (
             <Flex align="center" gap="2">
-              <CheckCircle2 size={16} className="text-green-500" />
+              <CheckCircle size={16} className="text-green-500" />
               <Text size="2" color="green">
                 Enregistre
               </Text>
@@ -308,23 +301,14 @@ export function FiscalSettings({ initialData }: FiscalSettingsProps) {
           )}
           {saveStatus === "error" && (
             <Flex align="center" gap="2">
-              <AlertCircle size={16} className="text-red-500" />
+              <WarningCircle size={16} className="text-red-500" />
               <Text size="2" color="red">
                 Erreur d'enregistrement
               </Text>
             </Flex>
           )}
-          <Button
-            type="submit"
-            size="3"
-            disabled={isLoading}
-           
-          >
-            {isLoading ? (
-              <Loader2 size={16} className="animate-spin" />
-            ) : (
-              <Save size={16} />
-            )}
+          <Button type="submit" size="3" disabled={isLoading}>
+            {isLoading ? <CircleNotch size={16} className="animate-spin" /> : <FloppyDisk size={16} />}
             Enregistrer les parametres fiscaux
           </Button>
         </Flex>

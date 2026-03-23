@@ -1,36 +1,34 @@
 "use client";
 
 /**
- * Layout Admin - Réservé au SUPER_ADMIN
- * Interface de gestion de contenu avec navigation dédiée
+ * Layout Admin - Reserve au SUPER_ADMIN
+ * Interface de gestion avec navigation dediee
  *
- * Note: Ce layout utilise des marges négatives pour compenser
+ * Note: Ce layout utilise des marges negatives pour compenser
  * le padding du DashboardShell parent (24px 32px)
  */
 
 import { useAuth } from "@/lib/auth/context";
-import { redirect , usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import {
-  Box,
-  Flex,
-  Heading,
-  Text,
-  Badge,
-  Spinner,
-} from "@radix-ui/themes";
+
+import { useMounted } from "@/hooks/use-mounted";
+import { Box, Flex, Heading, Text, Badge, Spinner } from "@radix-ui/themes";
 import * as Collapsible from "@radix-ui/react-collapsible";
+import type { IconWeight } from "@phosphor-icons/react";
 import {
-  LayoutDashboard,
+  SquaresFour,
   FileText,
-  BookOpen,
+  BookOpenText,
   Newspaper,
-  ChevronLeft,
-  ChevronDown,
-  Shield,
-  Sparkles,
-  Building2,
-} from "lucide-react";
+  CaretLeft,
+  CaretDown,
+  ShieldCheck,
+  Sparkle,
+  Buildings,
+  CreditCard,
+} from "@phosphor-icons/react";
+import Image from "next/image";
 import Link from "next/link";
 import { motion, AnimatePresence } from "motion/react";
 
@@ -46,13 +44,19 @@ const adminNavItems = [
   {
     href: "/admin",
     label: "Vue d'ensemble",
-    icon: LayoutDashboard,
+    icon: SquaresFour,
     exact: true,
   },
   {
     href: "/admin/etablissements",
     label: "Établissements",
-    icon: Building2,
+    icon: Buildings,
+  },
+  {
+    href: "/admin/billing",
+    label: "Facturation",
+    icon: CreditCard,
+    exact: true,
   },
   {
     label: "Gestion du contenu",
@@ -62,7 +66,7 @@ const adminNavItems = [
       {
         href: "/admin/contenu/documentation",
         label: "Documentation",
-        icon: BookOpen,
+        icon: BookOpenText,
       },
       {
         href: "/admin/contenu/blog",
@@ -83,7 +87,7 @@ function CollapsibleNavGroup({
   pathname,
 }: {
   item: (typeof adminNavItems)[number];
-  Icon: React.ComponentType<{ size?: number; style?: React.CSSProperties }>;
+  Icon: React.ComponentType<{ size?: number; weight?: IconWeight; style?: React.CSSProperties }>;
   isGroupActive: boolean;
   pathname: string;
 }) {
@@ -111,22 +115,24 @@ function CollapsibleNavGroup({
           <Flex align="center" gap="3">
             <Icon
               size={18}
+              weight={isGroupActive ? "fill" : "regular"}
               style={{
-                color: isGroupActive ? "var(--violet-9)" : "var(--gray-10)",
+                color: isGroupActive ? "var(--accent-9)" : "var(--gray-10)",
               }}
             />
             <Text
               size="2"
               weight="medium"
               style={{
-                color: isGroupActive ? "var(--violet-11)" : "var(--gray-11)",
+                color: isGroupActive ? "var(--accent-11)" : "var(--gray-11)",
                 flex: 1,
               }}
             >
               {item.label}
             </Text>
-            <ChevronDown
+            <CaretDown
               size={14}
+              weight="bold"
               style={{
                 color: "var(--gray-9)",
                 transition: "transform 0.2s ease",
@@ -154,19 +160,13 @@ function CollapsibleNavGroup({
             const ChildIcon = child.icon;
 
             return (
-              <Link
-                key={child.href}
-                href={child.href}
-                style={{ textDecoration: "none" }}
-              >
+              <Link key={child.href} href={child.href} style={{ textDecoration: "none" }}>
                 <Box
                   px="3"
                   py="2"
                   style={{
                     borderRadius: 8,
-                    background: childActive
-                      ? "linear-gradient(135deg, var(--violet-a3) 0%, var(--purple-a3) 100%)"
-                      : "transparent",
+                    background: childActive ? "var(--accent-a3)" : "transparent",
                     transition: "all 0.15s ease",
                     cursor: "pointer",
                   }}
@@ -184,15 +184,16 @@ function CollapsibleNavGroup({
                   <Flex align="center" gap="3">
                     <ChildIcon
                       size={16}
+                      weight={childActive ? "fill" : "regular"}
                       style={{
-                        color: childActive ? "var(--violet-9)" : "var(--gray-10)",
+                        color: childActive ? "var(--accent-9)" : "var(--gray-10)",
                       }}
                     />
                     <Text
                       size="2"
                       weight={childActive ? "medium" : "regular"}
                       style={{
-                        color: childActive ? "var(--violet-11)" : "var(--gray-11)",
+                        color: childActive ? "var(--accent-11)" : "var(--gray-11)",
                       }}
                     >
                       {child.label}
@@ -203,7 +204,7 @@ function CollapsibleNavGroup({
                           width: 6,
                           height: 6,
                           borderRadius: "50%",
-                          background: "var(--violet-9)",
+                          background: "var(--accent-9)",
                         }}
                       /> : null}
                   </Flex>
@@ -217,25 +218,18 @@ function CollapsibleNavGroup({
   );
 }
 
-export default function AdminLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const { user, isLoading, isSuperAdmin } = useAuth();
   const pathname = usePathname();
-  const [mounted, setMounted] = useState(false);
+  const router = useRouter();
+  const mounted = useMounted();
 
-  useEffect(() => {
-    setMounted(true);
-  }, []);
-
-  // Vérification du rôle SUPER_ADMIN
+  // Verification du role SUPER_ADMIN
   useEffect(() => {
     if (!isLoading && !isSuperAdmin) {
-      redirect("/dashboard");
+      router.push("/dashboard");
     }
-  }, [isLoading, isSuperAdmin]);
+  }, [isLoading, isSuperAdmin, router]);
 
   // Loading state
   if (isLoading || !mounted) {
@@ -246,27 +240,20 @@ export default function AdminLayout({
         style={{
           height: `calc(100vh - 64px)`,
           margin: `-${PARENT_PADDING_Y}px -${PARENT_PADDING_X}px`,
-          background: "var(--gray-1)"
+          background: "var(--gray-1)",
         }}
       >
         <Flex direction="column" align="center" gap="4">
-          <Box
-            style={{
-              width: 64,
-              height: 64,
-              borderRadius: 16,
-              background: "linear-gradient(135deg, var(--violet-9) 0%, var(--purple-9) 100%)",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              boxShadow: "0 8px 32px var(--violet-a5)",
-            }}
-          >
-            <Shield size={32} style={{ color: "white" }} />
-          </Box>
+          <Image
+            src="/images/logos/ic-lg.webp"
+            alt="Orema N+"
+            width={64}
+            height={64}
+            style={{ borderRadius: 16 }}
+          />
           <Spinner size="3" />
           <Text size="2" color="gray">
-            Vérification des permissions...
+            Verification des permissions...
           </Text>
         </Flex>
       </Flex>
@@ -285,16 +272,14 @@ export default function AdminLayout({
 
   return (
     <Flex
-        style={{
-          // Marges négatives pour compenser le padding du parent
-          margin: `-${PARENT_PADDING_Y}px -${PARENT_PADDING_X}px`,
-          // Hauteur fixe pour permettre le scroll interne
-          height: `calc(100vh - 64px)`, // 64px = hauteur du header principal
-          background: "var(--gray-1)",
-          overflow: "hidden",
-        }}
-      >
-      {/* Sidebar Admin - Fixe, pas de scroll */}
+      style={{
+        margin: `-${PARENT_PADDING_Y}px -${PARENT_PADDING_X}px`,
+        height: `calc(100vh - 64px)`,
+        background: "var(--gray-1)",
+        overflow: "hidden",
+      }}
+    >
+      {/* Sidebar Admin */}
       <Box
         style={{
           width: ADMIN_SIDEBAR_WIDTH,
@@ -312,30 +297,22 @@ export default function AdminLayout({
           p="5"
           style={{
             borderBottom: "1px solid var(--gray-a4)",
-            background: "linear-gradient(180deg, var(--violet-a2) 0%, transparent 100%)",
           }}
         >
           <Flex align="center" gap="3" mb="3">
-            <Box
-              style={{
-                width: 40,
-                height: 40,
-                borderRadius: 10,
-                background: "linear-gradient(135deg, var(--violet-9) 0%, var(--purple-9) 100%)",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                boxShadow: "0 4px 12px var(--violet-a4)",
-              }}
-            >
-              <Shield size={20} style={{ color: "white" }} />
-            </Box>
+            <Image
+              src="/images/logos/ic-lg.webp"
+              alt="Orema N+"
+              width={36}
+              height={36}
+              style={{ borderRadius: 10 }}
+            />
             <Box>
               <Heading size="3" style={{ lineHeight: 1.2 }}>
-                Admin Panel
+                Administration
               </Heading>
               <Flex align="center" gap="1" mt="1">
-                <Sparkles size={12} style={{ color: "var(--violet-9)" }} />
+                <Sparkle size={12} weight="fill" style={{ color: "var(--accent-9)" }} />
                 <Text size="1" color="gray">
                   SUPER_ADMIN
                 </Text>
@@ -361,7 +338,7 @@ export default function AdminLayout({
         </Box>
 
         {/* Navigation */}
-        <Box p="3" style={{ flex: 1 }}>
+        <Box p="3" style={{ flex: 1, overflowY: "auto" }}>
           <Flex direction="column" gap="1">
             {adminNavItems.map((item) => {
               const Icon = item.icon;
@@ -387,19 +364,13 @@ export default function AdminLayout({
               const active = isActive(item.href!, item.exact);
 
               return (
-                <Link
-                  key={item.href}
-                  href={item.href!}
-                  style={{ textDecoration: "none" }}
-                >
+                <Link key={item.href} href={item.href!} style={{ textDecoration: "none" }}>
                   <Box
                     px="3"
                     py="2"
                     style={{
                       borderRadius: 8,
-                      background: active
-                        ? "linear-gradient(135deg, var(--violet-a3) 0%, var(--purple-a3) 100%)"
-                        : "transparent",
+                      background: active ? "var(--accent-a3)" : "transparent",
                       transition: "all 0.15s ease",
                       cursor: "pointer",
                     }}
@@ -417,15 +388,16 @@ export default function AdminLayout({
                     <Flex align="center" gap="3">
                       <Icon
                         size={18}
+                        weight={active ? "fill" : "regular"}
                         style={{
-                          color: active ? "var(--violet-9)" : "var(--gray-10)",
+                          color: active ? "var(--accent-9)" : "var(--gray-10)",
                         }}
                       />
                       <Text
                         size="2"
                         weight={active ? "medium" : "regular"}
                         style={{
-                          color: active ? "var(--violet-11)" : "var(--gray-11)",
+                          color: active ? "var(--accent-11)" : "var(--gray-11)",
                         }}
                       >
                         {item.label}
@@ -436,7 +408,7 @@ export default function AdminLayout({
                             width: 6,
                             height: 6,
                             borderRadius: "50%",
-                            background: "var(--violet-9)",
+                            background: "var(--accent-9)",
                           }}
                         /> : null}
                     </Flex>
@@ -472,7 +444,7 @@ export default function AdminLayout({
                 e.currentTarget.style.background = "var(--gray-a2)";
               }}
             >
-              <ChevronLeft size={16} style={{ color: "var(--gray-10)" }} />
+              <CaretLeft size={16} weight="bold" style={{ color: "var(--gray-10)" }} />
               <Text size="2" color="gray">
                 Retour au dashboard
               </Text>
@@ -491,7 +463,7 @@ export default function AdminLayout({
           overflow: "hidden",
         }}
       >
-        {/* Top bar with breadcrumb - Fixed at top */}
+        {/* Top bar */}
         <Box
           px="5"
           py="3"
@@ -504,23 +476,33 @@ export default function AdminLayout({
           <Flex align="center" justify="between">
             <Flex align="center" gap="2">
               <Badge
-                color="violet"
-                variant="surface"
+                color="orange"
+                variant="soft"
                 size="1"
-                style={{
-                  background: "linear-gradient(135deg, var(--violet-a3) 0%, var(--purple-a3) 100%)",
-                }}
               >
                 <Flex align="center" gap="1">
-                  <Shield size={12} />
+                  <ShieldCheck size={12} weight="fill" />
                   SUPER_ADMIN
                 </Flex>
               </Badge>
               <Text size="2" color="gray">
-                •
+                /
               </Text>
               <Text size="2" color="gray">
-                Gestion de contenu
+                {(() => {
+                  const pageLabels: Record<string, string> = {
+                    "/admin/etablissements": "Établissements",
+                    "/admin/billing": "Facturation",
+                    "/admin/contenu/blog": "Blog",
+                    "/admin/contenu/documentation": "Documentation",
+                    "/admin/contenu": "Gestion de contenu",
+                    "/admin": "Vue d'ensemble",
+                  };
+                  const match = Object.keys(pageLabels)
+                    .sort((a, b) => b.length - a.length)
+                    .find((key) => pathname.startsWith(key));
+                  return match ? pageLabels[match] : "Administration";
+                })()}
               </Text>
             </Flex>
 
@@ -545,9 +527,7 @@ export default function AdminLayout({
               exit={{ opacity: 0, y: -8 }}
               transition={{ duration: 0.2 }}
             >
-              <Box p="5">
-                {children}
-              </Box>
+              <Box p="5">{children}</Box>
             </motion.div>
           </AnimatePresence>
         </Box>

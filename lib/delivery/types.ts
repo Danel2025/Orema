@@ -9,12 +9,12 @@
 // ============================================================================
 
 export const STATUT_LIVRAISON = {
-  EN_PREPARATION: 'EN_PREPARATION',
-  PRETE: 'PRETE',
-  EN_COURS: 'EN_COURS',
-  LIVREE: 'LIVREE',
-  ECHOUEE: 'ECHOUEE',
-  ANNULEE: 'ANNULEE',
+  EN_PREPARATION: "EN_PREPARATION",
+  PRETE: "PRETE",
+  EN_COURS: "EN_COURS",
+  LIVREE: "LIVREE",
+  ECHOUEE: "ECHOUEE",
+  ANNULEE: "ANNULEE",
 } as const;
 
 export type StatutLivraison = (typeof STATUT_LIVRAISON)[keyof typeof STATUT_LIVRAISON];
@@ -41,11 +41,11 @@ export const STATUTS_TERMINES: StatutLivraison[] = [
  * Transitions de statut autorisées
  */
 export const TRANSITIONS_AUTORISEES: Record<StatutLivraison, StatutLivraison[]> = {
-  EN_PREPARATION: ['PRETE', 'ANNULEE'],
-  PRETE: ['EN_COURS', 'ANNULEE'],
-  EN_COURS: ['LIVREE', 'ECHOUEE'],
+  EN_PREPARATION: ["PRETE", "ANNULEE"],
+  PRETE: ["EN_COURS", "ANNULEE"],
+  EN_COURS: ["LIVREE", "ECHOUEE"],
   LIVREE: [],
-  ECHOUEE: ['EN_COURS'], // Possibilité de retenter
+  ECHOUEE: ["EN_COURS"], // Possibilité de retenter
   ANNULEE: [],
 };
 
@@ -122,22 +122,22 @@ export interface ActionResult<T = void> {
  * Labels lisibles pour chaque statut de livraison
  */
 export const STATUT_LIVRAISON_LABELS: Record<StatutLivraison, string> = {
-  EN_PREPARATION: 'En préparation',
-  PRETE: 'Prête',
-  EN_COURS: 'En cours de livraison',
-  LIVREE: 'Livrée',
-  ECHOUEE: 'Échouée',
-  ANNULEE: 'Annulée',
+  EN_PREPARATION: "En préparation",
+  PRETE: "Prête",
+  EN_COURS: "En cours de livraison",
+  LIVREE: "Livrée",
+  ECHOUEE: "Échouée",
+  ANNULEE: "Annulée",
 };
 
 /**
  * Couleurs pour chaque statut (compatibles Radix UI Themes)
  */
 export const STATUT_LIVRAISON_COLORS: Record<StatutLivraison, string> = {
-  EN_PREPARATION: 'orange',
-  PRETE: 'blue',
-  EN_COURS: 'violet',
-  LIVREE: 'green',
-  ECHOUEE: 'red',
-  ANNULEE: 'gray',
+  EN_PREPARATION: "orange",
+  PRETE: "blue",
+  EN_COURS: "violet",
+  LIVREE: "green",
+  ECHOUEE: "red",
+  ANNULEE: "gray",
 };

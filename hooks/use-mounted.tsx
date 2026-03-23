@@ -2,22 +2,23 @@
  * Hook pour détecter si le composant est monté (côté client)
  * Utile pour éviter les erreurs d'hydratation avec les composants
  * qui génèrent des IDs aléatoires (ex: Radix UI Popover, DropdownMenu)
+ *
+ * Utilise useSyncExternalStore pour éviter les re-renders en cascade
+ * (best practice React 19 / React Compiler).
  */
 
-import { useEffect, useState } from "react";
+import { useSyncExternalStore } from "react";
+
+const emptySubscribe = () => () => {};
+const getSnapshot = () => true;
+const getServerSnapshot = () => false;
 
 /**
  * Retourne `true` uniquement après l'hydratation côté client.
  * Utile pour les composants qui ne doivent pas être rendus en SSR.
  */
 export function useMounted(): boolean {
-  const [mounted, setMounted] = useState(false);
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
-
-  return mounted;
+  return useSyncExternalStore(emptySubscribe, getSnapshot, getServerSnapshot);
 }
 
 /**

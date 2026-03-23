@@ -7,7 +7,7 @@
 
 import { useState, useEffect } from "react";
 import { Box, Card, Flex, Text, Table, Avatar, Badge, Select, Skeleton } from "@radix-ui/themes";
-import { Users, TrendingUp } from "lucide-react";
+import { Users, TrendUp } from "@phosphor-icons/react";
 import { getSalesByEmployee, type SalesByEmployeeData, type PeriodeType } from "@/actions/rapports";
 import { formatCurrency } from "@/lib/utils";
 
@@ -88,13 +88,7 @@ export function SalesByEmployee({ initialData }: SalesByEmployeeProps) {
 
   return (
     <Card size="3">
-      <Flex
-        justify="between"
-        align="center"
-        mb="4"
-        wrap="wrap"
-        gap="3"
-      >
+      <Flex justify="between" align="center" mb="4" wrap="wrap" gap="3">
         <Flex align="center" gap="2">
           <Users size={20} style={{ color: "var(--purple-9)" }} />
           <Text size="4" weight="bold">
@@ -103,7 +97,7 @@ export function SalesByEmployee({ initialData }: SalesByEmployeeProps) {
         </Flex>
         <Select.Root value={periode} onValueChange={(v) => setPeriode(v as PeriodeType)}>
           <Select.Trigger placeholder="Periode" />
-          <Select.Content>
+          <Select.Content position="popper">
             <Select.Item value="jour">Aujourd'hui</Select.Item>
             <Select.Item value="semaine">Cette semaine</Select.Item>
             <Select.Item value="mois">Ce mois</Select.Item>
@@ -113,11 +107,7 @@ export function SalesByEmployee({ initialData }: SalesByEmployeeProps) {
       </Flex>
 
       {!hasData ? (
-        <Flex
-          align="center"
-          justify="center"
-          style={{ height: 200 }}
-        >
+        <Flex align="center" justify="center" style={{ height: 200 }}>
           <Text size="3" color="gray">
             Aucune vente pour cette periode
           </Text>
@@ -125,7 +115,8 @@ export function SalesByEmployee({ initialData }: SalesByEmployeeProps) {
       ) : (
         <Flex direction="column" gap="4">
           {/* Meilleur employe */}
-          {bestEmployee ? <Box
+          {bestEmployee ? (
+            <Box
               style={{
                 padding: 16,
                 borderRadius: 8,
@@ -143,7 +134,6 @@ export function SalesByEmployee({ initialData }: SalesByEmployeeProps) {
                     <Avatar
                       size="4"
                       fallback={getInitials(bestEmployee.nom, bestEmployee.prenom)}
-                     
                     />
                     <Box
                       style={{
@@ -159,7 +149,7 @@ export function SalesByEmployee({ initialData }: SalesByEmployeeProps) {
                         justifyContent: "center",
                       }}
                     >
-                      <TrendingUp size={12} color="white" />
+                      <TrendUp size={12} color="white" />
                     </Box>
                   </Box>
                   <Box>
@@ -187,7 +177,8 @@ export function SalesByEmployee({ initialData }: SalesByEmployeeProps) {
                   </Text>
                 </Box>
               </Flex>
-            </Box> : null}
+            </Box>
+          ) : null}
 
           {/* Tableau des employes */}
           <Table.Root>
@@ -238,7 +229,8 @@ export function SalesByEmployee({ initialData }: SalesByEmployeeProps) {
                       size="2"
                       style={{
                         fontFamily: "var(--font-google-sans-code), ui-monospace, monospace",
-                        color: employee.panierMoyen >= avgPanier ? "var(--green-9)" : "var(--gray-11)",
+                        color:
+                          employee.panierMoyen >= avgPanier ? "var(--green-9)" : "var(--gray-11)",
                       }}
                     >
                       {formatCurrency(employee.panierMoyen)}

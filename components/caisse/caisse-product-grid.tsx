@@ -6,7 +6,7 @@
  */
 
 import { useState, useCallback, useRef, useEffect } from "react";
-import { Package, Search, Plus as PlusIcon, ChevronLeft, ChevronRight } from "lucide-react";
+import { Package, MagnifyingGlass, Plus as PlusIcon, CaretLeft, CaretRight } from "@phosphor-icons/react";
 import { Badge } from "@radix-ui/themes";
 import { useCartStore } from "@/stores/cart-store";
 import { formatCurrency } from "@/lib/utils";
@@ -93,43 +93,60 @@ export function CaisseProductGrid({ categories, produits }: CaisseProductGridPro
   // Filtrer les produits
   const filteredProduits = produits.filter((prod) => {
     const matchesCategory = !selectedCategory || prod.categorieId === selectedCategory;
-    const matchesSearch = !searchQuery || prod.nom.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesSearch =
+      !searchQuery || prod.nom.toLowerCase().includes(searchQuery.toLowerCase());
     return matchesCategory && matchesSearch;
   });
 
   // Ajouter au panier (ouvre le dialog si supplements disponibles)
-  const handleAddProduct = useCallback((prod: Produit) => {
-    const prix = toNumber(prod.prixVente);
-    const cat = categories.find((c) => c.id === prod.categorieId);
+  const handleAddProduct = useCallback(
+    (prod: Produit) => {
+      const prix = toNumber(prod.prixVente);
+      const cat = categories.find((c) => c.id === prod.categorieId);
 
-    // Si le produit a des supplements, ouvrir le selecteur
-    if (prod.supplements && prod.supplements.length > 0) {
-      setSelectedProduct(prod);
-      setSupplementDialogOpen(true);
-    } else {
-      // Sinon, ajouter directement
-      addItem({
-        produitId: prod.id,
-        prixUnitaire: prix,
-        categorieNom: cat?.nom,
-        produit: {
-          nom: prod.nom,
-          tauxTva: prod.tauxTva,
-        },
-      });
-    }
-  }, [addItem, categories]);
+      // Si le produit a des supplements, ouvrir le selecteur
+      if (prod.supplements && prod.supplements.length > 0) {
+        setSelectedProduct(prod);
+        setSupplementDialogOpen(true);
+      } else {
+        // Sinon, ajouter directement
+        addItem({
+          produitId: prod.id,
+          prixUnitaire: prix,
+          categorieNom: cat?.nom,
+          produit: {
+            nom: prod.nom,
+            tauxTva: prod.tauxTva,
+          },
+        });
+      }
+    },
+    [addItem, categories]
+  );
 
   // Confirmer l'ajout avec supplements
-  const handleConfirmSupplements = useCallback((supplements: { id?: string; nom: string; prix: number }[]) => {
-    if (!selectedProduct) return;
+  const handleConfirmSupplements = useCallback(
+    (supplements: { id?: string; nom: string; prix: number }[]) => {
+      if (!selectedProduct) return;
 
-    const prix = toNumber(selectedProduct.prixVente);
-    const cat = categories.find((c) => c.id === selectedProduct.categorieId);
+      const prix = toNumber(selectedProduct.prixVente);
+      const cat = categories.find((c) => c.id === selectedProduct.categorieId);
 
-    if (supplements.length > 0) {
-      addItemWithSupplements(
-        {
+      if (supplements.length > 0) {
+        addItemWithSupplements(
+          {
+            produitId: selectedProduct.id,
+            prixUnitaire: prix,
+            categorieNom: cat?.nom,
+            produit: {
+              nom: selectedProduct.nom,
+              tauxTva: selectedProduct.tauxTva,
+            },
+          },
+          supplements
+        );
+      } else {
+        addItem({
           produitId: selectedProduct.id,
           prixUnitaire: prix,
           categorieNom: cat?.nom,
@@ -137,23 +154,13 @@ export function CaisseProductGrid({ categories, produits }: CaisseProductGridPro
             nom: selectedProduct.nom,
             tauxTva: selectedProduct.tauxTva,
           },
-        },
-        supplements
-      );
-    } else {
-      addItem({
-        produitId: selectedProduct.id,
-        prixUnitaire: prix,
-        categorieNom: cat?.nom,
-        produit: {
-          nom: selectedProduct.nom,
-          tauxTva: selectedProduct.tauxTva,
-        },
-      });
-    }
+        });
+      }
 
-    setSelectedProduct(null);
-  }, [selectedProduct, addItem, addItemWithSupplements, categories]);
+      setSelectedProduct(null);
+    },
+    [selectedProduct, addItem, addItemWithSupplements, categories]
+  );
 
   return (
     <div style={{ display: "flex", flexDirection: "column", height: "100%" }}>
@@ -174,12 +181,17 @@ export function CaisseProductGrid({ categories, produits }: CaisseProductGridPro
             padding: "10px 14px",
           }}
         >
-          <Search size={18} style={{ color: "var(--gray-9)" }} />
+          <MagnifyingGlass size={18} style={{ color: "var(--gray-9)" }} aria-hidden="true" />
+          <label htmlFor="search-produit" className="sr-only">
+            Rechercher un produit
+          </label>
           <input
+            id="search-produit"
             type="text"
             placeholder="Rechercher un produit... (F2)"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
+            aria-label="Rechercher un produit"
             style={{
               flex: 1,
               border: "none",
@@ -202,14 +214,16 @@ export function CaisseProductGrid({ categories, produits }: CaisseProductGridPro
         }}
       >
         {/* Bouton gauche */}
-        {canScrollLeft ? <button
+        {canScrollLeft ? (
+          <button
             onClick={() => scrollCategories("left")}
+            aria-label="Catégories précédentes"
             style={{
               position: "absolute",
               left: 8,
               zIndex: 2,
-              width: 32,
-              height: 32,
+              minWidth: 44,
+              minHeight: 44,
               borderRadius: 6,
               border: "none",
               outline: "none",
@@ -221,8 +235,9 @@ export function CaisseProductGrid({ categories, produits }: CaisseProductGridPro
               justifyContent: "center",
             }}
           >
-            <ChevronLeft size={18} style={{ color: "var(--gray-11)" }} />
-          </button> : null}
+            <CaretLeft size={18} style={{ color: "var(--gray-11)" }} />
+          </button>
+        ) : null}
 
         {/* Container des catégories */}
         <div
@@ -234,8 +249,8 @@ export function CaisseProductGrid({ categories, produits }: CaisseProductGridPro
             padding: "12px 16px",
             overflowX: "auto",
             flex: 1,
-            scrollbarWidth: "none", /* Firefox */
-            msOverflowStyle: "none", /* IE/Edge */
+            scrollbarWidth: "none" /* Firefox */,
+            msOverflowStyle: "none" /* IE/Edge */,
           }}
           className="hide-scrollbar"
         >
@@ -262,14 +277,16 @@ export function CaisseProductGrid({ categories, produits }: CaisseProductGridPro
         </div>
 
         {/* Bouton droite */}
-        {canScrollRight ? <button
+        {canScrollRight ? (
+          <button
             onClick={() => scrollCategories("right")}
+            aria-label="Catégories suivantes"
             style={{
               position: "absolute",
               right: 8,
               zIndex: 2,
-              width: 32,
-              height: 32,
+              minWidth: 44,
+              minHeight: 44,
               borderRadius: 6,
               border: "none",
               outline: "none",
@@ -281,8 +298,9 @@ export function CaisseProductGrid({ categories, produits }: CaisseProductGridPro
               justifyContent: "center",
             }}
           >
-            <ChevronRight size={18} style={{ color: "var(--gray-11)" }} />
-          </button> : null}
+            <CaretRight size={18} style={{ color: "var(--gray-11)" }} />
+          </button>
+        ) : null}
       </div>
 
       {/* Grille de produits */}
@@ -394,7 +412,8 @@ export function CaisseProductGrid({ categories, produits }: CaisseProductGridPro
                   </span>
 
                   {/* Badge rupture */}
-                  {rupture ? <span
+                  {rupture ? (
+                    <span
                       style={{
                         marginTop: 4,
                         fontSize: 10,
@@ -406,18 +425,16 @@ export function CaisseProductGrid({ categories, produits }: CaisseProductGridPro
                       }}
                     >
                       Rupture
-                    </span> : null}
+                    </span>
+                  ) : null}
 
                   {/* Badge supplements disponibles */}
-                  {!rupture && prod.supplements && prod.supplements.length > 0 ? <Badge
-                      color="blue"
-                      variant="soft"
-                      size="1"
-                      style={{ marginTop: 4 }}
-                    >
+                  {!rupture && prod.supplements && prod.supplements.length > 0 ? (
+                    <Badge color="blue" variant="soft" size="1" style={{ marginTop: 4 }}>
                       <PlusIcon size={10} style={{ marginRight: 2 }} />
                       Options
-                    </Badge> : null}
+                    </Badge>
+                  ) : null}
                 </button>
               );
             })}
@@ -426,7 +443,8 @@ export function CaisseProductGrid({ categories, produits }: CaisseProductGridPro
       </div>
 
       {/* Dialog de selection des supplements */}
-      {selectedProduct ? <SupplementSelector
+      {selectedProduct ? (
+        <SupplementSelector
           open={supplementDialogOpen}
           onOpenChange={setSupplementDialogOpen}
           produit={{
@@ -437,7 +455,8 @@ export function CaisseProductGrid({ categories, produits }: CaisseProductGridPro
             supplements: selectedProduct.supplements || [],
           }}
           onConfirm={handleConfirmSupplements}
-        /> : null}
+        />
+      ) : null}
     </div>
   );
 }

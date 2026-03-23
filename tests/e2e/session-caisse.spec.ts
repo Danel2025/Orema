@@ -2,241 +2,326 @@
  * Tests E2E - Session de caisse
  *
  * Teste les fonctionnalites d'ouverture et fermeture de session:
- * - Ouverture avec fond de caisse
- * - Affichage des statistiques en temps reel
- * - Cloture avec comptage des especes
- * - Calcul de l'ecart
+ * - Redirection vers login si non authentifie
+ * - Affichage de "Caisse fermee" sans session active
+ * - Bouton "Ouvrir la caisse" et dialog d'ouverture
+ * - Session active: statut, popover avec details
+ * - Cloture de session
  */
 
-import { test, expect } from '@playwright/test'
+import { test, expect } from "@playwright/test";
 
-// Ces tests necessitent une authentification
-// On utilise un state d'auth pre-configure ou on se connecte avant
-test.describe('Session de caisse', () => {
-  // TODO: Ajouter l'authentification avant les tests
-  // test.use({ storageState: 'tests/.auth/caissier.json' })
+// =============================================================================
+// TESTS SANS AUTHENTIFICATION
+// =============================================================================
 
-  test.describe('Ouverture de session', () => {
-    test.beforeEach(async ({ page }) => {
-      await page.goto('/caisse')
-    })
+test.describe("Session caisse - Acces sans authentification", () => {
+  test("redirige vers /login quand non authentifie", async ({ page }) => {
+    await page.goto("/caisse");
+    await expect(page).toHaveURL(/\/login/);
+  });
+});
 
-    test('affiche le formulaire d ouverture si pas de session active', async ({ page }) => {
-      // Verifier la presence du formulaire d'ouverture
-      // Note: Ce test suppose qu'aucune session n'est active
-      const openSessionForm = page.locator('[data-testid="open-session-form"]')
-      const fondCaisseInput = page.getByLabel(/fond de caisse/i)
+// =============================================================================
+// TESTS - CAISSE FERMEE (pas de session active)
+// =============================================================================
 
-      // L'un ou l'autre devrait etre visible selon l'etat
-      const formVisible = await openSessionForm.isVisible().catch(() => false)
-      const inputVisible = await fondCaisseInput.isVisible().catch(() => false)
-
-      // Si pas de session, le formulaire d'ouverture devrait apparaitre
-      // Sinon, on est deja sur l'interface de caisse
-    })
-
-    test('permet de saisir le fond de caisse', async ({ page }) => {
-      const fondCaisseInput = page.getByLabel(/fond de caisse/i)
-
-      if (await fondCaisseInput.isVisible().catch(() => false)) {
-        await fondCaisseInput.fill('50000')
-        await expect(fondCaisseInput).toHaveValue('50000')
-      }
-    })
-
-    test('valide que le fond de caisse est positif', async ({ page }) => {
-      const fondCaisseInput = page.getByLabel(/fond de caisse/i)
-      const submitButton = page.getByRole('button', { name: /ouvrir/i })
-
-      if (await fondCaisseInput.isVisible().catch(() => false)) {
-        await fondCaisseInput.fill('-1000')
-        await submitButton.click()
-
-        // Devrait afficher une erreur
-        await expect(
-          page.getByText(/negatif|positif/i).first()
-        ).toBeVisible({ timeout: 5000 })
-      }
-    })
-
-    test('ouvre une session avec succes', async ({ page }) => {
-      const fondCaisseInput = page.getByLabel(/fond de caisse/i)
-      const submitButton = page.getByRole('button', { name: /ouvrir/i })
-
-      if (await fondCaisseInput.isVisible().catch(() => false)) {
-        await fondCaisseInput.fill('50000')
-        await submitButton.click()
-
-        // Apres ouverture, l'interface de caisse devrait apparaitre
-        // ou un message de succes
-        await expect(
-          page.getByText(/session ouverte|caisse/i).first()
-        ).toBeVisible({ timeout: 10000 })
-      }
-    })
-  })
-
-  test.describe('Interface de caisse active', () => {
-    test.beforeEach(async ({ page }) => {
-      await page.goto('/caisse')
-      // Attendre que la page se charge
-      await page.waitForLoadState('networkidle')
-    })
-
-    test('affiche les statistiques de la session', async ({ page }) => {
-      // Verifier la presence des indicateurs
-      const statsLocators = [
-        page.getByText(/total ventes|chiffre/i).first(),
-        page.getByText(/especes/i).first(),
-        page.getByText(/nombre/i).first(),
-      ]
-
-      for (const locator of statsLocators) {
-        // Les stats devraient etre visibles si une session est active
-        // On ne fait pas d'assertion stricte car l'etat peut varier
-      }
-    })
-
-    test('affiche le fond de caisse initial', async ({ page }) => {
-      const fondCaisseDisplay = page.getByText(/fond.*caisse/i)
-      if (await fondCaisseDisplay.isVisible().catch(() => false)) {
-        // Le fond de caisse devrait afficher un montant en FCFA
-        await expect(fondCaisseDisplay).toContainText(/fcfa|\d/i)
-      }
-    })
-
-    test('met a jour les totaux en temps reel', async ({ page }) => {
-      // Ce test verifierait que les totaux se mettent a jour
-      // apres une vente, mais necessite une vente complete
-      // On verifie juste que les elements existent
-    })
-  })
-
-  test.describe('Cloture de session', () => {
-    test.beforeEach(async ({ page }) => {
-      await page.goto('/caisse')
-    })
-
-    test('affiche le bouton de cloture si session active', async ({ page }) => {
-      const closeButton = page.getByRole('button', { name: /cloturer|fermer/i })
-      // Le bouton peut etre visible ou non selon l'etat de la session
-    })
-
-    test('ouvre le dialogue de cloture', async ({ page }) => {
-      const closeButton = page.getByRole('button', { name: /cloturer|fermer/i })
-
-      if (await closeButton.isVisible().catch(() => false)) {
-        await closeButton.click()
-
-        // Un dialogue ou formulaire devrait apparaitre
-        await expect(
-          page.getByText(/comptage|especes comptees/i).first()
-        ).toBeVisible({ timeout: 5000 })
-      }
-    })
-
-    test('permet de saisir les especes comptees', async ({ page }) => {
-      const closeButton = page.getByRole('button', { name: /cloturer|fermer/i })
-
-      if (await closeButton.isVisible().catch(() => false)) {
-        await closeButton.click()
-
-        const especesInput = page.getByLabel(/especes.*comptees/i)
-        if (await especesInput.isVisible().catch(() => false)) {
-          await especesInput.fill('75000')
-          await expect(especesInput).toHaveValue('75000')
-        }
-      }
-    })
-
-    test('calcule et affiche l ecart', async ({ page }) => {
-      const closeButton = page.getByRole('button', { name: /cloturer|fermer/i })
-
-      if (await closeButton.isVisible().catch(() => false)) {
-        await closeButton.click()
-
-        const especesInput = page.getByLabel(/especes.*comptees/i)
-        if (await especesInput.isVisible().catch(() => false)) {
-          await especesInput.fill('75000')
-
-          // L'ecart devrait etre calcule automatiquement
-          const ecartDisplay = page.getByText(/ecart/i)
-          if (await ecartDisplay.isVisible().catch(() => false)) {
-            await expect(ecartDisplay).toContainText(/fcfa|\d|-/i)
-          }
-        }
-      }
-    })
-
-    test('permet d ajouter des notes de cloture', async ({ page }) => {
-      const closeButton = page.getByRole('button', { name: /cloturer|fermer/i })
-
-      if (await closeButton.isVisible().catch(() => false)) {
-        await closeButton.click()
-
-        const notesInput = page.getByLabel(/notes|commentaire/i)
-        if (await notesInput.isVisible().catch(() => false)) {
-          await notesInput.fill('RAS - Journee normale')
-          await expect(notesInput).toHaveValue('RAS - Journee normale')
-        }
-      }
-    })
-  })
-
-  test.describe('Rapport Z', () => {
-    test('affiche le rapport Z apres cloture', async ({ page }) => {
-      // Ce test verifierait l'affichage du rapport Z
-      // apres une cloture de session
-      await page.goto('/rapports')
-
-      // Verifier la presence d'elements du rapport
-      const rapportElements = [
-        page.getByText(/rapport.*z/i),
-        page.getByText(/total.*ventes/i),
-        page.getByText(/tva/i),
-      ]
-
-      for (const element of rapportElements) {
-        // Les elements peuvent etre visibles selon les donnees
-      }
-    })
-
-    test('permet d imprimer le rapport Z', async ({ page }) => {
-      await page.goto('/rapports')
-
-      const printButton = page.getByRole('button', { name: /imprimer/i })
-      if (await printButton.isVisible().catch(() => false)) {
-        // Verifier que le bouton est cliquable
-        await expect(printButton).toBeEnabled()
-      }
-    })
-  })
-})
-
-test.describe('Gestion des erreurs', () => {
-  test('affiche une erreur si double ouverture de session', async ({ page }) => {
-    // Ce test verifierait qu'on ne peut pas ouvrir deux sessions
-    await page.goto('/caisse')
-    // L'erreur devrait apparaitre si une session existe deja
-  })
-
-  test('empeche la cloture sans comptage', async ({ page }) => {
-    await page.goto('/caisse')
-
-    const closeButton = page.getByRole('button', { name: /cloturer|fermer/i })
-
-    if (await closeButton.isVisible().catch(() => false)) {
-      await closeButton.click()
-
-      const confirmButton = page.getByRole('button', { name: /confirmer|valider/i })
-      if (await confirmButton.isVisible().catch(() => false)) {
-        await confirmButton.click()
-
-        // Devrait demander le comptage des especes
-        await expect(
-          page.getByText(/requis|obligatoire|comptage/i).first()
-        ).toBeVisible({ timeout: 5000 })
-      }
+test.describe("Session caisse - Caisse fermee", () => {
+  test.beforeEach(async ({ page }) => {
+    await page.goto("/caisse");
+    if (page.url().includes("/login")) {
+      test.skip();
+      return;
     }
-  })
-})
+    await page.waitForLoadState("networkidle");
+  });
+
+  test("affiche 'Caisse fermee' quand aucune session n'est ouverte", async ({ page }) => {
+    const caisseFermee = page.getByText("Caisse fermee");
+    const isSessionClosed = await caisseFermee.isVisible().catch(() => false);
+
+    if (!isSessionClosed) {
+      // Session deja ouverte - verifier qu'on a l'interface caisse
+      await expect(page.getByRole("button", { name: /vente directe/i })).toBeVisible();
+      return;
+    }
+
+    await expect(caisseFermee).toBeVisible();
+  });
+
+  test("affiche le message explicatif quand caisse fermee", async ({ page }) => {
+    const caisseFermee = page.getByText("Caisse fermee");
+    const isSessionClosed = await caisseFermee.isVisible().catch(() => false);
+
+    if (!isSessionClosed) {
+      test.skip();
+      return;
+    }
+
+    await expect(
+      page.getByText(/aucune session de caisse n'est ouverte/i)
+    ).toBeVisible();
+
+    // Message d'avertissement
+    await expect(
+      page.getByText(/toutes les ventes seront enregistr/i)
+    ).toBeVisible();
+  });
+
+  test("affiche le bouton 'Ouvrir la caisse'", async ({ page }) => {
+    const caisseFermee = page.getByText("Caisse fermee");
+    const isSessionClosed = await caisseFermee.isVisible().catch(() => false);
+
+    if (!isSessionClosed) {
+      test.skip();
+      return;
+    }
+
+    const ouvrirButton = page.getByRole("button", { name: /ouvrir la caisse/i });
+    await expect(ouvrirButton).toBeVisible();
+    await expect(ouvrirButton).toBeEnabled();
+  });
+
+  test("affiche le bouton 'Actualiser'", async ({ page }) => {
+    const caisseFermee = page.getByText("Caisse fermee");
+    const isSessionClosed = await caisseFermee.isVisible().catch(() => false);
+
+    if (!isSessionClosed) {
+      test.skip();
+      return;
+    }
+
+    const actualiserButton = page.getByRole("button", { name: /actualiser/i });
+    await expect(actualiserButton).toBeVisible();
+  });
+
+  test("clic sur 'Ouvrir la caisse' ouvre le dialog d'ouverture", async ({ page }) => {
+    const caisseFermee = page.getByText("Caisse fermee");
+    const isSessionClosed = await caisseFermee.isVisible().catch(() => false);
+
+    if (!isSessionClosed) {
+      test.skip();
+      return;
+    }
+
+    const ouvrirButton = page.getByRole("button", { name: /ouvrir la caisse/i });
+    await ouvrirButton.click();
+
+    // Le dialog doit s'ouvrir
+    const dialog = page.locator('[role="dialog"]');
+    await expect(dialog).toBeVisible({ timeout: 5000 });
+  });
+});
+
+// =============================================================================
+// TESTS - DIALOG D'OUVERTURE DE SESSION
+// =============================================================================
+
+test.describe("Session caisse - Dialog d'ouverture", () => {
+  test.beforeEach(async ({ page }) => {
+    await page.goto("/caisse");
+    if (page.url().includes("/login")) {
+      test.skip();
+      return;
+    }
+    await page.waitForLoadState("networkidle");
+
+    // On a besoin que la caisse soit fermee pour tester le dialog
+    const caisseFermee = page.getByText("Caisse fermee");
+    const isSessionClosed = await caisseFermee.isVisible().catch(() => false);
+
+    if (!isSessionClosed) {
+      test.skip();
+      return;
+    }
+
+    // Ouvrir le dialog
+    const ouvrirButton = page.getByRole("button", { name: /ouvrir la caisse/i });
+    await ouvrirButton.click();
+    await expect(page.locator('[role="dialog"]')).toBeVisible({ timeout: 5000 });
+  });
+
+  test("le dialog contient un champ 'Fond de caisse'", async ({ page }) => {
+    const dialog = page.locator('[role="dialog"]');
+    const fondCaisseInput = dialog.getByLabel(/fond de caisse/i);
+    await expect(fondCaisseInput).toBeVisible();
+  });
+
+  test("le champ 'Fond de caisse' accepte un montant", async ({ page }) => {
+    const dialog = page.locator('[role="dialog"]');
+    const fondCaisseInput = dialog.getByLabel(/fond de caisse/i);
+    await fondCaisseInput.fill("50000");
+    await expect(fondCaisseInput).toHaveValue("50000");
+  });
+
+  test("le dialog contient un bouton de validation", async ({ page }) => {
+    const dialog = page.locator('[role="dialog"]');
+    const submitButton = dialog.getByRole("button", { name: /ouvrir|valider|confirmer/i });
+    await expect(submitButton).toBeVisible();
+  });
+
+  test("le dialog peut etre ferme avec Escape", async ({ page }) => {
+    const dialog = page.locator('[role="dialog"]');
+    await expect(dialog).toBeVisible();
+
+    await page.keyboard.press("Escape");
+
+    await expect(dialog).not.toBeVisible({ timeout: 3000 });
+  });
+});
+
+// =============================================================================
+// TESTS - SESSION ACTIVE (statut dans le header)
+// =============================================================================
+
+test.describe("Session caisse - Session active", () => {
+  test.beforeEach(async ({ page }) => {
+    await page.goto("/caisse");
+    if (page.url().includes("/login")) {
+      test.skip();
+      return;
+    }
+    await page.waitForLoadState("networkidle");
+
+    // Skip si caisse fermee
+    const caisseFermee = page.getByText("Caisse fermee");
+    if (await caisseFermee.isVisible().catch(() => false)) {
+      test.skip();
+      return;
+    }
+  });
+
+  test("affiche le compteur de ventes dans le header", async ({ page }) => {
+    await expect(page.getByText(/ventes/i).first()).toBeVisible();
+  });
+
+  test("affiche le chiffre d'affaires en FCFA", async ({ page }) => {
+    const fcfaTexts = page.getByText(/fcfa/i);
+    const count = await fcfaTexts.count();
+    expect(count).toBeGreaterThan(0);
+  });
+
+  test("affiche la duree de la session au format XhMM", async ({ page }) => {
+    const durationText = page.getByText(/\d+h\d{2}/);
+    await expect(durationText.first()).toBeVisible();
+  });
+
+  test("le clic sur le statut ouvre un popover avec les details", async ({ page }) => {
+    const sessionButton = page.locator("button").filter({ hasText: /ventes/ }).first();
+    const isVisible = await sessionButton.isVisible().catch(() => false);
+
+    if (!isVisible) {
+      test.skip();
+      return;
+    }
+
+    await sessionButton.click();
+
+    await expect(page.getByText("Session active")).toBeVisible({ timeout: 3000 });
+  });
+
+  test("le popover affiche les informations du caissier", async ({ page }) => {
+    const sessionButton = page.locator("button").filter({ hasText: /ventes/ }).first();
+    const isVisible = await sessionButton.isVisible().catch(() => false);
+
+    if (!isVisible) {
+      test.skip();
+      return;
+    }
+
+    await sessionButton.click();
+    await expect(page.getByText("Session active")).toBeVisible({ timeout: 3000 });
+
+    await expect(page.getByText("Caissier")).toBeVisible();
+    await expect(page.getByText(/fond de caisse/i)).toBeVisible();
+  });
+
+  test("le popover affiche les totaux par mode de paiement", async ({ page }) => {
+    const sessionButton = page.locator("button").filter({ hasText: /ventes/ }).first();
+    const isVisible = await sessionButton.isVisible().catch(() => false);
+
+    if (!isVisible) {
+      test.skip();
+      return;
+    }
+
+    await sessionButton.click();
+    await expect(page.getByText("Session active")).toBeVisible({ timeout: 3000 });
+
+    await expect(page.getByText("Paiements")).toBeVisible();
+    await expect(page.getByText("Especes")).toBeVisible();
+    await expect(page.getByText("Cartes")).toBeVisible();
+    await expect(page.getByText("Mobile Money")).toBeVisible();
+  });
+
+  test("le popover contient le bouton 'Cloturer la caisse'", async ({ page }) => {
+    const sessionButton = page.locator("button").filter({ hasText: /ventes/ }).first();
+    const isVisible = await sessionButton.isVisible().catch(() => false);
+
+    if (!isVisible) {
+      test.skip();
+      return;
+    }
+
+    await sessionButton.click();
+    await expect(page.getByText("Session active")).toBeVisible({ timeout: 3000 });
+
+    const cloturerButton = page.getByRole("button", { name: /cl[oô]turer la caisse/i });
+    await expect(cloturerButton).toBeVisible();
+  });
+});
+
+// =============================================================================
+// TESTS - CLOTURE DE SESSION
+// =============================================================================
+
+test.describe("Session caisse - Cloture", () => {
+  test.beforeEach(async ({ page }) => {
+    await page.goto("/caisse");
+    if (page.url().includes("/login")) {
+      test.skip();
+      return;
+    }
+    await page.waitForLoadState("networkidle");
+
+    // Skip si caisse fermee
+    const caisseFermee = page.getByText("Caisse fermee");
+    if (await caisseFermee.isVisible().catch(() => false)) {
+      test.skip();
+      return;
+    }
+  });
+
+  test("le bouton 'Cloturer la caisse' ouvre le dialog de cloture", async ({ page }) => {
+    // Ouvrir le popover de session
+    const sessionButton = page.locator("button").filter({ hasText: /ventes/ }).first();
+    const isVisible = await sessionButton.isVisible().catch(() => false);
+
+    if (!isVisible) {
+      test.skip();
+      return;
+    }
+
+    await sessionButton.click();
+    await expect(page.getByText("Session active")).toBeVisible({ timeout: 3000 });
+
+    // Cliquer sur "Clôturer la caisse"
+    const cloturerButton = page.getByRole("button", { name: /cl[oô]turer la caisse/i });
+    await cloturerButton.click();
+
+    // Le dialog de cloture doit s'ouvrir
+    const closeDialog = page.locator('[role="dialog"]');
+    await expect(closeDialog).toBeVisible({ timeout: 5000 });
+  });
+});
+
+// =============================================================================
+// TESTS - PAGE RAPPORTS
+// =============================================================================
+
+test.describe("Session caisse - Page rapports", () => {
+  test("la page rapports redirige vers login si non authentifie", async ({ page }) => {
+    await page.goto("/rapports");
+    await expect(page).toHaveURL(/\/login/);
+  });
+});

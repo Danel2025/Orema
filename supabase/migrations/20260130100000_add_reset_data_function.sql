@@ -54,18 +54,14 @@ BEGIN
     utilisateur_id,
     action,
     entite,
-    details,
+    description,
     created_at
   ) VALUES (
     p_etablissement_id,
     p_current_user_id,
     'DELETE',
     'SYSTEM',
-    jsonb_build_object(
-      'type', 'RESET_DATA',
-      'options', p_options,
-      'timestamp', NOW()
-    ),
+    'RESET_DATA: ' || p_options::TEXT,
     NOW()
   );
 
@@ -109,10 +105,14 @@ BEGIN
   -- SUPPRESSION DES MOUVEMENTS DE STOCK
   -- ========================================================================
   IF v_delete_stocks THEN
-    SELECT COUNT(*) INTO v_count FROM mouvements_stock WHERE etablissement_id = p_etablissement_id;
+    SELECT COUNT(*) INTO v_count
+    FROM mouvements_stock ms
+    JOIN produits p ON p.id = ms.produit_id
+    WHERE p.etablissement_id = p_etablissement_id;
     v_deleted_counts := v_deleted_counts || jsonb_build_object('mouvements_stock', v_count);
 
-    DELETE FROM mouvements_stock WHERE etablissement_id = p_etablissement_id;
+    DELETE FROM mouvements_stock
+    WHERE produit_id IN (SELECT id FROM produits WHERE etablissement_id = p_etablissement_id);
   END IF;
 
   -- ========================================================================
@@ -205,7 +205,7 @@ BEGIN
       AND NOT (
         action = 'DELETE'
         AND entite = 'SYSTEM'
-        AND (details->>'type') = 'RESET_DATA'
+        AND description LIKE 'RESET_DATA:%'
         AND created_at >= NOW() - INTERVAL '1 minute'
       );
   END IF;

@@ -4,41 +4,20 @@
  * AppearanceSettings - Parametres d'apparence de l'interface
  */
 
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { useTheme } from "next-themes";
-import {
-  Box,
-  Card,
-  Flex,
-  Text,
-  RadioCards,
-  Button,
-} from "@radix-ui/themes";
-import {
-  Sun,
-  Moon,
-  Monitor,
-  Palette,
-  Type,
-  Check,
-} from "lucide-react";
+import { Box, Flex, Text, RadioCards, Button } from "@radix-ui/themes";
+import { Sun, Moon, Desktop, Palette, TextT, Check } from "@phosphor-icons/react";
 import { toast } from "sonner";
 
+import { useMounted } from "@/hooks/use-mounted";
 import { useUIStore } from "@/stores/ui-store";
-import {
-  themeOptions,
-  accentColors,
-  fontSizeOptions,
-} from "@/schemas/parametres.schema";
+import { themeOptions, accentColors, fontSizeOptions } from "@/schemas/parametres.schema";
 
 export function AppearanceSettings() {
-  const [mounted, setMounted] = useState(false);
+  const mounted = useMounted();
   const { theme, setTheme: setNextTheme } = useTheme();
   const { accentColor, setAccentColor, fontSize, setFontSize } = useUIStore();
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
 
   // Appliquer la taille de police
   useEffect(() => {
@@ -54,9 +33,7 @@ export function AppearanceSettings() {
     // Mapper nos valeurs vers next-themes
     const nextThemeValue = newTheme === "auto" ? "system" : newTheme;
     setNextTheme(nextThemeValue);
-    toast.success(
-      `Theme ${themeOptions.find((t) => t.value === newTheme)?.label} active`
-    );
+    toast.success(`Theme ${themeOptions.find((t) => t.value === newTheme)?.label} active`);
   };
 
   const handleAccentColorChange = (color: string) => {
@@ -66,26 +43,26 @@ export function AppearanceSettings() {
 
   const handleFontSizeChange = (size: string) => {
     setFontSize(size as "small" | "medium" | "large");
-    toast.success(
-      `Taille de police ${fontSizeOptions.find((f) => f.value === size)?.label}`
-    );
+    toast.success(`Taille de police ${fontSizeOptions.find((f) => f.value === size)?.label}`);
   };
 
   // Eviter le flash d'hydratation
   if (!mounted) {
     return (
       <Flex direction="column" gap="5">
-        <Card size="3">
+        <Box style={{ border: "1px solid var(--gray-a6)", borderRadius: 8 }} p="4">
           <Flex direction="column" gap="4">
             <Flex align="center" gap="2">
-              <Monitor size={20} style={{ color: "var(--accent-9)" }} />
+              <Desktop size={20} weight="duotone" style={{ color: "var(--accent-9)" }} />
               <Text size="4" weight="bold">
                 Theme de l'interface
               </Text>
             </Flex>
-            <Text size="2" color="gray">Chargement...</Text>
+            <Text size="2" color="gray">
+              Chargement...
+            </Text>
           </Flex>
-        </Card>
+        </Box>
       </Flex>
     );
   }
@@ -93,10 +70,10 @@ export function AppearanceSettings() {
   return (
     <Flex direction="column" gap="5">
       {/* Selection du theme */}
-      <Card size="3">
+      <Box style={{ border: "1px solid var(--gray-a6)", borderRadius: 8 }} p="4">
         <Flex direction="column" gap="4">
           <Flex align="center" gap="2">
-            <Monitor size={20} style={{ color: "var(--accent-9)" }} />
+            <Desktop size={20} weight="duotone" style={{ color: "var(--accent-9)" }} />
             <Text size="4" weight="bold">
               Theme de l'interface
             </Text>
@@ -133,7 +110,7 @@ export function AppearanceSettings() {
 
             <RadioCards.Item value="auto">
               <Flex direction="column" align="center" gap="2" py="2">
-                <Monitor size={24} />
+                <Desktop size={24} />
                 <Text size="2" weight="medium">
                   Automatique
                 </Text>
@@ -144,13 +121,13 @@ export function AppearanceSettings() {
             </RadioCards.Item>
           </RadioCards.Root>
         </Flex>
-      </Card>
+      </Box>
 
       {/* Couleur d'accent */}
-      <Card size="3">
+      <Box style={{ border: "1px solid var(--gray-a6)", borderRadius: 8 }} p="4">
         <Flex direction="column" gap="4">
           <Flex align="center" gap="2">
-            <Palette size={20} style={{ color: "var(--accent-9)" }} />
+            <Palette size={20} weight="duotone" style={{ color: "var(--accent-9)" }} />
             <Text size="4" weight="bold">
               Couleur d'accent
             </Text>
@@ -168,8 +145,7 @@ export function AppearanceSettings() {
                 size="3"
                 onClick={() => handleAccentColorChange(color.value)}
                 style={{
-                  backgroundColor:
-                    accentColor === color.value ? color.hex : undefined,
+                  backgroundColor: accentColor === color.value ? color.hex : undefined,
                   minWidth: 100,
                 }}
               >
@@ -180,9 +156,7 @@ export function AppearanceSettings() {
                     borderRadius: "50%",
                     backgroundColor: color.hex,
                     border:
-                      accentColor === color.value
-                        ? "2px solid white"
-                        : "1px solid var(--gray-6)",
+                      accentColor === color.value ? "2px solid white" : "1px solid var(--gray-6)",
                   }}
                 />
                 {color.label}
@@ -231,13 +205,13 @@ export function AppearanceSettings() {
             </Flex>
           </Box>
         </Flex>
-      </Card>
+      </Box>
 
       {/* Taille de police */}
-      <Card size="3">
+      <Box style={{ border: "1px solid var(--gray-a6)", borderRadius: 8 }} p="4">
         <Flex direction="column" gap="4">
           <Flex align="center" gap="2">
-            <Type size={20} style={{ color: "var(--accent-9)" }} />
+            <TextT size={20} weight="duotone" style={{ color: "var(--accent-9)" }} />
             <Text size="4" weight="bold">
               Taille de l'interface
             </Text>
@@ -263,8 +237,8 @@ export function AppearanceSettings() {
                         option.value === "small"
                           ? "14px"
                           : option.value === "large"
-                          ? "20px"
-                          : "16px",
+                            ? "20px"
+                            : "16px",
                     }}
                   >
                     Aa
@@ -284,7 +258,7 @@ export function AppearanceSettings() {
             Ces preferences sont sauvegardees localement sur cet appareil.
           </Text>
         </Flex>
-      </Card>
+      </Box>
     </Flex>
   );
 }

@@ -19,7 +19,7 @@ export const splitPartPaymentSchema = z.object({
     "VIREMENT",
     "COMPTE_CLIENT",
   ]),
-  montant: z.number().int().positive("Le montant doit etre positif"),
+  montant: z.number().int().positive("Le montant doit être positif"),
   reference: z.string().max(100).optional(),
   montantRecu: z.number().int().optional(),
   monnaieRendue: z.number().int().optional(),
@@ -47,7 +47,7 @@ export type SplitBillEqualData = z.infer<typeof splitBillEqualSchema>;
 export const splitBillCustomSchema = z.object({
   venteId: z.string().min(1, "L'ID de la vente est requis"),
   montants: z
-    .array(z.number().int().positive("Chaque montant doit etre positif"))
+    .array(z.number().int().positive("Chaque montant doit être positif"))
     .min(2, "Il faut au moins 2 montants"),
 });
 
@@ -80,8 +80,9 @@ export type SplitBillByItemsData = z.infer<typeof splitBillByItemsSchema>;
  * Schema pour payer une part
  */
 export const payPartSchema = z.object({
+  venteId: z.string().min(1, "L'ID de la vente est requis"),
   partId: z.string().min(1, "L'ID de la part est requis"),
-  montant: z.number().int().positive("Le montant doit etre positif"),
+  montant: z.number().int().positive("Le montant doit être positif"),
   modePaiement: z.enum([
     "ESPECES",
     "CARTE_BANCAIRE",
@@ -94,6 +95,7 @@ export const payPartSchema = z.object({
   reference: z.string().max(100).optional(),
   montantRecu: z.number().int().optional(),
   monnaieRendue: z.number().int().optional(),
+  sessionCaisseId: z.string().min(1).optional(),
 });
 
 export type PayPartData = z.infer<typeof payPartSchema>;

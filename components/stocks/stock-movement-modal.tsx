@@ -19,13 +19,13 @@ import {
 } from "@radix-ui/themes";
 import {
   Package,
-  ArrowDownCircle,
-  ArrowUpCircle,
-  RotateCcw,
-  Trash2,
-  ClipboardList,
-  AlertCircle,
-} from "lucide-react";
+  ArrowCircleDown,
+  ArrowCircleUp,
+  ArrowCounterClockwise,
+  Trash,
+  ClipboardText,
+  WarningCircle,
+} from "@phosphor-icons/react";
 import { createMovement } from "@/actions/stocks";
 import type { TypeMouvementType } from "@/schemas/stock.schema";
 import { toast } from "sonner";
@@ -58,28 +58,28 @@ const mouvementTypes: {
   {
     value: "ENTREE",
     label: "Entrée",
-    icon: <ArrowDownCircle size={16} />,
+    icon: <ArrowCircleDown size={16} />,
     color: "green",
     description: "Réception de marchandise (approvisionnement)",
   },
   {
     value: "SORTIE",
     label: "Sortie",
-    icon: <ArrowUpCircle size={16} />,
+    icon: <ArrowCircleUp size={16} />,
     color: "red",
     description: "Sortie manuelle (hors vente)",
   },
   {
     value: "AJUSTEMENT",
     label: "Ajustement",
-    icon: <RotateCcw size={16} />,
+    icon: <ArrowCounterClockwise size={16} />,
     color: "blue",
     description: "Correction du stock (définir une nouvelle valeur)",
   },
   {
     value: "PERTE",
     label: "Perte",
-    icon: <Trash2 size={16} />,
+    icon: <Trash size={16} />,
     color: "violet",
     description: "Casse, péremption, vol",
   },
@@ -209,13 +209,14 @@ export function StockMovementModal({
 
         <Flex direction="column" gap="4">
           {/* Sélection du produit (si pas pré-sélectionné) */}
-          {!produit && produits ? <Box>
+          {!produit && produits ? (
+            <Box>
               <Text as="label" size="2" weight="medium" mb="1">
                 Produit *
               </Text>
               <Select.Root value={selectedProduitId} onValueChange={setSelectedProduitId}>
                 <Select.Trigger placeholder="Sélectionner un produit" style={{ width: "100%" }} />
-                <Select.Content>
+                <Select.Content position="popper">
                   {produits.map((p) => (
                     <Select.Item key={p.id} value={p.id}>
                       {p.nom} (Stock: {p.stockActuel} {p.unite || ""})
@@ -223,10 +224,12 @@ export function StockMovementModal({
                   ))}
                 </Select.Content>
               </Select.Root>
-            </Box> : null}
+            </Box>
+          ) : null}
 
           {/* Produit sélectionné */}
-          {selectedProduct ? <Box
+          {selectedProduct ? (
+            <Box
               style={{
                 padding: 12,
                 borderRadius: 8,
@@ -250,7 +253,8 @@ export function StockMovementModal({
                   </Text>
                 </Flex>
               </Flex>
-            </Box> : null}
+            </Box>
+          ) : null}
 
           {/* Type de mouvement */}
           <Box>
@@ -259,7 +263,7 @@ export function StockMovementModal({
             </Text>
             <Select.Root value={type} onValueChange={(v) => setType(v as TypeMouvementType)}>
               <Select.Trigger style={{ width: "100%" }} />
-              <Select.Content>
+              <Select.Content position="popper">
                 {mouvementTypes.map((t) => (
                   <Select.Item key={t.value} value={t.value}>
                     <Flex align="center" gap="2">
@@ -270,26 +274,22 @@ export function StockMovementModal({
                 ))}
               </Select.Content>
             </Select.Root>
-            {typeConfig ? <Text size="1" color="gray" mt="1">
+            {typeConfig ? (
+              <Text size="1" color="gray" mt="1">
                 {typeConfig.description}
-              </Text> : null}
+              </Text>
+            ) : null}
           </Box>
 
           {/* Quantité */}
           <Box>
             <Text as="label" size="2" weight="medium" mb="1">
-              {type === "AJUSTEMENT"
-                ? "Nouvelle quantité *"
-                : "Quantité *"}
+              {type === "AJUSTEMENT" ? "Nouvelle quantité *" : "Quantité *"}
             </Text>
             <TextField.Root
               type="number"
               min="0"
-              placeholder={
-                type === "AJUSTEMENT"
-                  ? "Nouveau stock"
-                  : "Quantité à ajouter/retirer"
-              }
+              placeholder={type === "AJUSTEMENT" ? "Nouveau stock" : "Quantité à ajouter/retirer"}
               value={quantite}
               onChange={(e) => setQuantite(e.target.value)}
             >
@@ -374,12 +374,14 @@ export function StockMovementModal({
           </Box>
 
           {/* Erreur */}
-          {error ? <Callout.Root color="red" size="1">
+          {error ? (
+            <Callout.Root color="red" size="1">
               <Callout.Icon>
-                <AlertCircle size={16} />
+                <WarningCircle size={16} />
               </Callout.Icon>
               <Callout.Text>{error}</Callout.Text>
-            </Callout.Root> : null}
+            </Callout.Root>
+          ) : null}
         </Flex>
 
         <Flex gap="3" mt="4" justify="end">

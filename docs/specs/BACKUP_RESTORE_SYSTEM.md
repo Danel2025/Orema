@@ -27,17 +27,19 @@ Pour les petites/moyennes quantites de donnees :
 ```typescript
 // Recuperer toutes les donnees d'une table
 const { data, error } = await supabase
-  .from('table_name')
-  .select('*')
-  .eq('etablissement_id', etablissementId);
+  .from("table_name")
+  .select("*")
+  .eq("etablissement_id", etablissementId);
 ```
 
 **Avantages:**
+
 - Simple a implementer
 - Fonctionne dans le navigateur
 - Respecte les politiques RLS
 
 **Inconvenients:**
+
 - Limite par la taille des reponses
 - Lent pour grandes quantites de donnees
 
@@ -53,11 +55,13 @@ supabase db dump --db-url [CONNECTION_STRING] -f data.sql --use-copy --data-only
 ```
 
 **Avantages:**
+
 - Backup complet et coherent
 - Performance optimale
 - Include schema et contraintes
 
 **Inconvenients:**
+
 - Necessite acces serveur
 - Plus complexe a implementer
 
@@ -102,6 +106,7 @@ AND updated_at > $2;
 #### Format CSV (pour export tableur)
 
 Un fichier ZIP contenant :
+
 - `ventes.csv`
 - `produits.csv`
 - `clients.csv`
@@ -460,10 +465,7 @@ export async function deleteBackup(backupId: string): Promise<BackupResult> {
     }
 
     // Supprimer l'enregistrement
-    const { error } = await supabase
-      .from("backups")
-      .delete()
-      .eq("id", backupId);
+    const { error } = await supabase.from("backups").delete().eq("id", backupId);
 
     if (error) throw error;
     return { success: true };
@@ -590,6 +592,7 @@ L'onglet "Donnees" des parametres contiendra :
 ## Ressources Context7
 
 Documentation consultee :
+
 - Supabase: backup database, pg_dump, restore
 - Supabase JS: select all rows, download files, storage API
 

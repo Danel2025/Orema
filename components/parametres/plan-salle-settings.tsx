@@ -7,27 +7,18 @@
 import { useState } from "react";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { Box, Flex, Text, Switch, Button, Callout, Select } from "@radix-ui/themes";
 import {
-  Box,
-  Card,
-  Flex,
-  Text,
-  Switch,
-  Button,
-  Callout,
-  Select,
-} from "@radix-ui/themes";
-import {
-  LayoutGrid,
+  SquaresFour,
   Palette,
   Eye,
-  Grid3X3,
-  Save,
-  Loader2,
-  CheckCircle2,
-  AlertCircle,
+  GridFour,
+  FloppyDisk,
+  CircleNotch,
+  CheckCircle,
+  WarningCircle,
   Info,
-} from "lucide-react";
+} from "@phosphor-icons/react";
 import { toast } from "sonner";
 
 import { updatePlanSalleSettings } from "@/actions/parametres";
@@ -60,9 +51,11 @@ function ColorPicker({ label, description, value, onChange, error }: ColorPicker
         <Text size="1" color="gray">
           {description}
         </Text>
-        {error ? <Text size="1" color="red">
+        {error ? (
+          <Text size="1" color="red">
             {error}
-          </Text> : null}
+          </Text>
+        ) : null}
       </Flex>
       <Flex align="center" gap="2">
         <Box
@@ -123,7 +116,7 @@ export function PlanSalleSettings({ initialData }: PlanSalleSettingsProps) {
 
       if (result.success) {
         setSaveStatus("success");
-        toast.success("Parametres du plan de salle enregistres");
+        toast.success("Paramètres du plan de salle enregistrés");
         setTimeout(() => setSaveStatus("idle"), 3000);
       } else {
         setSaveStatus("error");
@@ -143,7 +136,7 @@ export function PlanSalleSettings({ initialData }: PlanSalleSettingsProps) {
         {/* Information */}
         <Callout.Root color="blue" size="2">
           <Callout.Icon>
-            <Info size={18} />
+            <Info size={18} weight="duotone" />
           </Callout.Icon>
           <Callout.Text>
             <Text weight="bold">Plan de salle</Text>
@@ -153,10 +146,10 @@ export function PlanSalleSettings({ initialData }: PlanSalleSettingsProps) {
         </Callout.Root>
 
         {/* Couleurs des tables */}
-        <Card size="3">
+        <Box style={{ border: "1px solid var(--gray-a6)", borderRadius: 8 }} p="4">
           <Flex direction="column" gap="4">
             <Flex align="center" gap="2">
-              <Palette size={20} style={{ color: "var(--accent-9)" }} />
+              <Palette size={20} weight="duotone" style={{ color: "var(--accent-9)" }} />
               <Text size="4" weight="bold">
                 Couleurs des tables
               </Text>
@@ -279,13 +272,13 @@ export function PlanSalleSettings({ initialData }: PlanSalleSettingsProps) {
               </Flex>
             </Box>
           </Flex>
-        </Card>
+        </Box>
 
         {/* Affichage des tables */}
-        <Card size="3">
+        <Box style={{ border: "1px solid var(--gray-a6)", borderRadius: 8 }} p="4">
           <Flex direction="column" gap="4">
             <Flex align="center" gap="2">
-              <Eye size={20} style={{ color: "var(--accent-9)" }} />
+              <Eye size={20} weight="duotone" style={{ color: "var(--accent-9)" }} />
               <Text size="4" weight="bold">
                 Affichage des tables
               </Text>
@@ -301,7 +294,7 @@ export function PlanSalleSettings({ initialData }: PlanSalleSettingsProps) {
                   </Text>
                   <Select.Root value={field.value} onValueChange={field.onChange}>
                     <Select.Trigger style={{ width: "100%" }} />
-                    <Select.Content>
+                    <Select.Content position="popper">
                       {affichageTableOptions.map((option) => (
                         <Select.Item key={option.value} value={option.value}>
                           {option.label}
@@ -313,13 +306,13 @@ export function PlanSalleSettings({ initialData }: PlanSalleSettingsProps) {
               )}
             />
           </Flex>
-        </Card>
+        </Box>
 
         {/* Grille d'alignement */}
-        <Card size="3">
+        <Box style={{ border: "1px solid var(--gray-a6)", borderRadius: 8 }} p="4">
           <Flex direction="column" gap="4">
             <Flex align="center" gap="2">
-              <Grid3X3 size={20} style={{ color: "var(--accent-9)" }} />
+              <GridFour size={20} weight="duotone" style={{ color: "var(--accent-9)" }} />
               <Text size="4" weight="bold">
                 Grille d'alignement
               </Text>
@@ -338,16 +331,13 @@ export function PlanSalleSettings({ initialData }: PlanSalleSettingsProps) {
                       Aide a aligner les tables lors de l'edition du plan
                     </Text>
                   </Flex>
-                  <Switch
-                    size="3"
-                    checked={field.value}
-                    onCheckedChange={field.onChange}
-                  />
+                  <Switch size="3" checked={field.value} onCheckedChange={field.onChange} />
                 </Flex>
               )}
             />
 
-            {grilleActivee ? <Controller
+            {grilleActivee ? (
+              <Controller
                 name="tailleGrille"
                 control={control}
                 render={({ field }) => (
@@ -360,7 +350,7 @@ export function PlanSalleSettings({ initialData }: PlanSalleSettingsProps) {
                       onValueChange={(v) => field.onChange(Number(v))}
                     >
                       <Select.Trigger style={{ width: "200px" }} />
-                      <Select.Content>
+                      <Select.Content position="popper">
                         {tailleGrilleOptions.map((option) => (
                           <Select.Item key={option.value} value={String(option.value)}>
                             {option.label}
@@ -373,15 +363,16 @@ export function PlanSalleSettings({ initialData }: PlanSalleSettingsProps) {
                     </Text>
                   </Box>
                 )}
-              /> : null}
+              />
+            ) : null}
           </Flex>
-        </Card>
+        </Box>
 
         {/* Bouton de sauvegarde */}
         <Flex justify="end" gap="3" align="center">
           {saveStatus === "success" && (
             <Flex align="center" gap="2">
-              <CheckCircle2 size={16} className="text-green-500" />
+              <CheckCircle size={16} weight="fill" style={{ color: "var(--green-9)" }} />
               <Text size="2" color="green">
                 Enregistre
               </Text>
@@ -389,18 +380,14 @@ export function PlanSalleSettings({ initialData }: PlanSalleSettingsProps) {
           )}
           {saveStatus === "error" && (
             <Flex align="center" gap="2">
-              <AlertCircle size={16} className="text-red-500" />
+              <WarningCircle size={16} style={{ color: "var(--red-9)" }} />
               <Text size="2" color="red">
                 Erreur d'enregistrement
               </Text>
             </Flex>
           )}
           <Button type="submit" size="3" disabled={isLoading}>
-            {isLoading ? (
-              <Loader2 size={16} className="animate-spin" />
-            ) : (
-              <Save size={16} />
-            )}
+            {isLoading ? <CircleNotch size={16} className="animate-spin" /> : <FloppyDisk size={16} />}
             Enregistrer les parametres du plan
           </Button>
         </Flex>

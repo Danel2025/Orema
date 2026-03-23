@@ -6,25 +6,8 @@
  */
 
 import { useState, useEffect, useCallback } from "react";
-import {
-  X,
-  Plus,
-  Trash2,
-  Package,
-  Loader2,
-  Check,
-  Search,
-  Layers,
-} from "lucide-react";
-import {
-  Dialog,
-  Flex,
-  Text,
-  Button,
-  Badge,
-  TextField,
-  Separator,
-} from "@radix-ui/themes";
+import { X, Plus, Trash, Package, SpinnerGap, Check, MagnifyingGlass, Stack } from "@phosphor-icons/react";
+import { Dialog, Flex, Text, Button, Badge, TextField, Separator } from "@radix-ui/themes";
 import { ScrollArea } from "@/components/ui";
 import { formatCurrency } from "@/lib/utils";
 
@@ -108,10 +91,7 @@ export function ComposeProductForm({
   });
 
   // Calculate sum of composants prices
-  const prixComposantsTotal = composants.reduce(
-    (acc, c) => acc + c.prixUnitaire * c.quantite,
-    0
-  );
+  const prixComposantsTotal = composants.reduce((acc, c) => acc + c.prixUnitaire * c.quantite, 0);
 
   // Calculate economy
   const economie = prixComposantsTotal - prixVente;
@@ -138,17 +118,13 @@ export function ComposeProductForm({
   // Update quantity
   const handleUpdateQuantity = useCallback((index: number, quantite: number) => {
     if (quantite < 1) return;
-    setComposants((prev) =>
-      prev.map((c, i) => (i === index ? { ...c, quantite } : c))
-    );
+    setComposants((prev) => prev.map((c, i) => (i === index ? { ...c, quantite } : c)));
   }, []);
 
   // Toggle choice option
   const handleToggleChoice = useCallback((index: number) => {
     setComposants((prev) =>
-      prev.map((c, i) =>
-        i === index ? { ...c, estChoixClient: !c.estChoixClient } : c
-      )
+      prev.map((c, i) => (i === index ? { ...c, estChoixClient: !c.estChoixClient } : c))
     );
   }, []);
 
@@ -183,10 +159,10 @@ export function ComposeProductForm({
           style={{ borderBottom: "1px solid var(--gray-a6)" }}
         >
           <Flex align="center" gap="3">
-            <Layers size={24} style={{ color: "var(--accent-9)" }} />
+            <Stack size={24} style={{ color: "var(--accent-9)" }} aria-hidden="true" />
             <Flex direction="column">
               <Dialog.Title size="4" weight="bold" style={{ margin: 0 }}>
-                {editData ? "Modifier le menu" : "Creer un menu / formule"}
+                {editData ? "Modifier le menu" : "Créer un menu / formule"}
               </Dialog.Title>
               <Dialog.Description size="2" color="gray" style={{ margin: 0 }}>
                 Combinez plusieurs produits en une offre
@@ -195,7 +171,7 @@ export function ComposeProductForm({
           </Flex>
           <Dialog.Close>
             <Button variant="ghost" color="gray" size="1">
-              <X size={18} />
+              <X size={18} aria-hidden="true" />
             </Button>
           </Dialog.Close>
         </Flex>
@@ -210,14 +186,19 @@ export function ComposeProductForm({
             }}
           >
             {/* Search */}
-            <Flex direction="column" gap="2" p="3" style={{ borderBottom: "1px solid var(--gray-a6)" }}>
+            <Flex
+              direction="column"
+              gap="2"
+              p="3"
+              style={{ borderBottom: "1px solid var(--gray-a6)" }}
+            >
               <TextField.Root
                 placeholder="Rechercher un produit..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
               >
                 <TextField.Slot>
-                  <Search size={16} />
+                  <MagnifyingGlass size={16} aria-hidden="true" />
                 </TextField.Slot>
               </TextField.Root>
 
@@ -237,10 +218,7 @@ export function ComposeProductForm({
                     variant={selectedCategoryFilter === cat.id ? "solid" : "soft"}
                     size="1"
                     style={{
-                      backgroundColor:
-                        selectedCategoryFilter === cat.id
-                          ? cat.couleur
-                          : undefined,
+                      backgroundColor: selectedCategoryFilter === cat.id ? cat.couleur : undefined,
                       color: selectedCategoryFilter === cat.id ? "white" : undefined,
                       whiteSpace: "nowrap",
                     }}
@@ -256,12 +234,7 @@ export function ComposeProductForm({
             <ScrollArea style={{ flex: 1 }}>
               <Flex direction="column" gap="1" p="2">
                 {filteredProduits.length === 0 ? (
-                  <Text
-                    size="2"
-                    color="gray"
-                    align="center"
-                    style={{ padding: 24 }}
-                  >
+                  <Text size="2" color="gray" align="center" style={{ padding: 24 }}>
                     Aucun produit trouve
                   </Text>
                 ) : (
@@ -279,7 +252,7 @@ export function ComposeProductForm({
                       onClick={() => handleAddProduct(produit)}
                     >
                       <Flex align="center" gap="2">
-                        <Package size={16} style={{ color: produit.categorie.couleur }} />
+                        <Package size={16} style={{ color: produit.categorie.couleur }} aria-hidden="true" />
                         <Flex direction="column">
                           <Text size="2" weight="medium">
                             {produit.nom}
@@ -298,7 +271,7 @@ export function ComposeProductForm({
                         >
                           {formatCurrency(produit.prixVente)}
                         </Text>
-                        <Plus size={16} style={{ color: "var(--accent-9)" }} />
+                        <Plus size={16} style={{ color: "var(--accent-9)" }} aria-hidden="true" />
                       </Flex>
                     </Flex>
                   ))
@@ -310,7 +283,12 @@ export function ComposeProductForm({
           {/* Right: Menu composition */}
           <Flex direction="column" style={{ width: "50%" }}>
             {/* Menu info */}
-            <Flex direction="column" gap="3" p="3" style={{ borderBottom: "1px solid var(--gray-a6)" }}>
+            <Flex
+              direction="column"
+              gap="3"
+              p="3"
+              style={{ borderBottom: "1px solid var(--gray-a6)" }}
+            >
               <TextField.Root
                 placeholder="Nom du menu / formule *"
                 value={nom}
@@ -353,12 +331,7 @@ export function ComposeProductForm({
                 </Text>
 
                 {composants.length === 0 ? (
-                  <Text
-                    size="2"
-                    color="gray"
-                    align="center"
-                    style={{ padding: 24 }}
-                  >
+                  <Text size="2" color="gray" align="center" style={{ padding: 24 }}>
                     Cliquez sur un produit pour l'ajouter
                   </Text>
                 ) : (
@@ -398,7 +371,7 @@ export function ComposeProductForm({
                           size="1"
                           onClick={() => handleRemoveProduct(index)}
                         >
-                          <Trash2 size={14} />
+                          <Trash size={14} aria-hidden="true" />
                         </Button>
                       </Flex>
 
@@ -489,7 +462,6 @@ export function ComposeProductForm({
                   <Text
                     size="3"
                     weight="bold"
-                   
                     style={{
                       fontFamily: "var(--font-google-sans-code), ui-monospace, monospace",
                     }}
@@ -503,28 +475,18 @@ export function ComposeProductForm({
         </Flex>
 
         {/* Footer */}
-        <Flex
-          justify="end"
-          gap="3"
-          p="4"
-          style={{ borderTop: "1px solid var(--gray-a6)" }}
-        >
+        <Flex justify="end" gap="3" p="4" style={{ borderTop: "1px solid var(--gray-a6)" }}>
           <Dialog.Close>
             <Button variant="soft" color="gray">
               Annuler
             </Button>
           </Dialog.Close>
           <Button
-           
             onClick={handleSubmit}
             disabled={!nom.trim() || composants.length === 0 || prixVente <= 0 || isSubmitting}
           >
-            {isSubmitting ? (
-              <Loader2 size={16} className="animate-spin" />
-            ) : (
-              <Check size={16} />
-            )}
-            {editData ? "Modifier" : "Creer le menu"}
+            {isSubmitting ? <SpinnerGap size={16} className="animate-spin" aria-hidden="true" /> : <Check size={16} aria-hidden="true" />}
+            {editData ? "Modifier" : "Créer le menu"}
           </Button>
         </Flex>
       </Dialog.Content>

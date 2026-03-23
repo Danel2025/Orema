@@ -67,10 +67,7 @@ export default function DashboardPage() {
                       backgroundColor: `var(--${stat.color}-3)`,
                     }}
                   >
-                    <Icon
-                      size={20}
-                      style={{ color: `var(--${stat.color}-11)` }}
-                    />
+                    <Icon size={20} style={{ color: `var(--${stat.color}-11)` }} />
                   </Box>
                 </Flex>
 
@@ -190,9 +187,7 @@ export default function DashboardPage() {
           <Flex direction="column" gap="3">
             <Flex align="center" justify="between">
               <Heading size="5">Activité récente</Heading>
-              <Badge variant="soft">
-                Nouveau
-              </Badge>
+              <Badge variant="soft">Nouveau</Badge>
             </Flex>
             <Text size="2" color="gray">
               Aucune activité pour le moment

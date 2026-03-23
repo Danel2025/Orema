@@ -1,7 +1,7 @@
 "use client";
 
 /**
- * SecuriteSettings - Parametres de securite
+ * SecuriteSettings - Paramètres de sécurité
  */
 
 import { useState } from "react";
@@ -9,7 +9,6 @@ import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
   Box,
-  Card,
   Flex,
   Text,
   TextField,
@@ -20,17 +19,17 @@ import {
   Checkbox,
 } from "@radix-ui/themes";
 import {
-  Shield,
+  ShieldCheck,
   Key,
   Clock,
   FileText,
-  Save,
-  Loader2,
-  CheckCircle2,
-  AlertCircle,
+  FloppyDisk,
+  CircleNotch,
+  CheckCircle,
+  WarningCircle,
   Info,
   Lock,
-} from "lucide-react";
+} from "@phosphor-icons/react";
 import { toast } from "sonner";
 
 import { updateSecuriteSettings } from "@/actions/parametres";
@@ -72,7 +71,7 @@ export function SecuriteSettings({ initialData }: SecuriteSettingsProps) {
 
       if (result.success) {
         setSaveStatus("success");
-        toast.success("Parametres de securite enregistres");
+        toast.success("Paramètres de sécurité enregistrés");
         setTimeout(() => setSaveStatus("idle"), 3000);
       } else {
         setSaveStatus("error");
@@ -92,20 +91,20 @@ export function SecuriteSettings({ initialData }: SecuriteSettingsProps) {
         {/* Information */}
         <Callout.Root color="amber" size="2">
           <Callout.Icon>
-            <Shield size={18} />
+            <ShieldCheck size={18} weight="duotone" />
           </Callout.Icon>
           <Callout.Text>
-            <Text weight="bold">Parametres de securite</Text>
+            <Text weight="bold">Paramètres de sécurité</Text>
             <br />
             Ces parametres affectent la securite de votre systeme. Modifiez-les avec precaution.
           </Callout.Text>
         </Callout.Root>
 
         {/* Code PIN */}
-        <Card size="3">
+        <Box style={{ border: "1px solid var(--gray-a6)", borderRadius: 8 }} p="4">
           <Flex direction="column" gap="4">
             <Flex align="center" gap="2">
-              <Key size={20} style={{ color: "var(--accent-9)" }} />
+              <Key size={20} weight="duotone" style={{ color: "var(--accent-9)" }} />
               <Text size="4" weight="bold">
                 Code PIN
               </Text>
@@ -124,7 +123,7 @@ export function SecuriteSettings({ initialData }: SecuriteSettingsProps) {
                     onValueChange={(v) => field.onChange(Number(v))}
                   >
                     <Select.Trigger style={{ width: "200px" }} />
-                    <Select.Content>
+                    <Select.Content position="popper">
                       {longueurPinOptions.map((option) => (
                         <Select.Item key={option.value} value={String(option.value)}>
                           {option.label}
@@ -139,13 +138,13 @@ export function SecuriteSettings({ initialData }: SecuriteSettingsProps) {
               )}
             />
           </Flex>
-        </Card>
+        </Box>
 
         {/* Protection contre les attaques */}
-        <Card size="3">
+        <Box style={{ border: "1px solid var(--gray-a6)", borderRadius: 8 }} p="4">
           <Flex direction="column" gap="4">
             <Flex align="center" gap="2">
-              <Lock size={20} style={{ color: "var(--accent-9)" }} />
+              <Lock size={20} weight="duotone" style={{ color: "var(--accent-9)" }} />
               <Text size="4" weight="bold">
                 Protection contre les attaques
               </Text>
@@ -164,9 +163,11 @@ export function SecuriteSettings({ initialData }: SecuriteSettingsProps) {
                   size="3"
                   placeholder="5"
                 />
-                {errors.tentativesLoginMax ? <Text size="1" color="red" mt="1">
+                {errors.tentativesLoginMax ? (
+                  <Text size="1" color="red" mt="1">
                     {errors.tentativesLoginMax.message}
-                  </Text> : null}
+                  </Text>
+                ) : null}
                 <Text size="1" color="gray" mt="1">
                   Nombre d'echecs avant blocage
                 </Text>
@@ -184,22 +185,24 @@ export function SecuriteSettings({ initialData }: SecuriteSettingsProps) {
                   size="3"
                   placeholder="15"
                 />
-                {errors.dureeBlocage ? <Text size="1" color="red" mt="1">
+                {errors.dureeBlocage ? (
+                  <Text size="1" color="red" mt="1">
                     {errors.dureeBlocage.message}
-                  </Text> : null}
+                  </Text>
+                ) : null}
                 <Text size="1" color="gray" mt="1">
                   Temps de blocage apres trop de tentatives
                 </Text>
               </Box>
             </Flex>
           </Flex>
-        </Card>
+        </Box>
 
         {/* Session */}
-        <Card size="3">
+        <Box style={{ border: "1px solid var(--gray-a6)", borderRadius: 8 }} p="4">
           <Flex direction="column" gap="4">
             <Flex align="center" gap="2">
-              <Clock size={20} style={{ color: "var(--accent-9)" }} />
+              <Clock size={20} weight="duotone" style={{ color: "var(--accent-9)" }} />
               <Text size="4" weight="bold">
                 Gestion de session
               </Text>
@@ -217,21 +220,23 @@ export function SecuriteSettings({ initialData }: SecuriteSettingsProps) {
                 size="3"
                 placeholder="30"
               />
-              {errors.sessionTimeout ? <Text size="1" color="red" mt="1">
+              {errors.sessionTimeout ? (
+                <Text size="1" color="red" mt="1">
                   {errors.sessionTimeout.message}
-                </Text> : null}
+                </Text>
+              ) : null}
               <Text size="1" color="gray" mt="1">
                 Deconnexion automatique apres inactivite
               </Text>
             </Box>
           </Flex>
-        </Card>
+        </Box>
 
         {/* Audit */}
-        <Card size="3">
+        <Box style={{ border: "1px solid var(--gray-a6)", borderRadius: 8 }} p="4">
           <Flex direction="column" gap="4">
             <Flex align="center" gap="2">
-              <FileText size={20} style={{ color: "var(--accent-9)" }} />
+              <FileText size={20} weight="duotone" style={{ color: "var(--accent-9)" }} />
               <Text size="4" weight="bold">
                 Journal d'audit
               </Text>
@@ -250,16 +255,13 @@ export function SecuriteSettings({ initialData }: SecuriteSettingsProps) {
                       Enregistrer les actions importantes pour la tracabilite
                     </Text>
                   </Flex>
-                  <Switch
-                    size="3"
-                    checked={field.value}
-                    onCheckedChange={field.onChange}
-                  />
+                  <Switch size="3" checked={field.value} onCheckedChange={field.onChange} />
                 </Flex>
               )}
             />
 
-            {auditActif ? <>
+            {auditActif ? (
+              <>
                 <Box
                   style={{
                     borderTop: "1px solid var(--gray-5)",
@@ -282,9 +284,7 @@ export function SecuriteSettings({ initialData }: SecuriteSettingsProps) {
                                 if (checked) {
                                   field.onChange([...field.value, option.value]);
                                 } else {
-                                  field.onChange(
-                                    field.value.filter((v) => v !== option.value)
-                                  );
+                                  field.onChange(field.value.filter((v) => v !== option.value));
                                 }
                               }}
                             />
@@ -294,9 +294,11 @@ export function SecuriteSettings({ initialData }: SecuriteSettingsProps) {
                       </Flex>
                     )}
                   />
-                  {errors.actionsALogger ? <Text size="1" color="red" mt="2">
+                  {errors.actionsALogger ? (
+                    <Text size="1" color="red" mt="2">
                       {errors.actionsALogger.message}
-                    </Text> : null}
+                    </Text>
+                  ) : null}
                 </Box>
 
                 <Callout.Root color="blue" size="1">
@@ -307,15 +309,16 @@ export function SecuriteSettings({ initialData }: SecuriteSettingsProps) {
                     Le journal d'audit est accessible depuis Rapports &gt; Journal d'audit
                   </Callout.Text>
                 </Callout.Root>
-              </> : null}
+              </>
+            ) : null}
           </Flex>
-        </Card>
+        </Box>
 
         {/* Bouton de sauvegarde */}
         <Flex justify="end" gap="3" align="center">
           {saveStatus === "success" && (
             <Flex align="center" gap="2">
-              <CheckCircle2 size={16} className="text-green-500" />
+              <CheckCircle size={16} weight="fill" className="text-green-500" />
               <Text size="2" color="green">
                 Enregistre
               </Text>
@@ -323,18 +326,14 @@ export function SecuriteSettings({ initialData }: SecuriteSettingsProps) {
           )}
           {saveStatus === "error" && (
             <Flex align="center" gap="2">
-              <AlertCircle size={16} className="text-red-500" />
+              <WarningCircle size={16} weight="fill" className="text-red-500" />
               <Text size="2" color="red">
                 Erreur d'enregistrement
               </Text>
             </Flex>
           )}
           <Button type="submit" size="3" disabled={isLoading}>
-            {isLoading ? (
-              <Loader2 size={16} className="animate-spin" />
-            ) : (
-              <Save size={16} />
-            )}
+            {isLoading ? <CircleNotch size={16} className="animate-spin" /> : <FloppyDisk size={16} />}
             Enregistrer les parametres de securite
           </Button>
         </Flex>

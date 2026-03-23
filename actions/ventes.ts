@@ -16,6 +16,143 @@ import {
   type TypeMouvement,
 } from "@/lib/db";
 import { getCurrentUser } from "@/lib/auth";
+import { z } from "zod";
+import {
+  getEnforcementContext,
+  validerRemise,
+  validerPrixMinimum,
+  validerModePaiement,
+} from "@/lib/tarification/enforcement";
+import { createAuditLog } from "@/actions/audit";
+import { generateBonCuisine } from "@/lib/print/bon-cuisine";
+import { generateBonBar } from "@/lib/print/bon-bar";
+import { isBarCategory, findPrinterByType } from "@/lib/print/router";
+import { sendToPrinter } from "@/lib/print/sender";
+import type { BonPreparationData, PrintLineItem } from "@/lib/print/types";
+
+// ============================================================================
+// SCHEMAS DE VALIDATION ZOD
+// ============================================================================
+
+const SupplementInputSchema = z.object({
+  nom: z.string().min(1, "Le nom du supplément est requis"),
+  prix: z.number().int().min(0, "Le prix du supplément ne peut pas être négatif"),
+  supplementProduitId: z.string().uuid("ID supplément invalide").optional(),
+});
+
+const LigneVenteInputSchema = z.object({
+  produitId: z.string().uuid("ID produit invalide"),
+  quantite: z.number().int().positive("La quantité doit être positive"),
+  prixUnitaire: z.number().int().min(0, "Le prix unitaire ne peut pas être négatif"),
+  tauxTva: z.enum(["STANDARD", "REDUIT", "EXONERE"], {
+    error: "Taux TVA invalide",
+  }),
+  notes: z.string().max(200, "Les notes ne peuvent pas dépasser 200 caractères").optional(),
+  supplements: z.array(SupplementInputSchema).optional(),
+  totalSupplements: z.number().int().min(0).optional(),
+  remiseLigne: z
+    .object({
+      type: z.enum(["POURCENTAGE", "MONTANT_FIXE"]),
+      valeur: z.number().positive("La valeur de la remise doit être positive"),
+    })
+    .optional(),
+});
+
+const PaiementInputSchema = z.object({
+  mode: z.enum([
+    "ESPECES",
+    "CARTE_BANCAIRE",
+    "AIRTEL_MONEY",
+    "MOOV_MONEY",
+    "CHEQUE",
+    "VIREMENT",
+    "COMPTE_CLIENT",
+    "MIXTE",
+  ], { error: "Mode de paiement invalide" }),
+  montant: z.number().int().positive("Le montant doit être positif"),
+  reference: z.string().max(100).optional(),
+});
+
+const RemiseSchema = z.object({
+  type: z.enum(["POURCENTAGE", "MONTANT_FIXE"]),
+  valeur: z.number().positive("La valeur de la remise doit être positive"),
+});
+
+const CreateVenteSchema = z.object({
+  typeVente: z.enum(["DIRECT", "TABLE", "LIVRAISON", "EMPORTER"], {
+    error: "Type de vente invalide",
+  }),
+  lignes: z
+    .array(LigneVenteInputSchema)
+    .min(1, "Au moins un produit doit être ajouté à la vente"),
+  modePaiement: z.enum([
+    "ESPECES",
+    "CARTE_BANCAIRE",
+    "AIRTEL_MONEY",
+    "MOOV_MONEY",
+    "CHEQUE",
+    "VIREMENT",
+    "COMPTE_CLIENT",
+    "MIXTE",
+  ], { error: "Mode de paiement invalide" }),
+  montantRecu: z.number().int().min(0, "Le montant reçu ne peut pas être négatif"),
+  montantRendu: z.number().int().min(0, "Le montant rendu ne peut pas être négatif"),
+  reference: z.string().max(100).optional(),
+  paiements: z.array(PaiementInputSchema).optional(),
+  remise: RemiseSchema.optional(),
+  tableId: z.string().uuid("ID table invalide").optional().nullable(),
+  clientId: z.string().uuid("ID client invalide").optional().nullable(),
+  sessionCaisseId: z.string().uuid("ID session caisse invalide").optional().nullable(),
+  adresseLivraison: z.string().max(300).optional(),
+  telephoneLivraison: z.string().max(30).optional(),
+  notesLivraison: z.string().max(500).optional(),
+});
+
+const CreateVenteEnAttenteSchema = z.object({
+  typeVente: z.enum(["DIRECT", "TABLE", "LIVRAISON", "EMPORTER"], {
+    error: "Type de vente invalide",
+  }),
+  lignes: z
+    .array(LigneVenteInputSchema)
+    .min(1, "Au moins un produit doit être ajouté"),
+  remise: RemiseSchema.optional(),
+  tableId: z.string().uuid("ID table invalide").optional().nullable(),
+  clientId: z.string().uuid("ID client invalide").optional().nullable(),
+  sessionCaisseId: z.string().uuid("ID session caisse invalide").optional().nullable(),
+  adresseLivraison: z.string().max(300).optional(),
+  telephoneLivraison: z.string().max(30).optional(),
+  notesLivraison: z.string().max(500).optional(),
+});
+
+const PayerVenteEnAttenteSchema = z.object({
+  venteId: z.string().uuid("ID vente invalide"),
+  modePaiement: z.enum([
+    "ESPECES",
+    "CARTE_BANCAIRE",
+    "AIRTEL_MONEY",
+    "MOOV_MONEY",
+    "CHEQUE",
+    "VIREMENT",
+    "COMPTE_CLIENT",
+    "MIXTE",
+  ], { error: "Mode de paiement invalide" }),
+  montantRecu: z.number().int().min(0, "Le montant reçu ne peut pas être négatif"),
+  montantRendu: z.number().int().min(0, "Le montant rendu ne peut pas être négatif"),
+  reference: z.string().max(100).optional(),
+  paiements: z.array(PaiementInputSchema).optional(),
+  sessionCaisseId: z.string().uuid("ID session caisse invalide"),
+});
+
+const AddToVenteEnAttenteSchema = z.object({
+  venteId: z.string().uuid("ID vente invalide"),
+  lignes: z
+    .array(LigneVenteInputSchema)
+    .min(1, "Au moins un produit doit être ajouté"),
+});
+
+const AnnulerVenteEnAttenteSchema = z.object({
+  venteId: z.string().uuid("ID vente invalide"),
+});
 
 // Note: On utilise createAuthenticatedClient qui définit le contexte RLS
 // via set_rls_context(). Cela permet aux politiques RLS de fonctionner
@@ -39,6 +176,7 @@ interface LigneVenteInput {
   notes?: string;
   supplements?: SupplementInput[];
   totalSupplements?: number;
+  remiseLigne?: { type: TypeRemise; valeur: number };
 }
 
 interface PaiementInput {
@@ -60,6 +198,7 @@ interface CreateVenteInput {
   clientId?: string;
   sessionCaisseId?: string;
   adresseLivraison?: string;
+  telephoneLivraison?: string;
   notesLivraison?: string;
 }
 
@@ -93,7 +232,17 @@ function calculerTotaux(lignes: LigneVenteInput[], remise?: { type: TypeRemise; 
 
   const lignesCalculees = lignes.map((ligne) => {
     const prixUnitaire = ligne.prixUnitaire + (ligne.totalSupplements || 0);
-    const prixLigne = prixUnitaire * ligne.quantite;
+    let prixLigne = prixUnitaire * ligne.quantite;
+
+    // Appliquer la remise par ligne si présente
+    if (ligne.remiseLigne) {
+      const remiseLigneAmount =
+        ligne.remiseLigne.type === "POURCENTAGE"
+          ? Math.round((prixLigne * ligne.remiseLigne.valeur) / 100)
+          : ligne.remiseLigne.valeur;
+      prixLigne = Math.max(0, prixLigne - remiseLigneAmount);
+    }
+
     const tauxPercent = getTauxTvaPercent(ligne.tauxTva);
     const montantTva = Math.round((prixLigne * tauxPercent) / 100);
 
@@ -113,12 +262,11 @@ function calculerTotaux(lignes: LigneVenteInput[], remise?: { type: TypeRemise; 
     };
   });
 
-  // Calcul remise
+  // Calcul remise globale
   let totalRemise = 0;
   if (remise) {
-    totalRemise = remise.type === "POURCENTAGE"
-      ? Math.round((sousTotal * remise.valeur) / 100)
-      : remise.valeur;
+    totalRemise =
+      remise.type === "POURCENTAGE" ? Math.round((sousTotal * remise.valeur) / 100) : remise.valeur;
   }
 
   return {
@@ -130,72 +278,52 @@ function calculerTotaux(lignes: LigneVenteInput[], remise?: { type: TypeRemise; 
   };
 }
 
-/** Génère le numéro de ticket unique */
+/** Génère le numéro de ticket unique via RPC atomique (SELECT FOR UPDATE) */
 async function generateNumeroTicket(supabase: DbClient, etablissementId: string): Promise<string> {
-  const today = new Date();
-  const dateStr = today.toISOString().slice(0, 10).replace(/-/g, "");
+  const { data, error } = await supabase.rpc("generate_numero_ticket" as never, {
+    p_etablissement_id: etablissementId,
+  } as never);
 
-  const { data: etab } = await supabase
-    .from("etablissements")
-    .select("dernier_numero_ticket, date_numero_ticket")
-    .eq("id", etablissementId)
-    .single();
+  if (error || !data) {
+    throw new Error(`Erreur génération numéro ticket: ${error?.message || "pas de résultat"}`);
+  }
 
-  const lastDate = etab?.date_numero_ticket
-    ? new Date(etab.date_numero_ticket).toISOString().slice(0, 10).replace(/-/g, "")
-    : "";
-
-  const numero = lastDate !== dateStr ? 1 : (etab?.dernier_numero_ticket || 0) + 1;
-
-  await supabase
-    .from("etablissements")
-    .update({ dernier_numero_ticket: numero, date_numero_ticket: today.toISOString() })
-    .eq("id", etablissementId);
-
-  return `${dateStr}${numero.toString().padStart(5, "0")}`;
+  return data;
 }
 
-/** Déduit le stock des produits et crée les mouvements */
+/** Déduit le stock des produits via RPC transactionnel (SELECT FOR UPDATE) */
 async function deduireStock(
   supabase: DbClient,
   lignes: LigneVenteInput[],
   motifPrefix: string,
   reference: string
 ) {
-  // Récupérer tous les produits en une seule requête
-  const produitIds = lignes.map((l) => l.produitId);
-  const { data: produits } = await supabase
-    .from("produits")
-    .select("id, gerer_stock, stock_actuel")
-    .in("id", produitIds);
+  const lignesJson = lignes.map((l) => ({
+    produit_id: l.produitId,
+    quantite: l.quantite,
+  }));
 
-  const produitsMap = new Map(produits?.map((p) => [p.id, p]) || []);
+  const { error } = await supabase.rpc("deduire_stock_transactionnel" as never, {
+    p_lignes: lignesJson,
+    p_motif: motifPrefix,
+    p_reference: reference,
+  } as never);
 
-  // Préparer les updates et mouvements
-  for (const ligne of lignes) {
-    const produit = produitsMap.get(ligne.produitId);
-    if (!produit?.gerer_stock || produit.stock_actuel === null) continue;
-
-    const stockAvant = produit.stock_actuel;
-    const stockApres = stockAvant - ligne.quantite;
-
-    await supabase.from("produits").update({ stock_actuel: stockApres }).eq("id", ligne.produitId);
-    await supabase.from("mouvements_stock").insert({
-      type: "SORTIE" as TypeMouvement,
-      quantite: ligne.quantite,
-      quantite_avant: stockAvant,
-      quantite_apres: stockApres,
-      motif: `${motifPrefix} - ${reference}`,
-      reference,
-      produit_id: ligne.produitId,
-    });
+  if (error) {
+    console.error("Erreur déduction stock transactionnelle:", error);
+    throw new Error(`Erreur déduction stock: ${error.message}`);
   }
 }
 
 /** Restitue le stock (annulation) */
 async function restituerStock(
   supabase: DbClient,
-  lignes: Array<{ produit_id: string; quantite: number; gerer_stock?: boolean; stock_actuel?: number | null }>,
+  lignes: Array<{
+    produit_id: string;
+    quantite: number;
+    gerer_stock?: boolean;
+    stock_actuel?: number | null;
+  }>,
   reference: string
 ) {
   for (const ligne of lignes) {
@@ -232,6 +360,7 @@ interface SerializedVente {
   tableId: string | null;
   clientId: string | null;
   adresseLivraison: string | null;
+  telephoneLivraison: string | null;
   notes: string | null;
   createdAt: string;
   updatedAt: string;
@@ -253,10 +382,251 @@ function serializeVente(vente: Record<string, unknown>): SerializedVente {
     tableId: (vente.table_id as string | null) ?? null,
     clientId: (vente.client_id as string | null) ?? null,
     adresseLivraison: (vente.adresse_livraison as string | null) ?? null,
+    telephoneLivraison: (vente.telephone_livraison as string | null) ?? null,
     notes: (vente.notes as string | null) ?? null,
     createdAt: vente.created_at as string,
     updatedAt: vente.updated_at as string,
   };
+}
+
+// ============================================================================
+// VÉRIFICATION DES PRIX SERVEUR
+// ============================================================================
+
+/**
+ * Récupère les prix réels des produits depuis la DB et remplace les prix client
+ * Sécurité: Ne jamais faire confiance aux prix envoyés par le client
+ */
+async function verifierPrixServeur(
+  supabase: DbClient,
+  lignes: LigneVenteInput[]
+): Promise<LigneVenteInput[]> {
+  const produitIds = lignes.map((l) => l.produitId);
+
+  const { data: produits, error } = await supabase
+    .from("produits")
+    .select("id, prix_vente")
+    .in("id", produitIds);
+
+  if (error || !produits) {
+    throw new Error("Impossible de vérifier les prix des produits");
+  }
+
+  const prixMap = new Map(produits.map((p) => [p.id, Number(p.prix_vente)]));
+
+  return lignes.map((ligne) => {
+    const prixServeur = prixMap.get(ligne.produitId);
+    if (prixServeur === undefined) {
+      throw new Error(`Produit introuvable: ${ligne.produitId}`);
+    }
+    return {
+      ...ligne,
+      prixUnitaire: prixServeur,
+    };
+  });
+}
+
+// ============================================================================
+// AUTO-IMPRESSION BONS CUISINE / BAR
+// ============================================================================
+
+/**
+ * Imprime automatiquement les bons cuisine et bar après création d'une vente.
+ * Ne bloque jamais la vente en cas d'erreur d'impression.
+ */
+async function imprimerBonsPreparation(
+  supabase: DbClient,
+  etablissementId: string,
+  venteData: {
+    numeroTicket: string;
+    typeVente: string;
+    notes?: string | null;
+    serveurNom: string;
+    tableNumero?: string | null;
+    tableZone?: string | null;
+    clientNom?: string | null;
+  },
+  lignesAvecProduits: Array<{
+    quantite: number;
+    notes?: string | null;
+    produitNom: string;
+    categorieId?: string;
+    categorieNom?: string;
+    destinationPreparation?: string | null;
+  }>
+): Promise<void> {
+  try {
+    // Séparer les lignes cuisine vs bar en utilisant destination_preparation (DB) ou heuristique
+    const lignesCuisine: PrintLineItem[] = [];
+    const lignesBar: PrintLineItem[] = [];
+
+    for (const ligne of lignesAvecProduits) {
+      const printLine: PrintLineItem = {
+        produitNom: ligne.produitNom,
+        quantite: ligne.quantite,
+        prixUnitaire: 0,
+        total: 0,
+        notes: ligne.notes ?? null,
+        categorieId: ligne.categorieId,
+        categorieNom: ligne.categorieNom,
+      };
+
+      const dest = ligne.destinationPreparation;
+      if (dest === "AUCUNE") {
+        // Pas d'impression pour cette ligne
+        continue;
+      } else if (dest === "BAR") {
+        lignesBar.push(printLine);
+      } else if (dest === "CUISINE") {
+        lignesCuisine.push(printLine);
+      } else {
+        // AUTO ou null : utiliser l'heuristique basée sur le nom de catégorie
+        if (isBarCategory(ligne.categorieNom)) {
+          lignesBar.push(printLine);
+        } else {
+          lignesCuisine.push(printLine);
+        }
+      }
+    }
+
+    const now = new Date();
+
+    // Impression bon cuisine
+    if (lignesCuisine.length > 0) {
+      const cuisinePrinter = await findPrinterByType(etablissementId, "CUISINE");
+      if (cuisinePrinter) {
+        const bonCuisineData: BonPreparationData = {
+          numeroCommande: venteData.numeroTicket,
+          dateCommande: now,
+          typeVente: venteData.typeVente as "DIRECT" | "TABLE" | "LIVRAISON" | "EMPORTER",
+          tableNumero: venteData.tableNumero ?? null,
+          tableZone: venteData.tableZone ?? null,
+          clientNom: venteData.clientNom ?? null,
+          serveurNom: venteData.serveurNom,
+          lignes: lignesCuisine,
+          notes: venteData.notes ?? null,
+        };
+
+        const escposData = generateBonCuisine(bonCuisineData, cuisinePrinter.largeurPapier as 58 | 80);
+        const result = await sendToPrinter(cuisinePrinter, escposData);
+        if (!result.success) {
+          console.error("[imprimerBonsPreparation] Erreur impression cuisine:", result.error);
+        }
+      }
+    }
+
+    // Impression bon bar
+    if (lignesBar.length > 0) {
+      const barPrinter = await findPrinterByType(etablissementId, "BAR");
+      if (barPrinter) {
+        const bonBarData: BonPreparationData = {
+          numeroCommande: venteData.numeroTicket,
+          dateCommande: now,
+          typeVente: venteData.typeVente as "DIRECT" | "TABLE" | "LIVRAISON" | "EMPORTER",
+          tableNumero: venteData.tableNumero ?? null,
+          tableZone: venteData.tableZone ?? null,
+          clientNom: venteData.clientNom ?? null,
+          serveurNom: venteData.serveurNom,
+          lignes: lignesBar,
+          notes: venteData.notes ?? null,
+        };
+
+        const escposData = generateBonBar(bonBarData, barPrinter.largeurPapier as 58 | 80);
+        const result = await sendToPrinter(barPrinter, escposData);
+        if (!result.success) {
+          console.error("[imprimerBonsPreparation] Erreur impression bar:", result.error);
+        }
+      }
+    }
+  } catch (error) {
+    console.error("[imprimerBonsPreparation] Erreur non bloquante:", error);
+  }
+}
+
+/**
+ * Récupère les infos produits/catégories nécessaires pour l'impression
+ * à partir des IDs de produits des lignes de vente.
+ */
+async function recupererInfosProduitsForPrint(
+  supabase: DbClient,
+  lignes: LigneVenteInput[]
+): Promise<
+  Array<{
+    quantite: number;
+    notes?: string | null;
+    produitNom: string;
+    categorieId?: string;
+    categorieNom?: string;
+    destinationPreparation?: string | null;
+  }>
+> {
+  const produitIds = lignes.map((l) => l.produitId);
+  const { data: produits } = await supabase
+    .from("produits")
+    .select("id, nom, categorie_id, categories(id, nom, destination_preparation)")
+    .in("id", produitIds);
+
+  const produitMap = new Map(
+    (produits || []).map((p) => {
+      const cat = p.categories as unknown as { id: string; nom: string; destination_preparation?: string | null } | null;
+      return [p.id, { nom: p.nom, categorieId: cat?.id, categorieNom: cat?.nom, destinationPreparation: cat?.destination_preparation }];
+    })
+  );
+
+  return lignes.map((l) => {
+    const info = produitMap.get(l.produitId);
+    return {
+      quantite: l.quantite,
+      notes: l.notes ?? null,
+      produitNom: info?.nom ?? "Produit inconnu",
+      categorieId: info?.categorieId,
+      categorieNom: info?.categorieNom,
+      destinationPreparation: info?.destinationPreparation,
+    };
+  });
+}
+
+/**
+ * Récupère les infos table (numéro + zone) et client (nom) pour l'impression
+ */
+async function recupererInfosContextForPrint(
+  supabase: DbClient,
+  tableId?: string | null,
+  clientId?: string | null
+): Promise<{
+  tableNumero: string | null;
+  tableZone: string | null;
+  clientNom: string | null;
+}> {
+  let tableNumero: string | null = null;
+  let tableZone: string | null = null;
+  let clientNom: string | null = null;
+
+  if (tableId) {
+    const { data: table } = await supabase
+      .from("tables")
+      .select("numero, zones(nom)")
+      .eq("id", tableId)
+      .single();
+    if (table) {
+      tableNumero = table.numero?.toString() ?? null;
+      const zone = table.zones as unknown as { nom: string } | null;
+      tableZone = zone?.nom ?? null;
+    }
+  }
+
+  if (clientId) {
+    const { data: client } = await supabase
+      .from("clients")
+      .select("nom, prenom")
+      .eq("id", clientId)
+      .single();
+    if (client) {
+      clientNom = `${client.nom}${client.prenom ? " " + client.prenom : ""}`;
+    }
+  }
+
+  return { tableNumero, tableZone, clientNom };
 }
 
 // ============================================================================
@@ -268,6 +638,13 @@ function serializeVente(vente: Record<string, unknown>): SerializedVente {
  * Note: Les serveurs ne peuvent pas encaisser, seulement prendre des commandes
  */
 export async function createVente(input: CreateVenteInput) {
+  // Validation Zod
+  const parsed = CreateVenteSchema.safeParse(input);
+  if (!parsed.success) {
+    return { success: false, error: parsed.error.issues[0].message };
+  }
+  const validatedInput = parsed.data;
+
   const user = await getCurrentUser();
   if (!user) return { success: false, error: "Vous devez être connecté" };
   if (!user.etablissementId) return { success: false, error: "Aucun établissement associé" };
@@ -275,7 +652,10 @@ export async function createVente(input: CreateVenteInput) {
 
   // Les serveurs ne peuvent pas encaisser
   if (user.role === "SERVEUR") {
-    return { success: false, error: "Les serveurs ne sont pas autorisés à encaisser. Utilisez la prise de commande." };
+    return {
+      success: false,
+      error: "Les serveurs ne sont pas autorisés à encaisser. Utilisez la prise de commande.",
+    };
   }
 
   const supabase = await createAuthenticatedClient({
@@ -285,29 +665,112 @@ export async function createVente(input: CreateVenteInput) {
   });
 
   try {
+    // Vérifier les prix serveur (ne jamais faire confiance au client)
+    const lignesVerifiees = await verifierPrixServeur(supabase, validatedInput.lignes as LigneVenteInput[]);
+
+    // --- Enforcement tarification ---
+    const enforcementCtx = await getEnforcementContext(
+      supabase,
+      etablissementId,
+      user.userId,
+      user.role
+    );
+
+    // Valider la remise globale si présente
+    if (validatedInput.remise) {
+      const tempTotaux = calculerTotaux(lignesVerifiees, undefined);
+      const pourcentage =
+        validatedInput.remise.type === "POURCENTAGE"
+          ? validatedInput.remise.valeur
+          : (validatedInput.remise.valeur / tempTotaux.sousTotal) * 100;
+      const montant =
+        validatedInput.remise.type === "POURCENTAGE"
+          ? Math.round((tempTotaux.sousTotal * validatedInput.remise.valeur) / 100)
+          : validatedInput.remise.valeur;
+
+      const resultRemise = validerRemise(enforcementCtx, pourcentage, montant);
+      if (!resultRemise.valide) {
+        return {
+          success: false,
+          error: resultRemise.raison,
+          data: resultRemise.necessiteApprobation
+            ? { code: "APPROBATION_REQUISE", pourcentage, montant }
+            : undefined,
+        };
+      }
+    }
+
+    // Valider le mode de paiement
+    const { data: etab } = await supabase
+      .from("etablissements")
+      .select("modes_paiement_actifs, montant_minimum_vente")
+      .eq("id", etablissementId)
+      .single();
+
+    if (etab?.modes_paiement_actifs) {
+      const resultMode = validerModePaiement(
+        validatedInput.modePaiement,
+        etab.modes_paiement_actifs
+      );
+      if (!resultMode.valide) {
+        return { success: false, error: resultMode.raison };
+      }
+    }
+
+    const { lignesCalculees, sousTotal, totalTva, totalRemise, totalFinal } = calculerTotaux(
+      lignesVerifiees,
+      validatedInput.remise
+    );
+
+    // Valider le montant minimum
+    if (etab?.montant_minimum_vente) {
+      const resultMin = validerPrixMinimum(totalFinal, etab.montant_minimum_vente);
+      if (!resultMin.valide) {
+        return { success: false, error: resultMin.raison };
+      }
+    }
+
     const numeroTicket = await generateNumeroTicket(supabase, etablissementId);
-    const { lignesCalculees, sousTotal, totalTva, totalRemise, totalFinal } = calculerTotaux(input.lignes, input.remise);
+
+    // Logger la remise dans l'audit si applicable
+    if (validatedInput.remise && totalRemise > 0) {
+      await createAuditLog({
+        action: "REMISE_APPLIQUEE",
+        entite: "ventes",
+        description: `Remise ${validatedInput.remise.type === "POURCENTAGE" ? validatedInput.remise.valeur + "%" : validatedInput.remise.valeur + " FCFA"} appliquée (${totalRemise} FCFA)`,
+        nouvelleValeur: {
+          type: validatedInput.remise.type,
+          valeur: validatedInput.remise.valeur,
+          montantRemise: totalRemise,
+          totalAvantRemise: sousTotal + totalTva,
+        },
+        utilisateurId: user.userId,
+        etablissementId,
+      });
+    }
+    // --- Fin enforcement tarification ---
 
     // Créer la vente
     const { data: vente, error: venteError } = await supabase
       .from("ventes")
       .insert({
         numero_ticket: numeroTicket,
-        type: input.typeVente,
+        type: validatedInput.typeVente,
         statut: "PAYEE" as StatutVente,
         sous_total: sousTotal,
         total_tva: totalTva,
         total_remise: totalRemise,
         total_final: totalFinal,
-        type_remise: input.remise?.type ?? null,
-        valeur_remise: input.remise?.valeur ?? null,
+        type_remise: validatedInput.remise?.type ?? null,
+        valeur_remise: validatedInput.remise?.valeur ?? null,
         etablissement_id: etablissementId,
-        table_id: input.tableId ?? null,
-        client_id: input.clientId ?? null,
+        table_id: validatedInput.tableId ?? null,
+        client_id: validatedInput.clientId ?? null,
         utilisateur_id: user.userId,
-        session_caisse_id: input.sessionCaisseId ?? null,
-        adresse_livraison: input.adresseLivraison ?? null,
-        notes: input.notesLivraison ?? null,
+        session_caisse_id: validatedInput.sessionCaisseId ?? null,
+        adresse_livraison: validatedInput.adresseLivraison ?? null,
+        telephone_livraison: validatedInput.telephoneLivraison ?? null,
+        notes: validatedInput.notesLivraison ?? null,
       })
       .select()
       .single();
@@ -345,26 +808,50 @@ export async function createVente(input: CreateVenteInput) {
     }
 
     // Créer les paiements
-    const paiementsData = input.modePaiement === "MIXTE" && input.paiements?.length
-      ? input.paiements.map((p) => ({
-          vente_id: vente.id,
-          mode_paiement: p.mode,
-          montant: p.montant,
-          reference: p.reference ?? null,
-        }))
-      : [{
-          vente_id: vente.id,
-          mode_paiement: input.modePaiement,
-          montant: totalFinal,
-          reference: input.reference ?? null,
-          montant_recu: input.modePaiement === "ESPECES" ? input.montantRecu : null,
-          monnaie_rendue: input.modePaiement === "ESPECES" ? input.montantRendu : null,
-        }];
+    const paiementsData =
+      validatedInput.modePaiement === "MIXTE" && validatedInput.paiements?.length
+        ? validatedInput.paiements.map((p) => ({
+            vente_id: vente.id,
+            mode_paiement: p.mode,
+            montant: p.montant,
+            reference: p.reference ?? null,
+          }))
+        : [
+            {
+              vente_id: vente.id,
+              mode_paiement: validatedInput.modePaiement,
+              montant: totalFinal,
+              reference: validatedInput.reference ?? null,
+              montant_recu: validatedInput.modePaiement === "ESPECES" ? validatedInput.montantRecu : null,
+              monnaie_rendue: validatedInput.modePaiement === "ESPECES" ? validatedInput.montantRendu : null,
+            },
+          ];
 
     await supabase.from("paiements").insert(paiementsData);
 
     // Déduire le stock
-    await deduireStock(supabase, input.lignes, "Vente - Ticket", numeroTicket);
+    await deduireStock(supabase, lignesVerifiees, "Vente - Ticket", numeroTicket);
+
+    // Auto-impression des bons cuisine/bar (non bloquant)
+    try {
+      const lignesForPrint = await recupererInfosProduitsForPrint(supabase, lignesVerifiees);
+      const contextForPrint = await recupererInfosContextForPrint(
+        supabase,
+        validatedInput.tableId,
+        validatedInput.clientId
+      );
+      await imprimerBonsPreparation(supabase, etablissementId, {
+        numeroTicket,
+        typeVente: validatedInput.typeVente,
+        notes: validatedInput.notesLivraison,
+        serveurNom: `${user.prenom ?? ""} ${user.nom ?? ""}`.trim() || "Caissier",
+        tableNumero: contextForPrint.tableNumero,
+        tableZone: contextForPrint.tableZone,
+        clientNom: contextForPrint.clientNom,
+      }, lignesForPrint);
+    } catch (printError) {
+      console.error("[createVente] Erreur impression (non bloquant):", printError);
+    }
 
     revalidatePath("/caisse");
     revalidatePath("/rapports");
@@ -381,16 +868,26 @@ export async function createVente(input: CreateVenteInput) {
  * Crée une vente en attente (TABLE, LIVRAISON, EMPORTER)
  */
 export async function createVenteEnAttente(input: CreateVenteEnAttenteInput) {
+  // Validation Zod
+  const parsed = CreateVenteEnAttenteSchema.safeParse(input);
+  if (!parsed.success) {
+    return { success: false, error: parsed.error.issues[0].message };
+  }
+  const validatedInput = parsed.data;
+
   const user = await getCurrentUser();
   if (!user) return { success: false, error: "Vous devez être connecté" };
   if (!user.etablissementId) return { success: false, error: "Aucun établissement associé" };
   const etablissementId = user.etablissementId;
 
-  if (input.typeVente === "DIRECT") {
-    return { success: false, error: "La mise en attente n'est pas disponible pour les ventes directes" };
+  if (validatedInput.typeVente === "DIRECT") {
+    return {
+      success: false,
+      error: "La mise en attente n'est pas disponible pour les ventes directes",
+    };
   }
 
-  if (input.typeVente === "TABLE" && !input.tableId) {
+  if (validatedInput.typeVente === "TABLE" && !validatedInput.tableId) {
     return { success: false, error: "Veuillez sélectionner une table" };
   }
 
@@ -401,11 +898,11 @@ export async function createVenteEnAttente(input: CreateVenteEnAttenteInput) {
   });
 
   // Vérifier s'il y a déjà une commande en cours sur cette table
-  if (input.tableId) {
+  if (validatedInput.tableId) {
     const { data: existing } = await supabase
       .from("ventes")
       .select("id, numero_ticket")
-      .eq("table_id", input.tableId)
+      .eq("table_id", validatedInput.tableId)
       .eq("statut", "EN_COURS")
       .single();
 
@@ -419,29 +916,36 @@ export async function createVenteEnAttente(input: CreateVenteEnAttenteInput) {
   }
 
   try {
+    // Vérifier les prix serveur (ne jamais faire confiance au client)
+    const lignesVerifiees = await verifierPrixServeur(supabase, validatedInput.lignes as LigneVenteInput[]);
+
     const numeroTicket = await generateNumeroTicket(supabase, etablissementId);
-    const { lignesCalculees, sousTotal, totalTva, totalRemise, totalFinal } = calculerTotaux(input.lignes, input.remise);
+    const { lignesCalculees, sousTotal, totalTva, totalRemise, totalFinal } = calculerTotaux(
+      lignesVerifiees,
+      validatedInput.remise
+    );
 
     // Créer la vente EN_COURS
     const { data: vente, error } = await supabase
       .from("ventes")
       .insert({
         numero_ticket: numeroTicket,
-        type: input.typeVente,
+        type: validatedInput.typeVente,
         statut: "EN_COURS" as StatutVente,
         sous_total: sousTotal,
         total_tva: totalTva,
         total_remise: totalRemise,
         total_final: totalFinal,
-        type_remise: input.remise?.type ?? null,
-        valeur_remise: input.remise?.valeur ?? null,
+        type_remise: validatedInput.remise?.type ?? null,
+        valeur_remise: validatedInput.remise?.valeur ?? null,
         etablissement_id: etablissementId,
-        table_id: input.tableId ?? null,
-        client_id: input.clientId ?? null,
+        table_id: validatedInput.tableId ?? null,
+        client_id: validatedInput.clientId ?? null,
         utilisateur_id: user.userId,
-        session_caisse_id: input.sessionCaisseId ?? null,
-        adresse_livraison: input.adresseLivraison ?? null,
-        notes: input.notesLivraison ?? null,
+        session_caisse_id: validatedInput.sessionCaisseId ?? null,
+        adresse_livraison: validatedInput.adresseLivraison ?? null,
+        telephone_livraison: validatedInput.telephoneLivraison ?? null,
+        notes: validatedInput.notesLivraison ?? null,
       })
       .select()
       .single();
@@ -479,11 +983,32 @@ export async function createVenteEnAttente(input: CreateVenteEnAttenteInput) {
     }
 
     // Déduire le stock immédiatement (préparation cuisine)
-    await deduireStock(supabase, input.lignes, "Commande en attente - Ticket", numeroTicket);
+    await deduireStock(supabase, lignesVerifiees, "Commande en attente - Ticket", numeroTicket);
 
     // Mettre à jour le statut de la table
-    if (input.tableId) {
-      await supabase.from("tables").update({ statut: "OCCUPEE" }).eq("id", input.tableId);
+    if (validatedInput.tableId) {
+      await supabase.from("tables").update({ statut: "OCCUPEE" }).eq("id", validatedInput.tableId);
+    }
+
+    // Auto-impression des bons cuisine/bar (non bloquant)
+    try {
+      const lignesForPrint = await recupererInfosProduitsForPrint(supabase, lignesVerifiees);
+      const contextForPrint = await recupererInfosContextForPrint(
+        supabase,
+        validatedInput.tableId,
+        validatedInput.clientId
+      );
+      await imprimerBonsPreparation(supabase, etablissementId, {
+        numeroTicket,
+        typeVente: validatedInput.typeVente,
+        notes: validatedInput.notesLivraison,
+        serveurNom: `${user.prenom ?? ""} ${user.nom ?? ""}`.trim() || "Serveur",
+        tableNumero: contextForPrint.tableNumero,
+        tableZone: contextForPrint.tableZone,
+        clientNom: contextForPrint.clientNom,
+      }, lignesForPrint);
+    } catch (printError) {
+      console.error("[createVenteEnAttente] Erreur impression (non bloquant):", printError);
     }
 
     revalidatePath("/caisse");
@@ -510,6 +1035,13 @@ export async function payerVenteEnAttente(input: {
   paiements?: PaiementInput[];
   sessionCaisseId: string;
 }) {
+  // Validation Zod
+  const parsed = PayerVenteEnAttenteSchema.safeParse(input);
+  if (!parsed.success) {
+    return { success: false, error: parsed.error.issues[0].message };
+  }
+  const validatedInput = parsed.data;
+
   const user = await getCurrentUser();
   if (!user) return { success: false, error: "Vous devez être connecté" };
   if (!user.etablissementId) return { success: false, error: "Aucun établissement associé" };
@@ -528,7 +1060,7 @@ export async function payerVenteEnAttente(input: {
   const { data: vente } = await supabase
     .from("ventes")
     .select("id, numero_ticket, total_final, table_id")
-    .eq("id", input.venteId)
+    .eq("id", validatedInput.venteId)
     .eq("statut", "EN_COURS")
     .single();
 
@@ -536,29 +1068,32 @@ export async function payerVenteEnAttente(input: {
 
   try {
     // Créer les paiements
-    const paiementsData = input.modePaiement === "MIXTE" && input.paiements?.length
-      ? input.paiements.map((p) => ({
-          vente_id: vente.id,
-          mode_paiement: p.mode,
-          montant: p.montant,
-          reference: p.reference ?? null,
-        }))
-      : [{
-          vente_id: vente.id,
-          mode_paiement: input.modePaiement,
-          montant: Number(vente.total_final),
-          reference: input.reference ?? null,
-          montant_recu: input.modePaiement === "ESPECES" ? input.montantRecu : null,
-          monnaie_rendue: input.modePaiement === "ESPECES" ? input.montantRendu : null,
-        }];
+    const paiementsData =
+      validatedInput.modePaiement === "MIXTE" && validatedInput.paiements?.length
+        ? validatedInput.paiements.map((p) => ({
+            vente_id: vente.id,
+            mode_paiement: p.mode,
+            montant: p.montant,
+            reference: p.reference ?? null,
+          }))
+        : [
+            {
+              vente_id: vente.id,
+              mode_paiement: validatedInput.modePaiement,
+              montant: Number(vente.total_final),
+              reference: validatedInput.reference ?? null,
+              montant_recu: validatedInput.modePaiement === "ESPECES" ? validatedInput.montantRecu : null,
+              monnaie_rendue: validatedInput.modePaiement === "ESPECES" ? validatedInput.montantRendu : null,
+            },
+          ];
 
     await supabase.from("paiements").insert(paiementsData);
 
     // Mettre à jour la vente
     await supabase
       .from("ventes")
-      .update({ statut: "PAYEE", session_caisse_id: input.sessionCaisseId })
-      .eq("id", input.venteId);
+      .update({ statut: "PAYEE", session_caisse_id: validatedInput.sessionCaisseId })
+      .eq("id", validatedInput.venteId);
 
     // Mettre à jour la table
     if (vente.table_id) {
@@ -579,6 +1114,13 @@ export async function payerVenteEnAttente(input: {
  * Ajoute des articles à une vente en attente
  */
 export async function addToVenteEnAttente(venteId: string, lignes: LigneVenteInput[]) {
+  // Validation Zod
+  const parsed = AddToVenteEnAttenteSchema.safeParse({ venteId, lignes });
+  if (!parsed.success) {
+    return { success: false, error: parsed.error.issues[0].message };
+  }
+  const validatedInput = parsed.data;
+
   const user = await getCurrentUser();
   if (!user) return { success: false, error: "Vous devez être connecté" };
   if (!user.etablissementId) return { success: false, error: "Aucun établissement associé" };
@@ -592,14 +1134,21 @@ export async function addToVenteEnAttente(venteId: string, lignes: LigneVenteInp
   const { data: vente } = await supabase
     .from("ventes")
     .select("*")
-    .eq("id", venteId)
+    .eq("id", validatedInput.venteId)
     .eq("statut", "EN_COURS")
     .single();
 
   if (!vente) return { success: false, error: "Commande non trouvée" };
 
   try {
-    const { lignesCalculees, sousTotal: addSousTotal, totalTva: addTotalTva } = calculerTotaux(lignes);
+    // Vérifier les prix serveur
+    const lignesVerifiees = await verifierPrixServeur(supabase, validatedInput.lignes as LigneVenteInput[]);
+
+    const {
+      lignesCalculees,
+      sousTotal: addSousTotal,
+      totalTva: addTotalTva,
+    } = calculerTotaux(lignesVerifiees);
 
     // Recalculer les totaux
     const newSousTotal = Number(vente.sous_total) + addSousTotal;
@@ -614,7 +1163,7 @@ export async function addToVenteEnAttente(venteId: string, lignes: LigneVenteInp
 
     // Créer les nouvelles lignes
     const lignesData = lignesCalculees.map((l) => ({
-      vente_id: venteId,
+      vente_id: validatedInput.venteId,
       produit_id: l.produit_id,
       quantite: l.quantite,
       prix_unitaire: l.prix_unitaire,
@@ -643,15 +1192,39 @@ export async function addToVenteEnAttente(venteId: string, lignes: LigneVenteInp
     }
 
     // Mettre à jour les totaux de la vente
-    await supabase.from("ventes").update({
-      sous_total: newSousTotal,
-      total_tva: newTotalTva,
-      total_remise: newTotalRemise,
-      total_final: newTotalFinal,
-    }).eq("id", venteId);
+    await supabase
+      .from("ventes")
+      .update({
+        sous_total: newSousTotal,
+        total_tva: newTotalTva,
+        total_remise: newTotalRemise,
+        total_final: newTotalFinal,
+      })
+      .eq("id", validatedInput.venteId);
 
     // Déduire le stock
-    await deduireStock(supabase, lignes, "Ajout commande - Ticket", vente.numero_ticket);
+    await deduireStock(supabase, lignesVerifiees, "Ajout commande - Ticket", vente.numero_ticket);
+
+    // Auto-impression des bons cuisine/bar pour les nouveaux articles (non bloquant)
+    try {
+      const lignesForPrint = await recupererInfosProduitsForPrint(supabase, lignesVerifiees);
+      const contextForPrint = await recupererInfosContextForPrint(
+        supabase,
+        vente.table_id as string | null,
+        vente.client_id as string | null
+      );
+      await imprimerBonsPreparation(supabase, user.etablissementId!, {
+        numeroTicket: vente.numero_ticket as string,
+        typeVente: vente.type as string,
+        notes: vente.notes as string | null,
+        serveurNom: `${user.prenom ?? ""} ${user.nom ?? ""}`.trim() || "Serveur",
+        tableNumero: contextForPrint.tableNumero,
+        tableZone: contextForPrint.tableZone,
+        clientNom: contextForPrint.clientNom,
+      }, lignesForPrint);
+    } catch (printError) {
+      console.error("[addToVenteEnAttente] Erreur impression (non bloquant):", printError);
+    }
 
     revalidatePath("/caisse");
     revalidatePath("/stocks");
@@ -665,11 +1238,27 @@ export async function addToVenteEnAttente(venteId: string, lignes: LigneVenteInp
 
 /**
  * Annule une vente en attente et restitue le stock
+ * Note: Les serveurs ne peuvent pas annuler de commandes
  */
 export async function annulerVenteEnAttente(venteId: string) {
+  // Validation Zod
+  const parsed = AnnulerVenteEnAttenteSchema.safeParse({ venteId });
+  if (!parsed.success) {
+    return { success: false, error: parsed.error.issues[0].message };
+  }
+  const validatedInput = parsed.data;
+
   const user = await getCurrentUser();
   if (!user) return { success: false, error: "Vous devez être connecté" };
   if (!user.etablissementId) return { success: false, error: "Aucun établissement associé" };
+
+  // Les serveurs ne peuvent pas annuler de commandes
+  if (user.role === "SERVEUR") {
+    return {
+      success: false,
+      error: "Les serveurs ne sont pas autorisés à annuler des commandes",
+    };
+  }
 
   const supabase = await createAuthenticatedClient({
     userId: user.userId,
@@ -680,7 +1269,7 @@ export async function annulerVenteEnAttente(venteId: string) {
   const { data: vente } = await supabase
     .from("ventes")
     .select("id, numero_ticket, table_id")
-    .eq("id", venteId)
+    .eq("id", validatedInput.venteId)
     .eq("statut", "EN_COURS")
     .single();
 
@@ -691,20 +1280,20 @@ export async function annulerVenteEnAttente(venteId: string) {
     const { data: lignes } = await supabase
       .from("lignes_vente")
       .select("produit_id, quantite, produits(gerer_stock, stock_actuel)")
-      .eq("vente_id", venteId);
+      .eq("vente_id", validatedInput.venteId);
 
     // Restituer le stock
     const lignesWithStock = (lignes || []).map((l) => ({
       produit_id: l.produit_id,
       quantite: l.quantite,
-      gerer_stock: (l.produits as { gerer_stock: boolean })?.gerer_stock,
-      stock_actuel: (l.produits as { stock_actuel: number | null })?.stock_actuel,
+      gerer_stock: (l.produits as unknown as { gerer_stock: boolean })?.gerer_stock,
+      stock_actuel: (l.produits as unknown as { stock_actuel: number | null })?.stock_actuel,
     }));
 
     await restituerStock(supabase, lignesWithStock, vente.numero_ticket);
 
     // Annuler la vente
-    await supabase.from("ventes").update({ statut: "ANNULEE" }).eq("id", venteId);
+    await supabase.from("ventes").update({ statut: "ANNULEE" }).eq("id", validatedInput.venteId);
 
     // Libérer la table
     if (vente.table_id) {
@@ -727,9 +1316,14 @@ export async function annulerVenteEnAttente(venteId: string) {
  * Note: Les serveurs ne peuvent pas encaisser ni mettre en compte
  */
 export async function createVenteEnCompte(input: CreateVenteEnAttenteInput & { clientId: string }) {
-  if (!input.clientId) {
-    return { success: false, error: "Un client doit être sélectionné pour la mise en compte" };
+  // Validation Zod (réutilise le schema en attente + clientId obligatoire)
+  const parsed = CreateVenteEnAttenteSchema.extend({
+    clientId: z.string().uuid("ID client invalide"),
+  }).safeParse(input);
+  if (!parsed.success) {
+    return { success: false, error: parsed.error.issues[0].message };
   }
+  const validatedInput = parsed.data;
 
   const user = await getCurrentUser();
   if (!user) return { success: false, error: "Vous devez être connecté" };
@@ -751,14 +1345,21 @@ export async function createVenteEnCompte(input: CreateVenteEnAttenteInput & { c
   const { data: client } = await supabase
     .from("clients")
     .select("id, nom, prenom, credit_autorise, solde_credit, limit_credit")
-    .eq("id", input.clientId)
+    .eq("id", validatedInput.clientId)
     .eq("actif", true)
     .single();
 
   if (!client) return { success: false, error: "Client non trouvé" };
-  if (!client.credit_autorise) return { success: false, error: "Client non autorisé à acheter en compte" };
+  if (!client.credit_autorise)
+    return { success: false, error: "Client non autorisé à acheter en compte" };
 
-  const { totalFinal, lignesCalculees, sousTotal, totalTva, totalRemise } = calculerTotaux(input.lignes, input.remise);
+  // Vérifier les prix serveur
+  const lignesVerifiees = await verifierPrixServeur(supabase, validatedInput.lignes as LigneVenteInput[]);
+
+  const { totalFinal, lignesCalculees, sousTotal, totalTva, totalRemise } = calculerTotaux(
+    lignesVerifiees,
+    validatedInput.remise
+  );
 
   // Vérifier le crédit disponible
   const soldeActuel = Number(client.solde_credit) || 0;
@@ -780,20 +1381,20 @@ export async function createVenteEnCompte(input: CreateVenteEnAttenteInput & { c
       .from("ventes")
       .insert({
         numero_ticket: numeroTicket,
-        type: input.typeVente,
+        type: validatedInput.typeVente,
         statut: "PAYEE" as StatutVente,
         sous_total: sousTotal,
         total_tva: totalTva,
         total_remise: totalRemise,
         total_final: totalFinal,
-        type_remise: input.remise?.type ?? null,
-        valeur_remise: input.remise?.valeur ?? null,
+        type_remise: validatedInput.remise?.type ?? null,
+        valeur_remise: validatedInput.remise?.valeur ?? null,
         etablissement_id: etablissementId,
-        table_id: input.tableId ?? null,
-        client_id: input.clientId,
+        table_id: validatedInput.tableId ?? null,
+        client_id: validatedInput.clientId,
         utilisateur_id: user.userId,
-        session_caisse_id: input.sessionCaisseId ?? null,
-        notes: input.notesLivraison ?? null,
+        session_caisse_id: validatedInput.sessionCaisseId ?? null,
+        notes: validatedInput.notesLivraison ?? null,
       })
       .select()
       .single();
@@ -820,21 +1421,21 @@ export async function createVenteEnCompte(input: CreateVenteEnAttenteInput & { c
       vente_id: vente.id,
       mode_paiement: "COMPTE_CLIENT" as ModePaiement,
       montant: totalFinal,
-      reference: `Client: ${client.nom}${client.prenom ? ' ' + client.prenom : ''}`,
+      reference: `Client: ${client.nom}${client.prenom ? " " + client.prenom : ""}`,
     });
 
     // Incrémenter le solde crédit du client
     await supabase
       .from("clients")
       .update({ solde_credit: soldeActuel + totalFinal })
-      .eq("id", input.clientId);
+      .eq("id", validatedInput.clientId);
 
     // Déduire le stock
-    await deduireStock(supabase, input.lignes, "Vente en compte - Ticket", numeroTicket);
+    await deduireStock(supabase, lignesVerifiees, "Vente en compte - Ticket", numeroTicket);
 
     // Mettre à jour la table
-    if (input.tableId) {
-      await supabase.from("tables").update({ statut: "A_NETTOYER" }).eq("id", input.tableId);
+    if (validatedInput.tableId) {
+      await supabase.from("tables").update({ statut: "A_NETTOYER" }).eq("id", validatedInput.tableId);
     }
 
     revalidatePath("/caisse");
@@ -871,12 +1472,14 @@ export async function getVentesJour() {
 
   const { data } = await supabase
     .from("ventes")
-    .select(`
+    .select(
+      `
       *,
       lignes_vente(*, produits(nom)),
       paiements(*),
       clients(nom, prenom)
-    `)
+    `
+    )
     .gte("created_at", today.toISOString())
     .order("created_at", { ascending: false });
 
@@ -899,7 +1502,8 @@ export async function getVentesJour() {
  */
 export async function getStatsJour() {
   const user = await getCurrentUser();
-  if (!user || !user.etablissementId) return { totalVentes: 0, chiffreAffaires: 0, articlesVendus: 0, panierMoyen: 0 };
+  if (!user || !user.etablissementId)
+    return { totalVentes: 0, chiffreAffaires: 0, articlesVendus: 0, panierMoyen: 0 };
 
   const supabase = await createAuthenticatedClient({
     userId: user.userId,
@@ -920,7 +1524,9 @@ export async function getStatsJour() {
   const totalVentes = ventes.length;
   const chiffreAffaires = ventes.reduce((acc, v) => acc + Number(v.total_final), 0);
   const articlesVendus = ventes.reduce(
-    (acc, v) => acc + (v.lignes_vente || []).reduce((a: number, l: { quantite: number }) => a + l.quantite, 0),
+    (acc, v) =>
+      acc +
+      (v.lignes_vente || []).reduce((a: number, l: { quantite: number }) => a + l.quantite, 0),
     0
   );
 
@@ -947,13 +1553,15 @@ export async function getVentesEnAttente() {
 
   const { data } = await supabase
     .from("ventes")
-    .select(`
+    .select(
+      `
       *,
       lignes_vente(*, produits(id, nom), lignes_vente_supplements(*)),
       tables(id, numero, zones(nom)),
       clients(id, nom, prenom, telephone),
       utilisateurs(nom, prenom)
-    `)
+    `
+    )
     .eq("statut", "EN_COURS")
     .order("created_at", { ascending: true });
 
@@ -969,11 +1577,13 @@ export async function getVentesEnAttente() {
       statutPreparation: l.statut_preparation,
       produitId: l.produit_id,
       produit: l.produits,
-      supplements: ((l.lignes_vente_supplements as Array<Record<string, unknown>>) || []).map((s) => ({
-        id: s.id,
-        nom: s.nom,
-        prix: Number(s.prix),
-      })),
+      supplements: ((l.lignes_vente_supplements as Array<Record<string, unknown>>) || []).map(
+        (s) => ({
+          id: s.id,
+          nom: s.nom,
+          prix: Number(s.prix),
+        })
+      ),
     })),
     table: v.tables,
     client: v.clients,
@@ -996,13 +1606,15 @@ export async function getVenteEnAttenteByTable(tableId: string) {
 
   const { data } = await supabase
     .from("ventes")
-    .select(`
+    .select(
+      `
       *,
       lignes_vente(*, produits(id, nom), lignes_vente_supplements(*)),
       tables(id, numero),
       clients(id, nom, prenom),
       utilisateurs(nom, prenom)
-    `)
+    `
+    )
     .eq("table_id", tableId)
     .eq("statut", "EN_COURS")
     .single();
@@ -1021,11 +1633,13 @@ export async function getVenteEnAttenteByTable(tableId: string) {
       statutPreparation: l.statut_preparation,
       produitId: l.produit_id,
       produit: l.produits,
-      supplements: ((l.lignes_vente_supplements as Array<Record<string, unknown>>) || []).map((s) => ({
-        id: s.id,
-        nom: s.nom,
-        prix: Number(s.prix),
-      })),
+      supplements: ((l.lignes_vente_supplements as Array<Record<string, unknown>>) || []).map(
+        (s) => ({
+          id: s.id,
+          nom: s.nom,
+          prix: Number(s.prix),
+        })
+      ),
     })),
     table: data.tables,
     client: data.clients,

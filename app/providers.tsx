@@ -4,10 +4,10 @@ import { Theme } from "@radix-ui/themes";
 import type { ThemeProps } from "@radix-ui/themes";
 import { ThemeProvider } from "next-themes";
 import { QueryClientProvider } from "@tanstack/react-query";
-import type { ReactNode} from "react";
-import { useEffect, useState } from "react";
+import type { ReactNode } from "react";
 import { Toaster } from "sonner";
 import { getQueryClient } from "@/lib/query-client";
+import { useMounted } from "@/hooks/use-mounted";
 import { useUIStore } from "@/stores/ui-store";
 
 // Couleurs d'accent valides pour Radix UI Themes
@@ -33,14 +33,10 @@ const fontSizeScaling: Record<string, ThemeProps["scaling"]> = {
  */
 export function Providers({ children }: { children: ReactNode }) {
   const queryClient = getQueryClient();
-  const [mounted, setMounted] = useState(false);
+  const mounted = useMounted();
 
   // Lire les préférences depuis le store UI
   const { accentColor, fontSize } = useUIStore();
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
 
   // Valeurs par défaut pour SSR
   const currentAccentColor = (mounted ? accentColor : "violet") as RadixAccentColor;
@@ -48,12 +44,7 @@ export function Providers({ children }: { children: ReactNode }) {
 
   return (
     <QueryClientProvider client={queryClient}>
-      <ThemeProvider
-        attribute="class"
-        defaultTheme="system"
-        enableSystem
-        disableTransitionOnChange
-      >
+      <ThemeProvider attribute="class" defaultTheme="dark" enableSystem disableTransitionOnChange>
         <Theme
           accentColor={currentAccentColor}
           grayColor="slate"

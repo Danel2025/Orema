@@ -270,7 +270,10 @@ export class ESCPOSBuilder {
     const colWidth = Math.floor(maxLen / 3);
 
     const leftPadded = left.substring(0, colWidth).padEnd(colWidth);
-    const centerPadded = center.substring(0, colWidth).padStart(Math.floor((colWidth + center.length) / 2)).padEnd(colWidth);
+    const centerPadded = center
+      .substring(0, colWidth)
+      .padStart(Math.floor((colWidth + center.length) / 2))
+      .padEnd(colWidth);
     const rightPadded = right.substring(0, colWidth).padStart(colWidth);
 
     this.println(leftPadded + centerPadded + rightPadded);
@@ -280,7 +283,9 @@ export class ESCPOSBuilder {
   /**
    * Imprime un tableau avec plusieurs colonnes
    */
-  table(columns: Array<{ text: string; width: number; align?: "left" | "center" | "right" }>): this {
+  table(
+    columns: Array<{ text: string; width: number; align?: "left" | "center" | "right" }>
+  ): this {
     const totalWidth = columns.reduce((sum, col) => sum + col.width, 0);
     const scale = this.charsPerLine / totalWidth;
 
@@ -311,7 +316,12 @@ export class ESCPOSBuilder {
   /**
    * Imprime un code-barres Code128
    */
-  barcode(data: string, height: number = 60, width: number = 2, hri: "off" | "above" | "below" | "both" = "below"): this {
+  barcode(
+    data: string,
+    height: number = 60,
+    width: number = 2,
+    hri: "off" | "above" | "below" | "both" = "below"
+  ): this {
     // Configuration du code-barres
     this.buffer.push(ESCPOS.BARCODE_HEIGHT(height));
     this.buffer.push(ESCPOS.BARCODE_WIDTH(width));

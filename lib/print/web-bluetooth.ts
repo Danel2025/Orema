@@ -121,10 +121,7 @@ export async function connectBluetoothPrinter(
       for (const charUuid of PRINTER_WRITE_CHAR_UUIDS) {
         try {
           const char = await service.getCharacteristic(charUuid);
-          if (
-            char.properties.write ||
-            char.properties.writeWithoutResponse
-          ) {
+          if (char.properties.write || char.properties.writeWithoutResponse) {
             writeCharacteristic = char;
             break;
           }
@@ -137,10 +134,7 @@ export async function connectBluetoothPrinter(
       if (!writeCharacteristic) {
         const characteristics = await service.getCharacteristics();
         for (const char of characteristics) {
-          if (
-            char.properties.write ||
-            char.properties.writeWithoutResponse
-          ) {
+          if (char.properties.write || char.properties.writeWithoutResponse) {
             writeCharacteristic = char;
             break;
           }
@@ -160,10 +154,7 @@ export async function connectBluetoothPrinter(
       for (const service of services) {
         const chars = await service.getCharacteristics();
         for (const char of chars) {
-          if (
-            char.properties.write ||
-            char.properties.writeWithoutResponse
-          ) {
+          if (char.properties.write || char.properties.writeWithoutResponse) {
             writeCharacteristic = char;
             break;
           }
@@ -193,9 +184,7 @@ export async function connectBluetoothPrinter(
 /**
  * Deconnecte une imprimante Bluetooth
  */
-export function disconnectBluetoothPrinter(
-  deviceInfo: WebBluetoothDeviceInfo
-): void {
+export function disconnectBluetoothPrinter(deviceInfo: WebBluetoothDeviceInfo): void {
   if (deviceInfo.server?.connected) {
     deviceInfo.server.disconnect();
   }
@@ -213,10 +202,7 @@ export async function writeToBluetoothPrinter(
     throw new Error("Imprimante non connectee ou characteristique non trouvee");
   }
 
-  const buffer =
-    typeof data === "string"
-      ? new TextEncoder().encode(data)
-      : data;
+  const buffer = typeof data === "string" ? new TextEncoder().encode(data) : data;
 
   const char = deviceInfo.writeCharacteristic;
   const useWriteWithoutResponse = char.properties.writeWithoutResponse;
@@ -261,8 +247,7 @@ export async function sendViaWebBluetooth(
       message: `Impression envoyee via Bluetooth a "${connectedDevice.name}"`,
     };
   } catch (error) {
-    const errorMsg =
-      error instanceof Error ? error.message : "Erreur Bluetooth inconnue";
+    const errorMsg = error instanceof Error ? error.message : "Erreur Bluetooth inconnue";
     return {
       success: false,
       error: `Erreur d'impression Bluetooth: ${errorMsg}`,
@@ -291,8 +276,7 @@ export async function testBluetoothConnection(
       message: `Connexion Bluetooth a "${connectedDevice.name}" reussie`,
     };
   } catch (error) {
-    const errorMsg =
-      error instanceof Error ? error.message : "Erreur inconnue";
+    const errorMsg = error instanceof Error ? error.message : "Erreur inconnue";
     return {
       success: false,
       error: `Test Bluetooth echoue: ${errorMsg}`,
@@ -303,10 +287,7 @@ export async function testBluetoothConnection(
 /**
  * Ecoute les evenements de deconnexion d'un peripherique Bluetooth
  */
-export function onBluetoothDisconnect(
-  device: BluetoothDevice,
-  callback: () => void
-): () => void {
+export function onBluetoothDisconnect(device: BluetoothDevice, callback: () => void): () => void {
   const handler = () => callback();
   device.addEventListener("gattserverdisconnected", handler);
   return () => {

@@ -5,9 +5,9 @@
  * Permet de saisir une quantite avant de cliquer sur un produit
  */
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useCallback, useRef, useEffect } from "react";
 import { Flex, Text, IconButton, Box, Kbd } from "@radix-ui/themes";
-import { X, Delete } from "lucide-react";
+import { X, Backspace } from "@phosphor-icons/react";
 import { useCartStore } from "@/stores/cart-store";
 
 interface QuantityInputProps {
@@ -21,14 +21,12 @@ export function QuantityInput({ onConfirm, compact = false }: QuantityInputProps
   const [displayValue, setDisplayValue] = useState("");
   const { pendingQuantity, setPendingQuantity } = useCartStore();
 
-  // Synchroniser l'affichage avec le store
-  useEffect(() => {
-    if (pendingQuantity !== null) {
-      setDisplayValue(pendingQuantity.toString());
-    } else {
-      setDisplayValue("");
-    }
-  }, [pendingQuantity]);
+  // Synchroniser l'affichage avec le store (derived-state pattern)
+  const prevQuantityRef = useRef(pendingQuantity);
+  if (prevQuantityRef.current !== pendingQuantity) {
+    prevQuantityRef.current = pendingQuantity;
+    setDisplayValue(pendingQuantity !== null ? pendingQuantity.toString() : "");
+  }
 
   // Ajouter un chiffre
   const handleDigit = useCallback(
@@ -115,9 +113,11 @@ export function QuantityInput({ onConfirm, compact = false }: QuantityInputProps
         >
           {displayValue || "1"}
         </Text>
-        {pendingQuantity ? <IconButton size="1" variant="ghost" color="gray" onClick={handleClear}>
+        {pendingQuantity ? (
+          <IconButton size="1" variant="ghost" color="gray" onClick={handleClear}>
             <X size={14} />
-          </IconButton> : null}
+          </IconButton>
+        ) : null}
       </Flex>
     );
   }
@@ -193,7 +193,7 @@ export function QuantityInput({ onConfirm, compact = false }: QuantityInputProps
           </NumPadButton>
           <NumPadButton onClick={() => handleDigit("0")}>0</NumPadButton>
           <NumPadButton onClick={handleBackspace} variant="secondary">
-            <Delete size={18} />
+            <Backspace size={18} />
           </NumPadButton>
         </Flex>
       </Flex>

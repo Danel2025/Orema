@@ -18,12 +18,7 @@ import {
   Separator,
   Card,
 } from "@/components/ui";
-import {
-  StatCard,
-  StatusBadge,
-  EmptyState,
-  DashboardCard,
-} from "@/components/composed";
+import { StatCard, StatusBadge, EmptyState, DashboardCard } from "@/components/composed";
 import {
   ShoppingCart,
   Package,
@@ -289,12 +284,7 @@ export default function DesignSystemPage() {
             color="violet"
             trend={{ value: "+12%", isPositive: true }}
           />
-          <StatCard
-            title="Produits"
-            value="48"
-            icon={Package}
-            color="blue"
-          />
+          <StatCard title="Produits" value="48" icon={Package} color="blue" />
           <StatCard
             title="Clients"
             value="156"
@@ -302,12 +292,7 @@ export default function DesignSystemPage() {
             color="green"
             trend={{ value: "-3%", isPositive: false }}
           />
-          <StatCard
-            title="Commandes"
-            value="23"
-            icon={BarChart3}
-            color="purple"
-          />
+          <StatCard title="Commandes" value="23" icon={BarChart3} color="purple" />
         </Grid>
       </Box>
 
@@ -328,8 +313,8 @@ export default function DesignSystemPage() {
             }}
           >
             <Text size="2" color="gray">
-              Voici un exemple de contenu dans une DashboardCard. Vous pouvez
-              mettre n'importe quel composant ici.
+              Voici un exemple de contenu dans une DashboardCard. Vous pouvez mettre n'importe quel
+              composant ici.
             </Text>
           </DashboardCard>
 

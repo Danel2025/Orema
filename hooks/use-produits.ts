@@ -77,8 +77,7 @@ export function useUpdateProduit() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ id, data }: { id: string; data: ProduitFormData }) =>
-      updateProduit(id, data),
+    mutationFn: ({ id, data }: { id: string; data: ProduitFormData }) => updateProduit(id, data),
     onSuccess: (_, variables) => {
       // Invalider la liste et le détail
       queryClient.invalidateQueries({ queryKey: produitsKeys.lists() });

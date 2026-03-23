@@ -1,4 +1,4 @@
-'use server';
+"use server";
 
 /**
  * Server Actions pour le suivi de livraison
@@ -8,9 +8,9 @@
  * implémentation qui stockait les données dans ventes.notes.
  */
 
-import { revalidatePath } from 'next/cache';
-import { createAuthenticatedClient } from '@/lib/db';
-import { getCurrentUser } from '@/lib/auth';
+import { revalidatePath } from "next/cache";
+import { createAuthenticatedClient } from "@/lib/db";
+import { getCurrentUser } from "@/lib/auth";
 import {
   STATUT_LIVRAISON,
   TRANSITIONS_AUTORISEES,
@@ -21,7 +21,7 @@ import {
   type LivraisonAvecHistorique,
   type StatistiquesLivraison,
   type ActionResult,
-} from '@/lib/delivery/types';
+} from "@/lib/delivery/types";
 
 // ============================================================================
 // UTILITAIRES INTERNES
@@ -33,8 +33,9 @@ import {
  */
 async function getAuthClient() {
   const user = await getCurrentUser();
-  if (!user) return { client: null, user: null, error: 'Vous devez être connecté' } as const;
-  if (!user.etablissementId) return { client: null, user: null, error: 'Aucun établissement associé' } as const;
+  if (!user) return { client: null, user: null, error: "Vous devez être connecté" } as const;
+  if (!user.etablissementId)
+    return { client: null, user: null, error: "Aucun établissement associé" } as const;
 
   const etablissementId = user.etablissementId;
 
@@ -61,7 +62,7 @@ export async function creerLivraison(
   adresse: string,
   telephone: string,
   clientNom?: string,
-  fraisLivraison?: number,
+  fraisLivraison?: number
 ): Promise<ActionResult<Livraison>> {
   const { client: supabase, user, error: authError } = await getAuthClient();
   if (!supabase || !user) return { success: false, error: authError };
@@ -69,34 +70,36 @@ export async function creerLivraison(
   try {
     // Vérifier que la vente existe et est de type LIVRAISON
     const { data: vente, error: venteError } = await supabase
-      .from('ventes')
-      .select('id, numero_ticket, type, total_final, frais_livraison, adresse_livraison, created_at, updated_at, etablissement_id')
-      .eq('id', venteId)
-      .eq('etablissement_id', user.etablissementId)
+      .from("ventes")
+      .select(
+        "id, numero_ticket, type, total_final, frais_livraison, adresse_livraison, created_at, updated_at, etablissement_id"
+      )
+      .eq("id", venteId)
+      .eq("etablissement_id", user.etablissementId)
       .single();
 
     if (venteError || !vente) {
-      return { success: false, error: 'Vente non trouvée' };
+      return { success: false, error: "Vente non trouvée" };
     }
 
-    if (vente.type !== 'LIVRAISON') {
-      return { success: false, error: 'Cette vente n\'est pas de type LIVRAISON' };
+    if (vente.type !== "LIVRAISON") {
+      return { success: false, error: "Cette vente n'est pas de type LIVRAISON" };
     }
 
     // Vérifier qu'il n'y a pas déjà un suivi de livraison
     const { data: existingLivraison } = await supabase
-      .from('livraisons')
-      .select('id')
-      .eq('vente_id', venteId)
+      .from("livraisons")
+      .select("id")
+      .eq("vente_id", venteId)
       .maybeSingle();
 
     if (existingLivraison) {
-      return { success: false, error: 'Un suivi de livraison existe déjà pour cette vente' };
+      return { success: false, error: "Un suivi de livraison existe déjà pour cette vente" };
     }
 
     // Créer la livraison
     const { data: livraison, error: insertError } = await supabase
-      .from('livraisons')
+      .from("livraisons")
       .insert({
         vente_id: venteId,
         statut: STATUT_LIVRAISON.EN_PREPARATION,
@@ -109,17 +112,15 @@ export async function creerLivraison(
       .single();
 
     if (insertError || !livraison) {
-      throw insertError ?? new Error('Erreur lors de la création de la livraison');
+      throw insertError ?? new Error("Erreur lors de la création de la livraison");
     }
 
     // Créer l'entrée d'historique initiale
-    await supabase
-      .from('historique_livraison')
-      .insert({
-        livraison_id: livraison.id,
-        statut: STATUT_LIVRAISON.EN_PREPARATION,
-        note: 'Livraison créée',
-      });
+    await supabase.from("historique_livraison").insert({
+      livraison_id: livraison.id,
+      statut: STATUT_LIVRAISON.EN_PREPARATION,
+      note: "Livraison créée",
+    });
 
     // Mettre à jour l'adresse et les frais de livraison sur la vente si fournis
     const venteUpdate: Record<string, unknown> = {};
@@ -127,10 +128,7 @@ export async function creerLivraison(
     if (fraisLivraison !== undefined) venteUpdate.frais_livraison = fraisLivraison;
 
     if (Object.keys(venteUpdate).length > 0) {
-      await supabase
-        .from('ventes')
-        .update(venteUpdate)
-        .eq('id', venteId);
+      await supabase.from("ventes").update(venteUpdate).eq("id", venteId);
     }
 
     const result: Livraison = {
@@ -147,17 +145,17 @@ export async function creerLivraison(
       notes: null,
       montantTotal: Number(vente.total_final),
       fraisLivraison: fraisLivraison ?? Number(vente.frais_livraison ?? 0),
-      createdAt: livraison.created_at,
-      updatedAt: livraison.updated_at,
+      createdAt: livraison.created_at ?? new Date().toISOString(),
+      updatedAt: livraison.updated_at ?? new Date().toISOString(),
     };
 
-    revalidatePath('/caisse');
-    revalidatePath('/livraisons');
+    revalidatePath("/caisse");
+    revalidatePath("/livraisons");
 
     return { success: true, data: result };
   } catch (error) {
-    console.error('[creerLivraison] Erreur:', error);
-    return { success: false, error: 'Erreur lors de la création du suivi de livraison' };
+    console.error("[creerLivraison] Erreur:", error);
+    return { success: false, error: "Erreur lors de la création du suivi de livraison" };
   }
 }
 
@@ -167,7 +165,7 @@ export async function creerLivraison(
 export async function assignerLivreur(
   livraisonId: string,
   livreurId: string,
-  livreurNom: string,
+  livreurNom: string
 ): Promise<ActionResult> {
   const { client: supabase, user, error: authError } = await getAuthClient();
   if (!supabase || !user) return { success: false, error: authError };
@@ -175,46 +173,50 @@ export async function assignerLivreur(
   try {
     // Récupérer la livraison
     const { data: livraison, error } = await supabase
-      .from('livraisons')
-      .select('id, statut')
-      .eq('id', livraisonId)
+      .from("livraisons")
+      .select("id, statut")
+      .eq("id", livraisonId)
       .single();
 
     if (error || !livraison) {
-      return { success: false, error: 'Livraison non trouvée' };
+      return { success: false, error: "Livraison non trouvée" };
     }
 
     // On ne peut assigner un livreur que si la livraison est en préparation ou prête
-    if (livraison.statut !== STATUT_LIVRAISON.EN_PREPARATION && livraison.statut !== STATUT_LIVRAISON.PRETE) {
-      return { success: false, error: `Impossible d'assigner un livreur en statut "${livraison.statut}"` };
+    if (
+      livraison.statut !== STATUT_LIVRAISON.EN_PREPARATION &&
+      livraison.statut !== STATUT_LIVRAISON.PRETE
+    ) {
+      return {
+        success: false,
+        error: `Impossible d'assigner un livreur en statut "${livraison.statut}"`,
+      };
     }
 
     // Mettre à jour la livraison
     const { error: updateError } = await supabase
-      .from('livraisons')
+      .from("livraisons")
       .update({
         livreur_id: livreurId,
         livreur_nom: livreurNom,
       })
-      .eq('id', livraisonId);
+      .eq("id", livraisonId);
 
     if (updateError) throw updateError;
 
     // Ajouter une entrée d'historique
-    await supabase
-      .from('historique_livraison')
-      .insert({
-        livraison_id: livraisonId,
-        statut: livraison.statut,
-        note: `Livreur assigné: ${livreurNom}`,
-      });
+    await supabase.from("historique_livraison").insert({
+      livraison_id: livraisonId,
+      statut: livraison.statut,
+      note: `Livreur assigné: ${livreurNom}`,
+    });
 
-    revalidatePath('/livraisons');
+    revalidatePath("/livraisons");
 
     return { success: true };
   } catch (error) {
-    console.error('[assignerLivreur] Erreur:', error);
-    return { success: false, error: 'Erreur lors de l\'assignation du livreur' };
+    console.error("[assignerLivreur] Erreur:", error);
+    return { success: false, error: "Erreur lors de l'assignation du livreur" };
   }
 }
 
@@ -224,7 +226,7 @@ export async function assignerLivreur(
 export async function updateStatutLivraison(
   livraisonId: string,
   nouveauStatut: StatutLivraison,
-  note?: string,
+  note?: string
 ): Promise<ActionResult> {
   const { client: supabase, user, error: authError } = await getAuthClient();
   if (!supabase || !user) return { success: false, error: authError };
@@ -232,13 +234,13 @@ export async function updateStatutLivraison(
   try {
     // Récupérer la livraison
     const { data: livraison, error } = await supabase
-      .from('livraisons')
-      .select('id, statut')
-      .eq('id', livraisonId)
+      .from("livraisons")
+      .select("id, statut")
+      .eq("id", livraisonId)
       .single();
 
     if (error || !livraison) {
-      return { success: false, error: 'Livraison non trouvée' };
+      return { success: false, error: "Livraison non trouvée" };
     }
 
     // Vérifier la transition de statut
@@ -253,28 +255,26 @@ export async function updateStatutLivraison(
 
     // Mettre à jour le statut
     const { error: updateError } = await supabase
-      .from('livraisons')
+      .from("livraisons")
       .update({ statut: nouveauStatut })
-      .eq('id', livraisonId);
+      .eq("id", livraisonId);
 
     if (updateError) throw updateError;
 
     // Créer l'entrée d'historique
-    await supabase
-      .from('historique_livraison')
-      .insert({
-        livraison_id: livraisonId,
-        statut: nouveauStatut,
-        note: note ?? null,
-      });
+    await supabase.from("historique_livraison").insert({
+      livraison_id: livraisonId,
+      statut: nouveauStatut,
+      note: note ?? null,
+    });
 
-    revalidatePath('/livraisons');
-    revalidatePath('/caisse');
+    revalidatePath("/livraisons");
+    revalidatePath("/caisse");
 
     return { success: true };
   } catch (error) {
-    console.error('[updateStatutLivraison] Erreur:', error);
-    return { success: false, error: 'Erreur lors de la mise à jour du statut' };
+    console.error("[updateStatutLivraison] Erreur:", error);
+    return { success: false, error: "Erreur lors de la mise à jour du statut" };
   }
 }
 
@@ -286,7 +286,7 @@ export async function updateStatutLivraison(
  * Récupère toutes les livraisons en cours (statuts actifs)
  */
 export async function getLivraisonsEnCours(
-  etablissementId?: string,
+  etablissementId?: string
 ): Promise<ActionResult<Livraison[]>> {
   const { client: supabase, user, error: authError } = await getAuthClient();
   if (!supabase || !user) return { success: false, error: authError };
@@ -294,8 +294,9 @@ export async function getLivraisonsEnCours(
   try {
     // Requête sur livraisons JOIN ventes pour obtenir les infos complètes
     const { data: rows, error } = await supabase
-      .from('livraisons')
-      .select(`
+      .from("livraisons")
+      .select(
+        `
         id,
         vente_id,
         statut,
@@ -315,49 +316,52 @@ export async function getLivraisonsEnCours(
           etablissement_id,
           clients ( nom, prenom, telephone )
         )
-      `)
-      .in('statut', STATUTS_ACTIFS)
-      .order('created_at', { ascending: false });
+      `
+      )
+      .in("statut", STATUTS_ACTIFS)
+      .order("created_at", { ascending: false });
 
     if (error) throw error;
 
-    const livraisons: Livraison[] = (rows ?? []).map((row) => {
-      const vente = row.ventes as unknown as {
-        id: string;
-        numero_ticket: string;
-        total_final: number;
-        frais_livraison: number | null;
-        etablissement_id: string;
-        clients: { nom: string; prenom?: string | null; telephone?: string | null } | null;
-      };
+    const livraisons: Livraison[] = (rows ?? [])
+      .map((row) => {
+        const vente = row.ventes as unknown as {
+          id: string;
+          numero_ticket: string;
+          total_final: number;
+          frais_livraison: number | null;
+          etablissement_id: string;
+          clients: { nom: string; prenom?: string | null; telephone?: string | null } | null;
+        };
 
-      // Filtrer par etablissement si spécifié
-      const etabId = etablissementId ?? user.etablissementId;
-      if (vente.etablissement_id !== etabId) return null;
+        // Filtrer par etablissement si spécifié
+        const etabId = etablissementId ?? user.etablissementId;
+        if (vente.etablissement_id !== etabId) return null;
 
-      return {
-        id: row.id,
-        venteId: row.vente_id,
-        numeroTicket: vente.numero_ticket,
-        statut: row.statut as StatutLivraison,
-        adresse: row.adresse,
-        telephone: row.telephone,
-        clientNom: vente.clients?.nom ?? null,
-        livreurId: row.livreur_id ?? null,
-        livreurNom: row.livreur_nom ?? null,
-        estimationMinutes: row.estimation_minutes ?? null,
-        notes: row.notes ?? null,
-        montantTotal: Number(vente.total_final),
-        fraisLivraison: Number(vente.frais_livraison ?? 0),
-        createdAt: row.created_at,
-        updatedAt: row.updated_at,
-      } as Livraison;
-    }).filter((l): l is Livraison => l !== null);
+        return {
+          id: row.id,
+          venteId: row.vente_id,
+          numeroTicket: vente.numero_ticket,
+          statut: row.statut as StatutLivraison,
+          adresse: row.adresse,
+          telephone: row.telephone,
+          clientNom: vente.clients?.nom ?? null,
+          livreurId: row.livreur_id ?? null,
+          livreurNom: row.livreur_nom ?? null,
+          estimationMinutes: row.estimation_minutes ?? null,
+          notes: row.notes ?? null,
+          montantTotal: Number(vente.total_final),
+          fraisLivraison: Number(vente.frais_livraison ?? 0),
+          createdAt: row.created_at,
+          updatedAt: row.updated_at,
+        } as Livraison;
+      })
+      .filter((l): l is Livraison => l !== null);
 
     return { success: true, data: livraisons };
   } catch (error) {
-    console.error('[getLivraisonsEnCours] Erreur:', error);
-    return { success: false, error: 'Erreur lors de la récupération des livraisons' };
+    console.error("[getLivraisonsEnCours] Erreur:", error);
+    return { success: false, error: "Erreur lors de la récupération des livraisons" };
   }
 }
 
@@ -365,7 +369,7 @@ export async function getLivraisonsEnCours(
  * Récupère le détail d'une livraison avec son historique complet
  */
 export async function getLivraisonByVente(
-  venteId: string,
+  venteId: string
 ): Promise<ActionResult<LivraisonAvecHistorique>> {
   const { client: supabase, user, error: authError } = await getAuthClient();
   if (!supabase || !user) return { success: false, error: authError };
@@ -373,8 +377,9 @@ export async function getLivraisonByVente(
   try {
     // Récupérer la livraison via vente_id
     const { data: livraison, error } = await supabase
-      .from('livraisons')
-      .select(`
+      .from("livraisons")
+      .select(
+        `
         id,
         vente_id,
         statut,
@@ -393,12 +398,13 @@ export async function getLivraisonByVente(
           frais_livraison,
           clients ( nom, prenom, telephone )
         )
-      `)
-      .eq('vente_id', venteId)
+      `
+      )
+      .eq("vente_id", venteId)
       .single();
 
     if (error || !livraison) {
-      return { success: false, error: 'Aucun suivi de livraison trouvé pour cette vente' };
+      return { success: false, error: "Aucun suivi de livraison trouvé pour cette vente" };
     }
 
     const vente = livraison.ventes as unknown as {
@@ -411,10 +417,10 @@ export async function getLivraisonByVente(
 
     // Récupérer l'historique
     const { data: historique, error: histError } = await supabase
-      .from('historique_livraison')
-      .select('id, livraison_id, statut, note, created_at')
-      .eq('livraison_id', livraison.id)
-      .order('created_at', { ascending: true });
+      .from("historique_livraison")
+      .select("id, livraison_id, statut, note, created_at")
+      .eq("livraison_id", livraison.id)
+      .order("created_at", { ascending: true });
 
     if (histError) throw histError;
 
@@ -432,14 +438,14 @@ export async function getLivraisonByVente(
       notes: livraison.notes ?? null,
       montantTotal: Number(vente.total_final),
       fraisLivraison: Number(vente.frais_livraison ?? 0),
-      createdAt: livraison.created_at,
-      updatedAt: livraison.updated_at,
+      createdAt: livraison.created_at ?? new Date().toISOString(),
+      updatedAt: livraison.updated_at ?? new Date().toISOString(),
       historique: (historique ?? []).map((h) => ({
         id: h.id,
         livraisonId: h.livraison_id,
         ancienStatut: null, // L'historique simplifié ne stocke que le nouveau statut
         nouveauStatut: h.statut as StatutLivraison,
-        timestamp: h.created_at,
+        timestamp: h.created_at ?? new Date().toISOString(),
         note: h.note ?? null,
         acteurId: null,
         acteurNom: null,
@@ -448,8 +454,8 @@ export async function getLivraisonByVente(
 
     return { success: true, data: result };
   } catch (error) {
-    console.error('[getLivraisonByVente] Erreur:', error);
-    return { success: false, error: 'Erreur lors de la récupération de la livraison' };
+    console.error("[getLivraisonByVente] Erreur:", error);
+    return { success: false, error: "Erreur lors de la récupération de la livraison" };
   }
 }
 
@@ -457,17 +463,17 @@ export async function getLivraisonByVente(
  * Récupère l'historique complet d'une livraison
  */
 export async function getHistoriqueLivraison(
-  livraisonId: string,
+  livraisonId: string
 ): Promise<ActionResult<HistoriqueLivraison[]>> {
   const { client: supabase, user, error: authError } = await getAuthClient();
   if (!supabase || !user) return { success: false, error: authError };
 
   try {
     const { data: historique, error } = await supabase
-      .from('historique_livraison')
-      .select('id, livraison_id, statut, note, created_at')
-      .eq('livraison_id', livraisonId)
-      .order('created_at', { ascending: true });
+      .from("historique_livraison")
+      .select("id, livraison_id, statut, note, created_at")
+      .eq("livraison_id", livraisonId)
+      .order("created_at", { ascending: true });
 
     if (error) throw error;
 
@@ -476,7 +482,7 @@ export async function getHistoriqueLivraison(
       livraisonId: h.livraison_id,
       ancienStatut: null,
       nouveauStatut: h.statut as StatutLivraison,
-      timestamp: h.created_at,
+      timestamp: h.created_at ?? new Date().toISOString(),
       note: h.note ?? null,
       acteurId: null,
       acteurNom: null,
@@ -484,8 +490,8 @@ export async function getHistoriqueLivraison(
 
     return { success: true, data: result };
   } catch (error) {
-    console.error('[getHistoriqueLivraison] Erreur:', error);
-    return { success: false, error: 'Erreur lors de la récupération de l\'historique' };
+    console.error("[getHistoriqueLivraison] Erreur:", error);
+    return { success: false, error: "Erreur lors de la récupération de l'historique" };
   }
 }
 
@@ -495,7 +501,7 @@ export async function getHistoriqueLivraison(
 export async function getStatistiquesLivraison(
   etablissementId: string,
   dateDebut: string,
-  dateFin: string,
+  dateFin: string
 ): Promise<ActionResult<StatistiquesLivraison>> {
   const { client: supabase, user, error: authError } = await getAuthClient();
   if (!supabase || !user) return { success: false, error: authError };
@@ -503,8 +509,9 @@ export async function getStatistiquesLivraison(
   try {
     // Récupérer les livraisons de la période via jointure avec ventes
     const { data: rows, error } = await supabase
-      .from('livraisons')
-      .select(`
+      .from("livraisons")
+      .select(
+        `
         id,
         statut,
         created_at,
@@ -512,9 +519,10 @@ export async function getStatistiquesLivraison(
           frais_livraison,
           etablissement_id
         )
-      `)
-      .gte('created_at', dateDebut)
-      .lte('created_at', dateFin);
+      `
+      )
+      .gte("created_at", dateDebut)
+      .lte("created_at", dateFin);
 
     if (error) throw error;
 
@@ -569,10 +577,10 @@ export async function getStatistiquesLivraison(
       if (livraisonIds.length > 0) {
         // Pour chaque livraison livrée, calculer la durée entre création et dernière entrée d'historique LIVREE
         const { data: histEntries } = await supabase
-          .from('historique_livraison')
-          .select('livraison_id, created_at')
-          .in('livraison_id', livraisonIds)
-          .eq('statut', STATUT_LIVRAISON.LIVREE);
+          .from("historique_livraison")
+          .select("livraison_id, created_at")
+          .in("livraison_id", livraisonIds)
+          .eq("statut", STATUT_LIVRAISON.LIVREE);
 
         if (histEntries && histEntries.length > 0) {
           let tempsTotal = 0;
@@ -580,8 +588,8 @@ export async function getStatistiquesLivraison(
           for (const entry of histEntries) {
             const livr = (rows ?? []).find((r) => r.id === entry.livraison_id);
             if (livr) {
-              const createdAt = new Date(livr.created_at).getTime();
-              const livreeAt = new Date(entry.created_at).getTime();
+              const createdAt = new Date(livr.created_at ?? Date.now()).getTime();
+              const livreeAt = new Date(entry.created_at ?? Date.now()).getTime();
               const dureeMinutes = Math.round((livreeAt - createdAt) / (1000 * 60));
               if (dureeMinutes > 0) {
                 tempsTotal += dureeMinutes;
@@ -606,8 +614,8 @@ export async function getStatistiquesLivraison(
 
     return { success: true, data: stats };
   } catch (error) {
-    console.error('[getStatistiquesLivraison] Erreur:', error);
-    return { success: false, error: 'Erreur lors du calcul des statistiques' };
+    console.error("[getStatistiquesLivraison] Erreur:", error);
+    return { success: false, error: "Erreur lors du calcul des statistiques" };
   }
 }
 
@@ -617,7 +625,7 @@ export async function getStatistiquesLivraison(
  * Peut être enrichi plus tard avec une API de géolocalisation.
  */
 export async function estimerTempsLivraison(
-  _adresse: string,
+  _adresse: string
 ): Promise<ActionResult<{ estimationMinutes: number }>> {
   return {
     success: true,

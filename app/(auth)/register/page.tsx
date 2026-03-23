@@ -1,4 +1,4 @@
-'use client'
+"use client";
 
 /**
  * Page d'inscription - Wizard en 2 étapes
@@ -8,17 +8,17 @@
  * Étape 2: Informations établissement (nom, téléphone, adresse, etc.)
  */
 
-import { useState, Suspense } from 'react'
-import { useRouter, useSearchParams } from 'next/navigation'
-import Link from 'next/link'
-import Image from 'next/image'
-import { toast } from 'sonner'
-import { Box, Flex, Text } from '@radix-ui/themes'
-import { ThemeToggle } from '@/components/layout/theme-toggle'
-import { RegisterStepUser } from '@/components/auth/register-step-user'
-import { RegisterStepEtablissement } from '@/components/auth/register-step-etablissement'
-import { registerWithEtablissement } from '@/actions/register'
-import type { RegisterUserInput, RegisterEtablissementInput } from '@/schemas/register.schema'
+import { useState, Suspense } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import Link from "next/link";
+import Image from "next/image";
+import { toast } from "sonner";
+import { Box, Flex, Text } from "@radix-ui/themes";
+import { ThemeToggle } from "@/components/layout/theme-toggle";
+import { RegisterStepUser } from "@/components/auth/register-step-user";
+import { RegisterStepEtablissement } from "@/components/auth/register-step-etablissement";
+import { registerWithEtablissement } from "@/actions/register";
+import type { RegisterUserInput, RegisterEtablissementInput } from "@/schemas/register.schema";
 import {
   Store,
   CreditCard,
@@ -28,52 +28,52 @@ import {
   Clock,
   CheckCircle2,
   ArrowRight,
-} from 'lucide-react'
+} from "lucide-react";
 
 function RegisterPageContent() {
-  const router = useRouter()
-  const searchParams = useSearchParams()
-  const [step, setStep] = useState<1 | 2>(1)
-  const [userData, setUserData] = useState<RegisterUserInput | null>(null)
-  const [isLoading, setIsLoading] = useState(false)
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const [step, setStep] = useState<1 | 2>(1);
+  const [userData, setUserData] = useState<RegisterUserInput | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
 
   const handleStepUserSubmit = (data: RegisterUserInput) => {
-    setUserData(data)
-    setStep(2)
-  }
+    setUserData(data);
+    setStep(2);
+  };
 
   const handleFinalSubmit = async (etablissementData: RegisterEtablissementInput) => {
     if (!userData) {
-      toast.error('Données utilisateur manquantes')
-      setStep(1)
-      return
+      toast.error("Données utilisateur manquantes");
+      setStep(1);
+      return;
     }
 
-    setIsLoading(true)
+    setIsLoading(true);
 
     try {
-      const result = await registerWithEtablissement(userData, etablissementData)
+      const result = await registerWithEtablissement(userData, etablissementData);
 
       if (result.success) {
-        toast.success('Inscription réussie ! Vous pouvez maintenant vous connecter.')
-        router.push('/login?registered=true')
+        toast.success("Inscription réussie ! Vous pouvez maintenant vous connecter.");
+        router.push("/login?registered=true");
       } else {
-        toast.error(result.error || 'Une erreur est survenue')
-        if (result.error?.includes('email')) {
-          setStep(1)
+        toast.error(result.error || "Une erreur est survenue");
+        if (result.error?.includes("email")) {
+          setStep(1);
         }
       }
     } catch (error) {
-      console.error('[Register] Erreur:', error)
-      toast.error('Une erreur inattendue est survenue')
+      console.error("[Register] Erreur:", error);
+      toast.error("Une erreur inattendue est survenue");
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
-  }
+  };
 
   const handleBack = () => {
-    setStep(1)
-  }
+    setStep(1);
+  };
 
   return (
     <>
@@ -407,31 +407,50 @@ function RegisterPageContent() {
         {/* Left Panel - Illustration */}
         <div className="left-panel">
           {/* Floating decorative icons */}
-          <div className="floating-icon" style={{ top: '8%', left: '8%' }}>
+          <div className="floating-icon" style={{ top: "8%", left: "8%" }}>
             <Store size={44} />
           </div>
-          <div className="floating-icon" style={{ top: '15%', right: '12%' }}>
+          <div className="floating-icon" style={{ top: "15%", right: "12%" }}>
             <CreditCard size={38} />
           </div>
-          <div className="floating-icon" style={{ bottom: '20%', left: '15%' }}>
+          <div className="floating-icon" style={{ bottom: "20%", left: "15%" }}>
             <Smartphone size={40} />
           </div>
-          <div className="floating-icon" style={{ bottom: '12%', right: '8%' }}>
+          <div className="floating-icon" style={{ bottom: "12%", right: "8%" }}>
             <Shield size={36} />
           </div>
 
           {/* Glow effects */}
-          <div className="glow-circle" style={{ width: '300px', height: '300px', top: '-50px', right: '-50px' }} />
-          <div className="glow-circle" style={{ width: '350px', height: '350px', bottom: '-80px', left: '-80px', animationDelay: '2s' }} />
+          <div
+            className="glow-circle"
+            style={{ width: "300px", height: "300px", top: "-50px", right: "-50px" }}
+          />
+          <div
+            className="glow-circle"
+            style={{
+              width: "350px",
+              height: "350px",
+              bottom: "-80px",
+              left: "-80px",
+              animationDelay: "2s",
+            }}
+          />
 
           {/* Hero Content */}
           <div className="hero-content">
             <div className="hero-logo">
-              <Image src="/images/logos/ic-lg.webp" alt="Oréma N+" width={56} height={56} style={{ objectFit: "contain" }} />
+              <Image
+                src="/images/logos/ic-lg.webp"
+                alt="Oréma N+"
+                width={56}
+                height={56}
+                style={{ objectFit: "contain" }}
+              />
             </div>
             <h1 className="hero-title">Lancez votre activité</h1>
             <p className="hero-subtitle">
-              Rejoignez des centaines de commerçants qui font confiance à Oréma N+ pour gérer leur établissement
+              Rejoignez des centaines de commerçants qui font confiance à Oréma N+ pour gérer leur
+              établissement
             </p>
 
             {/* Benefits List */}
@@ -469,11 +488,12 @@ function RegisterPageContent() {
                 </div>
                 <div className="benefit-text">
                   <div className="benefit-title">Données sécurisées</div>
-                  <div className="benefit-desc">Vos informations sont protégées et sauvegardées</div>
+                  <div className="benefit-desc">
+                    Vos informations sont protégées et sauvegardées
+                  </div>
                 </div>
               </div>
             </div>
-
           </div>
         </div>
 
@@ -486,28 +506,34 @@ function RegisterPageContent() {
           <div className="register-form-container">
             <div className="form-header">
               <div className="form-logo-mobile">
-                <Image src="/images/logos/ic-lg.webp" alt="Oréma N+" width={36} height={36} style={{ objectFit: "contain" }} />
+                <Image
+                  src="/images/logos/ic-lg.webp"
+                  alt="Oréma N+"
+                  width={36}
+                  height={36}
+                  style={{ objectFit: "contain" }}
+                />
               </div>
               <h2 className="form-title">Créer un compte</h2>
               <p className="form-subtitle">
-                {step === 1 ? 'Commencez par vos informations personnelles' : 'Configurez votre établissement'}
+                {step === 1
+                  ? "Commencez par vos informations personnelles"
+                  : "Configurez votre établissement"}
               </p>
             </div>
 
             {/* Steps Indicator */}
             <div className="steps-indicator">
               <div className="step-item">
-                <div className={`step-number ${step === 1 ? 'active' : 'completed'}`}>
-                  {step > 1 ? <CheckCircle2 size={18} /> : '1'}
+                <div className={`step-number ${step === 1 ? "active" : "completed"}`}>
+                  {step > 1 ? <CheckCircle2 size={18} /> : "1"}
                 </div>
-                <span className={`step-label ${step === 1 ? 'active' : ''}`}>Compte</span>
+                <span className={`step-label ${step === 1 ? "active" : ""}`}>Compte</span>
               </div>
-              <div className={`step-connector ${step > 1 ? 'completed' : ''}`} />
+              <div className={`step-connector ${step > 1 ? "completed" : ""}`} />
               <div className="step-item">
-                <div className={`step-number ${step === 2 ? 'active' : 'inactive'}`}>
-                  2
-                </div>
-                <span className={`step-label ${step === 2 ? 'active' : ''}`}>Établissement</span>
+                <div className={`step-number ${step === 2 ? "active" : "inactive"}`}>2</div>
+                <span className={`step-label ${step === 2 ? "active" : ""}`}>Établissement</span>
               </div>
             </div>
 
@@ -540,13 +566,11 @@ function RegisterPageContent() {
             )}
           </div>
 
-          <div className="footer">
-            Oréma N+ POS System © 2026
-          </div>
+          <div className="footer">Oréma N+ POS System © 2026</div>
         </div>
       </div>
     </>
-  )
+  );
 }
 
 export default function RegisterPage() {
@@ -554,5 +578,5 @@ export default function RegisterPage() {
     <Suspense>
       <RegisterPageContent />
     </Suspense>
-  )
+  );
 }

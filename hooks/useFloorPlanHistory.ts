@@ -74,32 +74,33 @@ export function useFloorPlanHistory(): UseFloorPlanHistoryReturn {
     future: [],
   });
 
-  // Track if localStorage has been loaded
-  const [isLoaded, setIsLoaded] = useState(false);
+  // Track if localStorage has been loaded (use lazy init + useSyncExternalStore pattern)
+  const [isLoaded] = useState(() => {
+    if (typeof window === "undefined") return false;
+    const saved = loadFromLocalStorage();
+    if (saved.length > 0) {
+      // Will be applied in initial render via lazy init below
+    }
+    return true;
+  });
+
+  // Lazy-load from localStorage on first render (client only)
+  const hasLoadedRef = useRef(false);
+  if (!hasLoadedRef.current && typeof window !== "undefined") {
+    hasLoadedRef.current = true;
+    const saved = loadFromLocalStorage();
+    if (saved.length > 0) {
+      setHistory({ past: [], present: saved, future: [] });
+    }
+  }
 
   // Track if this is an internal update (undo/redo) to avoid double-pushing to history
   const isInternalUpdate = useRef(false);
 
-  // Load from localStorage after mount (client-side only)
-  useEffect(() => {
-    const saved = loadFromLocalStorage();
-    if (saved.length > 0) {
-      setHistory({
-        past: [],
-        present: saved,
-        future: [],
-      });
-    }
-    setIsLoaded(true);
-  }, []);
-
   const setDecorElements = useCallback(
-    (
-      elements: DecorElementData[] | ((prev: DecorElementData[]) => DecorElementData[])
-    ) => {
+    (elements: DecorElementData[] | ((prev: DecorElementData[]) => DecorElementData[])) => {
       setHistory((prev) => {
-        const newPresent =
-          typeof elements === "function" ? elements(prev.present) : elements;
+        const newPresent = typeof elements === "function" ? elements(prev.present) : elements;
 
         // Skip if no actual change
         if (JSON.stringify(newPresent) === JSON.stringify(prev.present)) {

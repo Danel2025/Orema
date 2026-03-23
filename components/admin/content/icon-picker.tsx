@@ -6,15 +6,7 @@
  */
 
 import { useState, useMemo } from "react";
-import {
-  Box,
-  Flex,
-  Text,
-  TextField,
-  Popover,
-  ScrollArea,
-  Grid,
-} from "@radix-ui/themes";
+import { Box, Flex, Text, TextField, Popover, ScrollArea, Grid } from "@radix-ui/themes";
 import { Search, Check, ChevronDown } from "lucide-react";
 import * as LucideIcons from "lucide-react";
 import type { LucideIcon } from "lucide-react";
@@ -28,13 +20,7 @@ interface IconPickerProps {
   error?: string;
 }
 
-export function IconPicker({
-  value,
-  onChange,
-  label,
-  type = "doc",
-  error,
-}: IconPickerProps) {
+export function IconPicker({ value, onChange, label, type = "doc", error }: IconPickerProps) {
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState("");
 
@@ -52,14 +38,17 @@ export function IconPicker({
   }, [iconList, search]);
 
   // Récupérer le composant icône actuel
-  const CurrentIcon = (LucideIcons as unknown as Record<string, LucideIcon>)[value] || LucideIcons.FileText;
+  const CurrentIcon =
+    (LucideIcons as unknown as Record<string, LucideIcon>)[value] || LucideIcons.FileText;
   const currentIconLabel = iconList.find((i) => i.value === value)?.label || value;
 
   return (
     <Box>
-      {label ? <Text size="2" weight="medium" mb="2" style={{ display: "block" }}>
+      {label ? (
+        <Text size="2" weight="medium" mb="2" style={{ display: "block" }}>
           {label}
-        </Text> : null}
+        </Text>
+      ) : null}
 
       <Popover.Root open={open} onOpenChange={setOpen}>
         <Popover.Trigger>
@@ -99,10 +88,7 @@ export function IconPicker({
           </Flex>
         </Popover.Trigger>
 
-        <Popover.Content
-          style={{ width: 320, padding: 0 }}
-          align="start"
-        >
+        <Popover.Content style={{ width: 320, padding: 0 }} align="start">
           {/* Search */}
           <Box p="3" style={{ borderBottom: "1px solid var(--gray-a4)" }}>
             <TextField.Root
@@ -122,7 +108,9 @@ export function IconPicker({
             <Box p="3">
               <Grid columns="4" gap="2">
                 {filteredIcons.map((icon) => {
-                  const IconComponent = (LucideIcons as unknown as Record<string, LucideIcon>)[icon.value] || LucideIcons.FileText;
+                  const IconComponent =
+                    (LucideIcons as unknown as Record<string, LucideIcon>)[icon.value] ||
+                    LucideIcons.FileText;
                   const isSelected = value === icon.value;
 
                   return (
@@ -136,9 +124,7 @@ export function IconPicker({
                         borderRadius: 8,
                         cursor: "pointer",
                         background: isSelected ? "var(--violet-a3)" : "transparent",
-                        border: isSelected
-                          ? "1px solid var(--violet-a6)"
-                          : "1px solid transparent",
+                        border: isSelected ? "1px solid var(--violet-a6)" : "1px solid transparent",
                         transition: "all 0.15s ease",
                         position: "relative",
                       }}
@@ -174,7 +160,8 @@ export function IconPicker({
                       >
                         {icon.label}
                       </Text>
-                      {isSelected ? <Box
+                      {isSelected ? (
+                        <Box
                           style={{
                             position: "absolute",
                             top: 4,
@@ -182,18 +169,15 @@ export function IconPicker({
                           }}
                         >
                           <Check size={10} style={{ color: "var(--violet-9)" }} />
-                        </Box> : null}
+                        </Box>
+                      ) : null}
                     </Flex>
                   );
                 })}
               </Grid>
 
               {filteredIcons.length === 0 && (
-                <Flex
-                  align="center"
-                  justify="center"
-                  py="6"
-                >
+                <Flex align="center" justify="center" py="6">
                   <Text size="2" color="gray">
                     Aucune icône trouvée
                   </Text>
@@ -204,9 +188,11 @@ export function IconPicker({
         </Popover.Content>
       </Popover.Root>
 
-      {error ? <Text size="1" color="red" mt="1">
+      {error ? (
+        <Text size="1" color="red" mt="1">
           {error}
-        </Text> : null}
+        </Text>
+      ) : null}
     </Box>
   );
 }

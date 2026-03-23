@@ -1,19 +1,9 @@
 "use client";
 
-import {
-  Box,
-  Container,
-  Heading,
-  Text,
-  Flex,
-  Grid,
-  TextField,
-  Skeleton,
-} from "@radix-ui/themes";
+import { Box, Container, Heading, Text, Flex, Grid, TextField, Skeleton } from "@radix-ui/themes";
 import { motion } from "motion/react";
 import { PageHeader } from "@/components/public";
-import type {
-  LucideIcon} from "lucide-react";
+import type { LucideIcon } from "lucide-react";
 import {
   Book,
   Smartphone,
@@ -221,10 +211,7 @@ export default function DocsPage() {
                           borderRadius: 10,
                         }}
                       >
-                        <link.icon
-                          size={20}
-                          style={{ color: `var(--${link.color}-9)` }}
-                        />
+                        <link.icon size={20} style={{ color: `var(--${link.color}-9)` }} />
                       </Box>
                       <Box>
                         <Text size="2" weight="bold" style={{ display: "block" }}>
@@ -252,8 +239,7 @@ export default function DocsPage() {
             mb="9"
             p="6"
             style={{
-              background:
-                "linear-gradient(135deg, var(--violet-a2) 0%, var(--purple-a2) 100%)",
+              background: "linear-gradient(135deg, var(--violet-a2) 0%, var(--purple-a2) 100%)",
               borderRadius: 20,
               border: "1px solid var(--violet-a4)",
             }}
@@ -274,8 +260,8 @@ export default function DocsPage() {
                     Nouveau sur Oréma N+ ?
                   </Heading>
                   <Text size="3" color="gray">
-                    Suivez notre guide de démarrage rapide pour configurer votre
-                    système de caisse en moins de 30 minutes.
+                    Suivez notre guide de démarrage rapide pour configurer votre système de caisse
+                    en moins de 30 minutes.
                   </Text>
                 </Box>
               </Flex>
@@ -289,8 +275,7 @@ export default function DocsPage() {
                     gap: 8,
                     padding: "12px 24px",
                     borderRadius: 9999,
-                    background:
-                      "linear-gradient(135deg, var(--violet-9) 0%, var(--purple-9) 100%)",
+                    background: "linear-gradient(135deg, var(--violet-9) 0%, var(--purple-9) 100%)",
                     color: "white",
                     fontSize: 14,
                     fontWeight: 600,
@@ -315,7 +300,8 @@ export default function DocsPage() {
           </Heading>
 
           {/* Error state */}
-          {error && !isLoading ? <Box
+          {error && !isLoading ? (
+            <Box
               p="8"
               mb="6"
               style={{
@@ -325,18 +311,11 @@ export default function DocsPage() {
                 textAlign: "center",
               }}
             >
-              <AlertTriangle
-                size={48}
-                style={{ color: "var(--red-9)", marginBottom: 16 }}
-              />
+              <AlertTriangle size={48} style={{ color: "var(--red-9)", marginBottom: 16 }} />
               <Heading size="4" mb="2" style={{ color: "var(--red-11)" }}>
                 Erreur de chargement
               </Heading>
-              <Text
-                size="3"
-                mb="5"
-                style={{ color: "var(--red-11)", display: "block" }}
-              >
+              <Text size="3" mb="5" style={{ color: "var(--red-11)", display: "block" }}>
                 {error}
               </Text>
               <button
@@ -359,7 +338,8 @@ export default function DocsPage() {
                 <RefreshCw size={16} />
                 Reessayer
               </button>
-            </Box> : null}
+            </Box>
+          ) : null}
 
           {isLoading ? (
             <Grid columns={{ initial: "1", md: "2", lg: "3" }} gap="4">
@@ -400,10 +380,7 @@ export default function DocsPage() {
                 textAlign: "center",
               }}
             >
-              <FolderOpen
-                size={56}
-                style={{ color: "var(--gray-8)", marginBottom: 20 }}
-              />
+              <FolderOpen size={56} style={{ color: "var(--gray-8)", marginBottom: 20 }} />
               <Heading size="5" mb="3" color="gray">
                 Documentation en cours de redaction
               </Heading>
@@ -424,18 +401,11 @@ export default function DocsPage() {
                 textAlign: "center",
               }}
             >
-              <Search
-                size={48}
-                style={{ color: "var(--gray-8)", marginBottom: 16 }}
-              />
+              <Search size={48} style={{ color: "var(--gray-8)", marginBottom: 16 }} />
               <Heading size="4" mb="2" color="gray">
                 Aucun resultat
               </Heading>
-              <Text
-                size="3"
-                color="gray"
-                style={{ display: "block", marginBottom: 16 }}
-              >
+              <Text size="3" color="gray" style={{ display: "block", marginBottom: 16 }}>
                 Aucun article ne correspond a votre recherche &quot;{searchQuery}&quot;
               </Text>
               <button
@@ -484,10 +454,7 @@ export default function DocsPage() {
                             borderRadius: 12,
                           }}
                         >
-                          <CategoryIcon
-                            size={20}
-                            style={{ color: `var(--${category.color}-9)` }}
-                          />
+                          <CategoryIcon size={20} style={{ color: `var(--${category.color}-9)` }} />
                         </Box>
                         <Box>
                           <Heading size="4">{category.title}</Heading>
@@ -584,8 +551,7 @@ export default function DocsPage() {
                     Application mobile
                   </Heading>
                   <Text size="2" color="gray">
-                    Consultez vos statistiques et gérez votre établissement depuis
-                    votre smartphone.
+                    Consultez vos statistiques et gérez votre établissement depuis votre smartphone.
                   </Text>
                 </Box>
               </Flex>
@@ -620,16 +586,12 @@ export default function DocsPage() {
             mt="6"
             p="8"
             style={{
-              background:
-                "linear-gradient(135deg, var(--violet-9) 0%, var(--purple-9) 100%)",
+              background: "linear-gradient(135deg, var(--violet-9) 0%, var(--purple-9) 100%)",
               borderRadius: 24,
               textAlign: "center",
             }}
           >
-            <HelpCircle
-              size={48}
-              style={{ color: "white", marginBottom: 16, opacity: 0.9 }}
-            />
+            <HelpCircle size={48} style={{ color: "white", marginBottom: 16, opacity: 0.9 }} />
             <Heading size="5" mb="3" style={{ color: "white" }}>
               Vous ne trouvez pas ce que vous cherchez ?
             </Heading>
@@ -643,8 +605,7 @@ export default function DocsPage() {
                 display: "block",
               }}
             >
-              Notre équipe support est disponible pour vous aider du lundi au
-              samedi de 8h à 18h.
+              Notre équipe support est disponible pour vous aider du lundi au samedi de 8h à 18h.
             </Text>
             <Flex gap="3" justify="center" wrap="wrap">
               <Link

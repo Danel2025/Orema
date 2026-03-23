@@ -23,14 +23,14 @@ import {
   ArrowLeft,
   FileText,
   Eye,
-  EyeOff,
-  Trash2,
-  Edit,
+  EyeSlash,
+  Trash,
+  PencilSimple,
   Clock,
-  Calendar,
-  BookOpen,
-  MoreHorizontal,
-} from "lucide-react";
+  CalendarBlank,
+  BookOpenText,
+  DotsThree,
+} from "@phosphor-icons/react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { motion } from "motion/react";
@@ -157,7 +157,8 @@ export default function CategoryDetailPage({
     return null;
   }
 
-  const CategoryIcon = (LucideIcons as unknown as Record<string, LucideIcon>)[category.icon] || BookOpen;
+  const CategoryIcon =
+    (LucideIcons as unknown as Record<string, LucideIcon>)[category.icon] || BookOpenText;
   const statusColor = contentStatusColors[category.status];
 
   return (
@@ -172,16 +173,15 @@ export default function CategoryDetailPage({
           <Flex align="center" gap="4">
             <Link href="/admin/contenu/documentation">
               <Button variant="ghost" size="2" style={{ cursor: "pointer" }}>
-                <ArrowLeft size={18} />
+                <ArrowLeft size={18} weight="bold" />
               </Button>
             </Link>
 
             <Box
               p="3"
               style={{
-                background: `linear-gradient(135deg, var(--${category.color}-9) 0%, var(--${category.color}-10) 100%)`,
+                background: `var(--${category.color}-9)`,
                 borderRadius: 12,
-                boxShadow: `0 4px 16px var(--${category.color}-a4)`,
               }}
             >
               <CategoryIcon size={24} style={{ color: "white" }} />
@@ -190,17 +190,12 @@ export default function CategoryDetailPage({
             <Box>
               <Flex align="center" gap="2">
                 <Heading size="5">{category.title}</Heading>
-                <Badge
-                  color={statusColor as "green" | "gray" | "violet"}
-                  variant="soft"
-                  size="1"
-                >
+                <Badge color={statusColor as "green" | "gray" | "violet"} variant="soft" size="1">
                   {contentStatusLabels[category.status]}
                 </Badge>
               </Flex>
               <Text size="2" color="gray">
-                {articles.length} article{articles.length !== 1 ? "s" : ""} •
-                /docs/{category.slug}
+                {articles.length} article{articles.length !== 1 ? "s" : ""} • /docs/{category.slug}
               </Text>
             </Box>
           </Flex>
@@ -210,11 +205,11 @@ export default function CategoryDetailPage({
               <Button
                 size="3"
                 style={{
-                  background: `linear-gradient(135deg, var(--${category.color}-9) 0%, var(--${category.color}-10) 100%)`,
+                  background: `var(--${category.color}-9)`,
                   cursor: "pointer",
                 }}
               >
-                <Plus size={18} />
+                <Plus size={18} weight="bold" />
                 Nouvel article
               </Button>
             </Link>
@@ -223,7 +218,8 @@ export default function CategoryDetailPage({
       </motion.div>
 
       {/* Category Info Card */}
-      {category.description ? <motion.div
+      {category.description ? (
+        <motion.div
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.3, delay: 0.1 }}
@@ -233,7 +229,8 @@ export default function CategoryDetailPage({
               {category.description}
             </Text>
           </Card>
-        </motion.div> : null}
+        </motion.div>
+      ) : null}
 
       {/* Articles List */}
       <motion.div
@@ -243,16 +240,8 @@ export default function CategoryDetailPage({
       >
         {articles.length === 0 ? (
           <Card size="4">
-            <Flex
-              direction="column"
-              align="center"
-              justify="center"
-              py="8"
-            >
-              <FileText
-                size={48}
-                style={{ color: "var(--gray-8)", marginBottom: 16 }}
-              />
+            <Flex direction="column" align="center" justify="center" py="8">
+              <FileText size={48} weight="duotone" style={{ color: "var(--gray-8)", marginBottom: 16 }} />
               <Heading size="4" mb="2" color="gray">
                 Aucun article
               </Heading>
@@ -261,7 +250,7 @@ export default function CategoryDetailPage({
               </Text>
               <Link href={`/admin/contenu/documentation/${categoryId}/articles/nouveau`}>
                 <Button size="2">
-                  <Plus size={16} />
+                  <Plus size={16} weight="bold" />
                   Créer un article
                 </Button>
               </Link>
@@ -314,7 +303,7 @@ export default function CategoryDetailPage({
 
                       <Table.Cell>
                         <Flex align="center" gap="1">
-                          <Clock size={12} style={{ color: "var(--gray-9)" }} />
+                          <Clock size={12} weight="duotone" style={{ color: "var(--gray-9)" }} />
                           <Text size="1" color="gray">
                             {article.read_time}
                           </Text>
@@ -323,7 +312,7 @@ export default function CategoryDetailPage({
 
                       <Table.Cell>
                         <Flex align="center" gap="1">
-                          <Calendar size={12} style={{ color: "var(--gray-9)" }} />
+                          <CalendarBlank size={12} weight="duotone" style={{ color: "var(--gray-9)" }} />
                           <Text size="1" color="gray">
                             {new Date(article.updated_at).toLocaleDateString("fr-FR")}
                           </Text>
@@ -335,12 +324,8 @@ export default function CategoryDetailPage({
                           <Link
                             href={`/admin/contenu/documentation/${categoryId}/articles/${article.id}`}
                           >
-                            <Button
-                              variant="ghost"
-                              size="1"
-                              style={{ cursor: "pointer" }}
-                            >
-                              <Edit size={14} />
+                            <Button variant="ghost" size="1" style={{ cursor: "pointer" }}>
+                              <PencilSimple size={14} weight="bold" />
                             </Button>
                           </Link>
 
@@ -352,7 +337,7 @@ export default function CategoryDetailPage({
                               onClick={() => handleStatusChange(article.id, "PUBLISHED")}
                               style={{ cursor: "pointer" }}
                             >
-                              <Eye size={14} />
+                              <Eye size={14} weight="bold" />
                             </Button>
                           ) : article.status === "PUBLISHED" ? (
                             <Button
@@ -362,7 +347,7 @@ export default function CategoryDetailPage({
                               onClick={() => handleStatusChange(article.id, "DRAFT")}
                               style={{ cursor: "pointer" }}
                             >
-                              <EyeOff size={14} />
+                              <EyeSlash size={14} weight="bold" />
                             </Button>
                           ) : null}
 
@@ -373,7 +358,7 @@ export default function CategoryDetailPage({
                             onClick={() => setDeleteId(article.id)}
                             style={{ cursor: "pointer" }}
                           >
-                            <Trash2 size={14} />
+                            <Trash size={14} weight="bold" />
                           </Button>
                         </Flex>
                       </Table.Cell>
@@ -400,16 +385,17 @@ export default function CategoryDetailPage({
                 Annuler
               </Button>
             </AlertDialog.Cancel>
-            <AlertDialog.Action>
-              <Button
-                variant="solid"
-                color="red"
-                onClick={handleDelete}
-                disabled={isDeleting}
-              >
-                {isDeleting ? "Suppression..." : "Supprimer"}
-              </Button>
-            </AlertDialog.Action>
+            <Button
+              variant="solid"
+              color="red"
+              disabled={isDeleting}
+              onClick={async (e) => {
+                e.preventDefault();
+                await handleDelete();
+              }}
+            >
+              {isDeleting ? "Suppression..." : "Supprimer"}
+            </Button>
           </Flex>
         </AlertDialog.Content>
       </AlertDialog.Root>

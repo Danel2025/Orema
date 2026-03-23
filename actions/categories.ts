@@ -10,33 +10,31 @@ import { createAuthenticatedClient, db } from "@/lib/db";
 import { getCurrentUser } from "@/lib/auth";
 import { categorieSchema, type CategorieFormData } from "@/schemas/categorie.schema";
 
+// Rôles autorisés à modifier les catégories (CRUD)
+const ROLES_GESTION_CATEGORIES = ["SUPER_ADMIN", "ADMIN", "MANAGER"] as const;
+
+function canManageCategories(role: string): boolean {
+  return (ROLES_GESTION_CATEGORIES as readonly string[]).includes(role);
+}
+
 /**
  * Récupère toutes les catégories de l'établissement
+ * Utilise une requête unique avec comptage des produits (résout le N+1)
  */
 export async function getCategories(options?: { includeInactive?: boolean }) {
   const user = await getCurrentUser();
   if (!user || !user.etablissementId) return [];
   const etablissementId = user.etablissementId;
-  const supabase = await createAuthenticatedClient({ userId: user.userId, etablissementId, role: user.role });
-
-  const categories = await db.getCategories(supabase, etablissementId, {
-    actif: options?.includeInactive ? undefined : true,
+  const supabase = await createAuthenticatedClient({
+    userId: user.userId,
+    etablissementId,
+    role: user.role,
   });
 
-  // Récupérer le count des produits pour chaque catégorie
-  const categoriesWithCount = await Promise.all(
-    categories.map(async (cat) => {
-      const count = await db.countProduits(supabase, etablissementId, {
-        categorieId: cat.id,
-      });
-      return {
-        ...cat,
-        _count: { produits: count },
-      };
-    })
-  );
-
-  return categoriesWithCount;
+  // Requête unique avec comptage des produits (pas de N+1)
+  return db.getCategoriesWithProductCount(supabase, etablissementId, {
+    actif: options?.includeInactive ? undefined : true,
+  });
 }
 
 /**
@@ -46,7 +44,11 @@ export async function getCategorieById(id: string) {
   const user = await getCurrentUser();
   if (!user || !user.etablissementId) return null;
   const etablissementId = user.etablissementId;
-  const supabase = await createAuthenticatedClient({ userId: user.userId, etablissementId, role: user.role });
+  const supabase = await createAuthenticatedClient({
+    userId: user.userId,
+    etablissementId,
+    role: user.role,
+  });
 
   const categorie = await db.getCategorieById(supabase, id);
 
@@ -71,9 +73,16 @@ export async function getCategorieById(id: string) {
 export async function createCategorie(data: CategorieFormData) {
   try {
     const user = await getCurrentUser();
-    if (!user || !user.etablissementId) return { success: false, error: "Vous devez être connecté" };
+    if (!user || !user.etablissementId)
+      return { success: false, error: "Vous devez être connecté" };
+    if (!canManageCategories(user.role))
+      return { success: false, error: "Permissions insuffisantes" };
     const etablissementId = user.etablissementId;
-    const supabase = await createAuthenticatedClient({ userId: user.userId, etablissementId, role: user.role });
+    const supabase = await createAuthenticatedClient({
+      userId: user.userId,
+      etablissementId,
+      role: user.role,
+    });
 
     // Validation
     const validationResult = categorieSchema.safeParse(data);
@@ -86,10 +95,11 @@ export async function createCategorie(data: CategorieFormData) {
     }
     const validatedData = validationResult.data;
 
-    // Vérifier l'unicité du nom
-    const existingCategories = await db.getCategories(supabase, etablissementId);
-    const existing = existingCategories.find(
-      (cat) => cat.nom.toLowerCase() === validatedData.nom.toLowerCase()
+    // Vérifier l'unicité du nom (requête directe, pas de chargement complet)
+    const existing = await db.findCategorieByNom(
+      supabase,
+      etablissementId,
+      validatedData.nom
     );
 
     if (existing) {
@@ -99,10 +109,10 @@ export async function createCategorie(data: CategorieFormData) {
       };
     }
 
-    // Déterminer l'ordre (dernier + 1)
-    const lastOrdre = existingCategories.length > 0
-      ? Math.max(...existingCategories.map((c) => c.ordre))
-      : 0;
+    // Déterminer l'ordre (dernier + 1) - nécessite les catégories existantes
+    const existingCategories = await db.getCategories(supabase, etablissementId);
+    const lastOrdre =
+      existingCategories.length > 0 ? Math.max(...existingCategories.map((c) => c.ordre)) : 0;
 
     const ordre = validatedData.ordre || lastOrdre + 1;
 
@@ -114,6 +124,7 @@ export async function createCategorie(data: CategorieFormData) {
       ordre,
       actif: validatedData.actif,
       imprimante_id: validatedData.imprimanteId,
+      destination_preparation: validatedData.destinationPreparation ?? "AUTO",
       etablissement_id: etablissementId,
     });
 
@@ -138,12 +149,27 @@ export async function createCategorie(data: CategorieFormData) {
 export async function updateCategorie(id: string, data: CategorieFormData) {
   try {
     const user = await getCurrentUser();
-    if (!user || !user.etablissementId) return { success: false, error: "Vous devez être connecté" };
+    if (!user || !user.etablissementId)
+      return { success: false, error: "Vous devez être connecté" };
+    if (!canManageCategories(user.role))
+      return { success: false, error: "Permissions insuffisantes" };
     const etablissementId = user.etablissementId;
-    const supabase = await createAuthenticatedClient({ userId: user.userId, etablissementId, role: user.role });
+    const supabase = await createAuthenticatedClient({
+      userId: user.userId,
+      etablissementId,
+      role: user.role,
+    });
 
-    // Validation
-    const validatedData = categorieSchema.parse(data);
+    // Validation avec safeParse (au lieu de parse) pour un message d'erreur spécifique
+    const validationResult = categorieSchema.safeParse(data);
+    if (!validationResult.success) {
+      const firstError = validationResult.error.issues[0];
+      return {
+        success: false,
+        error: firstError?.message || "Données invalides",
+      };
+    }
+    const validatedData = validationResult.data;
 
     // Vérifier que la catégorie existe (RLS filtre par établissement)
     const existing = await db.getCategorieById(supabase, id);
@@ -155,12 +181,12 @@ export async function updateCategorie(id: string, data: CategorieFormData) {
       };
     }
 
-    // Vérifier l'unicité du nom (sauf pour la catégorie actuelle)
-    const allCategories = await db.getCategories(supabase, etablissementId);
-    const duplicate = allCategories.find(
-      (cat) =>
-        cat.id !== id &&
-        cat.nom.toLowerCase() === validatedData.nom.toLowerCase()
+    // Vérifier l'unicité du nom (requête directe avec exclusion de l'ID actuel)
+    const duplicate = await db.findCategorieByNom(
+      supabase,
+      etablissementId,
+      validatedData.nom,
+      id
     );
 
     if (duplicate) {
@@ -178,6 +204,7 @@ export async function updateCategorie(id: string, data: CategorieFormData) {
       ordre: validatedData.ordre,
       actif: validatedData.actif,
       imprimante_id: validatedData.imprimanteId,
+      destination_preparation: validatedData.destinationPreparation ?? "AUTO",
     });
 
     revalidatePath("/produits");
@@ -201,9 +228,16 @@ export async function updateCategorie(id: string, data: CategorieFormData) {
 export async function deleteCategorie(id: string) {
   try {
     const user = await getCurrentUser();
-    if (!user || !user.etablissementId) return { success: false, error: "Vous devez être connecté" };
+    if (!user || !user.etablissementId)
+      return { success: false, error: "Vous devez être connecté" };
+    if (!canManageCategories(user.role))
+      return { success: false, error: "Permissions insuffisantes" };
     const etablissementId = user.etablissementId;
-    const supabase = await createAuthenticatedClient({ userId: user.userId, etablissementId, role: user.role });
+    const supabase = await createAuthenticatedClient({
+      userId: user.userId,
+      etablissementId,
+      role: user.role,
+    });
 
     // Vérifier que la catégorie existe (RLS filtre par établissement)
     const categorie = await db.getCategorieById(supabase, id);
@@ -250,9 +284,16 @@ export async function deleteCategorie(id: string) {
 export async function reorderCategories(orderedIds: string[]) {
   try {
     const user = await getCurrentUser();
-    if (!user || !user.etablissementId) return { success: false, error: "Vous devez être connecté" };
+    if (!user || !user.etablissementId)
+      return { success: false, error: "Vous devez être connecté" };
+    if (!canManageCategories(user.role))
+      return { success: false, error: "Permissions insuffisantes" };
     const etablissementId = user.etablissementId;
-    const supabase = await createAuthenticatedClient({ userId: user.userId, etablissementId, role: user.role });
+    const supabase = await createAuthenticatedClient({
+      userId: user.userId,
+      etablissementId,
+      role: user.role,
+    });
 
     // Vérifier que toutes les catégories appartiennent à l'établissement
     const categories = await db.getCategories(supabase, etablissementId);
@@ -286,8 +327,15 @@ export async function reorderCategories(orderedIds: string[]) {
 export async function toggleCategorieActif(id: string) {
   try {
     const user = await getCurrentUser();
-    if (!user || !user.etablissementId) return { success: false, error: "Vous devez être connecté" };
-    const supabase = await createAuthenticatedClient({ userId: user.userId, etablissementId: user.etablissementId, role: user.role });
+    if (!user || !user.etablissementId)
+      return { success: false, error: "Vous devez être connecté" };
+    if (!canManageCategories(user.role))
+      return { success: false, error: "Permissions insuffisantes" };
+    const supabase = await createAuthenticatedClient({
+      userId: user.userId,
+      etablissementId: user.etablissementId,
+      role: user.role,
+    });
 
     const categorie = await db.getCategorieById(supabase, id);
 
@@ -324,7 +372,11 @@ export async function getImprimantes() {
   const user = await getCurrentUser();
   if (!user || !user.etablissementId) return [];
   const etablissementId = user.etablissementId;
-  const supabase = await createAuthenticatedClient({ userId: user.userId, etablissementId, role: user.role });
+  const supabase = await createAuthenticatedClient({
+    userId: user.userId,
+    etablissementId,
+    role: user.role,
+  });
 
   const imprimantes = await db.getImprimantes(supabase, etablissementId, {
     actif: true,

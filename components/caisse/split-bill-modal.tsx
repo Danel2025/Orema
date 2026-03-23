@@ -13,20 +13,20 @@ import { useState, useCallback, useEffect } from "react";
 import {
   X,
   Users,
-  Edit3,
+  PencilSimple,
   ShoppingBag,
   Plus,
   Minus,
-  Trash2,
+  Trash,
   Check,
-  Loader2,
-  Banknote,
+  SpinnerGap,
+  Money,
   CreditCard,
-  Smartphone,
+  DeviceMobile,
   FileText,
-  Building2,
+  Buildings,
   Wallet,
-} from "lucide-react";
+} from "@phosphor-icons/react";
 import {
   Dialog,
   Box,
@@ -56,12 +56,12 @@ const PAYMENT_METHODS: {
   icon: React.ReactNode;
   color: string;
 }[] = [
-  { id: "ESPECES", label: "Especes", icon: <Banknote size={16} />, color: "green" },
+  { id: "ESPECES", label: "Especes", icon: <Money size={16} />, color: "green" },
   { id: "CARTE_BANCAIRE", label: "CB", icon: <CreditCard size={16} />, color: "blue" },
-  { id: "AIRTEL_MONEY", label: "Airtel", icon: <Smartphone size={16} />, color: "red" },
-  { id: "MOOV_MONEY", label: "Moov", icon: <Smartphone size={16} />, color: "cyan" },
+  { id: "AIRTEL_MONEY", label: "Airtel", icon: <DeviceMobile size={16} />, color: "red" },
+  { id: "MOOV_MONEY", label: "Moov", icon: <DeviceMobile size={16} />, color: "cyan" },
   { id: "CHEQUE", label: "Cheque", icon: <FileText size={16} />, color: "amber" },
-  { id: "VIREMENT", label: "Virement", icon: <Building2 size={16} />, color: "purple" },
+  { id: "VIREMENT", label: "Virement", icon: <Buildings size={16} />, color: "purple" },
   { id: "COMPTE_CLIENT", label: "Compte", icon: <Wallet size={16} />, color: "violet" },
 ];
 
@@ -272,7 +272,7 @@ export function SplitBillModal({ onComplete }: SplitBillModalProps) {
             </Tabs.Trigger>
             <Tabs.Trigger value="custom">
               <Flex align="center" gap="2">
-                <Edit3 size={16} />
+                <PencilSimple size={16} />
                 <span>Montants libres</span>
               </Flex>
             </Tabs.Trigger>
@@ -349,7 +349,10 @@ export function SplitBillModal({ onComplete }: SplitBillModalProps) {
                       borderRadius: 8,
                     }}
                   >
-                    <Text size="2" style={{ color: ecart > 0 ? "var(--purple-11)" : "var(--red-11)" }}>
+                    <Text
+                      size="2"
+                      style={{ color: ecart > 0 ? "var(--purple-11)" : "var(--red-11)" }}
+                    >
                       {ecart > 0
                         ? `Il reste ${formatCurrency(ecart)} a attribuer`
                         : `La somme depasse le total de ${formatCurrency(Math.abs(ecart))}`}
@@ -429,7 +432,13 @@ export function SplitBillModal({ onComplete }: SplitBillModalProps) {
                       borderRadius: 8,
                     }}
                   >
-                    <Text size="2" weight="medium" style={{ color: "var(--purple-11)" }} mb="2" as="div">
+                    <Text
+                      size="2"
+                      weight="medium"
+                      style={{ color: "var(--purple-11)" }}
+                      mb="2"
+                      as="div"
+                    >
                       Articles non attribues ({itemsNonAttribues.length})
                     </Text>
                     <Flex gap="2" wrap="wrap">
@@ -498,7 +507,8 @@ export function SplitBillModal({ onComplete }: SplitBillModalProps) {
           </Flex>
 
           {/* Erreur */}
-          {error ? <Box
+          {error ? (
+            <Box
               p="3"
               mb="3"
               style={{
@@ -509,7 +519,8 @@ export function SplitBillModal({ onComplete }: SplitBillModalProps) {
               <Text size="2" style={{ color: "var(--red-11)" }}>
                 {error}
               </Text>
-            </Box> : null}
+            </Box>
+          ) : null}
 
           {/* Boutons */}
           <Flex gap="3" justify="end">
@@ -525,7 +536,7 @@ export function SplitBillModal({ onComplete }: SplitBillModalProps) {
             >
               {isProcessing ? (
                 <>
-                  <Loader2 size={16} className="animate-spin" />
+                  <SpinnerGap size={16} className="animate-spin" />
                   Traitement...
                 </>
               ) : (
@@ -615,9 +626,11 @@ function PartCard({
           <Text size="2" weight="medium" style={{ color: "var(--gray-12)" }}>
             {part.nom ?? `Personne ${index + 1}`}
           </Text>
-          {part.paye && part.modePaiement ? <Text size="1" color="gray">
+          {part.paye && part.modePaiement ? (
+            <Text size="1" color="gray">
               {PAYMENT_METHODS.find((m) => m.id === part.modePaiement)?.label}
-            </Text> : null}
+            </Text>
+          ) : null}
         </Box>
       </Flex>
 
@@ -752,9 +765,11 @@ function CustomPartCard({
           </Text>
         ) : (
           <>
-            {canRemove ? <Button size="1" variant="ghost" color="red" onClick={onRemove}>
-                <Trash2 size={14} />
-              </Button> : null}
+            {canRemove ? (
+              <Button size="1" variant="ghost" color="red" onClick={onRemove}>
+                <Trash size={14} />
+              </Button>
+            ) : null}
             <Button size="2" variant="soft" onClick={onPayClick} disabled={part.montant <= 0}>
               Payer
             </Button>
@@ -878,7 +893,7 @@ function ItemsPartCard({
       {!part.paye && availableItems.length > 0 && (
         <Select.Root onValueChange={onAssignItem}>
           <Select.Trigger placeholder="Ajouter un article..." variant="soft" />
-          <Select.Content>
+          <Select.Content position="popper">
             {availableItems.map((item) => (
               <Select.Item key={item.produitId} value={item.produitId}>
                 {item.produit.nom} - {formatCurrency(item.total)}
@@ -987,7 +1002,8 @@ function PaymentSelector({
           >
             <span
               style={{
-                color: selectedMethod === method.id ? `var(--${method.color}-11)` : "var(--gray-11)",
+                color:
+                  selectedMethod === method.id ? `var(--${method.color}-11)` : "var(--gray-11)",
               }}
             >
               {method.icon}
@@ -996,7 +1012,8 @@ function PaymentSelector({
               size="1"
               weight={selectedMethod === method.id ? "bold" : "regular"}
               style={{
-                color: selectedMethod === method.id ? `var(--${method.color}-11)` : "var(--gray-11)",
+                color:
+                  selectedMethod === method.id ? `var(--${method.color}-11)` : "var(--gray-11)",
               }}
             >
               {method.label}

@@ -1,52 +1,52 @@
 "use client";
 
 /**
- * CategoryCard - Carte affichant une catégorie
+ * CategoryCard - Carte affichant une catégorie avec menu contextuel accessible
+ * Utilise Radix UI DropdownMenu pour l'accessibilité clavier et ARIA
  */
 
 import {
-  MoreVertical,
-  Edit2,
-  Trash2,
+  DotsThreeVertical,
+  PencilSimple,
+  Trash,
   Power,
-  GripVertical,
   Package,
   Coffee,
-  UtensilsCrossed,
-  Salad,
-  IceCreamCone,
-  Beer,
+  ForkKnife,
+  Leaf,
+  IceCream,
+  BeerBottle,
   Wine,
-  Sandwich,
+  Hamburger,
   Pizza,
-  Soup,
-  Beef,
+  BowlFood,
+  Cow,
   Fish,
   Egg,
-  Croissant,
-  Apple,
+  Cookie,
+  AppleLogo,
   ShoppingBag,
   Printer,
-  type LucideIcon,
-} from "lucide-react";
-import { useState } from "react";
+  type Icon as PhosphorIcon,
+} from "@phosphor-icons/react";
+import { Box, Flex, Text, DropdownMenu, IconButton } from "@radix-ui/themes";
 
-// Map des icônes disponibles
-const iconMap: Record<string, LucideIcon> = {
+// Map des icônes disponibles (Phosphor)
+const iconMap: Record<string, PhosphorIcon> = {
   Coffee,
-  UtensilsCrossed,
-  Salad,
-  IceCreamCone,
-  Beer,
+  UtensilsCrossed: ForkKnife,
+  Salad: Leaf,
+  IceCreamCone: IceCream,
+  Beer: BeerBottle,
   Wine,
-  Sandwich,
+  Sandwich: Hamburger,
   Pizza,
-  Soup,
-  Beef,
+  Soup: BowlFood,
+  Beef: Cow,
   Fish,
   Egg,
-  Croissant,
-  Apple,
+  Croissant: Cookie,
+  Apple: AppleLogo,
   ShoppingBag,
   Package,
 };
@@ -85,13 +85,11 @@ export function CategoryCard({
   onToggleActif,
   isDragging,
 }: CategoryCardProps) {
-  const [showMenu, setShowMenu] = useState(false);
-
   // Récupérer l'icône dynamiquement
   const IconComponent = icone && iconMap[icone] ? iconMap[icone] : Package;
 
   return (
-    <div
+    <Box
       style={{
         backgroundColor: "var(--color-panel-solid)",
         borderRadius: 12,
@@ -104,16 +102,9 @@ export function CategoryCard({
       }}
     >
       {/* Header avec icône et menu */}
-      <div
-        style={{
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "flex-start",
-          marginBottom: 12,
-        }}
-      >
+      <Flex justify="between" align="start" mb="3">
         {/* Icône colorée */}
-        <div
+        <Box
           style={{
             width: 48,
             height: 48,
@@ -124,185 +115,55 @@ export function CategoryCard({
             justifyContent: "center",
           }}
         >
-          <IconComponent
-            size={24}
-            style={{ color: couleur }}
-          />
-        </div>
+          <IconComponent size={24} style={{ color: couleur }} aria-hidden="true" />
+        </Box>
 
-        {/* Menu d'actions */}
-        <div style={{ position: "relative" }}>
-          <button
-            onClick={() => setShowMenu(!showMenu)}
-            style={{
-              width: 32,
-              height: 32,
-              borderRadius: 8,
-              border: "none",
-              backgroundColor: "transparent",
-              cursor: "pointer",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              color: "var(--gray-11)",
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.backgroundColor = "var(--gray-a3)";
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.backgroundColor = "transparent";
-            }}
-          >
-            <MoreVertical size={18} />
-          </button>
+        {/* Menu d'actions accessible avec DropdownMenu Radix UI */}
+        <DropdownMenu.Root>
+          <DropdownMenu.Trigger>
+            <IconButton
+              variant="ghost"
+              color="gray"
+              size="2"
+              aria-label={`Options pour ${nom}`}
+              style={{ minWidth: 44, minHeight: 44 }}
+            >
+              <DotsThreeVertical size={18} aria-hidden="true" />
+            </IconButton>
+          </DropdownMenu.Trigger>
 
-          {showMenu ? <>
-              {/* Overlay pour fermer le menu */}
-              <div
-                style={{
-                  position: "fixed",
-                  inset: 0,
-                  zIndex: 40,
-                }}
-                onClick={() => setShowMenu(false)}
-              />
-              {/* Menu dropdown */}
-              <div
-                style={{
-                  position: "absolute",
-                  right: 0,
-                  top: "100%",
-                  marginTop: 4,
-                  backgroundColor: "var(--color-panel-solid)",
-                  borderRadius: 8,
-                  border: "1px solid var(--gray-a6)",
-                  boxShadow: "0 4px 12px rgba(0,0,0,0.15)",
-                  padding: 4,
-                  minWidth: 160,
-                  zIndex: 50,
-                }}
-              >
-                <button
-                  onClick={() => {
-                    onEdit(id);
-                    setShowMenu(false);
-                  }}
-                  style={{
-                    width: "100%",
-                    display: "flex",
-                    alignItems: "center",
-                    gap: 8,
-                    padding: "8px 12px",
-                    borderRadius: 6,
-                    border: "none",
-                    backgroundColor: "transparent",
-                    cursor: "pointer",
-                    fontSize: 14,
-                    color: "var(--gray-12)",
-                    textAlign: "left",
-                  }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.backgroundColor = "var(--gray-a3)";
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.backgroundColor = "transparent";
-                  }}
-                >
-                  <Edit2 size={16} />
-                  Modifier
-                </button>
+          <DropdownMenu.Content size="1">
+            <DropdownMenu.Item onSelect={() => onEdit(id)}>
+              <PencilSimple size={16} aria-hidden="true" />
+              Modifier
+            </DropdownMenu.Item>
 
-                <button
-                  onClick={() => {
-                    onToggleActif(id);
-                    setShowMenu(false);
-                  }}
-                  style={{
-                    width: "100%",
-                    display: "flex",
-                    alignItems: "center",
-                    gap: 8,
-                    padding: "8px 12px",
-                    borderRadius: 6,
-                    border: "none",
-                    backgroundColor: "transparent",
-                    cursor: "pointer",
-                    fontSize: 14,
-                    color: actif ? "var(--purple-11)" : "var(--green-11)",
-                    textAlign: "left",
-                  }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.backgroundColor = "var(--gray-a3)";
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.backgroundColor = "transparent";
-                  }}
-                >
-                  <Power size={16} />
-                  {actif ? "Désactiver" : "Activer"}
-                </button>
+            <DropdownMenu.Item onSelect={() => onToggleActif(id)}>
+              <Power size={16} aria-hidden="true" />
+              {actif ? "Désactiver" : "Activer"}
+            </DropdownMenu.Item>
 
-                <div
-                  style={{
-                    height: 1,
-                    backgroundColor: "var(--gray-a6)",
-                    margin: "4px 0",
-                  }}
-                />
+            <DropdownMenu.Separator />
 
-                <button
-                  onClick={() => {
-                    onDelete(id);
-                    setShowMenu(false);
-                  }}
-                  style={{
-                    width: "100%",
-                    display: "flex",
-                    alignItems: "center",
-                    gap: 8,
-                    padding: "8px 12px",
-                    borderRadius: 6,
-                    border: "none",
-                    backgroundColor: "transparent",
-                    cursor: "pointer",
-                    fontSize: 14,
-                    color: "var(--red-11)",
-                    textAlign: "left",
-                  }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.backgroundColor = "var(--red-a3)";
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.backgroundColor = "transparent";
-                  }}
-                >
-                  <Trash2 size={16} />
-                  Supprimer
-                </button>
-              </div>
-            </> : null}
-        </div>
-      </div>
+            <DropdownMenu.Item color="red" onSelect={() => onDelete(id)}>
+              <Trash size={16} aria-hidden="true" />
+              Supprimer
+            </DropdownMenu.Item>
+          </DropdownMenu.Content>
+        </DropdownMenu.Root>
+      </Flex>
 
       {/* Nom et statut */}
-      <div style={{ marginBottom: 8 }}>
-        <h3
-          style={{
-            fontSize: 16,
-            fontWeight: 600,
-            color: "var(--gray-12)",
-            margin: 0,
-            display: "flex",
-            alignItems: "center",
-            gap: 8,
-          }}
-        >
-          {nom}
+      <Box mb="2">
+        <Flex align="center" gap="2">
+          <Text size="3" weight="bold">
+            {nom}
+          </Text>
           {!actif && (
-            <span
+            <Text
+              size="1"
+              weight="medium"
               style={{
-                fontSize: 10,
-                fontWeight: 500,
                 padding: "2px 6px",
                 borderRadius: 4,
                 backgroundColor: "var(--gray-a3)",
@@ -310,45 +171,31 @@ export function CategoryCard({
               }}
             >
               Inactif
-            </span>
+            </Text>
           )}
-        </h3>
-      </div>
+        </Flex>
+      </Box>
 
       {/* Infos */}
-      <div
-        style={{
-          display: "flex",
-          alignItems: "center",
-          gap: 16,
-          fontSize: 13,
-          color: "var(--gray-11)",
-        }}
-      >
-        <span>
+      <Flex align="center" gap="4">
+        <Text size="2" color="gray">
           {_count.produits} produit{_count.produits > 1 ? "s" : ""}
-        </span>
-        {imprimante ? <span
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: 4,
-            }}
-          >
-            <Printer size={14} />
-            {imprimante.nom}
-          </span> : null}
-      </div>
+        </Text>
+        {imprimante ? <Flex align="center" gap="1">
+            <Printer size={14} style={{ color: "var(--gray-11)" }} aria-hidden="true" />
+            <Text size="2" color="gray">{imprimante.nom}</Text>
+          </Flex> : null}
+      </Flex>
 
       {/* Indicateur de couleur */}
-      <div
+      <Box
+        mt="3"
         style={{
-          marginTop: 12,
           height: 4,
           borderRadius: 2,
           backgroundColor: couleur,
         }}
       />
-    </div>
+    </Box>
   );
 }

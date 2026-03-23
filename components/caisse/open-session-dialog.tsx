@@ -20,7 +20,7 @@ import {
   Separator,
 } from "@radix-ui/themes";
 import { ScrollArea } from "@/components/ui";
-import { DoorOpen, Banknote, Info } from "lucide-react";
+import { Door, Money, Info } from "@phosphor-icons/react";
 import { toast } from "sonner";
 import { openSession } from "@/actions/sessions";
 import { formatCurrency, COUPURES_FCFA } from "@/lib/utils";
@@ -34,11 +34,7 @@ interface OpenSessionDialogProps {
 // Coupures simplifiees pour le comptage
 const COUPURES = COUPURES_FCFA.filter((c) => c.valeur >= 5);
 
-export function OpenSessionDialog({
-  open,
-  onOpenChange,
-  onSuccess,
-}: OpenSessionDialogProps) {
+export function OpenSessionDialog({ open, onOpenChange, onSuccess }: OpenSessionDialogProps) {
   const [mode, setMode] = useState<"simple" | "detailed">("simple");
   const [fondCaisse, setFondCaisse] = useState("");
   const [coupures, setCoupures] = useState<Record<number, number>>({});
@@ -125,7 +121,7 @@ export function OpenSessionDialog({
               color: "white",
             }}
           >
-            <DoorOpen size={24} />
+            <Door size={24} />
           </Box>
           <Box>
             <Dialog.Title size="5" mb="1">
@@ -143,12 +139,8 @@ export function OpenSessionDialog({
           onValueChange={(v) => setMode(v as "simple" | "detailed")}
           style={{ width: "100%", marginBottom: 16 }}
         >
-          <SegmentedControl.Item value="simple">
-            Montant simple
-          </SegmentedControl.Item>
-          <SegmentedControl.Item value="detailed">
-            Compter les coupures
-          </SegmentedControl.Item>
+          <SegmentedControl.Item value="simple">Montant simple</SegmentedControl.Item>
+          <SegmentedControl.Item value="detailed">Compter les coupures</SegmentedControl.Item>
         </SegmentedControl.Root>
 
         {/* Content */}
@@ -158,7 +150,7 @@ export function OpenSessionDialog({
               <Box>
                 <Text as="label" size="2" weight="medium" mb="2">
                   <Flex align="center" gap="2" mb="2">
-                    <Banknote size={14} />
+                    <Money size={14} />
                     Fond de caisse (FCFA)
                   </Flex>
                 </Text>
@@ -226,7 +218,7 @@ export function OpenSessionDialog({
                   >
                     <Flex align="center" gap="2" style={{ minWidth: 80 }}>
                       {c.type === "billet" ? (
-                        <Banknote size={14} color="var(--green-10)" />
+                        <Money size={14} color="var(--green-10)" />
                       ) : (
                         <Box
                           style={{
@@ -263,9 +255,7 @@ export function OpenSessionDialog({
                         type="number"
                         size="1"
                         value={coupures[c.valeur] || ""}
-                        onChange={(e) =>
-                          setCoupureValue(c.valeur, parseInt(e.target.value) || 0)
-                        }
+                        onChange={(e) => setCoupureValue(c.valeur, parseInt(e.target.value) || 0)}
                         style={{
                           width: 60,
                           textAlign: "center",
@@ -337,12 +327,8 @@ export function OpenSessionDialog({
               Annuler
             </Button>
           </Dialog.Close>
-          <Button
-            color="green"
-            onClick={handleSubmit}
-            disabled={isSubmitting}
-          >
-            <DoorOpen size={16} />
+          <Button color="green" onClick={handleSubmit} disabled={isSubmitting}>
+            <Door size={16} />
             {isSubmitting ? "Ouverture..." : "Ouvrir la caisse"}
           </Button>
         </Flex>

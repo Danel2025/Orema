@@ -9,20 +9,13 @@
  * - Marque d'urgence si necessaire
  */
 
-import {
-  createESCPOSBuilder,
-  formatPrintTime,
-  formatPrintDateTime,
-} from "./escpos";
+import { createESCPOSBuilder, formatPrintTime, formatPrintDateTime } from "./escpos";
 import { type BonPreparationData, TYPE_VENTE_LABELS } from "./types";
 
 /**
  * Genere les commandes ESC/POS pour un bon cuisine
  */
-export function generateBonCuisine(
-  data: BonPreparationData,
-  paperWidth: 58 | 80 = 80
-): string {
+export function generateBonCuisine(data: BonPreparationData, paperWidth: 58 | 80 = 80): string {
   const builder = createESCPOSBuilder(paperWidth);
 
   builder.init();
@@ -59,12 +52,7 @@ export function generateBonCuisine(
   builder.feed(1);
 
   // Numero de commande (grand)
-  builder
-    .size("double")
-    .bold(true)
-    .println(`#${data.numeroCommande}`)
-    .size("normal")
-    .bold(false);
+  builder.size("double").bold(true).println(`#${data.numeroCommande}`).size("normal").bold(false);
 
   builder.line("=");
 
@@ -93,12 +81,7 @@ export function generateBonCuisine(
     if (data.tableZone) {
       tableInfo += ` (${data.tableZone})`;
     }
-    builder
-      .bold(true)
-      .size("double-height")
-      .println(tableInfo)
-      .size("normal")
-      .bold(false);
+    builder.bold(true).size("double-height").println(tableInfo).size("normal").bold(false);
   } else if (data.clientNom) {
     builder.leftRight("Client:", data.clientNom);
   }
@@ -112,12 +95,7 @@ export function generateBonCuisine(
   // PRODUITS A PREPARER
   // ============================================
 
-  builder
-    .align("center")
-    .bold(true)
-    .println("PRODUITS A PREPARER")
-    .bold(false)
-    .align("left");
+  builder.align("center").bold(true).println("PRODUITS A PREPARER").bold(false).align("left");
 
   builder.line("-");
 
@@ -136,18 +114,13 @@ export function generateBonCuisine(
   for (const [categorie, produits] of produitsParCategorie) {
     // Titre de la categorie (si plusieurs categories)
     if (produitsParCategorie.size > 1) {
-      builder
-        .underline(true)
-        .println(`[ ${categorie.toUpperCase()} ]`)
-        .underline(false);
+      builder.underline(true).println(`[ ${categorie.toUpperCase()} ]`).underline(false);
     }
 
     // Produits de cette categorie
     for (const ligne of produits) {
       // Quantite + nom du produit
-      builder
-        .size("double-height")
-        .bold(true);
+      builder.size("double-height").bold(true);
 
       const qteStr = `${ligne.quantite}x`;
       const nomProduit = ligne.produitNom;
@@ -158,16 +131,11 @@ export function generateBonCuisine(
         builder.println(`${qteStr} ${nomProduit.substring(0, 24)}`);
       }
 
-      builder
-        .size("normal")
-        .bold(false);
+      builder.size("normal").bold(false);
 
       // Notes speciales pour ce produit
       if (ligne.notes) {
-        builder
-          .bold(true)
-          .println(`   >> ${ligne.notes.toUpperCase()}`)
-          .bold(false);
+        builder.bold(true).println(`   >> ${ligne.notes.toUpperCase()}`).bold(false);
       }
     }
 
@@ -180,11 +148,7 @@ export function generateBonCuisine(
 
   if (data.notes) {
     builder.line("-");
-    builder
-      .bold(true)
-      .println("NOTES:")
-      .bold(false)
-      .println(data.notes);
+    builder.bold(true).println("NOTES:").bold(false).println(data.notes);
   }
 
   // ============================================

@@ -5,14 +5,16 @@
  * Integre le module Session Caisse pour bloquer les ventes sans session ouverte
  */
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { toast } from "sonner";
-import { ShoppingCart, UtensilsCrossed, Truck, ShoppingBag, Search, Clock } from "lucide-react";
+import { ShoppingCart, ForkKnife, Truck, Bag, MagnifyingGlass, Clock } from "@phosphor-icons/react";
+import { useBarcodeScan } from "@/lib/hooks/use-barcode-scan";
 import {
   CaisseProductGrid,
   CaisseCart,
   CaissePayment,
   ModePanel,
+  CaisseFloorPlan,
   ProductSearchModal,
   QuantityInput,
   PendingOrdersModal,
@@ -34,15 +36,18 @@ import {
   payerVenteEnAttente,
 } from "@/actions/ventes";
 import { useCartStore } from "@/stores/cart-store";
+import { useAutoPrint } from "@/lib/print/hooks";
+import { calculerTVA } from "@/lib/utils";
+import type { CartItem } from "@/types";
 import type { SessionActive } from "@/actions/sessions";
 
 type TypeVente = "DIRECT" | "TABLE" | "LIVRAISON" | "EMPORTER";
 
 const venteTypes: { id: TypeVente; label: string; icon: React.ReactNode }[] = [
   { id: "DIRECT", label: "Vente directe", icon: <ShoppingCart size={18} /> },
-  { id: "TABLE", label: "Service a table", icon: <UtensilsCrossed size={18} /> },
+  { id: "TABLE", label: "Service a table", icon: <ForkKnife size={18} /> },
   { id: "LIVRAISON", label: "Livraison", icon: <Truck size={18} /> },
-  { id: "EMPORTER", label: "A emporter", icon: <ShoppingBag size={18} /> },
+  { id: "EMPORTER", label: "A emporter", icon: <Bag size={18} /> },
 ];
 
 interface Categorie {
@@ -55,7 +60,7 @@ interface Categorie {
 interface Produit {
   id: string;
   nom: string;
-  prixVente: number | { toNumber?(): number };
+  prixVente: number;
   tauxTva: string;
   image: string | null;
   gererStock: boolean;
@@ -90,6 +95,7 @@ interface Etablissement {
   email?: string | null;
   nif?: string | null;
   rccm?: string | null;
+  impressionAutoTicket?: boolean;
 }
 
 export default function CaissePage() {
@@ -105,6 +111,7 @@ export default function CaissePage() {
   const [isLoading, setIsLoading] = useState(true);
   const [showPayment, setShowPayment] = useState(false);
   const [showSearch, setShowSearch] = useState(false);
+  const [isProcessing, setIsProcessing] = useState(false);
 
   // États pour les commandes en attente
   const [showPendingOrders, setShowPendingOrders] = useState(false);
@@ -124,14 +131,56 @@ export default function CaissePage() {
     Awaited<ReturnType<typeof getVentesEnAttente>>[0] | null
   >(null);
 
-  const {
-    typeVente,
-    setTypeVente,
-    items,
-    clearCart,
-    tableId,
-    setVenteEnAttenteTable: setStoreVenteEnAttente,
-  } = useCartStore();
+  const typeVente = useCartStore((s) => s.typeVente);
+  const setTypeVente = useCartStore((s) => s.setTypeVente);
+  const items = useCartStore((s) => s.items);
+  const addItem = useCartStore((s) => s.addItem);
+  const clearCart = useCartStore((s) => s.clearCart);
+  const tableId = useCartStore((s) => s.tableId);
+  const setStoreVenteEnAttente = useCartStore((s) => s.setVenteEnAttenteTable);
+
+  // Ref pour tracker les lineIds de la commande existante (vs nouveaux articles)
+  const existingLineIdsRef = useRef<Set<string>>(new Set());
+  // Refs pour accéder à produits/categories dans le useEffect sans les ajouter comme dépendances
+  const produitsRef = useRef(produits);
+  produitsRef.current = produits;
+  const categoriesRef = useRef(categories);
+  categoriesRef.current = categories;
+
+  // Scanner code-barres USB : recherche et ajout automatique au panier
+  useBarcodeScan({
+    onScan: (barcode) => {
+      if (!session) {
+        toast.error("Ouvrez une session caisse avant de scanner");
+        return;
+      }
+
+      const produit = produits.find((p) => p.codeBarre === barcode);
+
+      if (produit) {
+        if (!produit.actif) {
+          toast.error(`${produit.nom} est inactif`);
+          return;
+        }
+
+        const cat = categories.find((c) => c.id === produit.categorieId);
+
+        addItem({
+          produitId: produit.id,
+          prixUnitaire: produit.prixVente,
+          categorieNom: cat?.nom,
+          produit: {
+            nom: produit.nom,
+            tauxTva: produit.tauxTva,
+          },
+        });
+        toast.success(`${produit.nom} ajouté au panier`);
+      } else {
+        toast.error(`Produit non trouvé pour le code-barres : ${barcode}`);
+      }
+    },
+    enabled: !!session && !showPayment && !isProcessing,
+  });
 
   // Charger toutes les données de la caisse en une seule requête
   const loadAllData = useCallback(async () => {
@@ -142,7 +191,7 @@ export default function CaissePage() {
       const data = await loadCaissePage();
 
       setCategories(data.categories as Categorie[]);
-      setProduits(data.produits as unknown as Produit[]);
+      setProduits(data.produits as Produit[]);
       setStats({
         totalVentes: data.stats.totalVentes,
         chiffreAffaires: data.stats.chiffreAffaires,
@@ -195,106 +244,86 @@ export default function CaissePage() {
   }, []);
 
   /**
-   * Impression des bons cuisine/bar pour une commande
+   * Hook useAutoPrint pour l'impression automatique apres paiement
+   * Route vers ticket client + bons cuisine + bons bar via /api/print/auto-route
    */
-  const printKitchenBons = useCallback(async (venteId: string) => {
-    try {
-      // Imprimer les bons cuisine et bar en parallele
-      const [cuisineResponse, barResponse] = await Promise.all([
-        fetch("/api/print", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            type: "cuisine",
-            venteId,
-          }),
-        }),
-        fetch("/api/print", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            type: "bar",
-            venteId,
-          }),
-        }),
-      ]);
-
-      const cuisineResult = await cuisineResponse.json();
-      const barResult = await barResponse.json();
-
-      // Les erreurs pour cuisine/bar sont normales si pas d'articles de ce type
-      if (!cuisineResult.success && cuisineResult.error !== "Donnees du bon cuisine manquantes") {
-        console.warn("Erreur impression bon cuisine:", cuisineResult.error);
+  const { autoPrint: autoPrintFull } = useAutoPrint({
+    printTicket: true,
+    printKitchen: true,
+    printBar: true,
+    onSuccess: () => {
+      toast.success("Impression envoyee");
+    },
+    onError: (errors) => {
+      for (const err of errors) {
+        toast.error(`Impression: ${err}`);
       }
-      if (!barResult.success && barResult.error !== "Donnees du bon bar manquantes") {
-        console.warn("Erreur impression bon bar:", barResult.error);
+    },
+  });
+
+  /**
+   * Hook useAutoPrint pour les bons cuisine/bar uniquement (mise en attente)
+   * Pas de ticket client car la commande n'est pas encore payee
+   */
+  const { autoPrint: autoPrintKitchenOnly } = useAutoPrint({
+    printTicket: false,
+    printKitchen: true,
+    printBar: true,
+    onError: (errors) => {
+      for (const err of errors) {
+        console.warn("Impression bon:", err);
       }
-    } catch (error) {
-      console.error("Erreur impression bons:", error);
-    }
-  }, []);
+    },
+  });
+
+  /**
+   * Impression des bons cuisine/bar pour une commande en attente
+   */
+  const printKitchenBons = useCallback(
+    async (venteId: string) => {
+      try {
+        await autoPrintKitchenOnly(venteId);
+      } catch (error) {
+        console.error("Erreur impression bons:", error);
+      }
+    },
+    [autoPrintKitchenOnly]
+  );
 
   /**
    * Impression automatique apres paiement
-   * Imprime le ticket client et les bons cuisine/bar
+   * Utilise le routage automatique via /api/print/auto-route
+   * Respecte le reglage impressionAutoTicket de l'etablissement
    */
-  const printAfterPayment = useCallback(async (venteId: string) => {
-    try {
-      // Imprimer le ticket client
-      const ticketResponse = await fetch("/api/print", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          type: "ticket",
-          venteId,
-        }),
-      });
-      const ticketResult = await ticketResponse.json();
-      if (!ticketResult.success) {
-        console.warn("Erreur impression ticket:", ticketResult.error);
+  const printAfterPayment = useCallback(
+    async (venteId: string) => {
+      // Verifier si l'impression automatique est activee
+      const autoEnabled = etablissement?.impressionAutoTicket !== false;
+      if (!autoEnabled) {
+        return; // L'impression automatique est desactivee dans les parametres
       }
 
-      // Imprimer les bons cuisine et bar en parallele
-      const [cuisineResponse, barResponse] = await Promise.all([
-        fetch("/api/print", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            type: "cuisine",
-            venteId,
-          }),
-        }),
-        fetch("/api/print", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            type: "bar",
-            venteId,
-          }),
-        }),
-      ]);
-
-      const cuisineResult = await cuisineResponse.json();
-      const barResult = await barResponse.json();
-
-      // Les erreurs pour cuisine/bar sont normales si pas d'articles de ce type
-      if (!cuisineResult.success && cuisineResult.error !== "Donnees du bon cuisine manquantes") {
-        console.warn("Erreur impression bon cuisine:", cuisineResult.error);
+      try {
+        const result = await autoPrintFull(venteId);
+        if (result.partialSuccess) {
+          toast.info("Impression partielle : certains documents n'ont pas pu etre imprimes");
+        }
+      } catch (error) {
+        console.error("Erreur impression apres paiement:", error);
+        // Ne pas bloquer la vente si l'impression echoue
       }
-      if (!barResult.success && barResult.error !== "Donnees du bon bar manquantes") {
-        console.warn("Erreur impression bon bar:", barResult.error);
-      }
-    } catch (error) {
-      console.error("Erreur impression:", error);
-      // Ne pas bloquer la vente si l'impression echoue
-    }
-  }, []);
+    },
+    [autoPrintFull, etablissement?.impressionAutoTicket]
+  );
 
-  // Vérifier si la table sélectionnée a une commande en attente
+  // Vérifier si la table sélectionnée a une commande en attente + hydrater le panier
   useEffect(() => {
+    let cancelled = false;
+
     const checkTablePendingOrder = async () => {
       if (typeVente === "TABLE" && tableId) {
         const vente = await getVenteEnAttenteByTable(tableId);
+        if (cancelled) return;
         setVenteEnAttenteTable(vente);
         if (vente) {
           setStoreVenteEnAttente({
@@ -303,15 +332,77 @@ export default function CaissePage() {
             totalFinal: Number(vente.totalFinal),
             lignesCount: vente.lignes.length,
           });
+
+          // Hydrater le panier avec les articles existants de la commande
+          const lineIds = new Set<string>();
+          const cartItems: CartItem[] = vente.lignes.map((ligne: {
+            id: unknown;
+            quantite: unknown;
+            prixUnitaire: number;
+            produitId: unknown;
+            produit: { id: string; nom: string } | null;
+            notes: unknown;
+            supplements: Array<{ id: string; nom: string; prix: number }> | null;
+          }) => {
+            const prod = produitsRef.current.find((p) => p.id === ligne.produitId);
+            const lineId = String(ligne.id);
+            lineIds.add(lineId);
+
+            const totalSupplements = (ligne.supplements || []).reduce(
+              (acc: number, s: { prix: number }) => acc + s.prix,
+              0
+            );
+            const prixAvecSupplements = ligne.prixUnitaire + totalSupplements;
+            const quantite = Number(ligne.quantite);
+            const sousTotal = prixAvecSupplements * quantite;
+            const tauxTva = prod?.tauxTva || "STANDARD";
+            const montantTva = calculerTVA(sousTotal, tauxTva);
+
+            return {
+              lineId,
+              produitId: ligne.produitId as string,
+              produit: {
+                nom: (ligne.produit as { nom: string } | null)?.nom || "Produit",
+                tauxTva,
+              },
+              categorieNom: prod
+                ? categoriesRef.current.find((c) => c.id === prod.categorieId)?.nom
+                : undefined,
+              quantite,
+              prixUnitaire: ligne.prixUnitaire,
+              sousTotal,
+              montantTva,
+              total: sousTotal + montantTva,
+              notes: ligne.notes as string | undefined,
+              supplements:
+                ligne.supplements && ligne.supplements.length > 0
+                  ? ligne.supplements.map((s: { nom: string; prix: number }) => ({
+                      nom: s.nom,
+                      prix: s.prix,
+                    }))
+                  : undefined,
+              totalSupplements: totalSupplements > 0 ? totalSupplements : undefined,
+            };
+          });
+
+          existingLineIdsRef.current = lineIds;
+          useCartStore.setState({ items: cartItems });
+          useCartStore.getState().calculateTotals();
         } else {
           setStoreVenteEnAttente(null);
+          existingLineIdsRef.current = new Set();
         }
       } else {
         setVenteEnAttenteTable(null);
         setStoreVenteEnAttente(null);
+        existingLineIdsRef.current = new Set();
       }
     };
     checkTablePendingOrder();
+
+    return () => {
+      cancelled = true;
+    };
   }, [typeVente, tableId, setStoreVenteEnAttente]);
 
   useEffect(() => {
@@ -324,141 +415,181 @@ export default function CaissePage() {
   }, [loadAllData]);
 
   // Handler pour mise en attente
-  const handleMettreEnAttente = async () => {
-    if (!session) {
-      toast.error("Aucune session de caisse ouverte");
-      return;
-    }
-
-    const cartState = useCartStore.getState();
-
-    if (cartState.typeVente === "LIVRAISON" && !cartState.adresseLivraison) {
-      toast.error("L'adresse de livraison est requise");
-      return;
-    }
-
-    const result = await createVenteEnAttente({
-      typeVente: cartState.typeVente as "TABLE" | "LIVRAISON" | "EMPORTER",
-      sessionCaisseId: session.id,
-      lignes: cartState.items.map((item) => ({
-        produitId: item.produitId,
-        quantite: item.quantite,
-        prixUnitaire: item.prixUnitaire,
-        tauxTva: item.produit.tauxTva,
-        notes: item.notes,
-        supplements: item.supplements,
-        totalSupplements: item.totalSupplements,
-      })),
-      remise: cartState.remise,
-      tableId: cartState.tableId,
-      clientId: cartState.clientId,
-      adresseLivraison: cartState.adresseLivraison,
-      telephoneLivraison: cartState.telephoneLivraison,
-      notesLivraison: cartState.notesLivraison,
-    });
-
-    if (result.success) {
-      toast.success(`Commande #${result.data?.numeroTicket} mise en attente`);
-      clearCart();
-      refreshStats();
-
-      // Imprimer les bons cuisine/bar
-      if (result.data?.id) {
-        printKitchenBons(result.data.id);
+  const handleMettreEnAttente = useCallback(async () => {
+    try {
+      if (!session) {
+        toast.error("Aucune session de caisse ouverte");
+        return;
       }
-    } else {
-      toast.error(result.error || "Erreur lors de la mise en attente");
+
+      const cartState = useCartStore.getState();
+
+      if (cartState.typeVente === "LIVRAISON" && !cartState.adresseLivraison) {
+        toast.error("L'adresse de livraison est requise");
+        return;
+      }
+
+      setIsProcessing(true);
+      const result = await createVenteEnAttente({
+        typeVente: cartState.typeVente as "TABLE" | "LIVRAISON" | "EMPORTER",
+        sessionCaisseId: session.id,
+        lignes: cartState.items.map((item) => ({
+          produitId: item.produitId,
+          quantite: item.quantite,
+          prixUnitaire: item.prixUnitaire,
+          tauxTva: item.produit.tauxTva,
+          notes: item.notes,
+          supplements: item.supplements,
+          totalSupplements: item.totalSupplements,
+        })),
+        remise: cartState.remise,
+        tableId: cartState.tableId,
+        clientId: cartState.clientId,
+        adresseLivraison: cartState.adresseLivraison,
+        telephoneLivraison: cartState.telephoneLivraison,
+        notesLivraison: cartState.notesLivraison,
+      });
+
+      if (result.success) {
+        toast.success(`Commande #${result.data?.numeroTicket} mise en attente`);
+        const currentMode = cartState.typeVente;
+        clearCart();
+        setTypeVente(currentMode);
+        refreshStats();
+
+        // Imprimer les bons cuisine/bar
+        if (result.data?.id) {
+          printKitchenBons(result.data.id);
+        }
+      } else {
+        toast.error(result.error || "Erreur lors de la mise en attente");
+      }
+    } catch (error) {
+      console.error("Erreur:", error);
+      toast.error("Une erreur inattendue est survenue");
+    } finally {
+      setIsProcessing(false);
     }
-  };
+  }, [session, clearCart, setTypeVente, refreshStats, printKitchenBons]);
 
   // Handler pour ajouter à une commande existante
-  const handleAjouterALaCommande = async () => {
-    if (!venteEnAttenteTable) {
-      toast.error("Aucune commande en attente sur cette table");
-      return;
+  const handleAjouterALaCommande = useCallback(async () => {
+    try {
+      if (!venteEnAttenteTable) {
+        toast.error("Aucune commande en attente sur cette table");
+        return;
+      }
+
+      const cartState = useCartStore.getState();
+
+      // Ne garder que les NOUVEAUX articles (pas ceux déjà dans la commande)
+      const newItems = cartState.items.filter(
+        (item) => !existingLineIdsRef.current.has(item.lineId)
+      );
+
+      if (newItems.length === 0) {
+        toast.info("Aucun nouvel article à ajouter");
+        return;
+      }
+
+      setIsProcessing(true);
+      const result = await addToVenteEnAttente(
+        venteEnAttenteTable.id,
+        newItems.map((item) => ({
+          produitId: item.produitId,
+          quantite: item.quantite,
+          prixUnitaire: item.prixUnitaire,
+          tauxTva: item.produit.tauxTva,
+          notes: item.notes,
+          supplements: item.supplements,
+          totalSupplements: item.totalSupplements,
+        }))
+      );
+
+      if (result.success) {
+        toast.success("Articles ajoutés à la commande");
+        const currentMode = useCartStore.getState().typeVente;
+        clearCart();
+        setTypeVente(currentMode);
+        refreshStats();
+
+        // Imprimer les bons cuisine/bar pour les nouveaux articles
+        printKitchenBons(venteEnAttenteTable.id);
+      } else {
+        toast.error(result.error || "Erreur lors de l'ajout");
+      }
+    } catch (error) {
+      console.error("Erreur:", error);
+      toast.error("Une erreur inattendue est survenue");
+    } finally {
+      setIsProcessing(false);
     }
-
-    const cartState = useCartStore.getState();
-
-    const result = await addToVenteEnAttente(
-      venteEnAttenteTable.id,
-      cartState.items.map((item) => ({
-        produitId: item.produitId,
-        quantite: item.quantite,
-        prixUnitaire: item.prixUnitaire,
-        tauxTva: item.produit.tauxTva,
-        notes: item.notes,
-        supplements: item.supplements,
-        totalSupplements: item.totalSupplements,
-      }))
-    );
-
-    if (result.success) {
-      toast.success("Articles ajoutés à la commande");
-      clearCart();
-      refreshStats();
-
-      // Imprimer les bons cuisine/bar pour les nouveaux articles
-      printKitchenBons(venteEnAttenteTable.id);
-    } else {
-      toast.error(result.error || "Erreur lors de l'ajout");
-    }
-  };
+  }, [venteEnAttenteTable, clearCart, setTypeVente, refreshStats, printKitchenBons]);
 
   // Handler pour mise en compte
-  const handleMettreEnCompte = async () => {
-    if (!session) {
-      toast.error("Aucune session de caisse ouverte");
-      return;
+  const handleMettreEnCompte = useCallback(async () => {
+    try {
+      if (!session) {
+        toast.error("Aucune session de caisse ouverte");
+        return;
+      }
+
+      const cartState = useCartStore.getState();
+
+      if (!cartState.clientId) {
+        toast.error("Veuillez sélectionner un client");
+        return;
+      }
+
+      setIsProcessing(true);
+      const result = await createVenteEnCompte({
+        typeVente: cartState.typeVente,
+        sessionCaisseId: session.id,
+        clientId: cartState.clientId,
+        lignes: cartState.items.map((item) => ({
+          produitId: item.produitId,
+          quantite: item.quantite,
+          prixUnitaire: item.prixUnitaire,
+          tauxTva: item.produit.tauxTva,
+          notes: item.notes,
+          supplements: item.supplements,
+          totalSupplements: item.totalSupplements,
+        })),
+        remise: cartState.remise,
+        tableId: cartState.tableId,
+        adresseLivraison: cartState.adresseLivraison,
+        notesLivraison: cartState.notesLivraison,
+      });
+
+      if (result.success) {
+        toast.success(`Vente #${result.data?.numeroTicket} mise en compte`);
+        const currentMode = cartState.typeVente;
+        clearCart();
+        setTypeVente(currentMode);
+        refreshStats();
+      } else {
+        toast.error(result.error || "Erreur lors de la mise en compte");
+      }
+    } catch (error) {
+      console.error("Erreur:", error);
+      toast.error("Une erreur inattendue est survenue");
+    } finally {
+      setIsProcessing(false);
     }
-
-    const cartState = useCartStore.getState();
-
-    if (!cartState.clientId) {
-      toast.error("Veuillez sélectionner un client");
-      return;
-    }
-
-    const result = await createVenteEnCompte({
-      typeVente: cartState.typeVente,
-      sessionCaisseId: session.id,
-      clientId: cartState.clientId,
-      lignes: cartState.items.map((item) => ({
-        produitId: item.produitId,
-        quantite: item.quantite,
-        prixUnitaire: item.prixUnitaire,
-        tauxTva: item.produit.tauxTva,
-        notes: item.notes,
-        supplements: item.supplements,
-        totalSupplements: item.totalSupplements,
-      })),
-      remise: cartState.remise,
-      tableId: cartState.tableId,
-      adresseLivraison: cartState.adresseLivraison,
-      notesLivraison: cartState.notesLivraison,
-    });
-
-    if (result.success) {
-      toast.success(`Vente #${result.data?.numeroTicket} mise en compte`);
-      clearCart();
-      refreshStats();
-    } else {
-      toast.error(result.error || "Erreur lors de la mise en compte");
-    }
-  };
+  }, [session, clearCart, setTypeVente, refreshStats]);
 
   // Handler pour payer une commande en attente
-  const handlePayerVenteEnAttente = (vente: (typeof ventesEnAttente)[0]) => {
+  const handlePayerVenteEnAttente = useCallback((vente: (typeof ventesEnAttente)[0]) => {
     // Fermer le modal des commandes en attente
     setShowPendingOrders(false);
     // Stocker la vente à payer
     setVenteAPayer(vente);
     // Ouvrir le modal de paiement
     setShowPayment(true);
-  };
+  }, []);
 
   // Handler pour annuler une commande en attente
-  const handleAnnulerVenteEnAttente = async (venteId: string) => {
+  const handleAnnulerVenteEnAttente = useCallback(async (venteId: string) => {
     const result = await annulerVenteEnAttente(venteId);
     if (result.success) {
       toast.success("Commande annulée");
@@ -467,10 +598,10 @@ export default function CaissePage() {
     } else {
       toast.error(result.error || "Erreur lors de l'annulation");
     }
-  };
+  }, [loadPendingOrders, refreshStats]);
 
   // Filtrer les produits selon le mode de vente
-  const filteredProduits = produits.filter((prod) => {
+  const filteredProduits = useMemo(() => produits.filter((prod) => {
     if (!prod.actif) return false;
     switch (typeVente) {
       case "DIRECT":
@@ -484,7 +615,7 @@ export default function CaissePage() {
       default:
         return true;
     }
-  });
+  }), [produits, typeVente]);
 
   // Raccourcis clavier
   useEffect(() => {
@@ -547,10 +678,10 @@ export default function CaissePage() {
 
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [items.length, showPayment, showSearch, clearCart, session]);
+  }, [items.length, showPayment, showSearch, clearCart, session, handleMettreEnAttente, handleAjouterALaCommande, venteEnAttenteTable, loadPendingOrders]);
 
   // Traitement du paiement
-  const handlePaymentComplete = async (paymentData: {
+  const handlePaymentComplete = useCallback(async (paymentData: {
     modePaiement: string;
     montantRecu: number;
     montantRendu: number;
@@ -668,7 +799,9 @@ export default function CaissePage() {
 
     if (result.success) {
       toast.success(`Vente #${result.data?.numeroTicket} enregistrée`);
+      const currentMode = cartState.typeVente;
       clearCart();
+      setTypeVente(currentMode);
       setShowPayment(false);
       await refreshStats();
 
@@ -679,7 +812,7 @@ export default function CaissePage() {
     } else {
       toast.error(result.error || "Erreur lors de la vente");
     }
-  };
+  }, [session, venteAPayer, clearCart, setTypeVente, refreshStats, loadPendingOrders, printAfterPayment]);
 
   // Loading state
   if (isLoadingSession) {
@@ -733,11 +866,12 @@ export default function CaissePage() {
                 key={type.id}
                 onClick={() => setTypeVente(type.id)}
                 title={type.label}
+                aria-label={type.label}
                 style={{
                   display: "flex",
                   alignItems: "center",
                   gap: 6,
-                  padding: "6px 12px",
+                  padding: "8px 16px",
                   borderRadius: 6,
                   border: "none",
                   backgroundColor:
@@ -778,12 +912,13 @@ export default function CaissePage() {
             <button
               onClick={() => setShowSearch(true)}
               title="Rechercher un produit (F2)"
+              aria-label="Rechercher un produit"
               style={{
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
-                width: 36,
-                height: 36,
+                width: 44,
+                height: 44,
                 borderRadius: 8,
                 border: "1px solid var(--gray-a5)",
                 backgroundColor: "transparent",
@@ -791,7 +926,7 @@ export default function CaissePage() {
                 cursor: "pointer",
               }}
             >
-              <Search size={18} />
+              <MagnifyingGlass size={18} />
             </button>
 
             {/* Bouton commandes en attente */}
@@ -801,13 +936,14 @@ export default function CaissePage() {
                 setShowPendingOrders(true);
               }}
               title="Commandes en attente (F7)"
+              aria-label="Commandes en attente"
               style={{
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
                 gap: 6,
                 padding: "0 12px",
-                height: 36,
+                height: 44,
                 borderRadius: 8,
                 border: "1px solid var(--purple-a6)",
                 backgroundColor: pendingOrdersCount > 0 ? "var(--purple-a3)" : "transparent",
@@ -854,9 +990,13 @@ export default function CaissePage() {
           </div>
         ) : (
           <div style={{ display: "flex", flex: 1, minHeight: 0 }}>
-            {/* Grille produits */}
-            <div style={{ flex: 1, minWidth: 0 }}>
-              <CaisseProductGrid categories={categories} produits={filteredProduits} />
+            {/* Zone principale : plan de salle (mode TABLE) ou grille produits */}
+            <div style={{ flex: 1, minWidth: 0, display: "flex", flexDirection: "column" }}>
+              {typeVente === "TABLE" && !tableId ? (
+                <CaisseFloorPlan />
+              ) : (
+                <CaisseProductGrid categories={categories} produits={filteredProduits} />
+              )}
             </div>
 
             {/* Panier */}
@@ -887,7 +1027,8 @@ export default function CaissePage() {
         />
 
         {/* Modal de paiement */}
-        {showPayment ? <CaissePayment
+        {showPayment ? (
+          <CaissePayment
             onClose={() => {
               setShowPayment(false);
               setVenteAPayer(null);
@@ -911,7 +1052,8 @@ export default function CaissePage() {
                   }
                 : null
             }
-          /> : null}
+          />
+        ) : null}
 
         {/* Dialog ouverture session */}
         <OpenSessionDialog
@@ -921,12 +1063,14 @@ export default function CaissePage() {
         />
 
         {/* Dialog cloture session */}
-        {session ? <CloseSessionDialog
+        {session ? (
+          <CloseSessionDialog
             open={showCloseSession}
             onOpenChange={setShowCloseSession}
             session={session}
             onSuccess={handleSessionChange}
-          /> : null}
+          />
+        ) : null}
 
         {/* Modal commandes en attente */}
         <PendingOrdersModal
@@ -968,19 +1112,29 @@ export default function CaissePage() {
                   valeurRemise: selectedOrderDetails.valeurRemise
                     ? Number(selectedOrderDetails.valeurRemise)
                     : null,
-                  lignes: selectedOrderDetails.lignes.map((l) => ({
-                    id: String(l.id),
-                    quantite: Number(l.quantite),
-                    prixUnitaire: Number(l.prixUnitaire),
-                    total: Number(l.total),
-                    notes: l.notes as string | null | undefined,
-                    produit: l.produit as { id: string; nom: string },
-                    supplements: (l.supplements || []).map((s) => ({
-                      id: String(s.id),
-                      nom: String(s.nom),
-                      prix: Number(s.prix),
-                    })),
-                  })),
+                  lignes: selectedOrderDetails.lignes.map(
+                    (l: {
+                      id: unknown;
+                      quantite: unknown;
+                      prixUnitaire: number;
+                      total: number;
+                      notes: unknown;
+                      produit: unknown;
+                      supplements: Array<{ id: unknown; nom: unknown; prix: number }>;
+                    }) => ({
+                      id: String(l.id),
+                      quantite: Number(l.quantite),
+                      prixUnitaire: Number(l.prixUnitaire),
+                      total: Number(l.total),
+                      notes: l.notes as string | null | undefined,
+                      produit: l.produit as { id: string; nom: string },
+                      supplements: (l.supplements || []).map((s) => ({
+                        id: String(s.id),
+                        nom: String(s.nom),
+                        prix: Number(s.prix),
+                      })),
+                    })
+                  ),
                 }
               : null
           }

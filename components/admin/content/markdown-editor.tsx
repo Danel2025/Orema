@@ -55,7 +55,8 @@ export function MarkdownEditor({
   return (
     <Box>
       {/* Header */}
-      {label ? <Flex align="center" justify="between" mb="2">
+      {label ? (
+        <Flex align="center" justify="between" mb="2">
           <Flex align="center" gap="2">
             <Text size="2" weight="medium">
               {label}
@@ -91,7 +92,8 @@ export function MarkdownEditor({
               </Flex>
             </SegmentedControl.Item>
           </SegmentedControl.Root>
-        </Flex> : null}
+        </Flex>
+      ) : null}
 
       {/* Editor */}
       <Box
@@ -142,9 +144,11 @@ export function MarkdownEditor({
           </Text>
         </Flex>
 
-        {error ? <Text size="1" color="red">
+        {error ? (
+          <Text size="1" color="red">
             {error}
-          </Text> : null}
+          </Text>
+        ) : null}
       </Flex>
 
       {/* Markdown Help */}
@@ -157,8 +161,8 @@ export function MarkdownEditor({
         }}
       >
         <Text size="1" color="gray" style={{ lineHeight: 1.5 }}>
-          <strong>Aide Markdown:</strong> **gras**, *italique*, # Titre, ## Sous-titre,
-          - liste, `code`, [lien](url), ![image](url)
+          <strong>Aide Markdown:</strong> **gras**, *italique*, # Titre, ## Sous-titre, - liste,
+          `code`, [lien](url), ![image](url)
         </Text>
       </Box>
     </Box>

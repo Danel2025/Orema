@@ -168,9 +168,7 @@ class WebPrinterManager {
    * Demande a l'utilisateur de selectionner une imprimante USB/Serie
    * @param useFilter true pour filtrer les imprimantes connues, false pour tout afficher
    */
-  async requestSerialPrinter(
-    useFilter: boolean = true
-  ): Promise<WebSerialPortInfo | null> {
+  async requestSerialPrinter(useFilter: boolean = true): Promise<WebSerialPortInfo | null> {
     return useFilter ? requestSerialPort() : requestAnySerialPort();
   }
 
@@ -328,10 +326,7 @@ class WebPrinterManager {
    * Envoie des donnees ESC/POS a une imprimante geree
    * Choisit automatiquement le canal (Web Serial, Bluetooth, ou API reseau)
    */
-  async sendToPrinter(
-    printerId: string,
-    data: string | Uint8Array
-  ): Promise<PrintResult> {
+  async sendToPrinter(printerId: string, data: string | Uint8Array): Promise<PrintResult> {
     const managed = this.printers.get(printerId);
 
     if (!managed) {
@@ -340,8 +335,7 @@ class WebPrinterManager {
     }
 
     // Convertir si necessaire
-    const bytes =
-      typeof data === "string" ? escposStringToUint8Array(data) : data;
+    const bytes = typeof data === "string" ? escposStringToUint8Array(data) : data;
 
     switch (managed.connectionType) {
       case "web-serial":
@@ -352,11 +346,7 @@ class WebPrinterManager {
             printerId,
           };
         }
-        return sendViaWebSerial(
-          managed.serialPort.port,
-          bytes,
-          managed.serialOptions
-        );
+        return sendViaWebSerial(managed.serialPort.port, bytes, managed.serialOptions);
 
       case "web-bluetooth":
         if (!managed.bluetoothDevice) {
@@ -396,10 +386,7 @@ class WebPrinterManager {
         if (!managed.serialPort) {
           return { success: false, error: "Port serie non configure", printerId };
         }
-        return testSerialConnection(
-          managed.serialPort.port,
-          managed.serialOptions
-        );
+        return testSerialConnection(managed.serialPort.port, managed.serialOptions);
 
       case "web-bluetooth":
         if (!managed.bluetoothDevice) {
@@ -443,10 +430,7 @@ class WebPrinterManager {
   ): Promise<PrintResult> {
     try {
       // Convertir en base64 pour le transport HTTP
-      const base64Data =
-        typeof data === "string"
-          ? btoa(data)
-          : btoa(String.fromCharCode(...data));
+      const base64Data = typeof data === "string" ? btoa(data) : btoa(String.fromCharCode(...data));
 
       const response = await fetch("/api/print/send-raw", {
         method: "POST",

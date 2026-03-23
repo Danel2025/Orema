@@ -14,7 +14,10 @@ export type LoginEmailData = z.infer<typeof loginEmailSchema>;
  * Schema Zod pour le login par PIN
  */
 export const loginPinSchema = z.object({
-  pinCode: z.string().length(4, "Le code PIN doit contenir 4 chiffres").regex(/^\d+$/, "Le code PIN doit contenir uniquement des chiffres"),
+  pinCode: z
+    .string()
+    .length(4, "Le code PIN doit contenir 4 chiffres")
+    .regex(/^\d+$/, "Le code PIN doit contenir uniquement des chiffres"),
 });
 
 export type LoginPinData = z.infer<typeof loginPinSchema>;

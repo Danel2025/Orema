@@ -5,16 +5,9 @@
  * S'ouvre quand un produit a des supplements disponibles
  */
 
-import { useState, useEffect, useCallback } from "react";
-import { X, Plus, Loader2 } from "lucide-react";
-import {
-  Dialog,
-  Flex,
-  Text,
-  Checkbox,
-  Button,
-  Badge,
-} from "@radix-ui/themes";
+import { useState, useCallback, useRef } from "react";
+import { X, Plus, SpinnerGap } from "@phosphor-icons/react";
+import { Dialog, Flex, Text, Checkbox, Button, Badge } from "@radix-ui/themes";
 import { ScrollArea } from "@/components/ui";
 import { formatCurrency } from "@/lib/utils";
 
@@ -49,17 +42,15 @@ export function SupplementSelector({
   produit,
   onConfirm,
 }: SupplementSelectorProps) {
-  const [selectedSupplements, setSelectedSupplements] = useState<Set<string>>(
-    new Set()
-  );
+  const [selectedSupplements, setSelectedSupplements] = useState<Set<string>>(new Set());
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Reset selections when dialog opens
-  useEffect(() => {
-    if (open) {
-      setSelectedSupplements(new Set());
-    }
-  }, [open]);
+  // Reset selections when dialog opens (derived-state pattern)
+  const prevOpenRef = useRef(false);
+  if (open && !prevOpenRef.current) {
+    setSelectedSupplements(new Set());
+  }
+  prevOpenRef.current = open;
 
   // Toggle supplement selection
   const toggleSupplement = useCallback((supplementId: string) => {
@@ -88,9 +79,7 @@ export function SupplementSelector({
   // Handle confirm
   const handleConfirm = useCallback(() => {
     setIsSubmitting(true);
-    const supplements = produit.supplements.filter((s) =>
-      selectedSupplements.has(s.id)
-    );
+    const supplements = produit.supplements.filter((s) => selectedSupplements.has(s.id));
     onConfirm(supplements);
     setIsSubmitting(false);
     onOpenChange(false);
@@ -102,20 +91,14 @@ export function SupplementSelector({
     onOpenChange(false);
   }, [onConfirm, onOpenChange]);
 
-  const totalSupplements = Array.from(selectedSupplements).reduce(
-    (acc, id) => {
-      const supplement = produit.supplements.find((s) => s.id === id);
-      return acc + (supplement?.prix || 0);
-    },
-    0
-  );
+  const totalSupplements = Array.from(selectedSupplements).reduce((acc, id) => {
+    const supplement = produit.supplements.find((s) => s.id === id);
+    return acc + (supplement?.prix || 0);
+  }, 0);
 
   return (
     <Dialog.Root open={open} onOpenChange={onOpenChange}>
-      <Dialog.Content
-        maxWidth="420px"
-        style={{ padding: 0, overflow: "hidden" }}
-      >
+      <Dialog.Content maxWidth="420px" style={{ padding: 0, overflow: "hidden" }}>
         {/* Header */}
         <Flex
           justify="between"
@@ -155,9 +138,7 @@ export function SupplementSelector({
                     justify="between"
                     p="3"
                     style={{
-                      backgroundColor: isSelected
-                        ? "var(--accent-a3)"
-                        : "var(--gray-a2)",
+                      backgroundColor: isSelected ? "var(--accent-a3)" : "var(--gray-a2)",
                       borderRadius: 10,
                       border: isSelected
                         ? "1px solid var(--accent-a6)"
@@ -171,18 +152,13 @@ export function SupplementSelector({
                       <Checkbox
                         checked={isSelected}
                         onCheckedChange={() => toggleSupplement(supplement.id)}
-                       
                         size="2"
                       />
                       <Text size="3" weight={isSelected ? "medium" : "regular"}>
                         {supplement.nom}
                       </Text>
                     </Flex>
-                    <Badge
-                      color={isSelected ? "violet" : "gray"}
-                      variant="soft"
-                      size="2"
-                    >
+                    <Badge color={isSelected ? "violet" : "gray"} variant="soft" size="2">
                       +{formatCurrency(supplement.prix)}
                     </Badge>
                   </Flex>
@@ -220,13 +196,10 @@ export function SupplementSelector({
             </Flex>
             {totalSupplements > 0 && (
               <Flex justify="between" align="center">
-                <Text size="2">
-                  Supplements ({selectedSupplements.size})
-                </Text>
+                <Text size="2">Supplements ({selectedSupplements.size})</Text>
                 <Text
                   size="2"
                   weight="medium"
-                 
                   style={{
                     fontFamily: "var(--font-google-sans-code), ui-monospace, monospace",
                   }}
@@ -247,7 +220,6 @@ export function SupplementSelector({
               <Text
                 size="4"
                 weight="bold"
-               
                 style={{
                   fontFamily: "var(--font-google-sans-code), ui-monospace, monospace",
                 }}
@@ -259,25 +231,11 @@ export function SupplementSelector({
 
           {/* Actions */}
           <Flex gap="3">
-            <Button
-              variant="soft"
-              color="gray"
-              style={{ flex: 1 }}
-              onClick={handleSkip}
-            >
+            <Button variant="soft" color="gray" style={{ flex: 1 }} onClick={handleSkip}>
               Sans supplement
             </Button>
-            <Button
-             
-              style={{ flex: 1 }}
-              onClick={handleConfirm}
-              disabled={isSubmitting}
-            >
-              {isSubmitting ? (
-                <Loader2 size={16} className="animate-spin" />
-              ) : (
-                <Plus size={16} />
-              )}
+            <Button style={{ flex: 1 }} onClick={handleConfirm} disabled={isSubmitting}>
+              {isSubmitting ? <SpinnerGap size={16} className="animate-spin" /> : <Plus size={16} />}
               Ajouter au panier
             </Button>
           </Flex>

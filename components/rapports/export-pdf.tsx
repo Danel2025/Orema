@@ -7,7 +7,7 @@
 
 import { useState } from "react";
 import { Button } from "@radix-ui/themes";
-import { FileText, Loader2 } from "lucide-react";
+import { FileText, CircleNotch } from "@phosphor-icons/react";
 import { toast } from "sonner";
 
 // ============================================================================
@@ -228,7 +228,8 @@ export function ExportPDF({
           const printBtn = doc.createElement("button");
           printBtn.className = "no-print";
           printBtn.textContent = "Imprimer";
-          printBtn.style.cssText = "padding: 10px 20px; background: #f97316; color: white; border: none; cursor: pointer; border-radius: 6px;";
+          printBtn.style.cssText =
+            "padding: 10px 20px; background: #f97316; color: white; border: none; cursor: pointer; border-radius: 6px;";
           printBtn.addEventListener("click", () => printWindow.print());
           doc.body.appendChild(printBtn);
 
@@ -243,17 +244,8 @@ export function ExportPDF({
   };
 
   return (
-    <Button
-      variant={variant}
-      color="red"
-      onClick={handleExport}
-      disabled={isExporting}
-    >
-      {isExporting ? (
-        <Loader2 size={16} className="animate-spin" />
-      ) : (
-        <FileText size={16} />
-      )}
+    <Button variant={variant} color="red" onClick={handleExport} disabled={isExporting}>
+      {isExporting ? <CircleNotch size={16} className="animate-spin" /> : <FileText size={16} />}
       {isExporting ? "Export en cours..." : "Exporter PDF"}
     </Button>
   );

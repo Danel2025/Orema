@@ -5,20 +5,13 @@
  * Format plus compact et oriente service rapide
  */
 
-import {
-  createESCPOSBuilder,
-  formatPrintTime,
-  formatPrintDateTime,
-} from "./escpos";
+import { createESCPOSBuilder, formatPrintTime, formatPrintDateTime } from "./escpos";
 import { type BonPreparationData, TYPE_VENTE_LABELS } from "./types";
 
 /**
  * Genere les commandes ESC/POS pour un bon bar
  */
-export function generateBonBar(
-  data: BonPreparationData,
-  paperWidth: 58 | 80 = 80
-): string {
+export function generateBonBar(data: BonPreparationData, paperWidth: 58 | 80 = 80): string {
   const builder = createESCPOSBuilder(paperWidth);
 
   builder.init();
@@ -55,12 +48,7 @@ export function generateBonBar(
   builder.feed(1);
 
   // Numero de commande (grand)
-  builder
-    .size("double")
-    .bold(true)
-    .println(`#${data.numeroCommande}`)
-    .size("normal")
-    .bold(false);
+  builder.size("double").bold(true).println(`#${data.numeroCommande}`).size("normal").bold(false);
 
   builder.line("=");
 
@@ -86,12 +74,7 @@ export function generateBonBar(
     if (data.tableZone) {
       tableInfo += ` (${data.tableZone})`;
     }
-    builder
-      .bold(true)
-      .size("double-height")
-      .println(tableInfo)
-      .size("normal")
-      .bold(false);
+    builder.bold(true).size("double-height").println(tableInfo).size("normal").bold(false);
   } else {
     // Type de vente
     builder.leftRight("Mode:", TYPE_VENTE_LABELS[data.typeVente] || data.typeVente);
@@ -111,12 +94,7 @@ export function generateBonBar(
   // BOISSONS A SERVIR
   // ============================================
 
-  builder
-    .align("center")
-    .bold(true)
-    .println("BOISSONS A SERVIR")
-    .bold(false)
-    .align("left");
+  builder.align("center").bold(true).println("BOISSONS A SERVIR").bold(false).align("left");
 
   builder.line("-");
 
@@ -135,18 +113,13 @@ export function generateBonBar(
   for (const [categorie, produits] of produitsParCategorie) {
     // Titre de la categorie (si plusieurs categories)
     if (produitsParCategorie.size > 1) {
-      builder
-        .underline(true)
-        .println(`[ ${categorie.toUpperCase()} ]`)
-        .underline(false);
+      builder.underline(true).println(`[ ${categorie.toUpperCase()} ]`).underline(false);
     }
 
     // Produits de cette categorie
     for (const ligne of produits) {
       // Format compact: quantite + nom sur une ligne
-      builder
-        .size("double-height")
-        .bold(true);
+      builder.size("double-height").bold(true);
 
       const qteStr = `${ligne.quantite}x`;
       const nomProduit = ligne.produitNom;
@@ -154,16 +127,11 @@ export function generateBonBar(
       // Affichage simple et clair
       builder.println(`${qteStr} ${nomProduit.substring(0, paperWidth === 80 ? 35 : 24)}`);
 
-      builder
-        .size("normal")
-        .bold(false);
+      builder.size("normal").bold(false);
 
       // Notes speciales (ex: "avec glace", "sans sucre")
       if (ligne.notes) {
-        builder
-          .bold(true)
-          .println(`   >> ${ligne.notes.toUpperCase()}`)
-          .bold(false);
+        builder.bold(true).println(`   >> ${ligne.notes.toUpperCase()}`).bold(false);
       }
     }
 
@@ -176,11 +144,7 @@ export function generateBonBar(
 
   if (data.notes) {
     builder.line("-");
-    builder
-      .bold(true)
-      .println("NOTES:")
-      .bold(false)
-      .println(data.notes);
+    builder.bold(true).println("NOTES:").bold(false).println(data.notes);
   }
 
   // ============================================
@@ -225,9 +189,7 @@ export function filterLignesBar(
     return lignes;
   }
 
-  return lignes.filter(
-    (ligne) => ligne.categorieId && categoriesBar.includes(ligne.categorieId)
-  );
+  return lignes.filter((ligne) => ligne.categorieId && categoriesBar.includes(ligne.categorieId));
 }
 
 /**

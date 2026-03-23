@@ -2,6 +2,10 @@ import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import type { CartItem, CartState, CartClient, CartTable, CartItemRemise } from "@/types";
 import { calculerTVA, calculerTTC } from "@/lib/utils";
+import {
+  type ReglesUtilisateur,
+  verifierRemiseAutorisee,
+} from "@/lib/tarification/client-validation";
 
 // Type pour les supplements selectionnes
 interface CartSupplement {
@@ -18,24 +22,53 @@ interface VenteEnAttenteInfo {
   lignesCount: number;
 }
 
+// Résultat de tentative d'application de remise
+export interface RemiseResult {
+  success: boolean;
+  raison?: string;
+  necessiteApprobation?: boolean;
+}
+
+// Résultat de validation du panier
+export interface CartValidation {
+  valide: boolean;
+  erreurs: string[];
+}
+
 interface CartStore extends CartState {
   // Actions
-  addItem: (item: Omit<CartItem, "sousTotal" | "montantTva" | "total" | "quantite" | "lineId">, quantity?: number) => void;
+  addItem: (
+    item: Omit<CartItem, "sousTotal" | "montantTva" | "total" | "quantite" | "lineId">,
+    quantity?: number
+  ) => void;
   addItemWithSupplements: (
-    item: Omit<CartItem, "sousTotal" | "montantTva" | "total" | "quantite" | "lineId" | "supplements" | "totalSupplements">,
+    item: Omit<
+      CartItem,
+      | "sousTotal"
+      | "montantTva"
+      | "total"
+      | "quantite"
+      | "lineId"
+      | "supplements"
+      | "totalSupplements"
+    >,
     supplements: CartSupplement[],
     quantity?: number
   ) => void;
   removeItem: (lineId: string) => void;
   updateQuantity: (lineId: string, quantite: number) => void;
   updateNotes: (lineId: string, notes: string) => void;
-  applyItemRemise: (lineId: string, remise: CartItemRemise | undefined) => void;
-  applyRemise: (type: "POURCENTAGE" | "MONTANT_FIXE", valeur: number) => void;
+  applyItemRemise: (lineId: string, remise: CartItemRemise | undefined) => RemiseResult;
+  applyRemise: (type: "POURCENTAGE" | "MONTANT_FIXE", valeur: number) => RemiseResult;
   clearRemise: () => void;
   setTypeVente: (type: "DIRECT" | "TABLE" | "LIVRAISON" | "EMPORTER") => void;
   setTable: (tableId: string | undefined, table?: CartTable, couverts?: number) => void;
   setClient: (clientId: string | undefined, client?: CartClient) => void;
-  setDeliveryInfo: (info: { adresseLivraison?: string; telephoneLivraison?: string; notesLivraison?: string }) => void;
+  setDeliveryInfo: (info: {
+    adresseLivraison?: string;
+    telephoneLivraison?: string;
+    notesLivraison?: string;
+  }) => void;
   clearDeliveryInfo: () => void;
   clearCart: () => void;
   calculateTotals: () => void;
@@ -48,9 +81,16 @@ interface CartStore extends CartState {
   canMettreEnAttente: () => boolean;
   canMettreEnCompte: () => boolean;
   getCreditDisponible: () => number | null;
+  // Tarification
+  reglesTarification: ReglesUtilisateur | null;
+  setReglesTarification: (regles: ReglesUtilisateur | null) => void;
+  validateCart: (montantMinimumVente?: number) => CartValidation;
 }
 
-const initialState: CartState & { pendingQuantity: number | null; venteEnAttenteTable: VenteEnAttenteInfo | null } = {
+const initialState: CartState & {
+  pendingQuantity: number | null;
+  venteEnAttenteTable: VenteEnAttenteInfo | null;
+} = {
   items: [],
   sousTotal: 0,
   totalTva: 0,
@@ -185,13 +225,44 @@ export const useCartStore = create<CartStore>()(
 
       updateNotes: (lineId, notes) => {
         set({
-          items: get().items.map((item) =>
-            item.lineId === lineId ? { ...item, notes } : item
-          ),
+          items: get().items.map((item) => (item.lineId === lineId ? { ...item, notes } : item)),
         });
       },
 
       applyItemRemise: (lineId, remise) => {
+        // Validation tarifaire si une remise est appliquée (pas pour la suppression)
+        if (remise) {
+          const regles = get().reglesTarification;
+          if (regles) {
+            // Trouver l'item pour calculer le montant de remise
+            const targetItem = get().items.find((i) => i.lineId === lineId);
+            if (targetItem) {
+              const prixAvecSupplements =
+                targetItem.prixUnitaire + (targetItem.totalSupplements || 0);
+              const sousTotalBrut = prixAvecSupplements * targetItem.quantite;
+              const pourcentage =
+                remise.type === "POURCENTAGE"
+                  ? remise.valeur
+                  : sousTotalBrut > 0
+                    ? (remise.valeur / sousTotalBrut) * 100
+                    : 0;
+              const montant =
+                remise.type === "POURCENTAGE"
+                  ? Math.round((sousTotalBrut * remise.valeur) / 100)
+                  : remise.valeur;
+
+              const resultat = verifierRemiseAutorisee(regles, pourcentage, montant);
+              if (!resultat.autorise) {
+                return {
+                  success: false,
+                  raison: resultat.raison,
+                  necessiteApprobation: resultat.necessiteApprobation,
+                };
+              }
+            }
+          }
+        }
+
         const items = get().items.map((item) => {
           if (item.lineId === lineId) {
             // Calculer le prix unitaire avec supplements
@@ -226,6 +297,7 @@ export const useCartStore = create<CartStore>()(
 
         set({ items });
         get().calculateTotals();
+        return { success: true };
       },
 
       setPendingQuantity: (qty) => {
@@ -233,8 +305,34 @@ export const useCartStore = create<CartStore>()(
       },
 
       applyRemise: (type, valeur) => {
+        // Validation tarifaire
+        const regles = get().reglesTarification;
+        if (regles) {
+          const { sousTotal } = get();
+          const pourcentage =
+            type === "POURCENTAGE"
+              ? valeur
+              : sousTotal > 0
+                ? (valeur / sousTotal) * 100
+                : 0;
+          const montant =
+            type === "POURCENTAGE"
+              ? Math.round((sousTotal * valeur) / 100)
+              : valeur;
+
+          const resultat = verifierRemiseAutorisee(regles, pourcentage, montant);
+          if (!resultat.autorise) {
+            return {
+              success: false,
+              raison: resultat.raison,
+              necessiteApprobation: resultat.necessiteApprobation,
+            };
+          }
+        }
+
         set({ remise: { type, valeur } });
         get().calculateTotals();
+        return { success: true };
       },
 
       clearRemise: () => {
@@ -249,14 +347,18 @@ export const useCartStore = create<CartStore>()(
           set({ tableId: undefined, table: undefined });
         }
         if (type !== "LIVRAISON") {
-          set({ adresseLivraison: undefined, telephoneLivraison: undefined, notesLivraison: undefined });
+          set({
+            adresseLivraison: undefined,
+            telephoneLivraison: undefined,
+            notesLivraison: undefined,
+          });
         }
       },
 
       setTable: (tableId, table, couverts) => {
         set({
           tableId,
-          table: table ? { ...table, couverts } : undefined
+          table: table ? { ...table, couverts } : undefined,
         });
       },
 
@@ -347,6 +449,54 @@ export const useCartStore = create<CartStore>()(
         const limiteCredit = client.limitCredit ?? 0;
         const soldeActuel = client.soldeCredit ?? 0;
         return limiteCredit - soldeActuel;
+      },
+
+      // Tarification
+      reglesTarification: null,
+
+      setReglesTarification: (regles) => {
+        set({ reglesTarification: regles });
+      },
+
+      validateCart: (montantMinimumVente) => {
+        const { items, totalFinal, reglesTarification } = get();
+        const erreurs: string[] = [];
+
+        if (items.length === 0) {
+          erreurs.push("Le panier est vide.");
+        }
+
+        // Vérifier montant minimum
+        if (montantMinimumVente && montantMinimumVente > 0 && totalFinal < montantMinimumVente) {
+          erreurs.push(
+            `Le montant minimum de vente est de ${montantMinimumVente} FCFA. Total actuel : ${totalFinal} FCFA.`
+          );
+        }
+
+        // Vérifier les marges si la protection est active
+        if (reglesTarification?.protectionMargeActive) {
+          const margeMin = reglesTarification.margeMinimumGlobale;
+          for (const item of items) {
+            // On vérifie la marge uniquement si le produit a un prix d'achat
+            // Le CartProduit ne contient pas le prixAchat, la validation complète se fait côté serveur
+            // Ici on vérifie les remises qui pourraient faire passer sous la marge
+            if (item.remiseLigne && item.montantRemiseLigne) {
+              const prixAvecSupplements = item.prixUnitaire + (item.totalSupplements || 0);
+              const sousTotalBrut = prixAvecSupplements * item.quantite;
+              const pourcentageRemise =
+                sousTotalBrut > 0
+                  ? (item.montantRemiseLigne / sousTotalBrut) * 100
+                  : 0;
+              if (pourcentageRemise > margeMin) {
+                erreurs.push(
+                  `La remise sur "${item.produit.nom}" (${Math.round(pourcentageRemise)}%) dépasse la marge minimum de ${margeMin}%.`
+                );
+              }
+            }
+          }
+        }
+
+        return { valide: erreurs.length === 0, erreurs };
       },
     }),
     {

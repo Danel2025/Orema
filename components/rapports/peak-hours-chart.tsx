@@ -17,7 +17,7 @@ import {
   Cell,
 } from "recharts";
 import { Box, Card, Flex, Text, Skeleton } from "@radix-ui/themes";
-import { Clock } from "lucide-react";
+import { Clock } from "@phosphor-icons/react";
 import { getPeakHours, type PeakHourData } from "@/actions/rapports";
 import { formatCurrency } from "@/lib/utils";
 
@@ -130,13 +130,7 @@ export function PeakHoursChart({ initialData }: PeakHoursChartProps) {
 
   return (
     <Card size="3">
-      <Flex
-        justify="between"
-        align="start"
-        mb="4"
-        wrap="wrap"
-        gap="3"
-      >
+      <Flex justify="between" align="start" mb="4" wrap="wrap" gap="3">
         <Flex align="center" gap="2">
           <Clock size={20} style={{ color: "var(--blue-9)" }} />
           <Text size="4" weight="bold">
@@ -152,16 +146,11 @@ export function PeakHoursChart({ initialData }: PeakHoursChartProps) {
                 style={{
                   padding: "4px 12px",
                   borderRadius: 20,
-                  backgroundColor:
-                    i === 0 ? "var(--accent-a3)" : "var(--gray-a3)",
+                  backgroundColor: i === 0 ? "var(--accent-a3)" : "var(--gray-a3)",
                   border: `1px solid ${i === 0 ? "var(--accent-a6)" : "var(--gray-a6)"}`,
                 }}
               >
-                <Text
-                  size="1"
-                  weight="medium"
-                  color={i === 0 ? "violet" : "gray"}
-                >
+                <Text size="1" weight="medium" color={i === 0 ? "violet" : "gray"}>
                   {peak.label} - {peak.nombreVentes} ventes
                 </Text>
               </Box>
@@ -172,26 +161,15 @@ export function PeakHoursChart({ initialData }: PeakHoursChartProps) {
 
       <Box style={{ height: 300 }}>
         {!hasData ? (
-          <Flex
-            align="center"
-            justify="center"
-            style={{ height: "100%" }}
-          >
+          <Flex align="center" justify="center" style={{ height: "100%" }}>
             <Text size="3" color="gray">
               Aucune vente aujourd'hui
             </Text>
           </Flex>
         ) : (
           <ResponsiveContainer width="100%" height="100%">
-            <BarChart
-              data={filteredData}
-              margin={{ top: 10, right: 10, left: -20, bottom: 10 }}
-            >
-              <CartesianGrid
-                strokeDasharray="3 3"
-                stroke="var(--gray-a5)"
-                vertical={false}
-              />
+            <BarChart data={filteredData} margin={{ top: 10, right: 10, left: -20, bottom: 10 }}>
+              <CartesianGrid strokeDasharray="3 3" stroke="var(--gray-a5)" vertical={false} />
               <XAxis
                 dataKey="label"
                 tick={{ fill: "var(--gray-11)", fontSize: 11 }}
@@ -208,10 +186,7 @@ export function PeakHoursChart({ initialData }: PeakHoursChartProps) {
               <Tooltip content={<CustomTooltip />} />
               <Bar dataKey="nombreVentes" radius={[4, 4, 0, 0]} maxBarSize={30}>
                 {filteredData.map((entry, index) => (
-                  <Cell
-                    key={`cell-${index}`}
-                    fill={getBarColor(entry.nombreVentes)}
-                  />
+                  <Cell key={`cell-${index}`} fill={getBarColor(entry.nombreVentes)} />
                 ))}
               </Bar>
             </BarChart>

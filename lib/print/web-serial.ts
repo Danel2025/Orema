@@ -11,24 +11,38 @@
 
 import type { PrintResult } from "./types";
 
-// Vendor IDs courants pour imprimantes thermiques ESC/POS
+// Vendor IDs courants pour imprimantes thermiques ESC/POS et adaptateurs serie
 const THERMAL_PRINTER_FILTERS: SerialPortFilter[] = [
-  { usbVendorId: 0x0416 }, // WinChipHead (CH340/CH341 - adaptateurs USB-Serie)
+  // --- Adaptateurs USB-Serie (utilisés par beaucoup d'imprimantes thermiques) ---
+  { usbVendorId: 0x0416 }, // WinChipHead (CH340/CH341)
   { usbVendorId: 0x1a86 }, // QinHeng Electronics (CH340)
-  { usbVendorId: 0x067b }, // Prolific (PL2303 - adaptateurs USB-Serie)
-  { usbVendorId: 0x0403 }, // FTDI (FT232R - adaptateurs USB-Serie)
+  { usbVendorId: 0x067b }, // Prolific (PL2303)
+  { usbVendorId: 0x0403 }, // FTDI (FT232R)
   { usbVendorId: 0x10c4 }, // Silicon Labs (CP210x)
+  { usbVendorId: 0x0483 }, // STMicroelectronics
+  { usbVendorId: 0x1fc9 }, // NXP Semiconductors
+  { usbVendorId: 0x0fe6 }, // ICS Electronics (Kontron)
+  { usbVendorId: 0x20d1 }, // DIGI International
+  // --- Fabricants d'imprimantes POS/thermiques ---
   { usbVendorId: 0x04b8 }, // Epson
   { usbVendorId: 0x0519 }, // Star Micronics
   { usbVendorId: 0x0dd4 }, // Custom (imprimantes thermiques)
-  { usbVendorId: 0x0fe6 }, // ICS Electronics (Kontron)
-  { usbVendorId: 0x0483 }, // STMicroelectronics
-  { usbVendorId: 0x20d1 }, // DIGI International
-  { usbVendorId: 0x1fc9 }, // NXP Semiconductors
   { usbVendorId: 0x0b00 }, // SEWOO (imprimantes POS)
   { usbVendorId: 0x154f }, // SNBC (imprimantes POS)
-  { usbVendorId: 0x0471 }, // Philips
   { usbVendorId: 0x2730 }, // Citizen Systems
+  { usbVendorId: 0x0471 }, // Philips
+  { usbVendorId: 0x0485 }, // Nokia Display Products
+  // --- Fabricants courants (imprimantes multifonction/jet d'encre avec port serie) ---
+  { usbVendorId: 0x04a9 }, // Canon
+  { usbVendorId: 0x03f0 }, // HP (Hewlett-Packard)
+  { usbVendorId: 0x04f9 }, // Brother
+  { usbVendorId: 0x04e8 }, // Samsung
+  { usbVendorId: 0x1504 }, // BIXOLON
+  { usbVendorId: 0x0dd4 }, // Custom Engineering
+  { usbVendorId: 0x20b0 }, // Xprinter
+  { usbVendorId: 0x0fe6 }, // Kontron
+  { usbVendorId: 0x0456 }, // Analog Devices
+  { usbVendorId: 0x28e9 }, // GoDEX International
 ];
 
 /**
@@ -103,9 +117,7 @@ export async function getAuthorizedPorts(): Promise<WebSerialPortInfo[]> {
  */
 export async function requestSerialPort(): Promise<WebSerialPortInfo | null> {
   if (!isWebSerialSupported()) {
-    throw new Error(
-      "Web Serial API non supportee. Utilisez Chrome 89+ ou Edge 89+."
-    );
+    throw new Error("Web Serial API non supportee. Utilisez Chrome 89+ ou Edge 89+.");
   }
 
   try {
@@ -136,9 +148,7 @@ export async function requestSerialPort(): Promise<WebSerialPortInfo | null> {
  */
 export async function requestAnySerialPort(): Promise<WebSerialPortInfo | null> {
   if (!isWebSerialSupported()) {
-    throw new Error(
-      "Web Serial API non supportee. Utilisez Chrome 89+ ou Edge 89+."
-    );
+    throw new Error("Web Serial API non supportee. Utilisez Chrome 89+ ou Edge 89+.");
   }
 
   try {
@@ -216,8 +226,7 @@ export async function writeToSerialPort(
 
   const writer = port.writable.getWriter();
   try {
-    const buffer =
-      typeof data === "string" ? new TextEncoder().encode(data) : data;
+    const buffer = typeof data === "string" ? new TextEncoder().encode(data) : data;
     await writer.write(buffer);
   } finally {
     writer.releaseLock();
@@ -247,8 +256,7 @@ export async function sendViaWebSerial(
       message: "Impression envoyee via USB/Serie (Web Serial)",
     };
   } catch (error) {
-    const errorMsg =
-      error instanceof Error ? error.message : "Erreur Web Serial inconnue";
+    const errorMsg = error instanceof Error ? error.message : "Erreur Web Serial inconnue";
     return {
       success: false,
       error: `Erreur d'impression USB/Serie: ${errorMsg}`,
@@ -283,8 +291,7 @@ export async function testSerialConnection(
       message: "Connexion USB/Serie reussie",
     };
   } catch (error) {
-    const errorMsg =
-      error instanceof Error ? error.message : "Erreur inconnue";
+    const errorMsg = error instanceof Error ? error.message : "Erreur inconnue";
     return {
       success: false,
       error: `Test echoue: ${errorMsg}`,
@@ -336,9 +343,7 @@ function formatPortLabel(info: SerialPortInfo): string {
         ? `${vendorName} (${hex(vendorId)}:${hex(productId)})`
         : `${vendorName} (${hex(vendorId)})`;
     }
-    return productId
-      ? `USB ${hex(vendorId)}:${hex(productId)}`
-      : `USB ${hex(vendorId)}`;
+    return productId ? `USB ${hex(vendorId)}:${hex(productId)}` : `USB ${hex(vendorId)}`;
   }
 
   return "Port serie";
@@ -358,12 +363,21 @@ function getVendorName(vendorId: number): string | null {
     0x067b: "Prolific (PL2303)",
     0x0403: "FTDI",
     0x10c4: "Silicon Labs",
+    0x0483: "STMicroelectronics",
+    0x1fc9: "NXP",
     0x04b8: "Epson",
     0x0519: "Star Micronics",
     0x0dd4: "Custom",
     0x0b00: "SEWOO",
     0x154f: "SNBC",
     0x2730: "Citizen Systems",
+    0x04a9: "Canon",
+    0x03f0: "HP",
+    0x04f9: "Brother",
+    0x04e8: "Samsung",
+    0x1504: "BIXOLON",
+    0x20b0: "Xprinter",
+    0x28e9: "GoDEX",
   };
   return vendors[vendorId] ?? null;
 }

@@ -5,15 +5,17 @@
  */
 
 import { useState, useRef } from "react";
-import { Upload, X, Loader2, ImageIcon } from "lucide-react";
+import { UploadSimple, X, SpinnerGap, Image as ImageIcon } from "@phosphor-icons/react";
+import { Box, IconButton } from "@radix-ui/themes";
 
 interface ImageUploadProps {
   value?: string | null;
   onChange: (url: string | null) => void;
   disabled?: boolean;
+  folder?: string;
 }
 
-export function ImageUpload({ value, onChange, disabled }: ImageUploadProps) {
+export function ImageUpload({ value, onChange, disabled, folder = "produits" }: ImageUploadProps) {
   const [isUploading, setIsUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [dragOver, setDragOver] = useState(false);
@@ -26,7 +28,7 @@ export function ImageUpload({ value, onChange, disabled }: ImageUploadProps) {
     try {
       const formData = new FormData();
       formData.append("file", file);
-      formData.append("folder", "produits");
+      formData.append("folder", folder);
 
       const response = await fetch("/api/upload", {
         method: "POST",
@@ -83,7 +85,7 @@ export function ImageUpload({ value, onChange, disabled }: ImageUploadProps) {
   };
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+    <Box style={{ display: "flex", flexDirection: "column", gap: 8 }}>
       <input
         ref={inputRef}
         type="file"
@@ -91,6 +93,7 @@ export function ImageUpload({ value, onChange, disabled }: ImageUploadProps) {
         onChange={handleFileChange}
         disabled={disabled || isUploading}
         style={{ display: "none" }}
+        aria-label="Sélectionner une image de produit"
       />
 
       {value ? (
@@ -107,7 +110,7 @@ export function ImageUpload({ value, onChange, disabled }: ImageUploadProps) {
         >
           <img
             src={value}
-            alt="Aperçu"
+            alt="Aperçu du produit"
             style={{
               width: "100%",
               height: "100%",
@@ -115,27 +118,23 @@ export function ImageUpload({ value, onChange, disabled }: ImageUploadProps) {
             }}
           />
           {!disabled && (
-            <button
-              type="button"
+            <IconButton
+              variant="solid"
+              color="gray"
+              size="1"
               onClick={handleRemove}
+              aria-label="Supprimer l'image"
               style={{
                 position: "absolute",
                 top: 8,
                 right: 8,
-                width: 28,
-                height: 28,
-                borderRadius: 8,
-                border: "none",
+                minWidth: 32,
+                minHeight: 32,
                 backgroundColor: "rgba(0, 0, 0, 0.6)",
-                color: "white",
-                cursor: "pointer",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
               }}
             >
-              <X size={16} />
-            </button>
+              <X size={16} aria-hidden="true" />
+            </IconButton>
           )}
         </div>
       ) : (
@@ -145,6 +144,15 @@ export function ImageUpload({ value, onChange, disabled }: ImageUploadProps) {
           onDrop={handleDrop}
           onDragOver={handleDragOver}
           onDragLeave={handleDragLeave}
+          role="button"
+          tabIndex={disabled || isUploading ? -1 : 0}
+          aria-label="Cliquez ou glissez une image pour l'ajouter"
+          onKeyDown={(e) => {
+            if (e.key === "Enter" || e.key === " ") {
+              e.preventDefault();
+              if (!disabled && !isUploading) inputRef.current?.click();
+            }
+          }}
           style={{
             width: "100%",
             height: 160,
@@ -163,7 +171,12 @@ export function ImageUpload({ value, onChange, disabled }: ImageUploadProps) {
         >
           {isUploading ? (
             <>
-              <Loader2 size={32} style={{ color: "var(--accent-9)", animation: "spin 1s linear infinite" }} />
+              <SpinnerGap
+                size={32}
+                className="animate-spin"
+                style={{ color: "var(--accent-9)" }}
+                aria-hidden="true"
+              />
               <span style={{ fontSize: 14, color: "var(--gray-11)" }}>Upload en cours...</span>
             </>
           ) : (
@@ -180,9 +193,9 @@ export function ImageUpload({ value, onChange, disabled }: ImageUploadProps) {
                 }}
               >
                 {dragOver ? (
-                  <Upload size={24} style={{ color: "var(--accent-9)" }} />
+                  <UploadSimple size={24} style={{ color: "var(--accent-9)" }} aria-hidden="true" />
                 ) : (
-                  <ImageIcon size={24} style={{ color: "var(--gray-10)" }} />
+                  <ImageIcon size={24} style={{ color: "var(--gray-10)" }} aria-hidden="true" />
                 )}
               </div>
               <span style={{ fontSize: 14, color: "var(--gray-11)" }}>
@@ -196,9 +209,7 @@ export function ImageUpload({ value, onChange, disabled }: ImageUploadProps) {
         </div>
       )}
 
-      {error ? <p style={{ fontSize: 13, color: "var(--red-11)", margin: 0 }}>
-          {error}
-        </p> : null}
-    </div>
+      {error ? <p role="alert" style={{ fontSize: 13, color: "var(--red-11)", margin: 0 }}>{error}</p> : null}
+    </Box>
   );
 }

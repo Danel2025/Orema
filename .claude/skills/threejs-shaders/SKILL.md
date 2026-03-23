@@ -408,7 +408,7 @@ material.onBeforeCompile = (shader) => {
     `
     #include <begin_vertex>
     transformed.y += sin(position.x * 10.0 + time) * 0.1;
-    `,
+    `
   );
 
   // Add uniform declaration

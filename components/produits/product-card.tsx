@@ -1,19 +1,20 @@
 "use client";
 
 /**
- * ProductCard - Carte affichant un produit
+ * ProductCard - Carte affichant un produit avec menu contextuel accessible
+ * Utilise Radix UI DropdownMenu pour l'accessibilité clavier et ARIA
  */
 
-import { useState, useRef, useEffect } from "react";
+import { Box, Flex, Text, DropdownMenu, IconButton } from "@radix-ui/themes";
 import {
-  MoreVertical,
-  Edit2,
-  Trash2,
+  DotsThreeVertical,
+  PencilSimple,
+  Trash,
   Power,
   Package,
-  AlertTriangle,
+  Warning,
   ListPlus,
-} from "lucide-react";
+} from "@phosphor-icons/react";
 import { formatCurrency } from "@/lib/utils";
 
 interface ProductCardProps {
@@ -56,21 +57,6 @@ export function ProductCard({
   onToggleActif,
   onManageSupplements,
 }: ProductCardProps) {
-  const [showMenu, setShowMenu] = useState(false);
-  const [menuPosition, setMenuPosition] = useState({ top: 0, left: 0 });
-  const buttonRef = useRef<HTMLButtonElement>(null);
-
-  // Calculer la position du menu quand il s'ouvre
-  useEffect(() => {
-    if (showMenu && buttonRef.current) {
-      const rect = buttonRef.current.getBoundingClientRect();
-      setMenuPosition({
-        top: rect.bottom + 4,
-        left: rect.right - 140, // 140 = largeur du menu
-      });
-    }
-  }, [showMenu]);
-
   // Convertir le prix en nombre
   const prix = typeof prixVente === "number" ? prixVente : Number(prixVente);
 
@@ -81,7 +67,7 @@ export function ProductCard({
   const tvaLabel = tauxTva === "STANDARD" ? "18%" : tauxTva === "REDUIT" ? "10%" : "0%";
 
   return (
-    <div
+    <Box
       style={{
         backgroundColor: "var(--color-panel-solid)",
         borderRadius: 12,
@@ -113,7 +99,7 @@ export function ProductCard({
             }}
           />
         ) : (
-          <Package size={40} style={{ color: categorie.couleur, opacity: 0.5 }} />
+          <Package size={40} style={{ color: categorie.couleur, opacity: 0.5 }} aria-hidden="true" />
         )}
 
         {/* Badge catégorie */}
@@ -150,7 +136,7 @@ export function ProductCard({
               gap: 4,
             }}
           >
-            <AlertTriangle size={12} />
+            <Warning size={12} aria-hidden="true" />
             Stock bas
           </div> : null}
 
@@ -175,186 +161,70 @@ export function ProductCard({
       </div>
 
       {/* Contenu */}
-      <div style={{ padding: 12 }}>
+      <Box p="3">
         {/* Header avec nom et menu */}
-        <div
-          style={{
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "flex-start",
-            marginBottom: 8,
-          }}
-        >
-          <h3
+        <Flex justify="between" align="start" mb="2">
+          <Text
+            as="p"
+            size="2"
+            weight="bold"
             style={{
-              fontSize: 14,
-              fontWeight: 600,
-              color: "var(--gray-12)",
               margin: 0,
               flex: 1,
               lineHeight: 1.3,
             }}
           >
             {nom}
-          </h3>
+          </Text>
 
-          {/* Menu d'actions */}
-          <div>
-            <button
-              ref={buttonRef}
-              onClick={() => setShowMenu(!showMenu)}
-              style={{
-                width: 28,
-                height: 28,
-                borderRadius: 6,
-                border: "none",
-                backgroundColor: "transparent",
-                cursor: "pointer",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                color: "var(--gray-11)",
-              }}
-            >
-              <MoreVertical size={16} />
-            </button>
+          {/* Menu d'actions accessible avec DropdownMenu Radix UI */}
+          <DropdownMenu.Root>
+            <DropdownMenu.Trigger>
+              <IconButton
+                variant="ghost"
+                color="gray"
+                size="2"
+                aria-label={`Options pour ${nom}`}
+                style={{ minWidth: 44, minHeight: 44 }}
+              >
+                <DotsThreeVertical size={18} aria-hidden="true" />
+              </IconButton>
+            </DropdownMenu.Trigger>
 
-            {showMenu ? <>
-                <div
-                  style={{
-                    position: "fixed",
-                    inset: 0,
-                    zIndex: 40,
-                  }}
-                  onClick={() => setShowMenu(false)}
-                />
-                <div
-                  style={{
-                    position: "fixed",
-                    top: menuPosition.top,
-                    left: menuPosition.left,
-                    backgroundColor: "var(--color-panel-solid)",
-                    borderRadius: 8,
-                    border: "1px solid var(--gray-a6)",
-                    boxShadow: "0 4px 12px rgba(0,0,0,0.15)",
-                    padding: 4,
-                    minWidth: 140,
-                    zIndex: 50,
-                  }}
-                >
-                  <button
-                    onClick={() => {
-                      onEdit(id);
-                      setShowMenu(false);
-                    }}
-                    style={{
-                      width: "100%",
-                      display: "flex",
-                      alignItems: "center",
-                      gap: 8,
-                      padding: "8px 12px",
-                      borderRadius: 6,
-                      border: "none",
-                      backgroundColor: "transparent",
-                      cursor: "pointer",
-                      fontSize: 13,
-                      color: "var(--gray-12)",
-                      textAlign: "left",
-                    }}
-                  >
-                    <Edit2 size={14} />
-                    Modifier
-                  </button>
+            <DropdownMenu.Content size="1">
+              <DropdownMenu.Item onSelect={() => onEdit(id)}>
+                <PencilSimple size={14} aria-hidden="true" />
+                Modifier
+              </DropdownMenu.Item>
 
-                  {onManageSupplements ? <button
-                      onClick={() => {
-                        onManageSupplements(id, nom);
-                        setShowMenu(false);
-                      }}
-                      style={{
-                        width: "100%",
-                        display: "flex",
-                        alignItems: "center",
-                        gap: 8,
-                        padding: "8px 12px",
-                        borderRadius: 6,
-                        border: "none",
-                        backgroundColor: "transparent",
-                        cursor: "pointer",
-                        fontSize: 13,
-                        color: "var(--gray-12)",
-                        textAlign: "left",
-                      }}
-                    >
-                      <ListPlus size={14} />
-                      Suppléments
-                    </button> : null}
+              {onManageSupplements ? <DropdownMenu.Item onSelect={() => onManageSupplements(id, nom)}>
+                  <ListPlus size={14} aria-hidden="true" />
+                  Suppléments
+                </DropdownMenu.Item> : null}
 
-                  <button
-                    onClick={() => {
-                      onToggleActif(id);
-                      setShowMenu(false);
-                    }}
-                    style={{
-                      width: "100%",
-                      display: "flex",
-                      alignItems: "center",
-                      gap: 8,
-                      padding: "8px 12px",
-                      borderRadius: 6,
-                      border: "none",
-                      backgroundColor: "transparent",
-                      cursor: "pointer",
-                      fontSize: 13,
-                      color: actif ? "var(--purple-11)" : "var(--green-11)",
-                      textAlign: "left",
-                    }}
-                  >
-                    <Power size={14} />
-                    {actif ? "Désactiver" : "Activer"}
-                  </button>
+              <DropdownMenu.Item
+                onSelect={() => onToggleActif(id)}
+              >
+                <Power size={14} aria-hidden="true" />
+                {actif ? "Désactiver" : "Activer"}
+              </DropdownMenu.Item>
 
-                  <div
-                    style={{
-                      height: 1,
-                      backgroundColor: "var(--gray-a6)",
-                      margin: "4px 0",
-                    }}
-                  />
+              <DropdownMenu.Separator />
 
-                  <button
-                    onClick={() => {
-                      onDelete(id);
-                      setShowMenu(false);
-                    }}
-                    style={{
-                      width: "100%",
-                      display: "flex",
-                      alignItems: "center",
-                      gap: 8,
-                      padding: "8px 12px",
-                      borderRadius: 6,
-                      border: "none",
-                      backgroundColor: "transparent",
-                      cursor: "pointer",
-                      fontSize: 13,
-                      color: "var(--red-11)",
-                      textAlign: "left",
-                    }}
-                  >
-                    <Trash2 size={14} />
-                    Supprimer
-                  </button>
-                </div>
-              </> : null}
-          </div>
-        </div>
+              <DropdownMenu.Item color="red" onSelect={() => onDelete(id)}>
+                <Trash size={14} aria-hidden="true" />
+                Supprimer
+              </DropdownMenu.Item>
+            </DropdownMenu.Content>
+          </DropdownMenu.Root>
+        </Flex>
 
         {/* Description */}
-        {description ? <p
+        {description ? <Text
+            as="p"
+            size="1"
+            color="gray"
             style={{
-              fontSize: 12,
-              color: "var(--gray-10)",
               margin: "0 0 8px 0",
               lineHeight: 1.4,
               display: "-webkit-box",
@@ -364,64 +234,48 @@ export function ProductCard({
             }}
           >
             {description}
-          </p> : null}
+          </Text> : null}
 
         {/* Prix et infos */}
-        <div
-          style={{
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "flex-end",
-          }}
-        >
-          <div>
-            <div
+        <Flex justify="between" align="end">
+          <Box>
+            <Text
+              as="p"
+              size="4"
+              weight="bold"
               style={{
-                fontSize: 18,
-                fontWeight: 700,
+                margin: 0,
                 color: "var(--accent-11)",
                 fontFamily: "var(--font-google-sans-code), ui-monospace, monospace",
               }}
             >
               {formatCurrency(prix)}
-            </div>
-            <div
-              style={{
-                fontSize: 11,
-                color: "var(--gray-10)",
-              }}
-            >
+            </Text>
+            <Text as="p" size="1" color="gray" style={{ margin: 0 }}>
               TVA {tvaLabel}
-            </div>
-          </div>
+            </Text>
+          </Box>
 
           {/* Stock */}
-          {gererStock ? <div
-              style={{
-                textAlign: "right",
-              }}
-            >
-              <div
+          {gererStock ? <Box style={{ textAlign: "right" }}>
+              <Text
+                as="p"
+                size="2"
+                weight="bold"
                 style={{
-                  fontSize: 13,
-                  fontWeight: 600,
+                  margin: 0,
                   color: stockBas ? "var(--red-11)" : "var(--gray-12)",
                   fontFamily: "var(--font-google-sans-code), ui-monospace, monospace",
                 }}
               >
                 {stockActuel ?? 0}
-              </div>
-              <div
-                style={{
-                  fontSize: 11,
-                  color: "var(--gray-10)",
-                }}
-              >
+              </Text>
+              <Text as="p" size="1" color="gray" style={{ margin: 0 }}>
                 en stock
-              </div>
-            </div> : null}
-        </div>
-      </div>
-    </div>
+              </Text>
+            </Box> : null}
+        </Flex>
+      </Box>
+    </Box>
   );
 }

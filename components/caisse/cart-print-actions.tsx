@@ -9,22 +9,16 @@
  */
 
 import { useState, useCallback } from "react";
-import {
-  DropdownMenu,
-  Tooltip,
-} from "@radix-ui/themes";
-import {
-  Printer,
-  Receipt,
-  ChefHat,
-  Wine,
-  FileText,
-  Loader2,
-  ChevronDown,
-} from "lucide-react";
+import { DropdownMenu, Tooltip } from "@radix-ui/themes";
+import { Printer, Receipt, CookingPot, Wine, FileText, SpinnerGap, CaretDown } from "@phosphor-icons/react";
 import { toast } from "sonner";
 import { useCartStore } from "@/stores/cart-store";
 import type { AdditionData, BonPreparationData } from "@/lib/print/types";
+import {
+  printViaSystem,
+  generateAdditionHTML,
+  generateBonPreparationHTML,
+} from "@/lib/print/system-print";
 
 interface CartPrintActionsProps {
   etablissement: {
@@ -41,27 +35,6 @@ interface CartPrintActionsProps {
 }
 
 type PrintType = "addition" | "cuisine" | "bar";
-
-/**
- * Envoie une requete d'impression a l'API
- */
-async function sendPrintRequest(
-  type: PrintType,
-  data: AdditionData | BonPreparationData
-): Promise<{ success: boolean; message?: string; error?: string }> {
-  const response = await fetch("/api/print", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      type,
-      data,
-    }),
-  });
-
-  return response.json();
-}
 
 export function CartPrintActions({
   etablissement,
@@ -104,9 +77,7 @@ export function CartPrintActions({
       tableNumero: table?.numero || null,
       tableZone: table?.zone?.nom || null,
       couverts: table?.couverts,
-      clientNom: client
-        ? `${client.nom}${client.prenom ? " " + client.prenom : ""}`
-        : null,
+      clientNom: client ? `${client.nom}${client.prenom ? " " + client.prenom : ""}` : null,
       serveurNom,
       lignes: items.map((item) => ({
         produitNom: item.produit.nom,
@@ -176,9 +147,7 @@ export function CartPrintActions({
         typeVente,
         tableNumero: table?.numero || null,
         tableZone: table?.zone?.nom || null,
-        clientNom: client
-          ? `${client.nom}${client.prenom ? " " + client.prenom : ""}`
-          : null,
+        clientNom: client ? `${client.nom}${client.prenom ? " " + client.prenom : ""}` : null,
         serveurNom,
         lignes: filteredItems.map((item) => ({
           produitNom: item.produit.nom,
@@ -196,7 +165,8 @@ export function CartPrintActions({
   );
 
   /**
-   * Gere l'impression
+   * Gere l'impression via le systeme (window.print)
+   * Utilise l'impression systeme pour compatibilite avec toutes les imprimantes
    */
   const handlePrint = useCallback(
     async (type: PrintType) => {
@@ -206,33 +176,39 @@ export function CartPrintActions({
       setPrintingType(type);
 
       try {
-        let data: AdditionData | BonPreparationData;
+        let html: string;
         let successMessage: string;
 
         switch (type) {
-          case "addition":
-            data = createAdditionData();
+          case "addition": {
+            const data = createAdditionData();
+            html = generateAdditionHTML(data);
             successMessage = "Addition imprimee";
             break;
-          case "cuisine":
-            data = createBonData("cuisine");
+          }
+          case "cuisine": {
+            const data = createBonData("cuisine");
             if (data.lignes.length === 0) {
               toast.info("Aucun article cuisine a imprimer");
               return;
             }
+            html = generateBonPreparationHTML(data, "cuisine");
             successMessage = "Bon cuisine imprime";
             break;
-          case "bar":
-            data = createBonData("bar");
+          }
+          case "bar": {
+            const data = createBonData("bar");
             if (data.lignes.length === 0) {
               toast.info("Aucun article bar a imprimer");
               return;
             }
+            html = generateBonPreparationHTML(data, "bar");
             successMessage = "Bon bar imprime";
             break;
+          }
         }
 
-        const result = await sendPrintRequest(type, data);
+        const result = await printViaSystem(html);
 
         if (result.success) {
           toast.success(successMessage);
@@ -240,8 +216,7 @@ export function CartPrintActions({
           toast.error(result.error || "Erreur d'impression");
         }
       } catch (error) {
-        const errorMsg =
-          error instanceof Error ? error.message : "Erreur de communication";
+        const errorMsg = error instanceof Error ? error.message : "Erreur d'impression";
         toast.error(errorMsg);
       } finally {
         setIsPrinting(false);
@@ -281,7 +256,7 @@ export function CartPrintActions({
           }}
         >
           {isPrinting && printingType === "addition" ? (
-            <Loader2 size={16} className="animate-spin" />
+            <SpinnerGap size={16} className="animate-spin" />
           ) : (
             <Receipt size={16} />
           )}
@@ -311,18 +286,18 @@ export function CartPrintActions({
             }}
           >
             {isPrinting && (printingType === "cuisine" || printingType === "bar") ? (
-              <Loader2 size={16} className="animate-spin" />
+              <SpinnerGap size={16} className="animate-spin" />
             ) : (
               <Printer size={16} />
             )}
             Bons
-            <ChevronDown size={14} />
+            <CaretDown size={14} />
           </button>
         </DropdownMenu.Trigger>
 
         <DropdownMenu.Content align="end">
           <DropdownMenu.Item onClick={() => handlePrint("cuisine")}>
-            <ChefHat size={14} />
+            <CookingPot size={14} />
             Bon cuisine
           </DropdownMenu.Item>
 

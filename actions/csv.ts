@@ -11,6 +11,7 @@ import { parseProductsCSV, mapCSVToProduct } from "@/lib/csv/parser";
 import { exportProductsToCSV, exportVentesToCSV, exportClientsToCSV } from "@/lib/csv/exporter";
 import { revalidatePath } from "next/cache";
 import { sanitizeSearchTerm } from "@/lib/utils/sanitize";
+import { getCurrentUser } from "@/lib/auth";
 
 interface ImportResult {
   success: boolean;
@@ -25,12 +26,36 @@ const MAX_CSV_ROWS = 10000;
 
 export async function importProductsFromCSV(formData: FormData): Promise<ImportResult> {
   try {
+    const currentUser = await getCurrentUser();
+    if (!currentUser || !["SUPER_ADMIN", "ADMIN", "MANAGER"].includes(currentUser.role)) {
+      return {
+        success: false,
+        message: "Permissions insuffisantes",
+        importes: 0,
+        ignores: 0,
+        erreurs: [],
+      };
+    }
+
     const file = formData.get("file") as File;
-    if (!file) return { success: false, message: "Aucun fichier fourni", importes: 0, ignores: 0, erreurs: [] };
+    if (!file)
+      return {
+        success: false,
+        message: "Aucun fichier fourni",
+        importes: 0,
+        ignores: 0,
+        erreurs: [],
+      };
 
     // Verification de la taille du fichier
     if (file.size > MAX_CSV_SIZE) {
-      return { success: false, message: "Fichier trop volumineux (max 5MB)", importes: 0, ignores: 0, erreurs: [] };
+      return {
+        success: false,
+        message: "Fichier trop volumineux (max 5MB)",
+        importes: 0,
+        ignores: 0,
+        erreurs: [],
+      };
     }
 
     const content = await file.text();
@@ -42,7 +67,10 @@ export async function importProductsFromCSV(formData: FormData): Promise<ImportR
         message: "Erreurs de validation dans le fichier",
         importes: 0,
         ignores: parseResult.lignesEnErreur,
-        erreurs: parseResult.errors.map((e) => ({ ligne: e.ligne, message: `${e.champ}: ${e.message}` })),
+        erreurs: parseResult.errors.map((e) => ({
+          ligne: e.ligne,
+          message: `${e.champ}: ${e.message}`,
+        })),
       };
     }
 
@@ -78,14 +106,20 @@ export async function importProductsFromCSV(formData: FormData): Promise<ImportR
       } else {
         const { data: newCategorie } = await supabase
           .from("categories")
-          .insert({ nom: nomCategorie, etablissement_id: etablissement.id, couleur: "#f97316", ordre: categoriesMap.size })
+          .insert({
+            nom: nomCategorie,
+            etablissement_id: etablissement.id,
+            couleur: "#f97316",
+            ordre: categoriesMap.size,
+          })
           .select("id")
           .single();
         if (newCategorie) categoriesMap.set(nomCategorie.toLowerCase(), newCategorie.id);
       }
     }
 
-    let importes = 0, ignores = 0;
+    let importes = 0,
+      ignores = 0;
     const erreurs: { ligne: number; message: string }[] = [];
 
     for (let i = 0; i < produitsValides.length; i++) {
@@ -94,7 +128,11 @@ export async function importProductsFromCSV(formData: FormData): Promise<ImportR
 
       try {
         const categorieId = categoriesMap.get(produit.categorie.toLowerCase());
-        if (!categorieId) { erreurs.push({ ligne, message: `Catégorie non trouvée: ${produit.categorie}` }); ignores++; continue; }
+        if (!categorieId) {
+          erreurs.push({ ligne, message: `Catégorie non trouvée: ${produit.categorie}` });
+          ignores++;
+          continue;
+        }
 
         const cleanNom = sanitizeSearchTerm(produit.nom);
         const cleanCodeBarre = produit.codeBarre ? sanitizeSearchTerm(produit.codeBarre) : null;
@@ -102,7 +140,11 @@ export async function importProductsFromCSV(formData: FormData): Promise<ImportR
           .from("produits")
           .select("id")
           .eq("etablissement_id", etablissement.id)
-          .or(cleanCodeBarre ? `code_barre.eq.${cleanCodeBarre},nom.eq.${cleanNom}` : `nom.eq.${cleanNom}`)
+          .or(
+            cleanCodeBarre
+              ? `code_barre.eq.${cleanCodeBarre},nom.eq.${cleanNom}`
+              : `nom.eq.${cleanNom}`
+          )
           .single();
 
         const productData = mapCSVToProduct(produit, categorieId, etablissement.id);
@@ -113,7 +155,10 @@ export async function importProductsFromCSV(formData: FormData): Promise<ImportR
         }
         importes++;
       } catch (error) {
-        erreurs.push({ ligne, message: error instanceof Error ? error.message : "Erreur inconnue" });
+        erreurs.push({
+          ligne,
+          message: error instanceof Error ? error.message : "Erreur inconnue",
+        });
         ignores++;
       }
     }
@@ -123,16 +168,31 @@ export async function importProductsFromCSV(formData: FormData): Promise<ImportR
 
     return {
       success: erreurs.length === 0,
-      message: erreurs.length === 0 ? `${importes} produit(s) importé(s) avec succès` : `${importes} importé(s), ${ignores} ignoré(s)`,
-      importes, ignores, erreurs,
+      message:
+        erreurs.length === 0
+          ? `${importes} produit(s) importé(s) avec succès`
+          : `${importes} importé(s), ${ignores} ignoré(s)`,
+      importes,
+      ignores,
+      erreurs,
     };
   } catch (error) {
     console.error("[CSV Import] Erreur:", error);
-    return { success: false, message: error instanceof Error ? error.message : "Erreur interne", importes: 0, ignores: 0, erreurs: [] };
+    return {
+      success: false,
+      message: error instanceof Error ? error.message : "Erreur interne",
+      importes: 0,
+      ignores: 0,
+      erreurs: [],
+    };
   }
 }
 
-export async function exportProducts(): Promise<{ success: boolean; data?: string; error?: string }> {
+export async function exportProducts(): Promise<{
+  success: boolean;
+  data?: string;
+  error?: string;
+}> {
   try {
     const etablissement = await getEtablissement();
     const supabase = createServiceClient();
@@ -171,7 +231,10 @@ export async function exportProducts(): Promise<{ success: boolean; data?: strin
   }
 }
 
-export async function exportVentes(dateDebut: Date, dateFin: Date): Promise<{ success: boolean; data?: string; error?: string; count?: number }> {
+export async function exportVentes(
+  dateDebut: Date,
+  dateFin: Date
+): Promise<{ success: boolean; data?: string; error?: string; count?: number }> {
   try {
     const etablissement = await getEtablissement();
     const supabase = createServiceClient();
@@ -197,7 +260,9 @@ export async function exportVentes(dateDebut: Date, dateFin: Date): Promise<{ su
       utilisateur: v.utilisateurs as { nom: string; prenom: string | null },
       client: v.clients as { nom: string; prenom: string | null } | null,
       table: v.tables as { numero: string } | null,
-      paiements: ((v.paiements || []) as Array<{ mode_paiement: string; montant: string | number }>).map((p) => ({
+      paiements: (
+        (v.paiements || []) as Array<{ mode_paiement: string; montant: string | number }>
+      ).map((p) => ({
         modePaiement: p.mode_paiement,
         montant: Number(p.montant),
       })),
@@ -211,7 +276,12 @@ export async function exportVentes(dateDebut: Date, dateFin: Date): Promise<{ su
   }
 }
 
-export async function exportClients(): Promise<{ success: boolean; data?: string; error?: string; count?: number }> {
+export async function exportClients(): Promise<{
+  success: boolean;
+  data?: string;
+  error?: string;
+  count?: number;
+}> {
   try {
     const etablissement = await getEtablissement();
     const supabase = createServiceClient();

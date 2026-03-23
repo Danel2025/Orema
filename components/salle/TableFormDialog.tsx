@@ -1,26 +1,14 @@
 "use client";
 
 import { useTransition, useEffect, useState } from "react";
-import {
-  Dialog,
-  Button,
-  Flex,
-  Text,
-  TextField,
-  Select,
-  Popover,
-  Box,
-} from "@radix-ui/themes";
-import { Plus, Check } from "lucide-react";
+import { Dialog, Button, Flex, Text, TextField, Select, Popover, Box } from "@radix-ui/themes";
+import { Plus, Check } from "@phosphor-icons/react";
 import type { SubmitHandler } from "react-hook-form";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
 import { z } from "zod";
-import {
-  FormeTable,
-  FORME_TABLE_LABELS,
-} from "@/schemas/table.schema";
+import { FormeTable, FORME_TABLE_LABELS } from "@/schemas/table.schema";
 import { createTable, updateTable, createZone } from "@/actions/tables";
 
 // Schema local pour le formulaire avec des valeurs par défaut explicites
@@ -104,7 +92,8 @@ export function TableFormDialog({
     defaultValues: {
       numero: table?.numero || "",
       capacite: table?.capacite || 4,
-      forme: (table?.forme as "RONDE" | "CARREE" | "RECTANGULAIRE") || prefilledData?.forme || "CARREE",
+      forme:
+        (table?.forme as "RONDE" | "CARREE" | "RECTANGULAIRE") || prefilledData?.forme || "CARREE",
       zoneId: table?.zoneId || undefined,
       positionX: table?.positionX ?? prefilledData?.positionX ?? undefined,
       positionY: table?.positionY ?? prefilledData?.positionY ?? undefined,
@@ -153,7 +142,10 @@ export function TableFormDialog({
       reset({
         numero: table?.numero || "",
         capacite: table?.capacite || 4,
-        forme: (table?.forme as "RONDE" | "CARREE" | "RECTANGULAIRE") || prefilledData?.forme || "CARREE",
+        forme:
+          (table?.forme as "RONDE" | "CARREE" | "RECTANGULAIRE") ||
+          prefilledData?.forme ||
+          "CARREE",
         zoneId: table?.zoneId || undefined,
         positionX: table?.positionX ?? prefilledData?.positionX ?? undefined,
         positionY: table?.positionY ?? prefilledData?.positionY ?? undefined,
@@ -167,9 +159,8 @@ export function TableFormDialog({
   const onSubmit: SubmitHandler<FormData> = (data) => {
     startTransition(async () => {
       try {
-        const result = isEdit && table
-          ? await updateTable(table.id, data)
-          : await createTable(data);
+        const result =
+          isEdit && table ? await updateTable(table.id, data) : await createTable(data);
 
         if (result.success) {
           toast.success(isEdit ? "Table mise à jour" : "Table créée");
@@ -202,13 +193,12 @@ export function TableFormDialog({
               <Text as="label" size="2" weight="medium" mb="1">
                 Numéro / Nom <span className="text-red-500">*</span>
               </Text>
-              <TextField.Root
-                {...register("numero")}
-                placeholder="Ex: T1, Table 1, VIP..."
-              />
-              {errors.numero ? <Text size="1" color="red" mt="1">
+              <TextField.Root {...register("numero")} placeholder="Ex: T1, Table 1, VIP..." />
+              {errors.numero ? (
+                <Text size="1" color="red" mt="1">
                   {errors.numero.message}
-                </Text> : null}
+                </Text>
+              ) : null}
             </div>
 
             {/* Capacité */}
@@ -223,9 +213,11 @@ export function TableFormDialog({
                 min={1}
                 max={50}
               />
-              {errors.capacite ? <Text size="1" color="red" mt="1">
+              {errors.capacite ? (
+                <Text size="1" color="red" mt="1">
                   {errors.capacite.message}
-                </Text> : null}
+                </Text>
+              ) : null}
             </div>
 
             {/* Forme */}
@@ -237,12 +229,9 @@ export function TableFormDialog({
                 name="forme"
                 control={control}
                 render={({ field }) => (
-                  <Select.Root
-                    value={field.value}
-                    onValueChange={field.onChange}
-                  >
+                  <Select.Root value={field.value} onValueChange={field.onChange}>
                     <Select.Trigger style={{ width: "100%" }} />
-                    <Select.Content>
+                    <Select.Content position="popper">
                       {Object.entries(FormeTable).map(([key, value]) => (
                         <Select.Item key={key} value={value}>
                           {FORME_TABLE_LABELS[value as keyof typeof FORME_TABLE_LABELS]}
@@ -271,8 +260,11 @@ export function TableFormDialog({
                       }
                     }}
                   >
-                    <Select.Trigger style={{ width: "100%" }} placeholder="Sélectionner une zone..." />
-                    <Select.Content>
+                    <Select.Trigger
+                      style={{ width: "100%" }}
+                      placeholder="Sélectionner une zone..."
+                    />
+                    <Select.Content position="popper">
                       <Select.Item value="__none__">
                         <Text color="gray">Aucune zone</Text>
                       </Select.Item>
@@ -295,7 +287,9 @@ export function TableFormDialog({
                   </Popover.Trigger>
                   <Popover.Content style={{ width: 280 }}>
                     <Flex direction="column" gap="3">
-                      <Text size="2" weight="medium">Nouvelle zone</Text>
+                      <Text size="2" weight="medium">
+                        Nouvelle zone
+                      </Text>
                       <input
                         type="text"
                         autoFocus
@@ -358,9 +352,11 @@ export function TableFormDialog({
                   </Popover.Content>
                 </Popover.Root>
               </Flex>
-              {errors.zoneId ? <Text size="1" color="red" mt="1">
+              {errors.zoneId ? (
+                <Text size="1" color="red" mt="1">
                   {errors.zoneId.message}
-                </Text> : null}
+                </Text>
+              ) : null}
             </div>
           </Flex>
 

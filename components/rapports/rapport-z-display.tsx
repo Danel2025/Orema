@@ -22,23 +22,19 @@ import {
 } from "@radix-ui/themes";
 import {
   FileText,
-  Calendar,
+  CalendarBlank,
   User,
   Clock,
   Wallet,
   CreditCard,
-  Smartphone,
-  AlertTriangle,
+  DeviceMobile,
+  Warning,
   CheckCircle,
   Eye,
   Printer,
-  TrendingUp,
-} from "lucide-react";
-import {
-  genererRapportZAction,
-  getClosedSessions,
-  type RapportZComplet,
-} from "@/actions/rapports";
+  TrendUp,
+} from "@phosphor-icons/react";
+import { genererRapportZAction, getClosedSessions, type RapportZComplet } from "@/actions/rapports";
 import { formatCurrency, formatDate, formatTime } from "@/lib/utils";
 
 interface Session {
@@ -161,16 +157,10 @@ export function RapportZDisplay({ initialSessions }: RapportZDisplayProps) {
             <Table.Row>
               <Table.ColumnHeaderCell>Date</Table.ColumnHeaderCell>
               <Table.ColumnHeaderCell>Caissier</Table.ColumnHeaderCell>
-              <Table.ColumnHeaderCell align="right">
-                Ventes
-              </Table.ColumnHeaderCell>
+              <Table.ColumnHeaderCell align="right">Ventes</Table.ColumnHeaderCell>
               <Table.ColumnHeaderCell align="right">CA</Table.ColumnHeaderCell>
-              <Table.ColumnHeaderCell align="right">
-                Ecart
-              </Table.ColumnHeaderCell>
-              <Table.ColumnHeaderCell align="center">
-                Actions
-              </Table.ColumnHeaderCell>
+              <Table.ColumnHeaderCell align="right">Ecart</Table.ColumnHeaderCell>
+              <Table.ColumnHeaderCell align="center">Actions</Table.ColumnHeaderCell>
             </Table.Row>
           </Table.Header>
 
@@ -180,7 +170,7 @@ export function RapportZDisplay({ initialSessions }: RapportZDisplayProps) {
                 <Table.RowHeaderCell>
                   <Flex direction="column" gap="1">
                     <Flex align="center" gap="1">
-                      <Calendar size={12} />
+                      <CalendarBlank size={12} />
                       <Text size="2" weight="medium">
                         {formatDate(session.dateCloture, "short")}
                       </Text>
@@ -188,8 +178,7 @@ export function RapportZDisplay({ initialSessions }: RapportZDisplayProps) {
                     <Flex align="center" gap="1">
                       <Clock size={12} />
                       <Text size="1" color="gray">
-                        {formatTime(session.dateOuverture)} -{" "}
-                        {formatTime(session.dateCloture)}
+                        {formatTime(session.dateOuverture)} - {formatTime(session.dateCloture)}
                       </Text>
                     </Flex>
                   </Flex>
@@ -212,8 +201,7 @@ export function RapportZDisplay({ initialSessions }: RapportZDisplayProps) {
                     size="2"
                     weight="medium"
                     style={{
-                      fontFamily:
-                        "var(--font-google-sans-code), ui-monospace, monospace",
+                      fontFamily: "var(--font-google-sans-code), ui-monospace, monospace",
                     }}
                   >
                     {formatCurrency(session.totalVentes)}
@@ -223,18 +211,12 @@ export function RapportZDisplay({ initialSessions }: RapportZDisplayProps) {
                   {session.ecart !== null && (
                     <Flex align="center" gap="1" justify="end">
                       {session.ecart === 0 ? (
-                        <CheckCircle
-                          size={14}
-                          style={{ color: "var(--green-9)" }}
-                        />
+                        <CheckCircle size={14} style={{ color: "var(--green-9)" }} />
                       ) : (
-                        <AlertTriangle
+                        <Warning
                           size={14}
                           style={{
-                            color:
-                              session.ecart > 0
-                                ? "var(--blue-9)"
-                                : "var(--red-9)",
+                            color: session.ecart > 0 ? "var(--blue-9)" : "var(--red-9)",
                           }}
                         />
                       )}
@@ -242,8 +224,7 @@ export function RapportZDisplay({ initialSessions }: RapportZDisplayProps) {
                         size="2"
                         weight="medium"
                         style={{
-                          fontFamily:
-                            "var(--font-google-sans-code), ui-monospace, monospace",
+                          fontFamily: "var(--font-google-sans-code), ui-monospace, monospace",
                           color:
                             session.ecart === 0
                               ? "var(--green-9)"
@@ -279,19 +260,14 @@ export function RapportZDisplay({ initialSessions }: RapportZDisplayProps) {
                         </Flex>
                       </Dialog.Title>
                       <Dialog.Description size="2" color="gray">
-                        Session du{" "}
-                        {formatDate(session.dateCloture, "long")}
+                        Session du {formatDate(session.dateCloture, "long")}
                       </Dialog.Description>
 
                       {isLoadingRapport ? (
                         <Box py="6">
                           <Flex direction="column" gap="3">
                             {Array.from({ length: 6 }).map((_, i) => (
-                              <Skeleton
-                                key={i}
-                                width="100%"
-                                height="40px"
-                              />
+                              <Skeleton key={i} width="100%" height="40px" />
                             ))}
                           </Flex>
                         </Box>
@@ -299,7 +275,7 @@ export function RapportZDisplay({ initialSessions }: RapportZDisplayProps) {
                         <Box py="6">
                           <Callout.Root color="red">
                             <Callout.Icon>
-                              <AlertTriangle size={16} />
+                              <Warning size={16} />
                             </Callout.Icon>
                             <Callout.Text>{rapportError}</Callout.Text>
                           </Callout.Root>
@@ -320,11 +296,7 @@ export function RapportZDisplay({ initialSessions }: RapportZDisplayProps) {
                                 <Text size="1" color="gray">
                                   Caissier
                                 </Text>
-                                <Text
-                                  size="2"
-                                  weight="medium"
-                                  style={{ display: "block" }}
-                                >
+                                <Text size="2" weight="medium" style={{ display: "block" }}>
                                   {rapportZ.session.caissierNom}
                                 </Text>
                               </Box>
@@ -332,11 +304,7 @@ export function RapportZDisplay({ initialSessions }: RapportZDisplayProps) {
                                 <Text size="1" color="gray">
                                   Ouverture
                                 </Text>
-                                <Text
-                                  size="2"
-                                  weight="medium"
-                                  style={{ display: "block" }}
-                                >
+                                <Text size="2" weight="medium" style={{ display: "block" }}>
                                   {formatTime(rapportZ.session.dateOuverture)}
                                 </Text>
                               </Box>
@@ -344,11 +312,7 @@ export function RapportZDisplay({ initialSessions }: RapportZDisplayProps) {
                                 <Text size="1" color="gray">
                                   Cloture
                                 </Text>
-                                <Text
-                                  size="2"
-                                  weight="medium"
-                                  style={{ display: "block" }}
-                                >
+                                <Text size="2" weight="medium" style={{ display: "block" }}>
                                   {formatTime(rapportZ.session.dateCloture)}
                                 </Text>
                               </Box>
@@ -383,9 +347,7 @@ export function RapportZDisplay({ initialSessions }: RapportZDisplayProps) {
                                 <Table.Row>
                                   <Table.Cell>Annulations</Table.Cell>
                                   <Table.Cell align="right">
-                                    <Text color="red">
-                                      {rapportZ.ventes.nombreAnnulations}
-                                    </Text>
+                                    <Text color="red">{rapportZ.ventes.nombreAnnulations}</Text>
                                   </Table.Cell>
                                 </Table.Row>
                               )}
@@ -395,9 +357,7 @@ export function RapportZDisplay({ initialSessions }: RapportZDisplayProps) {
                                 </Table.Cell>
                                 <Table.Cell align="right">
                                   <Text weight="bold">
-                                    {formatCurrency(
-                                      rapportZ.ventes.totalVentes
-                                    )}
+                                    {formatCurrency(rapportZ.ventes.totalVentes)}
                                   </Text>
                                 </Table.Cell>
                               </Table.Row>
@@ -442,14 +402,12 @@ export function RapportZDisplay({ initialSessions }: RapportZDisplayProps) {
                                 <Table.Row>
                                   <Table.Cell>
                                     <Flex align="center" gap="2">
-                                      <Smartphone size={14} />
+                                      <DeviceMobile size={14} />
                                       Mobile Money
                                     </Flex>
                                   </Table.Cell>
                                   <Table.Cell align="right">
-                                    {formatCurrency(
-                                      rapportZ.paiements.mobileMoney
-                                    )}
+                                    {formatCurrency(rapportZ.paiements.mobileMoney)}
                                   </Table.Cell>
                                 </Table.Row>
                               )}
@@ -457,9 +415,7 @@ export function RapportZDisplay({ initialSessions }: RapportZDisplayProps) {
                                 <Table.Row>
                                   <Table.Cell>Cheques</Table.Cell>
                                   <Table.Cell align="right">
-                                    {formatCurrency(
-                                      rapportZ.paiements.cheques
-                                    )}
+                                    {formatCurrency(rapportZ.paiements.cheques)}
                                   </Table.Cell>
                                 </Table.Row>
                               )}
@@ -467,9 +423,7 @@ export function RapportZDisplay({ initialSessions }: RapportZDisplayProps) {
                                 <Table.Row>
                                   <Table.Cell>Virements</Table.Cell>
                                   <Table.Cell align="right">
-                                    {formatCurrency(
-                                      rapportZ.paiements.virements
-                                    )}
+                                    {formatCurrency(rapportZ.paiements.virements)}
                                   </Table.Cell>
                                 </Table.Row>
                               )}
@@ -477,9 +431,7 @@ export function RapportZDisplay({ initialSessions }: RapportZDisplayProps) {
                                 <Table.Row>
                                   <Table.Cell>Compte client</Table.Cell>
                                   <Table.Cell align="right">
-                                    {formatCurrency(
-                                      rapportZ.paiements.compteClient
-                                    )}
+                                    {formatCurrency(rapportZ.paiements.compteClient)}
                                   </Table.Cell>
                                 </Table.Row>
                               )}
@@ -532,24 +484,18 @@ export function RapportZDisplay({ initialSessions }: RapportZDisplayProps) {
                             <Flex direction="column" gap="2">
                               <Flex justify="between">
                                 <Text size="2">Fond de caisse</Text>
-                                <Text size="2">
-                                  {formatCurrency(rapportZ.caisse.fondCaisse)}
-                                </Text>
+                                <Text size="2">{formatCurrency(rapportZ.caisse.fondCaisse)}</Text>
                               </Flex>
                               <Flex justify="between">
                                 <Text size="2">Especes attendues</Text>
                                 <Text size="2">
-                                  {formatCurrency(
-                                    rapportZ.caisse.especesAttendues
-                                  )}
+                                  {formatCurrency(rapportZ.caisse.especesAttendues)}
                                 </Text>
                               </Flex>
                               <Flex justify="between">
                                 <Text size="2">Especes comptees</Text>
                                 <Text size="2">
-                                  {formatCurrency(
-                                    rapportZ.caisse.especesComptees
-                                  )}
+                                  {formatCurrency(rapportZ.caisse.especesComptees)}
                                 </Text>
                               </Flex>
                               <Separator size="4" />
@@ -613,68 +559,61 @@ export function RapportZDisplay({ initialSessions }: RapportZDisplayProps) {
                           {rapportZ.topProduits.length > 0 && (
                             <Box mt="4">
                               <Flex align="center" gap="2" mb="2">
-                                <TrendingUp size={16} />
+                                <TrendUp size={16} />
                                 <Text size="3" weight="bold">
                                   Top produits
                                 </Text>
                               </Flex>
                               <Table.Root size="1">
                                 <Table.Body>
-                                  {rapportZ.topProduits
-                                    .slice(0, 5)
-                                    .map((produit, i) => (
-                                      <Table.Row key={i}>
-                                        <Table.Cell>
-                                          <Flex align="center" gap="2">
-                                            <Badge
-                                              variant="soft"
-                                              color="gray"
-                                              size="1"
-                                            >
-                                              {i + 1}
-                                            </Badge>
-                                            {produit.nom}
-                                          </Flex>
-                                        </Table.Cell>
-                                        <Table.Cell align="center">
-                                          <Badge variant="outline" size="1">
-                                            x{produit.quantite}
+                                  {rapportZ.topProduits.slice(0, 5).map((produit, i) => (
+                                    <Table.Row key={i}>
+                                      <Table.Cell>
+                                        <Flex align="center" gap="2">
+                                          <Badge variant="soft" color="gray" size="1">
+                                            {i + 1}
                                           </Badge>
-                                        </Table.Cell>
-                                        <Table.Cell align="right">
-                                          {formatCurrency(produit.total)}
-                                        </Table.Cell>
-                                      </Table.Row>
-                                    ))}
+                                          {produit.nom}
+                                        </Flex>
+                                      </Table.Cell>
+                                      <Table.Cell align="center">
+                                        <Badge variant="outline" size="1">
+                                          x{produit.quantite}
+                                        </Badge>
+                                      </Table.Cell>
+                                      <Table.Cell align="right">
+                                        {formatCurrency(produit.total)}
+                                      </Table.Cell>
+                                    </Table.Row>
+                                  ))}
                                 </Table.Body>
                               </Table.Root>
                             </Box>
                           )}
 
                           {/* Notes */}
-                          {rapportZ.notesCloture ? <Callout.Root color="gray" mt="4">
+                          {rapportZ.notesCloture ? (
+                            <Callout.Root color="gray" mt="4">
                               <Callout.Text>
                                 <Text weight="bold">Notes: </Text>
                                 {rapportZ.notesCloture}
                               </Callout.Text>
-                            </Callout.Root> : null}
+                            </Callout.Root>
+                          ) : null}
                         </Box>
                       ) : (
                         <Box py="6">
-                          <Text color="gray">
-                            Impossible de charger le rapport
-                          </Text>
+                          <Text color="gray">Impossible de charger le rapport</Text>
                         </Box>
                       )}
 
                       <Flex gap="3" mt="4" justify="end">
-                        {rapportZ ? <Button
-                            variant="soft"
-                            onClick={handlePrint}
-                          >
+                        {rapportZ ? (
+                          <Button variant="soft" onClick={handlePrint}>
                             <Printer size={16} />
                             Imprimer
-                          </Button> : null}
+                          </Button>
+                        ) : null}
                         <Dialog.Close>
                           <Button variant="soft" color="gray">
                             Fermer

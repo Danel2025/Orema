@@ -115,9 +115,7 @@ export function ClientList({
   };
 
   const getClientName = (client: Client) => {
-    return client.prenom
-      ? `${client.nom} ${client.prenom}`
-      : client.nom;
+    return client.prenom ? `${client.nom} ${client.prenom}` : client.nom;
   };
 
   return (
@@ -139,7 +137,8 @@ export function ClientList({
           </Flex>
 
           <Flex align="center" gap="3">
-            {onToggleInactive ? <Flex align="center" gap="2">
+            {onToggleInactive ? (
+              <Flex align="center" gap="2">
                 <Checkbox
                   checked={showInactive}
                   onCheckedChange={(checked) => onToggleInactive(!!checked)}
@@ -147,7 +146,8 @@ export function ClientList({
                 <Text size="2" color="gray">
                   Afficher inactifs
                 </Text>
-              </Flex> : null}
+              </Flex>
+            ) : null}
             <Button onClick={onAdd}>
               <Plus size={16} />
               Nouveau client
@@ -163,21 +163,11 @@ export function ClientList({
                 <Table.Row>
                   <Table.ColumnHeaderCell>Client</Table.ColumnHeaderCell>
                   <Table.ColumnHeaderCell>Contact</Table.ColumnHeaderCell>
-                  <Table.ColumnHeaderCell align="center">
-                    Fidelite
-                  </Table.ColumnHeaderCell>
-                  <Table.ColumnHeaderCell align="center">
-                    Solde prepaye
-                  </Table.ColumnHeaderCell>
-                  <Table.ColumnHeaderCell align="center">
-                    Achats
-                  </Table.ColumnHeaderCell>
-                  <Table.ColumnHeaderCell align="center">
-                    Statut
-                  </Table.ColumnHeaderCell>
-                  <Table.ColumnHeaderCell align="center">
-                    Actions
-                  </Table.ColumnHeaderCell>
+                  <Table.ColumnHeaderCell align="center">Fidelite</Table.ColumnHeaderCell>
+                  <Table.ColumnHeaderCell align="center">Solde prepaye</Table.ColumnHeaderCell>
+                  <Table.ColumnHeaderCell align="center">Achats</Table.ColumnHeaderCell>
+                  <Table.ColumnHeaderCell align="center">Statut</Table.ColumnHeaderCell>
+                  <Table.ColumnHeaderCell align="center">Actions</Table.ColumnHeaderCell>
                 </Table.Row>
               </Table.Header>
               <Table.Body>
@@ -189,23 +179,29 @@ export function ClientList({
                         <Text size="2" weight="medium">
                           {getClientName(client)}
                         </Text>
-                        {client.adresse ? <Text size="1" color="gray">
+                        {client.adresse ? (
+                          <Text size="1" color="gray">
                             {client.adresse}
-                          </Text> : null}
+                          </Text>
+                        ) : null}
                       </Flex>
                     </Table.Cell>
 
                     {/* Contact */}
                     <Table.Cell>
                       <Flex direction="column" gap="1">
-                        {client.telephone ? <Flex align="center" gap="1">
+                        {client.telephone ? (
+                          <Flex align="center" gap="1">
                             <Phone size={12} className="text-gray-500" />
                             <Text size="1">{client.telephone}</Text>
-                          </Flex> : null}
-                        {client.email ? <Flex align="center" gap="1">
+                          </Flex>
+                        ) : null}
+                        {client.email ? (
+                          <Flex align="center" gap="1">
                             <Mail size={12} className="text-gray-500" />
                             <Text size="1">{client.email}</Text>
-                          </Flex> : null}
+                          </Flex>
+                        ) : null}
                         {!client.telephone && !client.email && (
                           <Text size="1" color="gray">
                             -
@@ -245,21 +241,14 @@ export function ClientList({
 
                     {/* Nombre d'achats */}
                     <Table.Cell align="center">
-                      <Text
-                        size="2"
-                        style={{ fontFamily: "var(--font-google-sans-code)" }}
-                      >
+                      <Text size="2" style={{ fontFamily: "var(--font-google-sans-code)" }}>
                         {client._count?.ventes || 0}
                       </Text>
                     </Table.Cell>
 
                     {/* Statut */}
                     <Table.Cell align="center">
-                      <Badge
-                        size="1"
-                        color={client.actif ? "green" : "gray"}
-                        variant="soft"
-                      >
+                      <Badge size="1" color={client.actif ? "green" : "gray"} variant="soft">
                         {client.actif ? "Actif" : "Inactif"}
                       </Badge>
                     </Table.Cell>
@@ -304,8 +293,8 @@ export function ClientList({
             {pagination.totalPages > 1 && (
               <Flex justify="between" align="center" pt="2">
                 <Text size="2" color="gray">
-                  {pagination.total} client{pagination.total > 1 ? "s" : ""} -
-                  Page {pagination.page} sur {pagination.totalPages}
+                  {pagination.total} client{pagination.total > 1 ? "s" : ""} - Page{" "}
+                  {pagination.page} sur {pagination.totalPages}
                 </Text>
                 <Flex gap="2">
                   <Button
@@ -331,18 +320,10 @@ export function ClientList({
             )}
           </>
         ) : (
-          <Flex
-            direction="column"
-            align="center"
-            gap="3"
-            py="8"
-            style={{ color: "var(--gray-9)" }}
-          >
+          <Flex direction="column" align="center" gap="3" py="8" style={{ color: "var(--gray-9)" }}>
             <Users size={48} />
             <Text size="3" color="gray">
-              {searchQuery
-                ? "Aucun client trouve pour cette recherche"
-                : "Aucun client enregistre"}
+              {searchQuery ? "Aucun client trouve pour cette recherche" : "Aucun client enregistre"}
             </Text>
             {!searchQuery && (
               <Button variant="soft" onClick={onAdd}>
@@ -358,22 +339,20 @@ export function ClientList({
       <AlertDialog.Root open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
         <AlertDialog.Content maxWidth="400px">
           <AlertDialog.Title>
-            {clientToDelete?._count?.ventes
-              ? "Desactiver le client"
-              : "Supprimer le client"}
+            {clientToDelete?._count?.ventes ? "Desactiver le client" : "Supprimer le client"}
           </AlertDialog.Title>
           <AlertDialog.Description size="2">
             {clientToDelete?._count?.ventes ? (
               <>
-                Le client <strong>{clientToDelete ? getClientName(clientToDelete) : null}</strong>{" "}
-                a {clientToDelete._count.ventes} achat(s) enregistre(s). Il sera
-                desactive mais son historique sera conserve.
+                Le client <strong>{clientToDelete ? getClientName(clientToDelete) : null}</strong> a{" "}
+                {clientToDelete._count.ventes} achat(s) enregistre(s). Il sera desactive mais son
+                historique sera conserve.
               </>
             ) : (
               <>
                 Etes-vous sur de vouloir supprimer le client{" "}
-                <strong>{clientToDelete ? getClientName(clientToDelete) : null}</strong> ?
-                Cette action est irreversible.
+                <strong>{clientToDelete ? getClientName(clientToDelete) : null}</strong> ? Cette
+                action est irreversible.
               </>
             )}
           </AlertDialog.Description>

@@ -10,11 +10,7 @@ import { Flex, Heading, Text } from "@radix-ui/themes";
 import { Users } from "lucide-react";
 import { useDebounce } from "@/hooks/use-debounce";
 import { getClients } from "@/actions/clients";
-import {
-  ClientList,
-  ClientFormModal,
-  ClientDetailModal,
-} from "@/components/clients";
+import { ClientList, ClientFormModal, ClientDetailModal } from "@/components/clients";
 
 interface Client {
   id: string;

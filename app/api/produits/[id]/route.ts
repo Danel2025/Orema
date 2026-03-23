@@ -3,13 +3,13 @@
  * Migré vers Supabase
  */
 
-import type { NextRequest} from "next/server";
+import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { createClient } from "@/lib/db";
 import { getEtablissementId } from "@/lib/etablissement";
 import { produitSchema } from "@/schemas/produit.schema";
-import { getSession } from "@/lib/auth/session";
+import { getCurrentUser } from "@/lib/auth";
 import { isValidId } from "@/lib/utils/sanitize";
 import type { Role } from "@/lib/db/types";
 
@@ -23,26 +23,28 @@ const PRODUCT_WRITE_ROLES: Role[] = ["SUPER_ADMIN", "ADMIN", "MANAGER"];
  * .strict() rejette tout champ inconnu pour empecher
  * l'injection de champs arbitraires dans la requete Supabase.
  */
-const produitPatchSchema = z.object({
-  nom: z.string().min(2).max(100).optional(),
-  description: z.string().max(500).nullable().optional(),
-  code_barre: z.string().max(50).nullable().optional(),
-  image: z.string().max(500).nullable().optional(),
-  prix_vente: z.number().int().positive().optional(),
-  prix_achat: z.number().int().positive().nullable().optional(),
-  taux_tva: z.enum(["STANDARD", "REDUIT", "EXONERE"]).optional(),
-  categorie_id: z.string().optional(),
-  gerer_stock: z.boolean().optional(),
-  stock_actuel: z.number().int().nonnegative().nullable().optional(),
-  stock_min: z.number().int().nonnegative().nullable().optional(),
-  stock_max: z.number().int().nonnegative().nullable().optional(),
-  unite: z.string().max(20).nullable().optional(),
-  disponible_direct: z.boolean().optional(),
-  disponible_table: z.boolean().optional(),
-  disponible_livraison: z.boolean().optional(),
-  disponible_emporter: z.boolean().optional(),
-  actif: z.boolean().optional(),
-}).strict();
+const produitPatchSchema = z
+  .object({
+    nom: z.string().min(2).max(100).optional(),
+    description: z.string().max(500).nullable().optional(),
+    code_barre: z.string().max(50).nullable().optional(),
+    image: z.string().max(500).nullable().optional(),
+    prix_vente: z.number().int().positive().optional(),
+    prix_achat: z.number().int().positive().nullable().optional(),
+    taux_tva: z.enum(["STANDARD", "REDUIT", "EXONERE"]).optional(),
+    categorie_id: z.string().optional(),
+    gerer_stock: z.boolean().optional(),
+    stock_actuel: z.number().int().nonnegative().nullable().optional(),
+    stock_min: z.number().int().nonnegative().nullable().optional(),
+    stock_max: z.number().int().nonnegative().nullable().optional(),
+    unite: z.string().max(20).nullable().optional(),
+    disponible_direct: z.boolean().optional(),
+    disponible_table: z.boolean().optional(),
+    disponible_livraison: z.boolean().optional(),
+    disponible_emporter: z.boolean().optional(),
+    actif: z.boolean().optional(),
+  })
+  .strict();
 
 function getTauxTvaEnum(taux: number): "STANDARD" | "REDUIT" | "EXONERE" {
   if (taux === 0) return "EXONERE";
@@ -55,18 +57,17 @@ function serializeProduit<T extends Record<string, unknown>>(produit: T): T {
   if (serialized.prix_vente !== undefined) serialized.prixVente = Number(serialized.prix_vente);
   if (serialized.prix_achat !== undefined) serialized.prixAchat = Number(serialized.prix_achat);
   if (Array.isArray(serialized.supplements_produits)) {
-    serialized.supplements = serialized.supplements_produits.map((sup: Record<string, unknown>) => ({
-      ...sup,
-      prix: sup.prix !== undefined ? Number(sup.prix) : null,
-    }));
+    serialized.supplements = serialized.supplements_produits.map(
+      (sup: Record<string, unknown>) => ({
+        ...sup,
+        prix: sup.prix !== undefined ? Number(sup.prix) : null,
+      })
+    );
   }
   return serialized as T;
 }
 
-export async function GET(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
+export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const etablissementId = await getEtablissementId();
     const { id } = await params;
@@ -93,10 +94,7 @@ export async function GET(
   }
 }
 
-export async function PUT(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
+export async function PUT(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const etablissementId = await getEtablissementId();
     const { id } = await params;
@@ -180,22 +178,16 @@ export async function PUT(
   }
 }
 
-export async function PATCH(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
+export async function PATCH(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     // 1. Verification d'authentification
-    const session = await getSession();
-    if (!session) {
-      return NextResponse.json(
-        { success: false, error: "Non authentifie" },
-        { status: 401 }
-      );
+    const user = await getCurrentUser();
+    if (!user) {
+      return NextResponse.json({ success: false, error: "Non authentifie" }, { status: 401 });
     }
 
     // 2. Verification du role (SUPER_ADMIN, ADMIN, MANAGER uniquement)
-    if (!PRODUCT_WRITE_ROLES.includes(session.role)) {
+    if (!PRODUCT_WRITE_ROLES.includes(user.role)) {
       return NextResponse.json(
         { success: false, error: "Permissions insuffisantes" },
         { status: 403 }
@@ -207,10 +199,7 @@ export async function PATCH(
 
     // 3. Validation de l'ID (UUID ou CUID)
     if (!isValidId(id)) {
-      return NextResponse.json(
-        { success: false, error: "Identifiant invalide" },
-        { status: 400 }
-      );
+      return NextResponse.json({ success: false, error: "Identifiant invalide" }, { status: 400 });
     }
 
     const body = await request.json();

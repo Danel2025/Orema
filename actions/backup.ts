@@ -23,9 +23,13 @@ import type { ZodSchema } from "zod";
 
 type ActionResult<T = unknown> = { success: boolean; error?: string; data?: T };
 
-function validate<T>(schema: ZodSchema<T>, data: unknown): { valid: true; data: T } | { valid: false; error: string } {
+function validate<T>(
+  schema: ZodSchema<T>,
+  data: unknown
+): { valid: true; data: T } | { valid: false; error: string } {
   const result = schema.safeParse(data);
-  if (!result.success) return { valid: false, error: result.error.issues[0]?.message || "Donnees invalides" };
+  if (!result.success)
+    return { valid: false, error: result.error.issues[0]?.message || "Donnees invalides" };
   return { valid: true, data: result.data };
 }
 
@@ -54,15 +58,17 @@ interface CreateBackupResult {
 /**
  * Cree une nouvelle sauvegarde
  */
-export async function createBackup(input: CreateBackupInput): Promise<ActionResult<CreateBackupResult>> {
+export async function createBackup(
+  input: CreateBackupInput
+): Promise<ActionResult<CreateBackupResult>> {
   try {
     // 1. Verifier l'authentification et les permissions
     const currentUser = await getCurrentUser();
     if (!currentUser) {
-      return { success: false, error: "Vous devez etre connecte" };
+      return { success: false, error: "Vous devez être connecté" };
     }
     if (!["SUPER_ADMIN", "ADMIN"].includes(currentUser.role)) {
-      return { success: false, error: "Seuls les administrateurs peuvent creer des sauvegardes" };
+      return { success: false, error: "Seuls les administrateurs peuvent créer des sauvegardes" };
     }
 
     // 2. Valider les donnees
@@ -100,14 +106,21 @@ export async function createBackup(input: CreateBackupInput): Promise<ActionResu
     let totalRecords = 0;
 
     // Si type "full", prendre toutes les categories
-    const categoriesToExport = validation.data.type === "full"
-      ? backupCategories.map(c => c.key)
-      : validation.data.categories;
+    const categoriesToExport =
+      validation.data.type === "full"
+        ? backupCategories.map((c) => c.key)
+        : validation.data.categories;
+
+    // Tables enfants qui n'ont pas de etablissement_id direct
+    const CHILD_TABLES = new Set(["lignes_vente", "paiements"]);
 
     for (const category of categoriesToExport) {
       const tables = BACKUP_TABLES[category] || [];
 
       for (const table of tables) {
+        // Skip les tables enfants - elles seront récupérées via les ventes
+        if (CHILD_TABLES.has(table)) continue;
+
         try {
           const { data: tableData, error: tableError } = await supabase
             .from(table as "ventes")
@@ -119,9 +132,29 @@ export async function createBackup(input: CreateBackupInput): Promise<ActionResu
             totalRecords += tableData.length;
           }
         } catch (e) {
-          // Table peut ne pas avoir etablissement_id (ex: lignes_vente)
-          // Dans ce cas, on la skip ou on fait une jointure
           console.warn(`Impossible d'exporter la table ${table}:`, e);
+        }
+      }
+    }
+
+    // Récupérer les tables enfants via les IDs des ventes
+    if (data["ventes"] && (data["ventes"] as Array<{ id: string }>).length > 0) {
+      const venteIds = (data["ventes"] as Array<{ id: string }>).map((v) => v.id);
+
+      // Récupérer par batch de 100 IDs pour éviter les limites de requête
+      for (const childTable of CHILD_TABLES) {
+        const allChildData: unknown[] = [];
+        for (let i = 0; i < venteIds.length; i += 100) {
+          const batch = venteIds.slice(i, i + 100);
+          const { data: childData } = await supabase
+            .from(childTable as "lignes_vente")
+            .select("*")
+            .in("vente_id" as never, batch);
+          if (childData) allChildData.push(...childData);
+        }
+        if (allChildData.length > 0) {
+          data[childTable] = allChildData;
+          totalRecords += allChildData.length;
         }
       }
     }
@@ -169,12 +202,12 @@ export async function createBackup(input: CreateBackupInput): Promise<ActionResu
       return { success: false, error: "Erreur lors de l'upload du fichier de sauvegarde" };
     }
 
-    // 7. Obtenir une URL signee pour le telechargement
+    // 7. Obtenir une URL signée pour le téléchargement
     const { data: urlData } = await supabase.storage
       .from("backups")
       .createSignedUrl(fileName, 3600); // Valide 1 heure
 
-    // 8. Mettre a jour le backup avec les infos finales
+    // 8. Mettre à jour le backup avec les infos finales
     await supabase
       .from("backups")
       .update({
@@ -212,15 +245,21 @@ export async function createBackup(input: CreateBackupInput): Promise<ActionResu
  */
 export async function listBackups(): Promise<ActionResult<BackupRecord[]>> {
   try {
+    const currentUser = await getCurrentUser();
+    if (!currentUser || !["SUPER_ADMIN", "ADMIN"].includes(currentUser.role)) {
+      return { success: false, error: "Permissions insuffisantes" };
+    }
     const etablissementId = await getEtablissementId();
     const supabase = createServiceClient();
 
     const { data, error } = await supabase
       .from("backups")
-      .select(`
+      .select(
+        `
         *,
         created_by_user:utilisateurs!backups_created_by_fkey(nom, prenom)
-      `)
+      `
+      )
       .eq("etablissement_id", etablissementId)
       .order("created_at", { ascending: false });
 
@@ -264,8 +303,14 @@ export async function listBackups(): Promise<ActionResult<BackupRecord[]>> {
 /**
  * Obtient une URL de telechargement pour une sauvegarde
  */
-export async function downloadBackup(backupId: string): Promise<ActionResult<{ downloadUrl: string }>> {
+export async function downloadBackup(
+  backupId: string
+): Promise<ActionResult<{ downloadUrl: string }>> {
   try {
+    const currentUser = await getCurrentUser();
+    if (!currentUser || !["SUPER_ADMIN", "ADMIN"].includes(currentUser.role)) {
+      return { success: false, error: "Permissions insuffisantes" };
+    }
     const etablissementId = await getEtablissementId();
     const supabase = createServiceClient();
 
@@ -282,27 +327,27 @@ export async function downloadBackup(backupId: string): Promise<ActionResult<{ d
     }
 
     if (backup.status !== "completed") {
-      return { success: false, error: "La sauvegarde n'est pas terminee" };
+      return { success: false, error: "La sauvegarde n'est pas terminée" };
     }
 
     if (!backup.storage_path) {
       return { success: false, error: "Fichier de sauvegarde introuvable" };
     }
 
-    // Generer une URL signee
+    // Générer une URL signée
     const { data: urlData, error: urlError } = await supabase.storage
       .from("backups")
       .createSignedUrl(backup.storage_path, 3600);
 
     if (urlError || !urlData?.signedUrl) {
-      console.error("Erreur generation URL:", urlError);
-      return { success: false, error: "Impossible de generer le lien de telechargement" };
+      console.error("Erreur génération URL:", urlError);
+      return { success: false, error: "Impossible de générer le lien de téléchargement" };
     }
 
     return { success: true, data: { downloadUrl: urlData.signedUrl } };
   } catch (error) {
-    console.error("Erreur telechargement backup:", error);
-    return { success: false, error: "Erreur lors du telechargement" };
+    console.error("Erreur téléchargement backup:", error);
+    return { success: false, error: "Erreur lors du téléchargement" };
   }
 }
 
@@ -349,10 +394,7 @@ export async function deleteBackup(backupId: string): Promise<ActionResult> {
     }
 
     // Supprimer l'enregistrement
-    const { error: deleteError } = await supabase
-      .from("backups")
-      .delete()
-      .eq("id", backupId);
+    const { error: deleteError } = await supabase.from("backups").delete().eq("id", backupId);
 
     if (deleteError) {
       console.error("Erreur suppression backup:", deleteError);
@@ -376,6 +418,10 @@ export async function deleteBackup(backupId: string): Promise<ActionResult> {
  */
 export async function getBackupStats(): Promise<ActionResult<Record<string, number>>> {
   try {
+    const currentUser = await getCurrentUser();
+    if (!currentUser || !["SUPER_ADMIN", "ADMIN"].includes(currentUser.role)) {
+      return { success: false, error: "Permissions insuffisantes" };
+    }
     const etablissementId = await getEtablissementId();
     const supabase = createServiceClient();
 

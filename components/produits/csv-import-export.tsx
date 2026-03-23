@@ -2,19 +2,21 @@
 
 /**
  * CSVImportExport - Composant pour l'import/export CSV des produits
+ * Utilise Radix UI Dialog pour l'accessibilité
  */
 
 import { useState, useRef } from "react";
 import {
-  Download,
-  Upload,
+  DownloadSimple,
+  UploadSimple,
   FileText,
-  AlertCircle,
-  CheckCircle2,
+  WarningCircle,
+  CheckCircle,
   X,
-  Loader2,
-  FileWarning,
-} from "lucide-react";
+  SpinnerGap,
+  Warning,
+} from "@phosphor-icons/react";
+import { Dialog, Flex, Text, Button, Box, Spinner } from "@radix-ui/themes";
 import { toast } from "sonner";
 import {
   exportProduitsCSV,
@@ -38,7 +40,9 @@ export function CSVImportExport({ onImportComplete }: CSVImportExportProps) {
   const [isExporting, setIsExporting] = useState(false);
   const [isImporting, setIsImporting] = useState(false);
   const [parseResult, setParseResult] = useState<ParseResult | null>(null);
-  const [importStep, setImportStep] = useState<"upload" | "preview" | "importing" | "done">("upload");
+  const [importStep, setImportStep] = useState<"upload" | "preview" | "importing" | "done">(
+    "upload"
+  );
   const [importResult, setImportResult] = useState<{
     created: number;
     updated: number;
@@ -53,7 +57,6 @@ export function CSVImportExport({ onImportComplete }: CSVImportExportProps) {
       const result = await exportProduitsCSV();
 
       if (result.success && result.data) {
-        // Créer et télécharger le fichier
         const blob = new Blob(["\ufeff" + result.data], { type: "text/csv;charset=utf-8" });
         const url = URL.createObjectURL(blob);
         const a = document.createElement("a");
@@ -64,7 +67,7 @@ export function CSVImportExport({ onImportComplete }: CSVImportExportProps) {
         document.body.removeChild(a);
         URL.revokeObjectURL(url);
 
-        toast.success("Export CSV termine");
+        toast.success("Export CSV terminé");
       } else {
         toast.error("Erreur lors de l'export");
       }
@@ -92,11 +95,11 @@ export function CSVImportExport({ onImportComplete }: CSVImportExportProps) {
         document.body.removeChild(a);
         URL.revokeObjectURL(url);
 
-        toast.success("Template telecharge");
+        toast.success("Template téléchargé");
       }
     } catch (error) {
       console.error("Erreur template:", error);
-      toast.error("Erreur lors du telechargement du template");
+      toast.error("Erreur lors du téléchargement du template");
     }
   };
 
@@ -106,7 +109,7 @@ export function CSVImportExport({ onImportComplete }: CSVImportExportProps) {
     if (!file) return;
 
     if (!file.name.endsWith(".csv")) {
-      toast.error("Le fichier doit etre au format CSV");
+      toast.error("Le fichier doit être au format CSV");
       return;
     }
 
@@ -168,750 +171,359 @@ export function CSVImportExport({ onImportComplete }: CSVImportExportProps) {
   return (
     <>
       {/* Boutons Export/Import */}
-      <div style={{ display: "flex", gap: 8 }}>
+      <Flex gap="2">
         {/* Export */}
-        <button
+        <Button
+          variant="outline"
+          color="gray"
+          size="2"
           onClick={handleExport}
           disabled={isExporting}
-          style={{
-            display: "flex",
-            alignItems: "center",
-            gap: 6,
-            padding: "8px 14px",
-            fontSize: 13,
-            fontWeight: 500,
-            borderRadius: 8,
-            border: "1px solid var(--gray-a6)",
-            backgroundColor: "transparent",
-            color: "var(--gray-11)",
-            cursor: isExporting ? "not-allowed" : "pointer",
-            opacity: isExporting ? 0.7 : 1,
-          }}
+          style={{ minHeight: 44 }}
         >
           {isExporting ? (
-            <Loader2 size={16} className="animate-spin" />
+            <SpinnerGap size={16} className="animate-spin" aria-hidden="true" />
           ) : (
-            <Download size={16} />
+            <DownloadSimple size={16} aria-hidden="true" />
           )}
           Exporter CSV
-        </button>
+        </Button>
 
         {/* Import */}
-        <button
+        <Button
+          variant="outline"
+          color="gray"
+          size="2"
           onClick={() => setShowImportModal(true)}
-          style={{
-            display: "flex",
-            alignItems: "center",
-            gap: 6,
-            padding: "8px 14px",
-            fontSize: 13,
-            fontWeight: 500,
-            borderRadius: 8,
-            border: "1px solid var(--gray-a6)",
-            backgroundColor: "transparent",
-            color: "var(--gray-11)",
-            cursor: "pointer",
-          }}
+          style={{ minHeight: 44 }}
         >
-          <Upload size={16} />
+          <UploadSimple size={16} aria-hidden="true" />
           Importer CSV
-        </button>
-      </div>
+        </Button>
+      </Flex>
 
-      {/* Modal d'import */}
-      {showImportModal ? <div
-          style={{
-            position: "fixed",
-            inset: 0,
-            backgroundColor: "rgba(0, 0, 0, 0.5)",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            zIndex: 100,
-            padding: 16,
-          }}
-          onClick={handleCloseModal}
-        >
-          <div
-            style={{
-              backgroundColor: "var(--color-panel-solid)",
-              borderRadius: 16,
-              width: "100%",
-              maxWidth: 600,
-              maxHeight: "90vh",
-              display: "flex",
-              flexDirection: "column",
-              overflow: "hidden",
-            }}
-            onClick={(e) => e.stopPropagation()}
-          >
-            {/* Header */}
-            <div
-              style={{
-                display: "flex",
-                justifyContent: "space-between",
-                alignItems: "center",
-                padding: "20px 24px",
-                borderBottom: "1px solid var(--gray-a6)",
-              }}
-            >
-              <h2
-                style={{
-                  fontSize: 20,
-                  fontWeight: 600,
-                  color: "var(--gray-12)",
-                  margin: 0,
-                }}
-              >
-                Importer des produits
-              </h2>
-              <button
-                onClick={handleCloseModal}
-                style={{
-                  width: 32,
-                  height: 32,
-                  borderRadius: 8,
-                  border: "none",
-                  backgroundColor: "var(--gray-a3)",
-                  cursor: "pointer",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  color: "var(--gray-11)",
-                }}
-              >
-                <X size={18} />
-              </button>
-            </div>
+      {/* Modal d'import - Dialog Radix UI */}
+      <Dialog.Root open={showImportModal} onOpenChange={(open) => { if (!open) handleCloseModal(); }}>
+        <Dialog.Content maxWidth="600px" style={{ maxHeight: "90vh", display: "flex", flexDirection: "column" }}>
+          <Dialog.Title>Importer des produits</Dialog.Title>
 
-            {/* Content */}
-            <div style={{ padding: 24, overflowY: "auto", flex: 1 }}>
-              {/* Step: Upload */}
-              {importStep === "upload" && (
-                <div style={{ textAlign: "center" }}>
-                  {/* Zone de drop */}
-                  <div
-                    style={{
-                      border: "2px dashed var(--gray-a6)",
-                      borderRadius: 12,
-                      padding: 40,
-                      marginBottom: 24,
-                      backgroundColor: "var(--gray-a2)",
-                    }}
+          {/* Content */}
+          <Box style={{ overflowY: "auto", flex: 1, paddingTop: 16 }}>
+            {/* Step: Upload */}
+            {importStep === "upload" && (
+              <Box style={{ textAlign: "center" }}>
+                {/* Zone de drop */}
+                <Box
+                  style={{
+                    border: "2px dashed var(--gray-a6)",
+                    borderRadius: 12,
+                    padding: 40,
+                    marginBottom: 24,
+                    backgroundColor: "var(--gray-a2)",
+                  }}
+                >
+                  <FileText size={48} style={{ color: "var(--gray-9)", marginBottom: 16 }} aria-hidden="true" />
+                  <Text as="p" size="3" weight="medium" mb="2">
+                    Sélectionnez un fichier CSV
+                  </Text>
+                  <Text as="p" size="2" color="gray" mb="4">
+                    Format : CSV avec séparateur point-virgule (;)
+                  </Text>
+
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept=".csv"
+                    onChange={handleFileChange}
+                    style={{ display: "none" }}
+                    aria-label="Sélectionner un fichier CSV à importer"
+                  />
+
+                  <Button
+                    onClick={() => fileInputRef.current?.click()}
+                    disabled={isImporting}
+                    size="2"
+                    style={{ minHeight: 44 }}
                   >
-                    <FileText
-                      size={48}
-                      style={{ color: "var(--gray-9)", marginBottom: 16 }}
-                    />
-                    <p
-                      style={{
-                        fontSize: 15,
-                        fontWeight: 500,
-                        color: "var(--gray-12)",
-                        marginBottom: 8,
-                      }}
-                    >
-                      Selectionnez un fichier CSV
-                    </p>
-                    <p
-                      style={{
-                        fontSize: 13,
-                        color: "var(--gray-10)",
-                        marginBottom: 16,
-                      }}
-                    >
-                      Format: CSV avec separateur point-virgule (;)
-                    </p>
+                    {isImporting ? (
+                      <SpinnerGap size={16} className="animate-spin" aria-hidden="true" />
+                    ) : (
+                      <UploadSimple size={16} aria-hidden="true" />
+                    )}
+                    Choisir un fichier
+                  </Button>
+                </Box>
 
-                    <input
-                      ref={fileInputRef}
-                      type="file"
-                      accept=".csv"
-                      onChange={handleFileChange}
-                      style={{ display: "none" }}
-                    />
+                {/* Télécharger template */}
+                <Box
+                  p="4"
+                  style={{
+                    backgroundColor: "var(--blue-a2)",
+                    borderRadius: 8,
+                    border: "1px solid var(--blue-a6)",
+                  }}
+                >
+                  <Text as="p" size="2" style={{ color: "var(--blue-11)" }} mb="3">
+                    Besoin d&apos;un modèle ? Téléchargez le template CSV avec les colonnes requises.
+                  </Text>
+                  <Button
+                    variant="outline"
+                    color="blue"
+                    size="1"
+                    onClick={handleDownloadTemplate}
+                    style={{ minHeight: 36 }}
+                  >
+                    <DownloadSimple size={14} aria-hidden="true" />
+                    Télécharger le template
+                  </Button>
+                </Box>
+              </Box>
+            )}
 
-                    <button
-                      onClick={() => fileInputRef.current?.click()}
-                      disabled={isImporting}
-                      style={{
-                        display: "inline-flex",
-                        alignItems: "center",
-                        gap: 8,
-                        padding: "10px 20px",
-                        fontSize: 14,
-                        fontWeight: 600,
-                        borderRadius: 8,
-                        border: "none",
-                        backgroundColor: "var(--accent-9)",
-                        color: "white",
-                        cursor: isImporting ? "not-allowed" : "pointer",
-                        opacity: isImporting ? 0.7 : 1,
-                      }}
-                    >
-                      {isImporting ? (
-                        <Loader2 size={16} className="animate-spin" />
-                      ) : (
-                        <Upload size={16} />
-                      )}
-                      Choisir un fichier
-                    </button>
-                  </div>
-
-                  {/* Télécharger template */}
-                  <div
+            {/* Step: Preview */}
+            {importStep === "preview" && parseResult ? <Box>
+                {/* Résumé */}
+                <Flex gap="4" mb="5">
+                  <Box
                     style={{
+                      flex: 1,
                       padding: 16,
-                      backgroundColor: "var(--blue-a2)",
+                      backgroundColor: "var(--green-a2)",
                       borderRadius: 8,
-                      border: "1px solid var(--blue-a6)",
+                      border: "1px solid var(--green-a6)",
                     }}
                   >
-                    <p
-                      style={{
-                        fontSize: 13,
-                        color: "var(--blue-11)",
-                        marginBottom: 12,
-                      }}
-                    >
-                      Besoin d'un modele ? Telechargez le template CSV avec les colonnes requises.
-                    </p>
-                    <button
-                      onClick={handleDownloadTemplate}
-                      style={{
-                        display: "inline-flex",
-                        alignItems: "center",
-                        gap: 6,
-                        padding: "8px 14px",
-                        fontSize: 13,
-                        fontWeight: 500,
-                        borderRadius: 6,
-                        border: "1px solid var(--blue-a6)",
-                        backgroundColor: "transparent",
-                        color: "var(--blue-11)",
-                        cursor: "pointer",
-                      }}
-                    >
-                      <Download size={14} />
-                      Telecharger le template
-                    </button>
-                  </div>
-                </div>
-              )}
+                    <Flex align="center" gap="2" mb="1">
+                      <CheckCircle size={18} style={{ color: "var(--green-9)" }} aria-hidden="true" />
+                      <Text size="2" weight="medium" style={{ color: "var(--green-11)" }}>
+                        Produits valides
+                      </Text>
+                    </Flex>
+                    <Text size="7" weight="bold" style={{ color: "var(--green-11)" }}>
+                      {parseResult.valid.length}
+                    </Text>
+                  </Box>
 
-              {/* Step: Preview */}
-              {importStep === "preview" && parseResult ? <div>
-                  {/* Résumé */}
-                  <div
-                    style={{
-                      display: "flex",
-                      gap: 16,
-                      marginBottom: 24,
-                    }}
-                  >
-                    <div
+                  {parseResult.errors.length > 0 && (
+                    <Box
                       style={{
                         flex: 1,
                         padding: 16,
-                        backgroundColor: "var(--green-a2)",
-                        borderRadius: 8,
-                        border: "1px solid var(--green-a6)",
-                      }}
-                    >
-                      <div
-                        style={{
-                          display: "flex",
-                          alignItems: "center",
-                          gap: 8,
-                          marginBottom: 4,
-                        }}
-                      >
-                        <CheckCircle2 size={18} style={{ color: "var(--green-9)" }} />
-                        <span
-                          style={{
-                            fontSize: 13,
-                            fontWeight: 500,
-                            color: "var(--green-11)",
-                          }}
-                        >
-                          Produits valides
-                        </span>
-                      </div>
-                      <div
-                        style={{
-                          fontSize: 28,
-                          fontWeight: 700,
-                          color: "var(--green-11)",
-                        }}
-                      >
-                        {parseResult.valid.length}
-                      </div>
-                    </div>
-
-                    {parseResult.errors.length > 0 && (
-                      <div
-                        style={{
-                          flex: 1,
-                          padding: 16,
-                          backgroundColor: "var(--red-a2)",
-                          borderRadius: 8,
-                          border: "1px solid var(--red-a6)",
-                        }}
-                      >
-                        <div
-                          style={{
-                            display: "flex",
-                            alignItems: "center",
-                            gap: 8,
-                            marginBottom: 4,
-                          }}
-                        >
-                          <FileWarning size={18} style={{ color: "var(--red-9)" }} />
-                          <span
-                            style={{
-                              fontSize: 13,
-                              fontWeight: 500,
-                              color: "var(--red-11)",
-                            }}
-                          >
-                            Erreurs
-                          </span>
-                        </div>
-                        <div
-                          style={{
-                            fontSize: 28,
-                            fontWeight: 700,
-                            color: "var(--red-11)",
-                          }}
-                        >
-                          {parseResult.errors.length}
-                        </div>
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Liste des erreurs */}
-                  {parseResult.errors.length > 0 && (
-                    <div
-                      style={{
-                        marginBottom: 24,
-                        maxHeight: 200,
-                        overflowY: "auto",
-                        padding: 12,
                         backgroundColor: "var(--red-a2)",
                         borderRadius: 8,
                         border: "1px solid var(--red-a6)",
                       }}
                     >
-                      <h4
-                        style={{
-                          fontSize: 13,
-                          fontWeight: 600,
-                          color: "var(--red-11)",
-                          marginBottom: 12,
-                        }}
-                      >
-                        Lignes avec erreurs:
-                      </h4>
-                      {parseResult.errors.map((err, i) => (
-                        <div
-                          key={i}
-                          style={{
-                            fontSize: 12,
-                            color: "var(--red-11)",
-                            marginBottom: 8,
-                            paddingBottom: 8,
-                            borderBottom:
-                              i < parseResult.errors.length - 1
-                                ? "1px solid var(--red-a4)"
-                                : "none",
-                          }}
-                        >
-                          <strong>Ligne {err.line}:</strong>
-                          <ul style={{ margin: "4px 0 0 16px", padding: 0 }}>
-                            {err.errors.map((e, j) => (
-                              <li key={j}>{e}</li>
-                            ))}
-                          </ul>
-                        </div>
-                      ))}
-                    </div>
+                      <Flex align="center" gap="2" mb="1">
+                        <Warning size={18} style={{ color: "var(--red-9)" }} aria-hidden="true" />
+                        <Text size="2" weight="medium" style={{ color: "var(--red-11)" }}>
+                          Erreurs
+                        </Text>
+                      </Flex>
+                      <Text size="7" weight="bold" style={{ color: "var(--red-11)" }}>
+                        {parseResult.errors.length}
+                      </Text>
+                    </Box>
                   )}
+                </Flex>
 
-                  {/* Aperçu des produits valides */}
-                  {parseResult.valid.length > 0 && (
-                    <div>
-                      <h4
-                        style={{
-                          fontSize: 13,
-                          fontWeight: 600,
-                          color: "var(--gray-11)",
-                          marginBottom: 12,
-                        }}
-                      >
-                        Apercu des produits a importer:
-                      </h4>
-                      <div
-                        style={{
-                          maxHeight: 200,
-                          overflowY: "auto",
-                          border: "1px solid var(--gray-a6)",
-                          borderRadius: 8,
-                        }}
-                      >
-                        <table
-                          style={{
-                            width: "100%",
-                            borderCollapse: "collapse",
-                            fontSize: 12,
-                          }}
-                        >
-                          <thead>
-                            <tr
-                              style={{
-                                backgroundColor: "var(--gray-a2)",
-                                position: "sticky",
-                                top: 0,
-                              }}
-                            >
-                              <th
-                                style={{
-                                  padding: "8px 12px",
-                                  textAlign: "left",
-                                  fontWeight: 600,
-                                  color: "var(--gray-11)",
-                                }}
-                              >
-                                Nom
-                              </th>
-                              <th
-                                style={{
-                                  padding: "8px 12px",
-                                  textAlign: "left",
-                                  fontWeight: 600,
-                                  color: "var(--gray-11)",
-                                }}
-                              >
-                                Categorie
-                              </th>
-                              <th
-                                style={{
-                                  padding: "8px 12px",
-                                  textAlign: "right",
-                                  fontWeight: 600,
-                                  color: "var(--gray-11)",
-                                }}
-                              >
-                                Prix
-                              </th>
-                            </tr>
-                          </thead>
-                          <tbody>
-                            {parseResult.valid.slice(0, 10).map((prod, i) => (
-                              <tr
-                                key={i}
-                                style={{
-                                  borderTop: "1px solid var(--gray-a4)",
-                                }}
-                              >
-                                <td
-                                  style={{
-                                    padding: "8px 12px",
-                                    color: "var(--gray-12)",
-                                  }}
-                                >
-                                  {prod.nom}
-                                </td>
-                                <td
-                                  style={{
-                                    padding: "8px 12px",
-                                    color: "var(--gray-11)",
-                                  }}
-                                >
-                                  {prod.categorie}
-                                </td>
-                                <td
-                                  style={{
-                                    padding: "8px 12px",
-                                    textAlign: "right",
-                                    color: "var(--gray-12)",
-                                    fontFamily: "var(--font-google-sans-code), ui-monospace, monospace",
-                                  }}
-                                >
-                                  {prod.prixVente.toLocaleString("fr-FR")} FCFA
-                                </td>
-                              </tr>
-                            ))}
-                          </tbody>
-                        </table>
-                        {parseResult.valid.length > 10 && (
-                          <div
-                            style={{
-                              padding: 8,
-                              textAlign: "center",
-                              fontSize: 12,
-                              color: "var(--gray-10)",
-                              backgroundColor: "var(--gray-a2)",
-                            }}
-                          >
-                            ... et {parseResult.valid.length - 10} autres produits
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  )}
-                </div> : null}
-
-              {/* Step: Importing */}
-              {importStep === "importing" && (
-                <div style={{ textAlign: "center", padding: 40 }}>
-                  <Loader2
-                    size={48}
-                    className="animate-spin"
-                    style={{ color: "var(--accent-9)", marginBottom: 16 }}
-                  />
-                  <p
+                {/* Liste des erreurs */}
+                {parseResult.errors.length > 0 && (
+                  <Box
+                    mb="5"
+                    p="3"
                     style={{
-                      fontSize: 15,
-                      fontWeight: 500,
-                      color: "var(--gray-12)",
+                      maxHeight: 200,
+                      overflowY: "auto",
+                      backgroundColor: "var(--red-a2)",
+                      borderRadius: 8,
+                      border: "1px solid var(--red-a6)",
                     }}
                   >
-                    Import en cours...
-                  </p>
-                  <p
-                    style={{
-                      fontSize: 13,
-                      color: "var(--gray-10)",
-                    }}
-                  >
-                    Veuillez patienter
-                  </p>
-                </div>
-              )}
-
-              {/* Step: Done */}
-              {importStep === "done" && importResult ? <div style={{ textAlign: "center" }}>
-                  <CheckCircle2
-                    size={64}
-                    style={{ color: "var(--green-9)", marginBottom: 16 }}
-                  />
-                  <h3
-                    style={{
-                      fontSize: 18,
-                      fontWeight: 600,
-                      color: "var(--gray-12)",
-                      marginBottom: 8,
-                    }}
-                  >
-                    Import termine !
-                  </h3>
-
-                  <div
-                    style={{
-                      display: "flex",
-                      gap: 16,
-                      justifyContent: "center",
-                      marginTop: 24,
-                      marginBottom: 24,
-                    }}
-                  >
-                    <div
-                      style={{
-                        padding: 16,
-                        backgroundColor: "var(--green-a2)",
-                        borderRadius: 8,
-                        minWidth: 100,
-                      }}
-                    >
-                      <div
-                        style={{
-                          fontSize: 28,
-                          fontWeight: 700,
-                          color: "var(--green-11)",
-                        }}
-                      >
-                        {importResult.created}
-                      </div>
-                      <div
+                    <Text size="2" weight="bold" style={{ color: "var(--red-11)" }} mb="3">
+                      Lignes avec erreurs :
+                    </Text>
+                    {parseResult.errors.map((err, i) => (
+                      <Box
+                        key={i}
                         style={{
                           fontSize: 12,
-                          color: "var(--green-11)",
-                        }}
-                      >
-                        crees
-                      </div>
-                    </div>
-
-                    <div
-                      style={{
-                        padding: 16,
-                        backgroundColor: "var(--blue-a2)",
-                        borderRadius: 8,
-                        minWidth: 100,
-                      }}
-                    >
-                      <div
-                        style={{
-                          fontSize: 28,
-                          fontWeight: 700,
-                          color: "var(--blue-11)",
-                        }}
-                      >
-                        {importResult.updated}
-                      </div>
-                      <div
-                        style={{
-                          fontSize: 12,
-                          color: "var(--blue-11)",
-                        }}
-                      >
-                        mis a jour
-                      </div>
-                    </div>
-
-                    {importResult.errors.length > 0 && (
-                      <div
-                        style={{
-                          padding: 16,
-                          backgroundColor: "var(--red-a2)",
-                          borderRadius: 8,
-                          minWidth: 100,
-                        }}
-                      >
-                        <div
-                          style={{
-                            fontSize: 28,
-                            fontWeight: 700,
-                            color: "var(--red-11)",
-                          }}
-                        >
-                          {importResult.errors.length}
-                        </div>
-                        <div
-                          style={{
-                            fontSize: 12,
-                            color: "var(--red-11)",
-                          }}
-                        >
-                          erreurs
-                        </div>
-                      </div>
-                    )}
-                  </div>
-
-                  {importResult.errors.length > 0 && (
-                    <div
-                      style={{
-                        textAlign: "left",
-                        padding: 12,
-                        backgroundColor: "var(--red-a2)",
-                        borderRadius: 8,
-                        marginBottom: 16,
-                        maxHeight: 150,
-                        overflowY: "auto",
-                      }}
-                    >
-                      <h4
-                        style={{
-                          fontSize: 12,
-                          fontWeight: 600,
                           color: "var(--red-11)",
                           marginBottom: 8,
+                          paddingBottom: 8,
+                          borderBottom:
+                            i < parseResult.errors.length - 1
+                              ? "1px solid var(--red-a4)"
+                              : "none",
                         }}
                       >
-                        Produits en erreur:
-                      </h4>
-                      {importResult.errors.map((err, i) => (
-                        <div
-                          key={i}
-                          style={{
-                            fontSize: 12,
-                            color: "var(--red-11)",
-                            marginBottom: 4,
-                          }}
-                        >
-                          <strong>{err.nom}:</strong> {err.error}
-                        </div>
-                      ))}
-                    </div>
+                        <strong>Ligne {err.line} :</strong>
+                        <ul style={{ margin: "4px 0 0 16px", padding: 0 }}>
+                          {err.errors.map((e, j) => (
+                            <li key={j}>{e}</li>
+                          ))}
+                        </ul>
+                      </Box>
+                    ))}
+                  </Box>
+                )}
+
+                {/* Aperçu des produits valides */}
+                {parseResult.valid.length > 0 && (
+                  <Box>
+                    <Text size="2" weight="bold" color="gray" mb="3">
+                      Aperçu des produits à importer :
+                    </Text>
+                    <Box
+                      style={{
+                        maxHeight: 200,
+                        overflowY: "auto",
+                        border: "1px solid var(--gray-a6)",
+                        borderRadius: 8,
+                      }}
+                    >
+                      <table
+                        style={{
+                          width: "100%",
+                          borderCollapse: "collapse",
+                          fontSize: 12,
+                        }}
+                      >
+                        <thead>
+                          <tr style={{ backgroundColor: "var(--gray-a2)", position: "sticky", top: 0 }}>
+                            <th style={{ padding: "8px 12px", textAlign: "left", fontWeight: 600, color: "var(--gray-11)" }}>
+                              Nom
+                            </th>
+                            <th style={{ padding: "8px 12px", textAlign: "left", fontWeight: 600, color: "var(--gray-11)" }}>
+                              Catégorie
+                            </th>
+                            <th style={{ padding: "8px 12px", textAlign: "right", fontWeight: 600, color: "var(--gray-11)" }}>
+                              Prix
+                            </th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {parseResult.valid.slice(0, 10).map((prod, i) => (
+                            <tr key={i} style={{ borderTop: "1px solid var(--gray-a4)" }}>
+                              <td style={{ padding: "8px 12px", color: "var(--gray-12)" }}>{prod.nom}</td>
+                              <td style={{ padding: "8px 12px", color: "var(--gray-11)" }}>{prod.categorie}</td>
+                              <td style={{ padding: "8px 12px", textAlign: "right", color: "var(--gray-12)", fontFamily: "var(--font-google-sans-code), ui-monospace, monospace" }}>
+                                {prod.prixVente.toLocaleString("fr-FR")} FCFA
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                      {parseResult.valid.length > 10 && (
+                        <Box p="2" style={{ textAlign: "center", fontSize: 12, color: "var(--gray-10)", backgroundColor: "var(--gray-a2)" }}>
+                          ... et {parseResult.valid.length - 10} autres produits
+                        </Box>
+                      )}
+                    </Box>
+                  </Box>
+                )}
+              </Box> : null}
+
+            {/* Step: Importing */}
+            {importStep === "importing" && (
+              <Flex direction="column" align="center" py="8" role="status" aria-live="polite">
+                <Spinner size="3" style={{ marginBottom: 16 }} />
+                <Text size="3" weight="medium">Import en cours...</Text>
+                <Text size="2" color="gray">Veuillez patienter</Text>
+              </Flex>
+            )}
+
+            {/* Step: Done */}
+            {importStep === "done" && importResult ? <Box style={{ textAlign: "center" }}>
+                <CheckCircle size={64} style={{ color: "var(--green-9)", marginBottom: 16 }} aria-hidden="true" />
+                <Text as="p" size="5" weight="bold" mb="5">
+                  Import terminé !
+                </Text>
+
+                <Flex gap="4" justify="center" mb="5">
+                  <Box p="4" style={{ backgroundColor: "var(--green-a2)", borderRadius: 8, minWidth: 100 }}>
+                    <Text as="p" size="7" weight="bold" style={{ color: "var(--green-11)" }}>
+                      {importResult.created}
+                    </Text>
+                    <Text as="p" size="1" style={{ color: "var(--green-11)" }}>créés</Text>
+                  </Box>
+
+                  <Box p="4" style={{ backgroundColor: "var(--blue-a2)", borderRadius: 8, minWidth: 100 }}>
+                    <Text as="p" size="7" weight="bold" style={{ color: "var(--blue-11)" }}>
+                      {importResult.updated}
+                    </Text>
+                    <Text as="p" size="1" style={{ color: "var(--blue-11)" }}>mis à jour</Text>
+                  </Box>
+
+                  {importResult.errors.length > 0 && (
+                    <Box p="4" style={{ backgroundColor: "var(--red-a2)", borderRadius: 8, minWidth: 100 }}>
+                      <Text as="p" size="7" weight="bold" style={{ color: "var(--red-11)" }}>
+                        {importResult.errors.length}
+                      </Text>
+                      <Text as="p" size="1" style={{ color: "var(--red-11)" }}>erreurs</Text>
+                    </Box>
                   )}
-                </div> : null}
-            </div>
+                </Flex>
 
-            {/* Footer */}
-            <div
-              style={{
-                display: "flex",
-                justifyContent: "flex-end",
-                gap: 12,
-                padding: "16px 24px",
-                borderTop: "1px solid var(--gray-a6)",
-              }}
-            >
-              {importStep === "preview" && (
-                <>
-                  <button
-                    onClick={() => {
-                      setParseResult(null);
-                      setImportStep("upload");
-                    }}
+                {importResult.errors.length > 0 && (
+                  <Box
+                    p="3"
+                    mb="4"
                     style={{
-                      padding: "10px 20px",
-                      fontSize: 14,
-                      fontWeight: 500,
+                      textAlign: "left",
+                      backgroundColor: "var(--red-a2)",
                       borderRadius: 8,
-                      border: "1px solid var(--gray-a6)",
-                      backgroundColor: "transparent",
-                      color: "var(--gray-12)",
-                      cursor: "pointer",
+                      maxHeight: 150,
+                      overflowY: "auto",
                     }}
                   >
-                    Retour
-                  </button>
-                  <button
-                    onClick={handleConfirmImport}
-                    disabled={parseResult?.valid.length === 0}
-                    style={{
-                      padding: "10px 20px",
-                      fontSize: 14,
-                      fontWeight: 600,
-                      borderRadius: 8,
-                      border: "none",
-                      backgroundColor:
-                        parseResult?.valid.length === 0
-                          ? "var(--gray-a6)"
-                          : "var(--accent-9)",
-                      color: "white",
-                      cursor:
-                        parseResult?.valid.length === 0 ? "not-allowed" : "pointer",
-                    }}
-                  >
-                    Importer {parseResult?.valid.length || 0} produits
-                  </button>
-                </>
-              )}
+                    <Text size="1" weight="bold" style={{ color: "var(--red-11)" }} mb="2">
+                      Produits en erreur :
+                    </Text>
+                    {importResult.errors.map((err, i) => (
+                      <Box key={i} style={{ fontSize: 12, color: "var(--red-11)", marginBottom: 4 }}>
+                        <strong>{err.nom} :</strong> {err.error}
+                      </Box>
+                    ))}
+                  </Box>
+                )}
+              </Box> : null}
+          </Box>
 
-              {(importStep === "upload" || importStep === "done") && (
-                <button
-                  onClick={handleCloseModal}
-                  style={{
-                    padding: "10px 20px",
-                    fontSize: 14,
-                    fontWeight: 500,
-                    borderRadius: 8,
-                    border: "1px solid var(--gray-a6)",
-                    backgroundColor: "transparent",
-                    color: "var(--gray-12)",
-                    cursor: "pointer",
-                  }}
+          {/* Footer */}
+          <Flex gap="3" justify="end" pt="4" style={{ borderTop: "1px solid var(--gray-a6)" }}>
+            {importStep === "preview" && (
+              <>
+                <Button
+                  variant="soft"
+                  color="gray"
+                  size="2"
+                  onClick={() => { setParseResult(null); setImportStep("upload"); }}
+                  style={{ minHeight: 44 }}
                 >
+                  Retour
+                </Button>
+                <Button
+                  size="2"
+                  onClick={handleConfirmImport}
+                  disabled={parseResult?.valid.length === 0}
+                  style={{ minHeight: 44 }}
+                >
+                  Importer {parseResult?.valid.length || 0} produits
+                </Button>
+              </>
+            )}
+
+            {(importStep === "upload" || importStep === "done") && (
+              <Dialog.Close>
+                <Button variant="soft" color="gray" size="2" style={{ minHeight: 44 }}>
                   Fermer
-                </button>
-              )}
-            </div>
-          </div>
-        </div> : null}
+                </Button>
+              </Dialog.Close>
+            )}
+          </Flex>
+        </Dialog.Content>
+      </Dialog.Root>
     </>
   );
 }

@@ -5,16 +5,7 @@
  */
 
 import { useState } from "react";
-import {
-  Card,
-  Flex,
-  Text,
-  Badge,
-  Button,
-  Separator,
-  Table,
-  Dialog,
-} from "@radix-ui/themes";
+import { Card, Flex, Text, Badge, Button, Separator, Table, Dialog } from "@radix-ui/themes";
 import { ScrollArea } from "@/components/ui";
 import {
   ShoppingBag,
@@ -110,14 +101,11 @@ export function PurchaseHistory({
         </Flex>
 
         {/* Statistiques */}
-        {stats ? <Flex gap="3" wrap="wrap">
+        {stats ? (
+          <Flex gap="3" wrap="wrap">
             <Card variant="surface" style={{ flex: 1, minWidth: 120 }}>
               <Flex direction="column" align="center" gap="1">
-                <Text
-                  size="4"
-                  weight="bold"
-                  style={{ fontFamily: "var(--font-google-sans-code)" }}
-                >
+                <Text size="4" weight="bold" style={{ fontFamily: "var(--font-google-sans-code)" }}>
                   {formatCurrency(stats.totalDepense)}
                 </Text>
                 <Text size="1" color="gray">
@@ -127,11 +115,7 @@ export function PurchaseHistory({
             </Card>
             <Card variant="surface" style={{ flex: 1, minWidth: 120 }}>
               <Flex direction="column" align="center" gap="1">
-                <Text
-                  size="4"
-                  weight="bold"
-                  style={{ fontFamily: "var(--font-google-sans-code)" }}
-                >
+                <Text size="4" weight="bold" style={{ fontFamily: "var(--font-google-sans-code)" }}>
                   {stats.nombreAchats}
                 </Text>
                 <Text size="1" color="gray">
@@ -141,11 +125,7 @@ export function PurchaseHistory({
             </Card>
             <Card variant="surface" style={{ flex: 1, minWidth: 120 }}>
               <Flex direction="column" align="center" gap="1">
-                <Text
-                  size="4"
-                  weight="bold"
-                  style={{ fontFamily: "var(--font-google-sans-code)" }}
-                >
+                <Text size="4" weight="bold" style={{ fontFamily: "var(--font-google-sans-code)" }}>
                   {formatCurrency(stats.panierMoyen)}
                 </Text>
                 <Text size="1" color="gray">
@@ -153,10 +133,12 @@ export function PurchaseHistory({
                 </Text>
               </Flex>
             </Card>
-          </Flex> : null}
+          </Flex>
+        ) : null}
 
         {/* Produits preferes */}
-        {stats && stats.produitsPreference.length > 0 ? <>
+        {stats && stats.produitsPreference.length > 0 ? (
+          <>
             <Separator size="4" />
             <Flex direction="column" gap="2">
               <Flex align="center" gap="2">
@@ -179,7 +161,8 @@ export function PurchaseHistory({
                 ))}
               </Flex>
             </Flex>
-          </> : null}
+          </>
+        ) : null}
 
         <Separator size="4" />
 
@@ -193,12 +176,8 @@ export function PurchaseHistory({
                     <Table.ColumnHeaderCell>Date</Table.ColumnHeaderCell>
                     <Table.ColumnHeaderCell>Ticket</Table.ColumnHeaderCell>
                     <Table.ColumnHeaderCell>Type</Table.ColumnHeaderCell>
-                    <Table.ColumnHeaderCell align="right">
-                      Montant
-                    </Table.ColumnHeaderCell>
-                    <Table.ColumnHeaderCell align="center">
-                      Actions
-                    </Table.ColumnHeaderCell>
+                    <Table.ColumnHeaderCell align="right">Montant</Table.ColumnHeaderCell>
+                    <Table.ColumnHeaderCell align="center">Actions</Table.ColumnHeaderCell>
                   </Table.Row>
                 </Table.Header>
                 <Table.Body>
@@ -208,10 +187,7 @@ export function PurchaseHistory({
                         <Text size="2">{formatDate(vente.createdAt)}</Text>
                       </Table.Cell>
                       <Table.Cell>
-                        <Text
-                          size="2"
-                          style={{ fontFamily: "var(--font-google-sans-code)" }}
-                        >
+                        <Text size="2" style={{ fontFamily: "var(--font-google-sans-code)" }}>
                           #{vente.numeroTicket}
                         </Text>
                       </Table.Cell>
@@ -234,11 +210,7 @@ export function PurchaseHistory({
                         </Text>
                       </Table.Cell>
                       <Table.Cell align="center">
-                        <Button
-                          variant="ghost"
-                          size="1"
-                          onClick={() => setSelectedVente(vente)}
-                        >
+                        <Button variant="ghost" size="1" onClick={() => setSelectedVente(vente)}>
                           <Eye size={14} />
                         </Button>
                       </Table.Cell>
@@ -278,13 +250,7 @@ export function PurchaseHistory({
             )}
           </>
         ) : (
-          <Flex
-            direction="column"
-            align="center"
-            gap="2"
-            py="6"
-            style={{ color: "var(--gray-9)" }}
-          >
+          <Flex direction="column" align="center" gap="2" py="6" style={{ color: "var(--gray-9)" }}>
             <Receipt size={32} />
             <Text size="2" color="gray">
               Aucun achat enregistre
@@ -294,13 +260,11 @@ export function PurchaseHistory({
       </Flex>
 
       {/* Modal detail d'une vente */}
-      <Dialog.Root
-        open={!!selectedVente}
-        onOpenChange={(open) => !open && setSelectedVente(null)}
-      >
+      <Dialog.Root open={!!selectedVente} onOpenChange={(open) => !open && setSelectedVente(null)}>
         <Dialog.Content maxWidth="450px">
           <Dialog.Title>Detail du ticket</Dialog.Title>
-          {selectedVente ? <>
+          {selectedVente ? (
+            <>
               <Dialog.Description size="2" color="gray" mb="4">
                 Ticket #{selectedVente.numeroTicket} du{" "}
                 {formatDate(selectedVente.createdAt, "datetime")}
@@ -312,10 +276,7 @@ export function PurchaseHistory({
                   <Text size="2" color="gray">
                     Type
                   </Text>
-                  <Badge
-                    color={TYPE_VENTE_COLORS[selectedVente.type] || "gray"}
-                    variant="soft"
-                  >
+                  <Badge color={TYPE_VENTE_COLORS[selectedVente.type] || "gray"} variant="soft">
                     {TYPE_VENTE_LABELS[selectedVente.type] || selectedVente.type}
                   </Badge>
                 </Flex>
@@ -335,10 +296,7 @@ export function PurchaseHistory({
                         </Badge>
                         <Text size="2">{ligne.produit.nom}</Text>
                       </Flex>
-                      <Text
-                        size="2"
-                        style={{ fontFamily: "var(--font-google-sans-code)" }}
-                      >
+                      <Text size="2" style={{ fontFamily: "var(--font-google-sans-code)" }}>
                         {formatCurrency(ligne.total)}
                       </Text>
                     </Flex>
@@ -355,14 +313,14 @@ export function PurchaseHistory({
                   <Text
                     size="3"
                     weight="bold"
-                   
                     style={{ fontFamily: "var(--font-google-sans-code)" }}
                   >
                     {formatCurrency(selectedVente.totalFinal)}
                   </Text>
                 </Flex>
               </Flex>
-            </> : null}
+            </>
+          ) : null}
 
           <Flex gap="3" mt="5" justify="end">
             <Dialog.Close>

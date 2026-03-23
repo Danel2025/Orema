@@ -1,19 +1,9 @@
 "use client";
 
-import {
-  Box,
-  Container,
-  Heading,
-  Text,
-  Flex,
-  Grid,
-  Badge,
-  Skeleton,
-} from "@radix-ui/themes";
+import { Box, Container, Heading, Text, Flex, Grid, Badge, Skeleton } from "@radix-ui/themes";
 import { motion } from "motion/react";
 import { PageHeader, Newsletter } from "@/components/public";
-import type {
-  LucideIcon} from "lucide-react";
+import type { LucideIcon } from "lucide-react";
 import {
   BookOpen,
   Calendar,
@@ -154,7 +144,8 @@ export default function BlogPage() {
 
       <Container size="4" py="9">
         {/* Featured post */}
-        {featuredPost && !isLoading ? <motion.div
+        {featuredPost && !isLoading ? (
+          <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.2, duration: 0.6 }}
@@ -163,8 +154,7 @@ export default function BlogPage() {
               <Box
                 mb="9"
                 style={{
-                  background:
-                    "linear-gradient(135deg, var(--violet-a2) 0%, var(--purple-a2) 100%)",
+                  background: "linear-gradient(135deg, var(--violet-a2) 0%, var(--purple-a2) 100%)",
                   borderRadius: 24,
                   border: "1px solid var(--violet-a4)",
                   overflow: "hidden",
@@ -173,8 +163,7 @@ export default function BlogPage() {
                 }}
                 onMouseEnter={(e) => {
                   e.currentTarget.style.transform = "translateY(-4px)";
-                  e.currentTarget.style.boxShadow =
-                    "0 20px 40px -12px var(--violet-a5)";
+                  e.currentTarget.style.boxShadow = "0 20px 40px -12px var(--violet-a5)";
                 }}
                 onMouseLeave={(e) => {
                   e.currentTarget.style.transform = "translateY(0)";
@@ -197,7 +186,10 @@ export default function BlogPage() {
                       return (
                         <FeaturedIcon
                           size={64}
-                          style={{ color: `var(--${featuredPost.color || "violet"}-9)`, opacity: 0.5 }}
+                          style={{
+                            color: `var(--${featuredPost.color || "violet"}-9)`,
+                            opacity: 0.5,
+                          }}
                         />
                       );
                     })()}
@@ -227,12 +219,7 @@ export default function BlogPage() {
                     >
                       {featuredPost.excerpt}
                     </Text>
-                    <Flex
-                      align="center"
-                      justify="between"
-                      wrap="wrap"
-                      gap="4"
-                    >
+                    <Flex align="center" justify="between" wrap="wrap" gap="4">
                       <Flex align="center" gap="4">
                         <Flex align="center" gap="2">
                           <User size={14} style={{ color: "var(--gray-10)" }} />
@@ -241,20 +228,13 @@ export default function BlogPage() {
                           </Text>
                         </Flex>
                         <Flex align="center" gap="2">
-                          <Calendar
-                            size={14}
-                            style={{ color: "var(--gray-10)" }}
-                          />
+                          <Calendar size={14} style={{ color: "var(--gray-10)" }} />
                           <Text size="2" color="gray">
                             {formatDate(featuredPost.published_at)}
                           </Text>
                         </Flex>
                       </Flex>
-                      <Flex
-                        align="center"
-                        gap="2"
-                        style={{ color: "var(--violet-9)" }}
-                      >
+                      <Flex align="center" gap="2" style={{ color: "var(--violet-9)" }}>
                         <Text size="2" weight="bold">
                           Lire l&apos;article
                         </Text>
@@ -265,7 +245,8 @@ export default function BlogPage() {
                 </Grid>
               </Box>
             </Link>
-          </motion.div> : null}
+          </motion.div>
+        ) : null}
 
         {/* Categories */}
         <motion.div
@@ -293,8 +274,7 @@ export default function BlogPage() {
                     activeCategory === category.id
                       ? "linear-gradient(135deg, var(--violet-9) 0%, var(--purple-9) 100%)"
                       : "var(--gray-a3)",
-                  color:
-                    activeCategory === category.id ? "white" : "var(--gray-11)",
+                  color: activeCategory === category.id ? "white" : "var(--gray-11)",
                   fontSize: 14,
                   fontWeight: 500,
                   cursor: "pointer",
@@ -308,7 +288,8 @@ export default function BlogPage() {
         </motion.div>
 
         {/* Error state */}
-        {error && !isLoading ? <motion.div
+        {error && !isLoading ? (
+          <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5 }}
@@ -323,18 +304,11 @@ export default function BlogPage() {
                 textAlign: "center",
               }}
             >
-              <AlertTriangle
-                size={48}
-                style={{ color: "var(--red-9)", marginBottom: 16 }}
-              />
+              <AlertTriangle size={48} style={{ color: "var(--red-9)", marginBottom: 16 }} />
               <Heading size="4" mb="2" style={{ color: "var(--red-11)" }}>
                 Erreur de chargement
               </Heading>
-              <Text
-                size="3"
-                mb="5"
-                style={{ color: "var(--red-11)", display: "block" }}
-              >
+              <Text size="3" mb="5" style={{ color: "var(--red-11)", display: "block" }}>
                 {error}
               </Text>
               <button
@@ -358,7 +332,8 @@ export default function BlogPage() {
                 Reessayer
               </button>
             </Box>
-          </motion.div> : null}
+          </motion.div>
+        ) : null}
 
         {/* Loading state */}
         {isLoading ? (
@@ -407,10 +382,7 @@ export default function BlogPage() {
                   textAlign: "center",
                 }}
               >
-                <PenLine
-                  size={56}
-                  style={{ color: "var(--gray-8)", marginBottom: 20 }}
-                />
+                <PenLine size={56} style={{ color: "var(--gray-8)", marginBottom: 20 }} />
                 <Heading size="5" mb="3" color="gray">
                   Aucun article publie
                 </Heading>
@@ -419,202 +391,192 @@ export default function BlogPage() {
                   color="gray"
                   style={{ maxWidth: 400, margin: "0 auto", display: "block" }}
                 >
-                  Les articles du blog apparaitront ici une fois publies. Revenez bientot pour decouvrir nos contenus.
+                  Les articles du blog apparaitront ici une fois publies. Revenez bientot pour
+                  decouvrir nos contenus.
                 </Text>
               </Box>
             )}
 
             {/* Posts grid */}
-            {(posts.length > 0 || featuredPost) ? <>
-            <Grid columns={{ initial: "1", sm: "2", lg: "3" }} gap="5">
-              {displayedPosts.map((post, index) => {
-                const PostIcon = iconMap[post.icon || ""] || BookOpen;
-                return (
+            {posts.length > 0 || featuredPost ? (
+              <>
+                <Grid columns={{ initial: "1", sm: "2", lg: "3" }} gap="5">
+                  {displayedPosts.map((post, index) => {
+                    const PostIcon = iconMap[post.icon || ""] || BookOpen;
+                    return (
+                      <motion.div
+                        key={post.id}
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.6 + index * 0.08, duration: 0.5 }}
+                      >
+                        <Link href={`/blog/${post.slug}`} style={{ textDecoration: "none" }}>
+                          <Box
+                            style={{
+                              background: "var(--gray-a2)",
+                              borderRadius: 20,
+                              border: "1px solid var(--gray-a4)",
+                              overflow: "hidden",
+                              height: "100%",
+                              cursor: "pointer",
+                              transition: "all 0.2s ease",
+                            }}
+                            onMouseEnter={(e) => {
+                              e.currentTarget.style.transform = "translateY(-4px)";
+                              e.currentTarget.style.boxShadow = "0 12px 24px -8px var(--gray-a5)";
+                            }}
+                            onMouseLeave={(e) => {
+                              e.currentTarget.style.transform = "translateY(0)";
+                              e.currentTarget.style.boxShadow = "none";
+                            }}
+                          >
+                            {/* Icon header */}
+                            <Box
+                              style={{
+                                height: 100,
+                                background: `var(--${post.color || "gray"}-a2)`,
+                                display: "flex",
+                                alignItems: "center",
+                                justifyContent: "center",
+                              }}
+                            >
+                              <Box
+                                p="4"
+                                style={{
+                                  background: `var(--${post.color || "gray"}-a3)`,
+                                  borderRadius: 16,
+                                }}
+                              >
+                                <PostIcon
+                                  size={32}
+                                  style={{ color: `var(--${post.color || "gray"}-9)` }}
+                                />
+                              </Box>
+                            </Box>
+
+                            <Box p="5">
+                              <Flex gap="2" mb="3" wrap="wrap">
+                                {post.tags.slice(0, 2).map((tag) => (
+                                  <Flex key={tag.id} align="center" gap="1">
+                                    <Tag size={10} style={{ color: "var(--gray-10)" }} />
+                                    <Text size="1" color="gray">
+                                      {tag.name}
+                                    </Text>
+                                  </Flex>
+                                ))}
+                              </Flex>
+
+                              <Heading size="4" mb="2" style={{ color: "var(--gray-12)" }}>
+                                {post.title}
+                              </Heading>
+
+                              <Text
+                                size="2"
+                                mb="4"
+                                style={{
+                                  color: "var(--gray-11)",
+                                  lineHeight: 1.6,
+                                  display: "block",
+                                }}
+                              >
+                                {(post.excerpt || "").slice(0, 100)}...
+                              </Text>
+
+                              <Flex align="center" justify="between">
+                                <Flex align="center" gap="3">
+                                  <Text size="1" color="gray">
+                                    {formatDate(post.published_at)}
+                                  </Text>
+                                </Flex>
+                                <ArrowRight
+                                  size={16}
+                                  style={{ color: `var(--${post.color || "gray"}-9)` }}
+                                />
+                              </Flex>
+                            </Box>
+                          </Box>
+                        </Link>
+                      </motion.div>
+                    );
+                  })}
+                </Grid>
+
+                {/* Load more */}
+                {hasMorePosts ? (
                   <motion.div
-                    key={post.id}
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.6 + index * 0.08, duration: 0.5 }}
+                    transition={{ delay: 1, duration: 0.6 }}
                   >
-                    <Link href={`/blog/${post.slug}`} style={{ textDecoration: "none" }}>
-                      <Box
+                    <Flex justify="center" mt="9">
+                      <button
+                        onClick={loadMorePosts}
                         style={{
-                          background: "var(--gray-a2)",
-                          borderRadius: 20,
-                          border: "1px solid var(--gray-a4)",
-                          overflow: "hidden",
-                          height: "100%",
+                          padding: "14px 32px",
+                          borderRadius: 9999,
+                          border: "1px solid var(--gray-a6)",
+                          background: "transparent",
+                          color: "var(--gray-11)",
+                          fontSize: 14,
+                          fontWeight: 600,
                           cursor: "pointer",
                           transition: "all 0.2s ease",
                         }}
                         onMouseEnter={(e) => {
-                          e.currentTarget.style.transform = "translateY(-4px)";
-                          e.currentTarget.style.boxShadow =
-                            "0 12px 24px -8px var(--gray-a5)";
+                          e.currentTarget.style.background = "var(--gray-a3)";
                         }}
                         onMouseLeave={(e) => {
-                          e.currentTarget.style.transform = "translateY(0)";
-                          e.currentTarget.style.boxShadow = "none";
+                          e.currentTarget.style.background = "transparent";
                         }}
                       >
-                        {/* Icon header */}
-                        <Box
-                          style={{
-                            height: 100,
-                            background: `var(--${post.color || "gray"}-a2)`,
-                            display: "flex",
-                            alignItems: "center",
-                            justifyContent: "center",
-                          }}
-                        >
-                          <Box
-                            p="4"
-                            style={{
-                              background: `var(--${post.color || "gray"}-a3)`,
-                              borderRadius: 16,
-                            }}
-                          >
-                            <PostIcon
-                              size={32}
-                              style={{ color: `var(--${post.color || "gray"}-9)` }}
-                            />
-                          </Box>
-                        </Box>
-
-                        <Box p="5">
-                          <Flex gap="2" mb="3" wrap="wrap">
-                            {post.tags.slice(0, 2).map((tag) => (
-                              <Flex key={tag.id} align="center" gap="1">
-                                <Tag
-                                  size={10}
-                                  style={{ color: "var(--gray-10)" }}
-                                />
-                                <Text size="1" color="gray">
-                                  {tag.name}
-                                </Text>
-                              </Flex>
-                            ))}
-                          </Flex>
-
-                          <Heading
-                            size="4"
-                            mb="2"
-                            style={{ color: "var(--gray-12)" }}
-                          >
-                            {post.title}
-                          </Heading>
-
-                          <Text
-                            size="2"
-                            mb="4"
-                            style={{
-                              color: "var(--gray-11)",
-                              lineHeight: 1.6,
-                              display: "block",
-                            }}
-                          >
-                            {(post.excerpt || "").slice(0, 100)}...
-                          </Text>
-
-                          <Flex align="center" justify="between">
-                            <Flex align="center" gap="3">
-                              <Text size="1" color="gray">
-                                {formatDate(post.published_at)}
-                              </Text>
-                            </Flex>
-                            <ArrowRight
-                              size={16}
-                              style={{ color: `var(--${post.color || "gray"}-9)` }}
-                            />
-                          </Flex>
-                        </Box>
-                      </Box>
-                    </Link>
+                        Charger plus d&apos;articles
+                      </button>
+                    </Flex>
                   </motion.div>
-                );
-              })}
-            </Grid>
+                ) : null}
 
-            {/* Load more */}
-            {hasMorePosts ? <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 1, duration: 0.6 }}
-              >
-                <Flex justify="center" mt="9">
-                  <button
-                    onClick={loadMorePosts}
+                {/* No results for current filter */}
+                {displayedPosts.length === 0 && (
+                  <Box
+                    p="8"
                     style={{
-                      padding: "14px 32px",
-                      borderRadius: 9999,
-                      border: "1px solid var(--gray-a6)",
-                      background: "transparent",
-                      color: "var(--gray-11)",
-                      fontSize: 14,
-                      fontWeight: 600,
-                      cursor: "pointer",
-                      transition: "all 0.2s ease",
-                    }}
-                    onMouseEnter={(e) => {
-                      e.currentTarget.style.background = "var(--gray-a3)";
-                    }}
-                    onMouseLeave={(e) => {
-                      e.currentTarget.style.background = "transparent";
+                      background: "var(--gray-a2)",
+                      borderRadius: 16,
+                      textAlign: "center",
                     }}
                   >
-                    Charger plus d&apos;articles
-                  </button>
-                </Flex>
-              </motion.div> : null}
-
-            {/* No results for current filter */}
-            {displayedPosts.length === 0 && (
-              <Box
-                p="8"
-                style={{
-                  background: "var(--gray-a2)",
-                  borderRadius: 16,
-                  textAlign: "center",
-                }}
-              >
-                <BookOpen
-                  size={48}
-                  style={{ color: "var(--gray-8)", marginBottom: 16 }}
-                />
-                <Heading size="4" mb="2" color="gray">
-                  Aucun article
-                </Heading>
-                <Text
-                  size="3"
-                  color="gray"
-                  style={{ display: "block", marginBottom: 16 }}
-                >
-                  Aucun article dans cette categorie pour le moment.
-                </Text>
-                {activeCategory !== "all" && (
-                  <button
-                    onClick={() => {
-                      setActiveCategory("all");
-                      setVisiblePosts(6);
-                    }}
-                    style={{
-                      padding: "10px 20px",
-                      borderRadius: 9999,
-                      border: "1px solid var(--gray-a6)",
-                      background: "transparent",
-                      color: "var(--gray-11)",
-                      fontSize: 14,
-                      fontWeight: 500,
-                      cursor: "pointer",
-                      transition: "all 0.2s ease",
-                    }}
-                  >
-                    Voir tous les articles
-                  </button>
+                    <BookOpen size={48} style={{ color: "var(--gray-8)", marginBottom: 16 }} />
+                    <Heading size="4" mb="2" color="gray">
+                      Aucun article
+                    </Heading>
+                    <Text size="3" color="gray" style={{ display: "block", marginBottom: 16 }}>
+                      Aucun article dans cette categorie pour le moment.
+                    </Text>
+                    {activeCategory !== "all" && (
+                      <button
+                        onClick={() => {
+                          setActiveCategory("all");
+                          setVisiblePosts(6);
+                        }}
+                        style={{
+                          padding: "10px 20px",
+                          borderRadius: 9999,
+                          border: "1px solid var(--gray-a6)",
+                          background: "transparent",
+                          color: "var(--gray-11)",
+                          fontSize: 14,
+                          fontWeight: 500,
+                          cursor: "pointer",
+                          transition: "all 0.2s ease",
+                        }}
+                      >
+                        Voir tous les articles
+                      </button>
+                    )}
+                  </Box>
                 )}
-              </Box>
-            )}
-            </> : null}
+              </>
+            ) : null}
           </>
         ) : null}
 

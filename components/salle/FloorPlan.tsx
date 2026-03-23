@@ -1,14 +1,44 @@
 "use client";
 
-import { useState, useRef, useCallback, useTransition, useEffect } from "react";
-import { Edit2, Save, X, ZoomIn, ZoomOut, Plus, Undo2, Redo2, Square, Circle, RectangleHorizontal, DoorOpen, Armchair, UtensilsCrossed, Wine, MapPin, RotateCw } from "lucide-react";
+import { useState, useRef, useCallback, useEffect } from "react";
+import {
+  PencilSimple,
+  SignOut,
+  MagnifyingGlassPlus,
+  MagnifyingGlassMinus,
+  Plus,
+  ArrowCounterClockwise,
+  ArrowClockwise,
+  Square,
+  Circle,
+  Rectangle,
+  Door,
+  Armchair,
+  ForkKnife,
+  Wine,
+  MapPin,
+  CloudCheck,
+  SpinnerGap,
+  CloudSlash,
+} from "@phosphor-icons/react";
 import { IconButton, Tooltip, Separator } from "@radix-ui/themes";
 import { toast } from "sonner";
 import { TableItem } from "./TableItem";
 import { FloorPlanToolbar, type ToolType } from "./FloorPlanToolbar";
-import { DecorElement, type DecorElementData, type DecorType, getEffectiveDimensions } from "./DecorElement";
+import {
+  DecorElement,
+  type DecorElementData,
+  type DecorType,
+  getEffectiveDimensions,
+} from "./DecorElement";
 import { ZoneElement, type ZoneData, ZONE_COLORS } from "./ZoneElement";
-import { createZone, updateZone, deleteZone as deleteZoneAction, updateZonesPositions , updateTablesPositions } from "@/actions/tables";
+import {
+  createZone,
+  updateZone,
+  deleteZone as deleteZoneAction,
+  updateZonesPositions,
+  updateTablesPositions,
+} from "@/actions/tables";
 import { ElementContextMenu } from "./ElementContextMenu";
 import { TableContextMenu } from "./TableContextMenu";
 
@@ -89,7 +119,11 @@ interface FloorPlanProps {
   selectedTableId?: string | null;
   onTableSelect?: (tableId: string) => void;
   onTableDoubleClick?: (tableId: string) => void;
-  onAddTable?: (forme: "CARREE" | "RONDE" | "RECTANGULAIRE", positionX?: number, positionY?: number) => void;
+  onAddTable?: (
+    forme: "CARREE" | "RONDE" | "RECTANGULAIRE",
+    positionX?: number,
+    positionY?: number
+  ) => void;
   onRefresh?: () => void;
   /** Désactive le mode édition (pour serveurs/caissiers) */
   readOnly?: boolean;
@@ -107,18 +141,23 @@ export function FloorPlan({
 }: FloorPlanProps) {
   const [isEditMode, setIsEditMode] = useState(false);
   const [zoom, setZoom] = useState(1);
-  const [isPending, startTransition] = useTransition();
   const [draggedTable, setDraggedTable] = useState<string | null>(null);
   const [editSelectedTableId, setEditSelectedTableId] = useState<string | null>(null);
   const [positions, setPositions] = useState<Record<string, { x: number; y: number }>>({});
   const [hasChanges, setHasChanges] = useState(false);
   const [tableRotations, setTableRotations] = useState<Record<string, number>>({});
+
+  // Auto-save state
+  const [autoSaveStatus, setAutoSaveStatus] = useState<"idle" | "saving" | "saved" | "error">("idle");
+  const autoSaveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const isSavingRef = useRef(false);
   const containerRef = useRef<HTMLDivElement>(null);
 
   // Pan (déplacement du canvas avec Espace+clic)
   const [pan, setPan] = useState({ x: 0, y: 0 });
   const [isPanning, setIsPanning] = useState(false);
   const [isSpacePressed, setIsSpacePressed] = useState(false);
+  const [isAltPressed, setIsAltPressed] = useState(false);
   const panStartRef = useRef({ x: 0, y: 0, panX: 0, panY: 0 });
 
   // Snap-to-grid state
@@ -129,23 +168,20 @@ export function FloorPlan({
   const [activeTool, setActiveTool] = useState<ToolType>("select");
 
   // Utiliser le hook d'historique pour les éléments de décor
-  const {
-    decorElements,
-    setDecorElements,
-    undo,
-    redo,
-    canUndo,
-    canRedo,
-  } = useFloorPlanHistory();
+  const { decorElements, setDecorElements, undo, redo, canUndo, canRedo } = useFloorPlanHistory();
 
   const [selectedDecorId, setSelectedDecorId] = useState<string | null>(null);
 
   // Zones - converties depuis la BDD
   const [zones, setZones] = useState<ZoneData[]>([]);
-  const [zonePositions, setZonePositions] = useState<Record<string, { x: number; y: number; width: number; height: number }>>({});
+  const [zonePositions, setZonePositions] = useState<
+    Record<string, { x: number; y: number; width: number; height: number }>
+  >({});
   const [selectedZoneId, setSelectedZoneId] = useState<string | null>(null);
   const [showZoneDialog, setShowZoneDialog] = useState(false);
-  const [pendingZonePosition, setPendingZonePosition] = useState<{ x: number; y: number } | null>(null);
+  const [pendingZonePosition, setPendingZonePosition] = useState<{ x: number; y: number } | null>(
+    null
+  );
   const [editingZone, setEditingZone] = useState<ZoneData | null>(null);
 
   // Convertir les zones de la BDD vers le format ZoneData
@@ -178,7 +214,11 @@ export function FloorPlan({
   const [clipboard, setClipboard] = useState<DecorElementData | null>(null);
 
   // Menu contextuel
-  const [contextMenu, setContextMenu] = useState<{ x: number; y: number; elementId: string } | null>(null);
+  const [contextMenu, setContextMenu] = useState<{
+    x: number;
+    y: number;
+    elementId: string;
+  } | null>(null);
 
   // Position du curseur pour le ghost preview
   const [mousePosition, setMousePosition] = useState<{ x: number; y: number } | null>(null);
@@ -212,82 +252,116 @@ export function FloorPlan({
   );
 
   // Démarrer le déplacement direct d'une zone
-  const handleZoneMouseDown = useCallback((e: React.MouseEvent, zoneId: string) => {
-    if (!isEditMode || isSpacePressed) return;
-    e.preventDefault();
-    e.stopPropagation();
+  // Alt+Click sur zone = pas de duplication (les zones sont en BDD, pas de sens de dupliquer en drag)
+  const handleZoneMouseDown = useCallback(
+    (e: React.MouseEvent, zoneId: string) => {
+      if (!isEditMode || isSpacePressed) return;
+      e.preventDefault();
+      e.stopPropagation();
 
-    const zone = zones.find((z) => z.id === zoneId);
-    if (!zone || !containerRef.current) return;
+      const zone = zones.find((z) => z.id === zoneId);
+      if (!zone || !containerRef.current) return;
 
-    const rect = containerRef.current.getBoundingClientRect();
-    const mouseX = (e.clientX - rect.left - pan.x) / zoom;
-    const mouseY = (e.clientY - rect.top - pan.y) / zoom;
+      const rect = containerRef.current.getBoundingClientRect();
+      const mouseX = (e.clientX - rect.left - pan.x) / zoom;
+      const mouseY = (e.clientY - rect.top - pan.y) / zoom;
 
-    setDragging({
-      type: "zone",
-      id: zoneId,
-      offsetX: mouseX - zone.x,
-      offsetY: mouseY - zone.y,
-    });
-    setSelectedZoneId(zoneId);
-    setSelectedDecorId(null);
-  }, [isEditMode, zones, zoom, pan, isSpacePressed]);
+      setDragging({
+        type: "zone",
+        id: zoneId,
+        offsetX: mouseX - zone.x,
+        offsetY: mouseY - zone.y,
+      });
+      setSelectedZoneId(zoneId);
+      setSelectedDecorId(null);
+    },
+    [isEditMode, zones, zoom, pan, isSpacePressed]
+  );
 
   // Démarrer le déplacement direct d'un élément de décor
-  const handleDecorMouseDown = useCallback((e: React.MouseEvent, decorId: string) => {
-    if (!isEditMode || isSpacePressed) return;
-    e.preventDefault();
-    e.stopPropagation();
+  // Alt+Click = dupliquer l'élément et commencer à drag la copie
+  const handleDecorMouseDown = useCallback(
+    (e: React.MouseEvent, decorId: string) => {
+      if (!isEditMode || isSpacePressed) return;
+      e.preventDefault();
+      e.stopPropagation();
 
-    const element = decorElements.find((el) => el.id === decorId);
-    if (!element || !containerRef.current) return;
+      const element = decorElements.find((el) => el.id === decorId);
+      if (!element || !containerRef.current) return;
 
-    const rect = containerRef.current.getBoundingClientRect();
-    const mouseX = (e.clientX - rect.left - pan.x) / zoom;
-    const mouseY = (e.clientY - rect.top - pan.y) / zoom;
+      const rect = containerRef.current.getBoundingClientRect();
+      const mouseX = (e.clientX - rect.left - pan.x) / zoom;
+      const mouseY = (e.clientY - rect.top - pan.y) / zoom;
 
-    setDragging({
-      type: "decor",
-      id: decorId,
-      offsetX: mouseX - element.x,
-      offsetY: mouseY - element.y,
-    });
-    setSelectedDecorId(decorId);
-    setSelectedZoneId(null);
-  }, [isEditMode, decorElements, zoom, pan, isSpacePressed]);
+      // Alt+Click : dupliquer et drag la copie
+      if (e.altKey) {
+        const newId = `decor-${Date.now()}`;
+        const newElement: DecorElementData = { ...element, id: newId };
+        setDecorElements([...decorElements, newElement]);
+        setDragging({
+          type: "decor",
+          id: newId,
+          offsetX: mouseX - element.x,
+          offsetY: mouseY - element.y,
+        });
+        setSelectedDecorId(newId);
+        setSelectedZoneId(null);
+        setHasChanges(true);
+        return;
+      }
+
+      setDragging({
+        type: "decor",
+        id: decorId,
+        offsetX: mouseX - element.x,
+        offsetY: mouseY - element.y,
+      });
+      setSelectedDecorId(decorId);
+      setSelectedZoneId(null);
+    },
+    [isEditMode, decorElements, setDecorElements, zoom, pan, isSpacePressed]
+  );
 
   // Démarrer le déplacement direct d'une table
-  const handleTableMouseDown = useCallback((e: React.MouseEvent, tableId: string) => {
-    if (!isEditMode || isSpacePressed) return;
-    e.preventDefault();
-    e.stopPropagation();
+  // Alt+Click = dupliquer la table (ouvre le formulaire pré-rempli à la position du clic)
+  const handleTableMouseDown = useCallback(
+    (e: React.MouseEvent, tableId: string) => {
+      if (!isEditMode || isSpacePressed) return;
+      e.preventDefault();
+      e.stopPropagation();
 
-    const table = tables.find((t) => t.id === tableId);
-    if (!table || !containerRef.current) return;
+      const table = tables.find((t) => t.id === tableId);
+      if (!table || !containerRef.current) return;
 
-    const rect = containerRef.current.getBoundingClientRect();
-    const mouseX = (e.clientX - rect.left - pan.x) / zoom;
-    const mouseY = (e.clientY - rect.top - pan.y) / zoom;
+      const rect = containerRef.current.getBoundingClientRect();
+      const mouseX = (e.clientX - rect.left - pan.x) / zoom;
+      const mouseY = (e.clientY - rect.top - pan.y) / zoom;
 
-    const pos = positions[tableId] || { x: table.positionX || 50, y: table.positionY || 50 };
+      const pos = positions[tableId] || { x: table.positionX || 50, y: table.positionY || 50 };
 
-    setDragging({
-      type: "table",
-      id: tableId,
-      offsetX: mouseX - pos.x,
-      offsetY: mouseY - pos.y,
-    });
-    setDraggedTable(tableId);
-    setEditSelectedTableId(tableId);
-    setSelectedDecorId(null);
-    setSelectedZoneId(null);
-  }, [isEditMode, tables, positions, zoom, pan, isSpacePressed]);
+      // Alt+Click : créer une copie de la table via le formulaire
+      if (e.altKey && onAddTable) {
+        const forme = table.forme as "CARREE" | "RONDE" | "RECTANGULAIRE";
+        onAddTable(forme, Math.round(mouseX + 30), Math.round(mouseY + 30));
+        return;
+      }
 
-  // Sauvegarder les positions (tables et zones)
-  const handleSavePositions = useCallback(() => {
-    if (!hasChanges) return;
+      setDragging({
+        type: "table",
+        id: tableId,
+        offsetX: mouseX - pos.x,
+        offsetY: mouseY - pos.y,
+      });
+      setDraggedTable(tableId);
+      setEditSelectedTableId(tableId);
+      setSelectedDecorId(null);
+      setSelectedZoneId(null);
+    },
+    [isEditMode, tables, positions, zoom, pan, isSpacePressed, onAddTable]
+  );
 
+  // Auto-save : sauvegarder les positions (tables et zones) avec debounce
+  const performAutoSave = useCallback(async () => {
     const tableUpdates = Object.entries(positions).map(([id, pos]) => ({
       id,
       positionX: pos.x,
@@ -302,51 +376,91 @@ export function FloorPlan({
       hauteur: pos.height,
     }));
 
-    startTransition(async () => {
-      try {
-        // Sauvegarder les positions des tables
-        if (tableUpdates.length > 0) {
-          const tableResult = await updateTablesPositions(tableUpdates);
-          if (!tableResult.success) {
-            toast.error("Erreur lors de l'enregistrement des tables");
-            return;
-          }
-        }
+    if (tableUpdates.length === 0 && zoneUpdates.length === 0) return;
 
-        // Sauvegarder les positions des zones
-        if (zoneUpdates.length > 0) {
-          const zoneResult = await updateZonesPositions(zoneUpdates);
-          if (!zoneResult.success) {
-            toast.error("Erreur lors de l'enregistrement des zones");
-            return;
-          }
-        }
+    if (isSavingRef.current) return;
+    isSavingRef.current = true;
+    setAutoSaveStatus("saving");
 
-        toast.success("Positions enregistrées");
-        setPositions({});
-        setZonePositions({});
-        setHasChanges(false);
-        setIsEditMode(false);
-        onRefresh?.();
-      } catch (error) {
-        toast.error("Erreur lors de l'enregistrement");
+    try {
+      if (tableUpdates.length > 0) {
+        const tableResult = await updateTablesPositions(tableUpdates);
+        if (!tableResult.success) {
+          setAutoSaveStatus("error");
+          isSavingRef.current = false;
+          return;
+        }
       }
-    });
-  }, [positions, zonePositions, hasChanges, onRefresh]);
 
-  // Annuler les modifications
-  const handleCancelEdit = useCallback(() => {
+      if (zoneUpdates.length > 0) {
+        const zoneResult = await updateZonesPositions(zoneUpdates);
+        if (!zoneResult.success) {
+          setAutoSaveStatus("error");
+          isSavingRef.current = false;
+          return;
+        }
+      }
+
+      setPositions({});
+      setZonePositions({});
+      setHasChanges(false);
+      setAutoSaveStatus("saved");
+      onRefresh?.();
+    } catch {
+      setAutoSaveStatus("error");
+    } finally {
+      isSavingRef.current = false;
+    }
+  }, [positions, zonePositions, onRefresh]);
+
+  // Debounced auto-save : déclenché quand hasChanges passe à true
+  useEffect(() => {
+    if (!hasChanges || !isEditMode) return;
+
+    // Clear previous timer
+    if (autoSaveTimerRef.current) {
+      clearTimeout(autoSaveTimerRef.current);
+    }
+
+    autoSaveTimerRef.current = setTimeout(() => {
+      performAutoSave();
+    }, 500);
+
+    return () => {
+      if (autoSaveTimerRef.current) {
+        clearTimeout(autoSaveTimerRef.current);
+      }
+    };
+  }, [hasChanges, isEditMode, positions, zonePositions, performAutoSave]);
+
+  // Quitter le mode édition (les changements sont déjà sauvegardés)
+  const handleExitEditMode = useCallback(async () => {
+    // Sauvegarder immédiatement les changements en attente avant de quitter
+    if (autoSaveTimerRef.current) {
+      clearTimeout(autoSaveTimerRef.current);
+      autoSaveTimerRef.current = null;
+    }
+    if (hasChanges) {
+      await performAutoSave();
+    }
     setPositions({});
     setZonePositions({});
     setTableRotations({});
     setHasChanges(false);
     setIsEditMode(false);
     setEditSelectedTableId(null);
-  }, []);
+    setAutoSaveStatus("idle");
+  }, [hasChanges, performAutoSave]);
 
   // Zoom
   const handleZoomIn = () => setZoom((z) => Math.min(z + 0.1, 2));
   const handleZoomOut = () => setZoom((z) => Math.max(z - 0.1, 0.5));
+
+  // Réinitialiser l'affichage (zoom et pan)
+  const resetView = useCallback(() => {
+    setZoom(1);
+    setPan({ x: 0, y: 0 });
+  }, []);
 
   // Zoom avec Alt + molette
   const handleWheel = useCallback((e: React.WheelEvent) => {
@@ -356,7 +470,6 @@ export function FloorPlan({
       setZoom((z) => Math.min(2, Math.max(0.5, z + delta)));
     }
   }, []);
-
 
   // Ajouter un élément de décor
   const handleCanvasClick = useCallback(
@@ -439,7 +552,17 @@ export function FloorPlan({
       setHasChanges(true);
       setSelectedDecorId(newElement.id);
     },
-    [isEditMode, activeTool, zoom, decorElements, setDecorElements, onAddTable, gridSize, snapEnabled, pan]
+    [
+      isEditMode,
+      activeTool,
+      zoom,
+      decorElements,
+      setDecorElements,
+      onAddTable,
+      gridSize,
+      snapEnabled,
+      pan,
+    ]
   );
 
   // Supprimer l'élément sélectionné (zone ou decor)
@@ -477,24 +600,27 @@ export function FloorPlan({
 
   // Rotation - normalise à 0, 90, 180, 270
   // Pour les murs droits et étagères, échange width/height lors de rotation 90°
-  const rotateElement = useCallback((degrees: number) => {
-    if (!selectedDecorId) return;
-    const newElements = decorElements.map((el) => {
-      if (el.id === selectedDecorId) {
-        const currentRotation = el.rotation || 0;
-        let newRotation = (currentRotation + degrees) % 360;
-        if (newRotation < 0) newRotation += 360;
+  const rotateElement = useCallback(
+    (degrees: number) => {
+      if (!selectedDecorId) return;
+      const newElements = decorElements.map((el) => {
+        if (el.id === selectedDecorId) {
+          const currentRotation = el.rotation || 0;
+          let newRotation = (currentRotation + degrees) % 360;
+          if (newRotation < 0) newRotation += 360;
 
-        // Les murs droits et étagères utilisent le swap visuel dans DecorElement
-        // (getEffectiveDimensions échange width/height à 90°/270°)
-        // Pas besoin d'échanger les dimensions ici
-        return { ...el, rotation: newRotation };
-      }
-      return el;
-    });
-    setDecorElements(newElements);
-    setHasChanges(true);
-  }, [selectedDecorId, decorElements, setDecorElements]);
+          // Les murs droits et étagères utilisent le swap visuel dans DecorElement
+          // (getEffectiveDimensions échange width/height à 90°/270°)
+          // Pas besoin d'échanger les dimensions ici
+          return { ...el, rotation: newRotation };
+        }
+        return el;
+      });
+      setDecorElements(newElements);
+      setHasChanges(true);
+    },
+    [selectedDecorId, decorElements, setDecorElements]
+  );
 
   // Rotation des tables
   const rotateTable = useCallback((tableId: string, degrees: number) => {
@@ -508,21 +634,24 @@ export function FloorPlan({
   }, []);
 
   // Redimensionnement
-  const resizeElement = useCallback((widthDelta: number, heightDelta: number) => {
-    if (!selectedDecorId) return;
-    const newElements = decorElements.map((el) => {
-      if (el.id === selectedDecorId) {
-        return {
-          ...el,
-          width: Math.max(30, el.width + widthDelta),
-          height: Math.max(10, el.height + heightDelta),
-        };
-      }
-      return el;
-    });
-    setDecorElements(newElements);
-    setHasChanges(true);
-  }, [selectedDecorId, decorElements, setDecorElements]);
+  const resizeElement = useCallback(
+    (widthDelta: number, heightDelta: number) => {
+      if (!selectedDecorId) return;
+      const newElements = decorElements.map((el) => {
+        if (el.id === selectedDecorId) {
+          return {
+            ...el,
+            width: Math.max(30, el.width + widthDelta),
+            height: Math.max(10, el.height + heightDelta),
+          };
+        }
+        return el;
+      });
+      setDecorElements(newElements);
+      setHasChanges(true);
+    },
+    [selectedDecorId, decorElements, setDecorElements]
+  );
 
   // Dupliquer
   const duplicateElement = useCallback(() => {
@@ -568,21 +697,24 @@ export function FloorPlan({
   }, [clipboard, decorElements, setDecorElements]);
 
   // Déplacer l'élément sélectionné
-  const moveElement = useCallback((deltaX: number, deltaY: number) => {
-    if (!selectedDecorId) return;
-    const newElements = decorElements.map((el) => {
-      if (el.id === selectedDecorId) {
-        return {
-          ...el,
-          x: Math.max(0, el.x + deltaX),
-          y: Math.max(0, el.y + deltaY),
-        };
-      }
-      return el;
-    });
-    setDecorElements(newElements);
-    setHasChanges(true);
-  }, [selectedDecorId, decorElements, setDecorElements]);
+  const moveElement = useCallback(
+    (deltaX: number, deltaY: number) => {
+      if (!selectedDecorId) return;
+      const newElements = decorElements.map((el) => {
+        if (el.id === selectedDecorId) {
+          return {
+            ...el,
+            x: Math.max(0, el.x + deltaX),
+            y: Math.max(0, el.y + deltaY),
+          };
+        }
+        return el;
+      });
+      setDecorElements(newElements);
+      setHasChanges(true);
+    },
+    [selectedDecorId, decorElements, setDecorElements]
+  );
 
   // Désélectionner / quitter mode édition
   const handleEscape = useCallback(() => {
@@ -598,13 +730,73 @@ export function FloorPlan({
   }, [selectedDecorId, editSelectedTableId, selectedZoneId, activeTool]);
 
   // Rotation unifiée : décor ou table selon la sélection
-  const handleRotateSelected = useCallback((degrees: number) => {
+  const handleRotateSelected = useCallback(
+    (degrees: number) => {
+      if (selectedDecorId) {
+        rotateElement(degrees);
+      } else if (editSelectedTableId) {
+        rotateTable(editSelectedTableId, degrees);
+      }
+    },
+    [selectedDecorId, editSelectedTableId, rotateElement, rotateTable]
+  );
+
+  // Basculer la visibilité de la grille (toggle snap)
+  const handleToggleSnap = useCallback(() => {
+    setSnapEnabled((prev) => !prev);
+  }, []);
+
+  // Centrer la vue sur l'élément sélectionné
+  const handleFocusSelected = useCallback(() => {
+    if (!containerRef.current) return;
+    const containerRect = containerRef.current.getBoundingClientRect();
+    let targetX = 0;
+    let targetY = 0;
+    let found = false;
+
     if (selectedDecorId) {
-      rotateElement(degrees);
+      const el = decorElements.find((e) => e.id === selectedDecorId);
+      if (el) {
+        targetX = el.x + el.width / 2;
+        targetY = el.y + el.height / 2;
+        found = true;
+      }
     } else if (editSelectedTableId) {
-      rotateTable(editSelectedTableId, degrees);
+      const table = tables.find((t) => t.id === editSelectedTableId);
+      if (table) {
+        const pos = getPosition(table);
+        targetX = pos.x + (table.largeur || 80) / 2;
+        targetY = pos.y + (table.hauteur || 80) / 2;
+        found = true;
+      }
+    } else if (selectedZoneId) {
+      const zone = zones.find((z) => z.id === selectedZoneId);
+      if (zone) {
+        targetX = zone.x + zone.width / 2;
+        targetY = zone.y + zone.height / 2;
+        found = true;
+      }
     }
-  }, [selectedDecorId, editSelectedTableId, rotateElement, rotateTable]);
+
+    if (found) {
+      const centerX = containerRect.width / 2;
+      const centerY = containerRect.height / 2;
+      setPan({
+        x: centerX - targetX * zoom,
+        y: centerY - targetY * zoom,
+      });
+    }
+  }, [selectedDecorId, editSelectedTableId, selectedZoneId, decorElements, tables, zones, zoom, getPosition]);
+
+  // Augmenter la taille de l'élément sélectionné
+  const handleIncreaseSize = useCallback(() => {
+    resizeElement(10, 10);
+  }, [resizeElement]);
+
+  // Réduire la taille de l'élément sélectionné
+  const handleDecreaseSize = useCallback(() => {
+    resizeElement(-10, -10);
+  }, [resizeElement]);
 
   // Intégrer les raccourcis clavier
   useFloorPlanKeyboard(
@@ -618,6 +810,13 @@ export function FloorPlan({
       onEscape: handleEscape,
       onMove: moveElement,
       onRotate: handleRotateSelected,
+      onZoomIn: handleZoomIn,
+      onZoomOut: handleZoomOut,
+      onResetView: resetView,
+      onToggleSnap: handleToggleSnap,
+      onIncreaseSize: handleIncreaseSize,
+      onDecreaseSize: handleDecreaseSize,
+      onFocusSelected: handleFocusSelected,
     },
     {
       enabled: isEditMode && !isPanning,
@@ -687,19 +886,19 @@ export function FloorPlan({
     [getSelectedElementCorners]
   );
 
-  // Réinitialiser l'affichage (zoom et pan)
-  const resetView = useCallback(() => {
-    setZoom(1);
-    setPan({ x: 0, y: 0 });
-  }, []);
+  // (resetView défini plus haut)
 
-  // Détecter la touche Espace pour le mode pan et Alt+R pour reset
+  // Détecter la touche Espace pour le mode pan, Alt pour le mode duplication, Alt+R pour reset
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       // Espace pour le mode pan
       if (e.code === "Space" && !e.repeat) {
         e.preventDefault();
         setIsSpacePressed(true);
+      }
+      // Alt pour le mode duplication (Alt+Click)
+      if (e.key === "Alt") {
+        setIsAltPressed(true);
       }
       // Alt+R pour réinitialiser l'affichage
       if (e.altKey && e.code === "KeyR") {
@@ -713,6 +912,9 @@ export function FloorPlan({
         setIsSpacePressed(false);
         setIsPanning(false);
       }
+      if (e.key === "Alt") {
+        setIsAltPressed(false);
+      }
     };
 
     window.addEventListener("keydown", handleKeyDown);
@@ -725,144 +927,150 @@ export function FloorPlan({
   }, [resetView]);
 
   // Démarrer le redimensionnement
-  const handleResizeStart = useCallback((elementId: string, handle: string, e: React.MouseEvent) => {
-    const element = decorElements.find((el) => el.id === elementId);
-    if (!element) return;
+  const handleResizeStart = useCallback(
+    (elementId: string, handle: string, e: React.MouseEvent) => {
+      const element = decorElements.find((el) => el.id === elementId);
+      if (!element) return;
 
-    resizeHasMoved.current = false;
-    setResizing({
-      elementId,
-      handle,
-      startX: e.clientX,
-      startY: e.clientY,
-      startWidth: element.width,
-      startHeight: element.height,
-      startPosX: element.x,
-      startPosY: element.y,
-    });
-  }, [decorElements]);
+      resizeHasMoved.current = false;
+      setResizing({
+        elementId,
+        handle,
+        startX: e.clientX,
+        startY: e.clientY,
+        startWidth: element.width,
+        startHeight: element.height,
+        startPosX: element.x,
+        startPosY: element.y,
+      });
+    },
+    [decorElements]
+  );
 
   // Gérer le mouvement pendant le redimensionnement
-  const handleMouseMove = useCallback((e: React.MouseEvent) => {
-    if (!resizing) return;
+  const handleMouseMove = useCallback(
+    (e: React.MouseEvent) => {
+      if (!resizing) return;
 
-    const deltaX = (e.clientX - resizing.startX) / zoom;
-    const deltaY = (e.clientY - resizing.startY) / zoom;
+      const deltaX = (e.clientX - resizing.startX) / zoom;
+      const deltaY = (e.clientY - resizing.startY) / zoom;
 
-    // Détecter si le mouvement est significatif (> 3px)
-    if (Math.abs(e.clientX - resizing.startX) > 3 || Math.abs(e.clientY - resizing.startY) > 3) {
-      resizeHasMoved.current = true;
-    }
-
-    // Check if resizing a zone
-    const isZoneResize = zones.some((z) => z.id === resizing.elementId);
-
-    if (isZoneResize) {
-      let newWidth = resizing.startWidth;
-      let newHeight = resizing.startHeight;
-      let newX = resizing.startPosX;
-      let newY = resizing.startPosY;
-
-      switch (resizing.handle) {
-        case "bottom-right":
-          newWidth = Math.max(100, resizing.startWidth + deltaX);
-          newHeight = Math.max(80, resizing.startHeight + deltaY);
-          break;
-        case "bottom-left":
-          newWidth = Math.max(100, resizing.startWidth - deltaX);
-          newX = resizing.startPosX + (resizing.startWidth - newWidth);
-          newHeight = Math.max(80, resizing.startHeight + deltaY);
-          break;
-        case "top-right":
-          newWidth = Math.max(100, resizing.startWidth + deltaX);
-          newHeight = Math.max(80, resizing.startHeight - deltaY);
-          newY = resizing.startPosY + (resizing.startHeight - newHeight);
-          break;
-        case "top-left":
-          newWidth = Math.max(100, resizing.startWidth - deltaX);
-          newX = resizing.startPosX + (resizing.startWidth - newWidth);
-          newHeight = Math.max(80, resizing.startHeight - deltaY);
-          newY = resizing.startPosY + (resizing.startHeight - newHeight);
-          break;
+      // Détecter si le mouvement est significatif (> 3px)
+      if (Math.abs(e.clientX - resizing.startX) > 3 || Math.abs(e.clientY - resizing.startY) > 3) {
+        resizeHasMoved.current = true;
       }
 
-      if (snapEnabled) {
-        const snappedPos = snapPositionIfEnabled(newX, newY, gridSize, snapEnabled);
-        const snappedDims = snapDimensions(newWidth, newHeight, gridSize, 100, 80);
-        newX = snappedPos.x;
-        newY = snappedPos.y;
-        newWidth = snappedDims.width;
-        newHeight = snappedDims.height;
+      // Check if resizing a zone
+      const isZoneResize = zones.some((z) => z.id === resizing.elementId);
+
+      if (isZoneResize) {
+        let newWidth = resizing.startWidth;
+        let newHeight = resizing.startHeight;
+        let newX = resizing.startPosX;
+        let newY = resizing.startPosY;
+
+        switch (resizing.handle) {
+          case "bottom-right":
+            newWidth = Math.max(100, resizing.startWidth + deltaX);
+            newHeight = Math.max(80, resizing.startHeight + deltaY);
+            break;
+          case "bottom-left":
+            newWidth = Math.max(100, resizing.startWidth - deltaX);
+            newX = resizing.startPosX + (resizing.startWidth - newWidth);
+            newHeight = Math.max(80, resizing.startHeight + deltaY);
+            break;
+          case "top-right":
+            newWidth = Math.max(100, resizing.startWidth + deltaX);
+            newHeight = Math.max(80, resizing.startHeight - deltaY);
+            newY = resizing.startPosY + (resizing.startHeight - newHeight);
+            break;
+          case "top-left":
+            newWidth = Math.max(100, resizing.startWidth - deltaX);
+            newX = resizing.startPosX + (resizing.startWidth - newWidth);
+            newHeight = Math.max(80, resizing.startHeight - deltaY);
+            newY = resizing.startPosY + (resizing.startHeight - newHeight);
+            break;
+        }
+
+        if (snapEnabled) {
+          const snappedPos = snapPositionIfEnabled(newX, newY, gridSize, snapEnabled);
+          const snappedDims = snapDimensions(newWidth, newHeight, gridSize, 100, 80);
+          newX = snappedPos.x;
+          newY = snappedPos.y;
+          newWidth = snappedDims.width;
+          newHeight = snappedDims.height;
+        }
+
+        // Stocker la position locale pour le resize
+        setZonePositions((prev) => ({
+          ...prev,
+          [resizing.elementId]: { x: newX, y: newY, width: newWidth, height: newHeight },
+        }));
+        return;
       }
 
-      // Stocker la position locale pour le resize
-      setZonePositions((prev) => ({
-        ...prev,
-        [resizing.elementId]: { x: newX, y: newY, width: newWidth, height: newHeight },
-      }));
-      return;
-    }
+      const newElements = decorElements.map((el) => {
+        if (el.id !== resizing.elementId) return el;
 
-    const newElements = decorElements.map((el) => {
-      if (el.id !== resizing.elementId) return el;
+        let newWidth = resizing.startWidth;
+        let newHeight = resizing.startHeight;
+        let newX = resizing.startPosX;
+        let newY = resizing.startPosY;
 
-      let newWidth = resizing.startWidth;
-      let newHeight = resizing.startHeight;
-      let newX = resizing.startPosX;
-      let newY = resizing.startPosY;
+        switch (resizing.handle) {
+          case "right":
+            newWidth = Math.max(30, resizing.startWidth + deltaX);
+            break;
+          case "bottom":
+            newHeight = Math.max(10, resizing.startHeight + deltaY);
+            break;
+          case "left":
+            newWidth = Math.max(30, resizing.startWidth - deltaX);
+            newX = resizing.startPosX + (resizing.startWidth - newWidth);
+            break;
+          case "top":
+            newHeight = Math.max(10, resizing.startHeight - deltaY);
+            newY = resizing.startPosY + (resizing.startHeight - newHeight);
+            break;
+          case "bottom-right":
+            newWidth = Math.max(30, resizing.startWidth + deltaX);
+            newHeight = Math.max(10, resizing.startHeight + deltaY);
+            break;
+          case "bottom-left":
+            newWidth = Math.max(30, resizing.startWidth - deltaX);
+            newX = resizing.startPosX + (resizing.startWidth - newWidth);
+            newHeight = Math.max(10, resizing.startHeight + deltaY);
+            break;
+          case "top-right":
+            newWidth = Math.max(30, resizing.startWidth + deltaX);
+            newHeight = Math.max(10, resizing.startHeight - deltaY);
+            newY = resizing.startPosY + (resizing.startHeight - newHeight);
+            break;
+          case "top-left":
+            newWidth = Math.max(30, resizing.startWidth - deltaX);
+            newX = resizing.startPosX + (resizing.startWidth - newWidth);
+            newHeight = Math.max(10, resizing.startHeight - deltaY);
+            newY = resizing.startPosY + (resizing.startHeight - newHeight);
+            break;
+        }
 
-      switch (resizing.handle) {
-        case "right":
-          newWidth = Math.max(30, resizing.startWidth + deltaX);
-          break;
-        case "bottom":
-          newHeight = Math.max(10, resizing.startHeight + deltaY);
-          break;
-        case "left":
-          newWidth = Math.max(30, resizing.startWidth - deltaX);
-          newX = resizing.startPosX + (resizing.startWidth - newWidth);
-          break;
-        case "top":
-          newHeight = Math.max(10, resizing.startHeight - deltaY);
-          newY = resizing.startPosY + (resizing.startHeight - newHeight);
-          break;
-        case "bottom-right":
-          newWidth = Math.max(30, resizing.startWidth + deltaX);
-          newHeight = Math.max(10, resizing.startHeight + deltaY);
-          break;
-        case "bottom-left":
-          newWidth = Math.max(30, resizing.startWidth - deltaX);
-          newX = resizing.startPosX + (resizing.startWidth - newWidth);
-          newHeight = Math.max(10, resizing.startHeight + deltaY);
-          break;
-        case "top-right":
-          newWidth = Math.max(30, resizing.startWidth + deltaX);
-          newHeight = Math.max(10, resizing.startHeight - deltaY);
-          newY = resizing.startPosY + (resizing.startHeight - newHeight);
-          break;
-        case "top-left":
-          newWidth = Math.max(30, resizing.startWidth - deltaX);
-          newX = resizing.startPosX + (resizing.startWidth - newWidth);
-          newHeight = Math.max(10, resizing.startHeight - deltaY);
-          newY = resizing.startPosY + (resizing.startHeight - newHeight);
-          break;
-      }
+        // Appliquer le snap-to-grid si activé
+        if (snapEnabled) {
+          const snappedPos = snapPositionIfEnabled(newX, newY, gridSize, snapEnabled);
+          const snappedDims = snapDimensions(newWidth, newHeight, gridSize, 30, 10);
+          newX = snappedPos.x;
+          newY = snappedPos.y;
+          newWidth = snappedDims.width;
+          newHeight = snappedDims.height;
+        }
 
-      // Appliquer le snap-to-grid si activé
-      if (snapEnabled) {
-        const snappedPos = snapPositionIfEnabled(newX, newY, gridSize, snapEnabled);
-        const snappedDims = snapDimensions(newWidth, newHeight, gridSize, 30, 10);
-        newX = snappedPos.x;
-        newY = snappedPos.y;
-        newWidth = snappedDims.width;
-        newHeight = snappedDims.height;
-      }
+        return { ...el, width: newWidth, height: newHeight, x: newX, y: newY };
+      });
 
-      return { ...el, width: newWidth, height: newHeight, x: newX, y: newY };
-    });
-
-    setDecorElements(newElements);
-  }, [resizing, decorElements, zoom, snapEnabled, gridSize]);
+      setDecorElements(newElements);
+    },
+    [resizing, decorElements, zoom, snapEnabled, gridSize]
+  );
 
   // Terminer le redimensionnement
   const handleMouseUp = useCallback(() => {
@@ -875,7 +1083,13 @@ export function FloorPlan({
         // Restaurer les dimensions originales
         const newElements = decorElements.map((el) =>
           el.id === resizing.elementId
-            ? { ...el, width: resizing.startWidth, height: resizing.startHeight, x: resizing.startPosX, y: resizing.startPosY }
+            ? {
+                ...el,
+                width: resizing.startWidth,
+                height: resizing.startHeight,
+                x: resizing.startPosX,
+                y: resizing.startPosY,
+              }
             : el
         );
         setDecorElements(newElements);
@@ -895,71 +1109,85 @@ export function FloorPlan({
     if (isPanning) {
       setIsPanning(false);
     }
-  }, [resizing, dragging, isPanning, selectedDecorId, decorElements, setDecorElements, rotateElement]);
+  }, [
+    resizing,
+    dragging,
+    isPanning,
+    selectedDecorId,
+    decorElements,
+    setDecorElements,
+    rotateElement,
+  ]);
 
   // Démarrer le pan (Espace + clic)
-  const handlePanStart = useCallback((e: React.MouseEvent) => {
-    if (!isSpacePressed) return false;
+  const handlePanStart = useCallback(
+    (e: React.MouseEvent) => {
+      if (!isSpacePressed) return false;
 
-    e.preventDefault();
-    setIsPanning(true);
-    panStartRef.current = {
-      x: e.clientX,
-      y: e.clientY,
-      panX: pan.x,
-      panY: pan.y,
-    };
-    return true;
-  }, [isSpacePressed, pan]);
+      e.preventDefault();
+      setIsPanning(true);
+      panStartRef.current = {
+        x: e.clientX,
+        y: e.clientY,
+        panX: pan.x,
+        panY: pan.y,
+      };
+      return true;
+    },
+    [isSpacePressed, pan]
+  );
 
   // Configuration du ghost preview selon l'outil actif
   const getGhostPreviewConfig = useCallback((tool: ToolType) => {
-    const sizeMap: Record<string, { width: number; height: number; borderRadius: string | number }> = {
-      "zone": { width: 200, height: 150, borderRadius: 8 },
+    const sizeMap: Record<
+      string,
+      { width: number; height: number; borderRadius: string | number }
+    > = {
+      zone: { width: 200, height: 150, borderRadius: 8 },
       "table-square": { width: 80, height: 80, borderRadius: 8 },
       "table-round": { width: 80, height: 80, borderRadius: "50%" },
       "table-rect": { width: 120, height: 80, borderRadius: 8 },
-      "wall": { width: 120, height: 10, borderRadius: 2 },
+      wall: { width: 120, height: 10, borderRadius: 2 },
       "wall-l": { width: 80, height: 80, borderRadius: 2 },
       "wall-t": { width: 100, height: 80, borderRadius: 2 },
       "wall-cross": { width: 80, height: 80, borderRadius: 2 },
-      "shelf": { width: 100, height: 20, borderRadius: 2 },
-      "door": { width: 60, height: 20, borderRadius: 8 },
-      "counter": { width: 150, height: 50, borderRadius: 8 },
-      "bar": { width: 120, height: 60, borderRadius: 8 },
-      "decoration": { width: 50, height: 50, borderRadius: 8 },
+      shelf: { width: 100, height: 20, borderRadius: 2 },
+      door: { width: 60, height: 20, borderRadius: 8 },
+      counter: { width: 150, height: 50, borderRadius: 8 },
+      bar: { width: 120, height: 60, borderRadius: 8 },
+      decoration: { width: 50, height: 50, borderRadius: 8 },
     };
 
     const iconMap: Record<string, React.ReactNode> = {
-      "zone": <MapPin size={24} />,
+      zone: <MapPin size={24} />,
       "table-square": <Square size={24} />,
       "table-round": <Circle size={24} />,
-      "table-rect": <RectangleHorizontal size={24} />,
-      "wall": <WallIcon size={24} />,
+      "table-rect": <Rectangle size={24} />,
+      wall: <WallIcon size={24} />,
       "wall-l": <span style={{ fontSize: 16, fontWeight: 700 }}>L</span>,
       "wall-t": <span style={{ fontSize: 16, fontWeight: 700 }}>T</span>,
       "wall-cross": <span style={{ fontSize: 16, fontWeight: 700 }}>+</span>,
-      "shelf": <span style={{ fontSize: 12, fontWeight: 600 }}>═══</span>,
-      "door": <DoorOpen size={24} />,
-      "counter": <UtensilsCrossed size={24} />,
-      "bar": <Wine size={24} />,
-      "decoration": <Armchair size={24} />,
+      shelf: <span style={{ fontSize: 12, fontWeight: 600 }}>═══</span>,
+      door: <Door size={24} />,
+      counter: <ForkKnife size={24} />,
+      bar: <Wine size={24} />,
+      decoration: <Armchair size={24} />,
     };
 
     const colorMap: Record<string, { bg: string; border: string }> = {
-      "zone": { bg: "rgba(34, 197, 94, 0.1)", border: "rgba(34, 197, 94, 0.5)" },
+      zone: { bg: "rgba(34, 197, 94, 0.1)", border: "rgba(34, 197, 94, 0.5)" },
       "table-square": { bg: "rgba(34, 197, 94, 0.15)", border: "rgba(34, 197, 94, 0.5)" },
       "table-round": { bg: "rgba(34, 197, 94, 0.15)", border: "rgba(34, 197, 94, 0.5)" },
       "table-rect": { bg: "rgba(34, 197, 94, 0.15)", border: "rgba(34, 197, 94, 0.5)" },
-      "wall": { bg: "rgba(55, 65, 81, 0.15)", border: "rgba(55, 65, 81, 0.5)" },
+      wall: { bg: "rgba(55, 65, 81, 0.15)", border: "rgba(55, 65, 81, 0.5)" },
       "wall-l": { bg: "rgba(55, 65, 81, 0.15)", border: "rgba(55, 65, 81, 0.5)" },
       "wall-t": { bg: "rgba(55, 65, 81, 0.15)", border: "rgba(55, 65, 81, 0.5)" },
       "wall-cross": { bg: "rgba(55, 65, 81, 0.15)", border: "rgba(55, 65, 81, 0.5)" },
-      "shelf": { bg: "rgba(254, 243, 199, 0.5)", border: "rgba(146, 64, 14, 0.5)" },
-      "door": { bg: "rgba(254, 243, 199, 0.5)", border: "rgba(217, 119, 6, 0.5)" },
-      "counter": { bg: "rgba(219, 234, 254, 0.5)", border: "rgba(59, 130, 246, 0.5)" },
-      "bar": { bg: "rgba(250, 232, 255, 0.5)", border: "rgba(192, 38, 211, 0.5)" },
-      "decoration": { bg: "rgba(240, 253, 244, 0.5)", border: "rgba(34, 197, 94, 0.5)" },
+      shelf: { bg: "rgba(254, 243, 199, 0.5)", border: "rgba(146, 64, 14, 0.5)" },
+      door: { bg: "rgba(254, 243, 199, 0.5)", border: "rgba(217, 119, 6, 0.5)" },
+      counter: { bg: "rgba(219, 234, 254, 0.5)", border: "rgba(59, 130, 246, 0.5)" },
+      bar: { bg: "rgba(250, 232, 255, 0.5)", border: "rgba(192, 38, 211, 0.5)" },
+      decoration: { bg: "rgba(240, 253, 244, 0.5)", border: "rgba(34, 197, 94, 0.5)" },
     };
 
     return {
@@ -970,94 +1198,113 @@ export function FloorPlan({
   }, []);
 
   // Gerer le mouvement de la souris sur le canvas pour le ghost
-  const handleCanvasMouseMove = useCallback((e: React.MouseEvent) => {
-    if (!containerRef.current) return;
+  const handleCanvasMouseMove = useCallback(
+    (e: React.MouseEvent) => {
+      if (!containerRef.current) return;
 
-    // Gérer le panning (Espace + drag)
-    if (isPanning) {
-      const deltaX = e.clientX - panStartRef.current.x;
-      const deltaY = e.clientY - panStartRef.current.y;
-      setPan({
-        x: panStartRef.current.panX + deltaX,
-        y: panStartRef.current.panY + deltaY,
-      });
-      return;
-    }
-
-    const rect = containerRef.current.getBoundingClientRect();
-    const mouseX = (e.clientX - rect.left - pan.x) / zoom;
-    const mouseY = (e.clientY - rect.top - pan.y) / zoom;
-
-    // Gerer le resize si actif
-    if (resizing) {
-      handleMouseMove(e);
-      return;
-    }
-
-    // Gerer le déplacement direct si actif
-    if (dragging) {
-      const rawX = mouseX - dragging.offsetX;
-      const rawY = mouseY - dragging.offsetY;
-
-      // Appliquer le snap si activé
-      const snapped = snapPositionIfEnabled(rawX, rawY, gridSize, snapEnabled);
-
-      if (dragging.type === "decor") {
-        const element = decorElements.find((el) => el.id === dragging.id);
-        if (!element) return;
-
-        // Limiter aux bordures
-        const newX = Math.max(0, Math.min(snapped.x, rect.width / zoom - element.width));
-        const newY = Math.max(0, Math.min(snapped.y, rect.height / zoom - element.height));
-
-        // Mettre à jour directement la position
-        const newElements = decorElements.map((el) =>
-          el.id === dragging.id ? { ...el, x: newX, y: newY } : el
-        );
-        setDecorElements(newElements);
-      } else if (dragging.type === "table") {
-        // Limiter aux bordures
-        const newX = Math.max(0, Math.min(snapped.x, rect.width / zoom - 80));
-        const newY = Math.max(0, Math.min(snapped.y, rect.height / zoom - 80));
-
-        setPositions((prev) => ({
-          ...prev,
-          [dragging.id]: { x: newX, y: newY },
-        }));
-      } else if (dragging.type === "zone") {
-        const zone = zones.find((z) => z.id === dragging.id);
-        if (!zone) return;
-
-        const newX = Math.max(0, Math.min(snapped.x, rect.width / zoom - zone.width));
-        const newY = Math.max(0, Math.min(snapped.y, rect.height / zoom - zone.height));
-
-        // Stocker la position locale pour le drag
-        setZonePositions((prev) => ({
-          ...prev,
-          [dragging.id]: {
-            x: newX,
-            y: newY,
-            width: prev[dragging.id]?.width ?? zone.width,
-            height: prev[dragging.id]?.height ?? zone.height,
-          },
-        }));
+      // Gérer le panning (Espace + drag)
+      if (isPanning) {
+        const deltaX = e.clientX - panStartRef.current.x;
+        const deltaY = e.clientY - panStartRef.current.y;
+        setPan({
+          x: panStartRef.current.panX + deltaX,
+          y: panStartRef.current.panY + deltaY,
+        });
+        return;
       }
-      return;
-    }
 
-    // Mettre a jour la position du ghost preview si un outil de creation est actif
-    if (isEditMode && activeTool !== "select") {
-      setMousePosition({ x: mouseX, y: mouseY });
-    }
+      const rect = containerRef.current.getBoundingClientRect();
+      const mouseX = (e.clientX - rect.left - pan.x) / zoom;
+      const mouseY = (e.clientY - rect.top - pan.y) / zoom;
 
-    // Détecter la proximité aux coins pour la rotation
-    if (isEditMode && activeTool === "select" && (selectedDecorId || editSelectedTableId)) {
-      const corner = detectCornerProximity(mouseX, mouseY);
-      setHoveredRotationCorner(corner);
-    } else {
-      setHoveredRotationCorner(null);
-    }
-  }, [isEditMode, activeTool, zoom, resizing, handleMouseMove, dragging, decorElements, setDecorElements, gridSize, snapEnabled, isPanning, pan, selectedDecorId, editSelectedTableId, detectCornerProximity]);
+      // Gerer le resize si actif
+      if (resizing) {
+        handleMouseMove(e);
+        return;
+      }
+
+      // Gerer le déplacement direct si actif
+      if (dragging) {
+        const rawX = mouseX - dragging.offsetX;
+        const rawY = mouseY - dragging.offsetY;
+
+        // Appliquer le snap si activé
+        const snapped = snapPositionIfEnabled(rawX, rawY, gridSize, snapEnabled);
+
+        if (dragging.type === "decor") {
+          const element = decorElements.find((el) => el.id === dragging.id);
+          if (!element) return;
+
+          // Limiter aux bordures
+          const newX = Math.max(0, Math.min(snapped.x, rect.width / zoom - element.width));
+          const newY = Math.max(0, Math.min(snapped.y, rect.height / zoom - element.height));
+
+          // Mettre à jour directement la position
+          const newElements = decorElements.map((el) =>
+            el.id === dragging.id ? { ...el, x: newX, y: newY } : el
+          );
+          setDecorElements(newElements);
+        } else if (dragging.type === "table") {
+          // Limiter aux bordures
+          const newX = Math.max(0, Math.min(snapped.x, rect.width / zoom - 80));
+          const newY = Math.max(0, Math.min(snapped.y, rect.height / zoom - 80));
+
+          setPositions((prev) => ({
+            ...prev,
+            [dragging.id]: { x: newX, y: newY },
+          }));
+        } else if (dragging.type === "zone") {
+          const zone = zones.find((z) => z.id === dragging.id);
+          if (!zone) return;
+
+          const newX = Math.max(0, Math.min(snapped.x, rect.width / zoom - zone.width));
+          const newY = Math.max(0, Math.min(snapped.y, rect.height / zoom - zone.height));
+
+          // Stocker la position locale pour le drag
+          setZonePositions((prev) => ({
+            ...prev,
+            [dragging.id]: {
+              x: newX,
+              y: newY,
+              width: prev[dragging.id]?.width ?? zone.width,
+              height: prev[dragging.id]?.height ?? zone.height,
+            },
+          }));
+        }
+        return;
+      }
+
+      // Mettre a jour la position du ghost preview si un outil de creation est actif
+      if (isEditMode && activeTool !== "select") {
+        setMousePosition({ x: mouseX, y: mouseY });
+      }
+
+      // Détecter la proximité aux coins pour la rotation
+      if (isEditMode && activeTool === "select" && (selectedDecorId || editSelectedTableId)) {
+        const corner = detectCornerProximity(mouseX, mouseY);
+        setHoveredRotationCorner(corner);
+      } else {
+        setHoveredRotationCorner(null);
+      }
+    },
+    [
+      isEditMode,
+      activeTool,
+      zoom,
+      resizing,
+      handleMouseMove,
+      dragging,
+      decorElements,
+      setDecorElements,
+      gridSize,
+      snapEnabled,
+      isPanning,
+      pan,
+      selectedDecorId,
+      editSelectedTableId,
+      detectCornerProximity,
+    ]
+  );
 
   // Reset mouse position quand on quitte le canvas
   const handleCanvasMouseLeave = useCallback(() => {
@@ -1121,7 +1368,8 @@ export function FloorPlan({
 
         <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
           {/* Undo/Redo controls (only in edit mode) */}
-          {isEditMode ? <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
+          {isEditMode ? (
+            <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
               <Tooltip content="Annuler (Ctrl+Z)">
                 <IconButton
                   size="2"
@@ -1131,7 +1379,7 @@ export function FloorPlan({
                   onClick={undo}
                   aria-label="Annuler"
                 >
-                  <Undo2 size={16} />
+                  <ArrowCounterClockwise size={16} />
                 </IconButton>
               </Tooltip>
               <Tooltip content="Refaire (Ctrl+Y)">
@@ -1143,11 +1391,16 @@ export function FloorPlan({
                   onClick={redo}
                   aria-label="Refaire"
                 >
-                  <Redo2 size={16} />
+                  <ArrowClockwise size={16} />
                 </IconButton>
               </Tooltip>
-              <Separator orientation="vertical" size="1" style={{ height: 24, marginLeft: 8, marginRight: 4 }} />
-            </div> : null}
+              <Separator
+                orientation="vertical"
+                size="1"
+                style={{ height: 24, marginLeft: 8, marginRight: 4 }}
+              />
+            </div>
+          ) : null}
 
           {/* Zoom controls */}
           <div
@@ -1183,7 +1436,7 @@ export function FloorPlan({
                 e.currentTarget.style.backgroundColor = "transparent";
               }}
             >
-              <ZoomOut size={16} />
+              <MagnifyingGlassMinus size={16} />
             </button>
             <span
               style={{
@@ -1220,16 +1473,54 @@ export function FloorPlan({
                 e.currentTarget.style.backgroundColor = "transparent";
               }}
             >
-              <ZoomIn size={16} />
+              <MagnifyingGlassPlus size={16} />
             </button>
           </div>
 
           {/* Edit mode toggle */}
           {isEditMode ? (
-            <div style={{ display: "flex", gap: 8 }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+              {/* Auto-save status indicator */}
+              <span
+                style={{
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: 5,
+                  fontSize: 12,
+                  fontWeight: 500,
+                  color:
+                    autoSaveStatus === "saving"
+                      ? "var(--accent-11)"
+                      : autoSaveStatus === "saved"
+                        ? "var(--green-11)"
+                        : autoSaveStatus === "error"
+                          ? "var(--red-11)"
+                          : "var(--gray-9)",
+                  transition: "color 0.2s",
+                }}
+              >
+                {autoSaveStatus === "saving" && (
+                  <>
+                    <SpinnerGap size={14} className="animate-spin" />
+                    Sauvegarde...
+                  </>
+                )}
+                {autoSaveStatus === "saved" && (
+                  <>
+                    <CloudCheck size={14} />
+                    Sauvegarde
+                  </>
+                )}
+                {autoSaveStatus === "error" && (
+                  <>
+                    <CloudSlash size={14} />
+                    Erreur
+                  </>
+                )}
+              </span>
+
               <button
-                onClick={handleCancelEdit}
-                disabled={isPending}
+                onClick={handleExitEditMode}
                 style={{
                   display: "flex",
                   alignItems: "center",
@@ -1244,32 +1535,18 @@ export function FloorPlan({
                   cursor: "pointer",
                 }}
               >
-                <X size={14} />
-                Annuler
-              </button>
-              <button
-                onClick={handleSavePositions}
-                disabled={!hasChanges || isPending}
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 6,
-                  padding: "8px 14px",
-                  borderRadius: 8,
-                  border: "none",
-                  backgroundColor: hasChanges ? "var(--accent-9)" : "var(--gray-a4)",
-                  color: hasChanges ? "white" : "var(--gray-9)",
-                  fontSize: 13,
-                  fontWeight: 600,
-                  cursor: hasChanges ? "pointer" : "not-allowed",
-                }}
-              >
-                <Save size={14} />
-                {isPending ? "Enregistrement..." : "Enregistrer"}
+                <SignOut size={14} />
+                Quitter l'edition
               </button>
             </div>
           ) : (
-            <Tooltip content={readOnly ? "Seuls les managers et administrateurs peuvent modifier le plan" : undefined}>
+            <Tooltip
+              content={
+                readOnly
+                  ? "Seuls les managers et administrateurs peuvent modifier le plan"
+                  : undefined
+              }
+            >
               <button
                 onClick={() => {
                   if (!readOnly) {
@@ -1293,7 +1570,7 @@ export function FloorPlan({
                   opacity: readOnly ? 0.6 : 1,
                 }}
               >
-                <Edit2 size={14} />
+                <PencilSimple size={14} />
                 Modifier le plan
               </button>
             </Tooltip>
@@ -1304,13 +1581,16 @@ export function FloorPlan({
       {/* Main content with toolbar */}
       <div style={{ display: "flex", flex: 1, minHeight: 0, overflow: "hidden" }}>
         {/* Left toolbar (only in edit mode) */}
-        {isEditMode ? <div style={{
-            padding: 12,
-            borderRight: "1px solid var(--gray-a5)",
-            overflowY: "auto",
-            overflowX: "hidden",
-            flexShrink: 0,
-          }}>
+        {isEditMode ? (
+          <div
+            style={{
+              padding: 12,
+              borderRight: "1px solid var(--gray-a5)",
+              overflowY: "auto",
+              overflowX: "hidden",
+              flexShrink: 0,
+            }}
+          >
             <FloorPlanToolbar
               activeTool={activeTool}
               onToolChange={setActiveTool}
@@ -1322,7 +1602,8 @@ export function FloorPlan({
               gridSize={gridSize}
               onGridSizeChange={setGridSize}
             />
-          </div> : null}
+          </div>
+        ) : null}
 
         {/* Floor plan canvas */}
         <div
@@ -1371,18 +1652,21 @@ export function FloorPlan({
             cursor: isPanning
               ? "grabbing"
               : isSpacePressed
-              ? "grab"
-              : dragging || resizing
-              ? "grabbing"
-              : hoveredRotationCorner
-              ? "alias"
-              : isEditMode && activeTool !== "select"
-              ? "crosshair"
-              : "default",
+                ? "grab"
+                : dragging || resizing
+                  ? "grabbing"
+                  : hoveredRotationCorner
+                    ? "alias"
+                    : isEditMode && isAltPressed
+                      ? "copy"
+                      : isEditMode && activeTool !== "select"
+                        ? "crosshair"
+                        : "default",
           }}
         >
           {/* Grid background infinie - visible uniquement si snap activé */}
-          {snapEnabled ? <div
+          {snapEnabled ? (
+            <div
               style={{
                 position: "absolute",
                 // Taille très large pour couvrir tout déplacement possible
@@ -1399,7 +1683,8 @@ export function FloorPlan({
                 transition: isPanning ? "none" : "opacity 0.2s",
                 pointerEvents: "none",
               }}
-            /> : null}
+            />
+          ) : null}
 
           <div
             style={{
@@ -1411,36 +1696,37 @@ export function FloorPlan({
               transition: isPanning ? "none" : "transform 0.1s ease-out",
             }}
           >
-
             {/* Ghost preview pour l'outil de creation actif */}
-            {isEditMode && activeTool !== "select" && mousePosition ? (() => {
-                const config = getGhostPreviewConfig(activeTool);
-                if (!config.size) return null;
+            {isEditMode && activeTool !== "select" && mousePosition
+              ? (() => {
+                  const config = getGhostPreviewConfig(activeTool);
+                  if (!config.size) return null;
 
-                return (
-                  <div
-                    style={{
-                      position: "absolute",
-                      left: mousePosition.x - config.size.width / 2,
-                      top: mousePosition.y - config.size.height / 2,
-                      width: config.size.width,
-                      height: config.size.height,
-                      backgroundColor: config.color?.bg || "rgba(249, 115, 22, 0.15)",
-                      border: `2px dashed ${config.color?.border || "rgba(249, 115, 22, 0.5)"}`,
-                      borderRadius: config.size.borderRadius,
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      pointerEvents: "none",
-                      opacity: 0.8,
-                      color: config.color?.border || "var(--accent-9)",
-                      zIndex: 1000,
-                    }}
-                  >
-                    {config.icon}
-                  </div>
-                );
-              })() : null}
+                  return (
+                    <div
+                      style={{
+                        position: "absolute",
+                        left: mousePosition.x - config.size.width / 2,
+                        top: mousePosition.y - config.size.height / 2,
+                        width: config.size.width,
+                        height: config.size.height,
+                        backgroundColor: config.color?.bg || "rgba(249, 115, 22, 0.15)",
+                        border: `2px dashed ${config.color?.border || "rgba(249, 115, 22, 0.5)"}`,
+                        borderRadius: config.size.borderRadius,
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        pointerEvents: "none",
+                        opacity: 0.8,
+                        color: config.color?.border || "var(--accent-9)",
+                        zIndex: 1000,
+                      }}
+                    >
+                      {config.icon}
+                    </div>
+                  );
+                })()
+              : null}
 
             {/* Zones (rendered first, behind everything) */}
             {zones.map((zone) => (
@@ -1515,7 +1801,10 @@ export function FloorPlan({
 
                       // Pour les murs droits et étagères, échange width/height
                       const isStraightWall = el.type === "wall" || el.type === "shelf";
-                      if (isStraightWall && (degrees === 90 || degrees === -90 || degrees === 270 || degrees === -270)) {
+                      if (
+                        isStraightWall &&
+                        (degrees === 90 || degrees === -90 || degrees === 270 || degrees === -270)
+                      ) {
                         return {
                           ...el,
                           rotation: newRotation,
@@ -1564,7 +1853,9 @@ export function FloorPlan({
                         }
                       : null
                   }
-                  isSelected={isEditMode ? editSelectedTableId === table.id : selectedTableId === table.id}
+                  isSelected={
+                    isEditMode ? editSelectedTableId === table.id : selectedTableId === table.id
+                  }
                   isEditMode={isEditMode}
                   isDragging={dragging?.type === "table" && dragging.id === table.id}
                   onClick={() => {
@@ -1620,83 +1911,93 @@ export function FloorPlan({
             })}
 
             {/* Poignées de rotation aux coins - uniquement pour les tables (les décors utilisent les poignées de resize) */}
-            {isEditMode && editSelectedTableId ? (() => {
-              const el = getSelectedElementCorners();
-              if (!el) return null;
+            {isEditMode && editSelectedTableId
+              ? (() => {
+                  const el = getSelectedElementCorners();
+                  if (!el) return null;
 
-              const corners = [
-                { key: "nw", cx: el.x - 8, cy: el.y - 8 },
-                { key: "ne", cx: el.x + el.width - 8, cy: el.y - 8 },
-                { key: "sw", cx: el.x - 8, cy: el.y + el.height - 8 },
-                { key: "se", cx: el.x + el.width - 8, cy: el.y + el.height - 8 },
-              ];
+                  const corners = [
+                    { key: "nw", cx: el.x - 8, cy: el.y - 8 },
+                    { key: "ne", cx: el.x + el.width - 8, cy: el.y - 8 },
+                    { key: "sw", cx: el.x - 8, cy: el.y + el.height - 8 },
+                    { key: "se", cx: el.x + el.width - 8, cy: el.y + el.height - 8 },
+                  ];
 
-              return corners.map(({ key, cx, cy }) => (
-                <div
-                  key={`rot-${key}`}
-                  onMouseDown={(e) => e.stopPropagation()}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    rotateTable(editSelectedTableId, 90);
-                  }}
-                  onContextMenu={(e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    rotateTable(editSelectedTableId, -90);
-                  }}
-                  title="Clic: +90° | Clic droit: -90°"
-                  style={{
-                    position: "absolute",
-                    left: cx,
-                    top: cy,
-                    width: 16,
-                    height: 16,
-                    borderRadius: "50%",
-                    backgroundColor: hoveredRotationCorner === key ? "var(--accent-9)" : "transparent",
-                    border: hoveredRotationCorner === key ? "2px solid white" : "2px solid transparent",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    cursor: "alias",
-                    zIndex: 100,
-                    transition: "background-color 0.12s, border-color 0.12s, box-shadow 0.12s, transform 0.12s",
-                    boxShadow: hoveredRotationCorner === key ? "0 2px 8px rgba(0,0,0,0.3)" : "none",
-                    transform: hoveredRotationCorner === key ? "scale(1.5)" : "scale(1)",
-                    pointerEvents: "auto",
-                  }}
-                >
-                  {hoveredRotationCorner === key && <RotateCw size={10} color="white" />}
-                </div>
-              ));
-            })() : null}
+                  return corners.map(({ key, cx, cy }) => (
+                    <div
+                      key={`rot-${key}`}
+                      onMouseDown={(e) => e.stopPropagation()}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        rotateTable(editSelectedTableId, 90);
+                      }}
+                      onContextMenu={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        rotateTable(editSelectedTableId, -90);
+                      }}
+                      title="Clic: +90° | Clic droit: -90°"
+                      style={{
+                        position: "absolute",
+                        left: cx,
+                        top: cy,
+                        width: 16,
+                        height: 16,
+                        borderRadius: "50%",
+                        backgroundColor:
+                          hoveredRotationCorner === key ? "var(--accent-9)" : "transparent",
+                        border:
+                          hoveredRotationCorner === key
+                            ? "2px solid white"
+                            : "2px solid transparent",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        cursor: "alias",
+                        zIndex: 100,
+                        transition:
+                          "background-color 0.12s, border-color 0.12s, box-shadow 0.12s, transform 0.12s",
+                        boxShadow:
+                          hoveredRotationCorner === key ? "0 2px 8px rgba(0,0,0,0.3)" : "none",
+                        transform: hoveredRotationCorner === key ? "scale(1.5)" : "scale(1)",
+                        pointerEvents: "auto",
+                      }}
+                    >
+                      {hoveredRotationCorner === key && <ArrowClockwise size={10} color="white" />}
+                    </div>
+                  ));
+                })()
+              : null}
 
             {/* Indicateur d'angle pour l'élément sélectionné */}
-            {isEditMode ? (() => {
-              const el = getSelectedElementCorners();
-              if (!el || el.rotation === 0) return null;
-              return (
-                <div
-                  style={{
-                    position: "absolute",
-                    left: el.x + el.width / 2,
-                    top: el.y - 22,
-                    transform: "translateX(-50%)",
-                    padding: "2px 6px",
-                    backgroundColor: "var(--gray-12)",
-                    color: "var(--gray-1)",
-                    fontSize: 10,
-                    fontWeight: 600,
-                    fontFamily: "var(--font-google-sans-code), ui-monospace, monospace",
-                    borderRadius: 4,
-                    boxShadow: "0 2px 6px rgba(0,0,0,0.2)",
-                    zIndex: 100,
-                    pointerEvents: "none",
-                  }}
-                >
-                  {el.rotation}°
-                </div>
-              );
-            })() : null}
+            {isEditMode
+              ? (() => {
+                  const el = getSelectedElementCorners();
+                  if (!el || el.rotation === 0) return null;
+                  return (
+                    <div
+                      style={{
+                        position: "absolute",
+                        left: el.x + el.width / 2,
+                        top: el.y - 22,
+                        transform: "translateX(-50%)",
+                        padding: "2px 6px",
+                        backgroundColor: "var(--gray-12)",
+                        color: "var(--gray-1)",
+                        fontSize: 10,
+                        fontWeight: 600,
+                        fontFamily: "var(--font-google-sans-code), ui-monospace, monospace",
+                        borderRadius: 4,
+                        boxShadow: "0 2px 6px rgba(0,0,0,0.2)",
+                        zIndex: 100,
+                        pointerEvents: "none",
+                      }}
+                    >
+                      {el.rotation}°
+                    </div>
+                  );
+                })()
+              : null}
 
             {/* Empty state */}
             {tables.length === 0 && decorElements.length === 0 && (
@@ -1712,7 +2013,7 @@ export function FloorPlan({
                 <span style={{ color: "var(--gray-9)", fontSize: 14 }}>
                   {isEditMode
                     ? "Cliquez sur le plan pour ajouter des éléments"
-                    : "Aucune table. Cliquez sur \"Modifier le plan\" pour commencer."}
+                    : 'Aucune table. Cliquez sur "Modifier le plan" pour commencer.'}
                 </span>
               </div>
             )}
@@ -1738,51 +2039,67 @@ export function FloorPlan({
             }}
           >
             <span style={{ display: "flex", alignItems: "center", gap: 4 }}>
-              <kbd style={{
-                padding: "2px 5px",
-                backgroundColor: "var(--gray-a3)",
-                borderRadius: 4,
-                fontSize: 10,
-                fontFamily: "var(--font-google-sans-code), ui-monospace, monospace",
-                border: "1px solid var(--gray-a5)",
-              }}>Espace</kbd>
+              <kbd
+                style={{
+                  padding: "2px 5px",
+                  backgroundColor: "var(--gray-a3)",
+                  borderRadius: 4,
+                  fontSize: 10,
+                  fontFamily: "var(--font-google-sans-code), ui-monospace, monospace",
+                  border: "1px solid var(--gray-a5)",
+                }}
+              >
+                Espace
+              </kbd>
               <span>+</span>
               <span>clic</span>
               <span style={{ color: "var(--gray-8)", marginLeft: 2 }}>déplacer</span>
             </span>
             <span style={{ color: "var(--gray-a6)" }}>|</span>
             <span style={{ display: "flex", alignItems: "center", gap: 4 }}>
-              <kbd style={{
-                padding: "2px 5px",
-                backgroundColor: "var(--gray-a3)",
-                borderRadius: 4,
-                fontSize: 10,
-                fontFamily: "var(--font-google-sans-code), ui-monospace, monospace",
-                border: "1px solid var(--gray-a5)",
-              }}>Alt</kbd>
+              <kbd
+                style={{
+                  padding: "2px 5px",
+                  backgroundColor: "var(--gray-a3)",
+                  borderRadius: 4,
+                  fontSize: 10,
+                  fontFamily: "var(--font-google-sans-code), ui-monospace, monospace",
+                  border: "1px solid var(--gray-a5)",
+                }}
+              >
+                Alt
+              </kbd>
               <span>+</span>
               <span>molette</span>
               <span style={{ color: "var(--gray-8)", marginLeft: 2 }}>zoom</span>
             </span>
             <span style={{ color: "var(--gray-a6)" }}>|</span>
             <span style={{ display: "flex", alignItems: "center", gap: 4 }}>
-              <kbd style={{
-                padding: "2px 5px",
-                backgroundColor: "var(--gray-a3)",
-                borderRadius: 4,
-                fontSize: 10,
-                fontFamily: "var(--font-google-sans-code), ui-monospace, monospace",
-                border: "1px solid var(--gray-a5)",
-              }}>Alt</kbd>
+              <kbd
+                style={{
+                  padding: "2px 5px",
+                  backgroundColor: "var(--gray-a3)",
+                  borderRadius: 4,
+                  fontSize: 10,
+                  fontFamily: "var(--font-google-sans-code), ui-monospace, monospace",
+                  border: "1px solid var(--gray-a5)",
+                }}
+              >
+                Alt
+              </kbd>
               <span>+</span>
-              <kbd style={{
-                padding: "2px 5px",
-                backgroundColor: "var(--gray-a3)",
-                borderRadius: 4,
-                fontSize: 10,
-                fontFamily: "var(--font-google-sans-code), ui-monospace, monospace",
-                border: "1px solid var(--gray-a5)",
-              }}>R</kbd>
+              <kbd
+                style={{
+                  padding: "2px 5px",
+                  backgroundColor: "var(--gray-a3)",
+                  borderRadius: 4,
+                  fontSize: 10,
+                  fontFamily: "var(--font-google-sans-code), ui-monospace, monospace",
+                  border: "1px solid var(--gray-a5)",
+                }}
+              >
+                R
+              </kbd>
               <span style={{ color: "var(--gray-8)", marginLeft: 2 }}>reset</span>
             </span>
           </div>
@@ -1790,7 +2107,8 @@ export function FloorPlan({
       </div>
 
       {/* Context menu */}
-      {contextMenu && isEditMode ? <ElementContextMenu
+      {contextMenu && isEditMode ? (
+        <ElementContextMenu
           x={contextMenu.x}
           y={contextMenu.y}
           onClose={closeContextMenu}
@@ -1803,10 +2121,12 @@ export function FloorPlan({
           onIncreaseHeight={() => resizeElement(0, 20)}
           onDuplicate={duplicateElement}
           onDelete={handleDeleteSelected}
-        /> : null}
+        />
+      ) : null}
 
       {/* Zone creation/edit dialog */}
-      {showZoneDialog ? <ZoneCreationDialog
+      {showZoneDialog ? (
+        <ZoneCreationDialog
           editingZone={editingZone}
           onClose={() => {
             setShowZoneDialog(false);
@@ -1846,7 +2166,8 @@ export function FloorPlan({
               }
             }
           }}
-        /> : null}
+        />
+      ) : null}
     </div>
   );
 }
@@ -1980,7 +2301,8 @@ function ZoneCreationDialog({
                       height: 36,
                       borderRadius: 8,
                       backgroundColor: c.value,
-                      border: couleur === c.value ? "3px solid var(--gray-12)" : "2px solid transparent",
+                      border:
+                        couleur === c.value ? "3px solid var(--gray-12)" : "2px solid transparent",
                       cursor: "pointer",
                       display: "flex",
                       alignItems: "center",
@@ -1995,7 +2317,14 @@ function ZoneCreationDialog({
                     }}
                   >
                     {couleur === c.value && (
-                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="3">
+                      <svg
+                        width="16"
+                        height="16"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="white"
+                        strokeWidth="3"
+                      >
                         <polyline points="20 6 9 17 4 12" />
                       </svg>
                     )}

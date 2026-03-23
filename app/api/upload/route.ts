@@ -1,9 +1,9 @@
-import type { NextRequest} from "next/server";
+import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
 import { writeFile, mkdir } from "fs/promises";
 import path from "path";
 import { randomUUID } from "crypto";
-import { getSession } from "@/lib/auth/session";
+import { getCurrentUser } from "@/lib/auth";
 import { sanitizeFolderName, isAllowedFileExtension } from "@/lib/utils/sanitize";
 
 // Types de fichiers autorises (whitelist MIME)
@@ -16,12 +16,9 @@ const ALLOWED_FOLDERS = ["produits", "categories", "etablissements", "avatars"];
 export async function POST(request: NextRequest) {
   try {
     // 1. Verification d'authentification
-    const session = await getSession();
-    if (!session) {
-      return NextResponse.json(
-        { success: false, error: "Non authentifie" },
-        { status: 401 }
-      );
+    const user = await getCurrentUser();
+    if (!user) {
+      return NextResponse.json({ success: false, error: "Non authentifie" }, { status: 401 });
     }
 
     const formData = await request.formData();
@@ -29,10 +26,7 @@ export async function POST(request: NextRequest) {
     const rawFolder = (formData.get("folder") as string) || "produits";
 
     if (!file) {
-      return NextResponse.json(
-        { success: false, error: "Aucun fichier fourni" },
-        { status: 400 }
-      );
+      return NextResponse.json({ success: false, error: "Aucun fichier fourni" }, { status: 400 });
     }
 
     // 2. Verification de la taille du fichier
@@ -62,10 +56,7 @@ export async function POST(request: NextRequest) {
     // 5. Sanitisation et whitelist du dossier cible
     const folder = sanitizeFolderName(rawFolder);
     if (!ALLOWED_FOLDERS.includes(folder)) {
-      return NextResponse.json(
-        { success: false, error: "Dossier non autorise" },
-        { status: 400 }
-      );
+      return NextResponse.json({ success: false, error: "Dossier non autorise" }, { status: 400 });
     }
 
     // 6. Generation d'un nom de fichier securise (aucun input utilisateur dans le nom)
@@ -81,10 +72,7 @@ export async function POST(request: NextRequest) {
     //    (defense en profondeur contre path traversal)
     const resolvedFilePath = path.resolve(filePath);
     if (!resolvedFilePath.startsWith(uploadsRoot)) {
-      return NextResponse.json(
-        { success: false, error: "Chemin invalide" },
-        { status: 400 }
-      );
+      return NextResponse.json({ success: false, error: "Chemin invalide" }, { status: 400 });
     }
 
     // 9. Creation du dossier et ecriture du fichier

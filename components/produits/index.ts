@@ -21,7 +21,5 @@ export {
   type SupplementOption,
   type SelectedSupplement,
 } from "./supplement-selector";
-export {
-  CompositeProductSection,
-  type CompositeComponent,
-} from "./composite-product-section";
+export { CompositeProductSection, type CompositeComponent } from "./composite-product-section";
+export { SeedDataPanel } from "./SeedDataPanel";

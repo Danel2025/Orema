@@ -10,7 +10,6 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
   Box,
-  Card,
   Flex,
   Text,
   TextField,
@@ -27,27 +26,31 @@ import {
 import {
   Printer,
   Plus,
-  Pencil,
-  Trash2,
-  Wifi,
+  PencilSimple,
+  Trash,
+  WifiHigh,
   Usb,
   Bluetooth,
-  Cable,
-  Save,
-  Loader2,
-  CheckCircle2,
-  AlertCircle,
-  TestTube,
+  Plug,
+  FloppyDisk,
+  CircleNotch,
+  CheckCircle,
+  WarningCircle,
+  Flask,
   X,
-  Zap,
-  Search,
+  Lightning,
+  MagnifyingGlass,
   Tag,
-  Unplug,
-  Link2,
-  MonitorSmartphone,
-} from "lucide-react";
+  LinkBreak,
+  Link,
+  DeviceMobile,
+  Desktop,
+  Globe,
+  Info,
+} from "@phosphor-icons/react";
 import { toast } from "sonner";
 import { useWebPrinter } from "@/hooks/useWebPrinter";
+import { printSystemTest } from "@/lib/print/system-print";
 import type { WebSerialPortInfo } from "@/lib/print/web-serial";
 import type { WebBluetoothDeviceInfo } from "@/lib/print/web-bluetooth";
 
@@ -86,21 +89,22 @@ interface Imprimante {
 
 interface PrinterSettingsProps {
   initialData: Imprimante[];
+  etablissementNom?: string;
 }
 
 // Icone de connexion selon le type
 const getConnexionIcon = (type: string) => {
   switch (type) {
     case "RESEAU":
-      return <Wifi size={14} />;
+      return <WifiHigh size={14} />;
     case "USB":
       return <Usb size={14} />;
     case "BLUETOOTH":
       return <Bluetooth size={14} />;
     case "SERIE":
-      return <Cable size={14} />;
+      return <Plug size={14} />;
     case "SYSTEME":
-      return <MonitorSmartphone size={14} />;
+      return <Desktop size={14} />;
     default:
       return null;
   }
@@ -120,7 +124,7 @@ const getTypeBadgeColor = (type: string): "violet" | "blue" | "purple" => {
   }
 };
 
-export function PrinterSettings({ initialData }: PrinterSettingsProps) {
+export function PrinterSettings({ initialData, etablissementNom }: PrinterSettingsProps) {
   const [imprimantes, setImprimantes] = useState<Imprimante[]>(initialData);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingPrinter, setEditingPrinter] = useState<Imprimante | null>(null);
@@ -132,7 +136,9 @@ export function PrinterSettings({ initialData }: PrinterSettingsProps) {
   const [connectionMessage, setConnectionMessage] = useState<string>("");
   const [isScanning, setIsScanning] = useState(false);
   const [scanResults, setScanResults] = useState<string[]>([]);
-  const [scanDetails, setScanDetails] = useState<{ ip: string; port: number; protocol: string }[]>([]);
+  const [scanDetails, setScanDetails] = useState<{ ip: string; port: number; protocol: string }[]>(
+    []
+  );
   const [showScanDialog, setShowScanDialog] = useState(false);
 
   // --- Web Printer (USB/Bluetooth via navigateur) ---
@@ -143,6 +149,24 @@ export function PrinterSettings({ initialData }: PrinterSettingsProps) {
   const [pendingBTDevice, setPendingBTDevice] = useState<WebBluetoothDeviceInfo | null>(null);
   const [isPairing, setIsPairing] = useState(false);
   const [serialBaudRate, setSerialBaudRate] = useState(9600);
+  const [isSystemTesting, setIsSystemTesting] = useState(false);
+
+  // Test d'impression systeme (window.print - fonctionne avec TOUTE imprimante)
+  const handleSystemTestPrint = async () => {
+    setIsSystemTesting(true);
+    try {
+      const result = await printSystemTest(etablissementNom || "Mon Etablissement");
+      if (result.success) {
+        toast.success("Page de test envoyee au systeme d'impression");
+      } else {
+        toast.error(result.error || "Erreur lors du test systeme");
+      }
+    } catch {
+      toast.error("Erreur lors du test d'impression systeme");
+    } finally {
+      setIsSystemTesting(false);
+    }
+  };
 
   // Detecter une imprimante USB via Web Serial API
   const handleDetectUSB = async (printerId: string) => {
@@ -155,9 +179,7 @@ export function PrinterSettings({ initialData }: PrinterSettingsProps) {
         setShowPairDialog(true);
       }
     } catch (error) {
-      toast.error(
-        error instanceof Error ? error.message : "Erreur detection USB"
-      );
+      toast.error(error instanceof Error ? error.message : "Erreur detection USB");
     }
   };
 
@@ -172,9 +194,7 @@ export function PrinterSettings({ initialData }: PrinterSettingsProps) {
         setShowPairDialog(true);
       }
     } catch (error) {
-      toast.error(
-        error instanceof Error ? error.message : "Erreur detection Bluetooth"
-      );
+      toast.error(error instanceof Error ? error.message : "Erreur detection Bluetooth");
     }
   };
 
@@ -195,9 +215,7 @@ export function PrinterSettings({ initialData }: PrinterSettingsProps) {
       }
       setShowPairDialog(false);
     } catch (error) {
-      toast.error(
-        error instanceof Error ? error.message : "Erreur d'appairage"
-      );
+      toast.error(error instanceof Error ? error.message : "Erreur d'appairage");
     } finally {
       setIsPairing(false);
     }
@@ -222,9 +240,7 @@ export function PrinterSettings({ initialData }: PrinterSettingsProps) {
 
   // Connecter/deconnecter via Web APIs
   const handleWebConnect = async (printerId: string) => {
-    const managed = webPrinter.managedPrinters.find(
-      (p) => p.printerId === printerId
-    );
+    const managed = webPrinter.managedPrinters.find((p) => p.printerId === printerId);
     if (managed?.connected) {
       await webPrinter.disconnect(printerId);
       toast.info("Imprimante deconnectee");
@@ -256,13 +272,12 @@ export function PrinterSettings({ initialData }: PrinterSettingsProps) {
     watch,
     setValue,
     getValues,
-   
   } = useForm<ImprimanteFormData>({
     resolver: zodResolver(imprimanteSchema) as any,
     defaultValues: {
       nom: "",
       type: "TICKET",
-      typeConnexion: "RESEAU",
+      typeConnexion: "SYSTEME",
       adresseIp: "",
       port: 9100,
       pathUsb: "",
@@ -280,7 +295,7 @@ export function PrinterSettings({ initialData }: PrinterSettingsProps) {
     reset({
       nom: "",
       type: "TICKET",
-      typeConnexion: "RESEAU",
+      typeConnexion: "SYSTEME",
       adresseIp: "",
       port: 9100,
       pathUsb: "",
@@ -405,7 +420,12 @@ export function PrinterSettings({ initialData }: PrinterSettingsProps) {
           id: rawData.id as string,
           nom: rawData.nom as string,
           type: rawData.type as "TICKET" | "CUISINE" | "BAR",
-          typeConnexion: rawData.type_connexion as "USB" | "RESEAU" | "SERIE" | "BLUETOOTH" | "SYSTEME",
+          typeConnexion: rawData.type_connexion as
+            | "USB"
+            | "RESEAU"
+            | "SERIE"
+            | "BLUETOOTH"
+            | "SYSTEME",
           adresseIp: rawData.adresse_ip as string | null,
           port: rawData.port as number | null,
           pathUsb: rawData.path_usb as string | null,
@@ -415,9 +435,7 @@ export function PrinterSettings({ initialData }: PrinterSettingsProps) {
         };
 
         if (editingPrinter) {
-          setImprimantes((prev) =>
-            prev.map((p) => (p.id === editingPrinter.id ? newPrinter : p))
-          );
+          setImprimantes((prev) => prev.map((p) => (p.id === editingPrinter.id ? newPrinter : p)));
           toast.success("Imprimante modifiée avec succès");
         } else {
           setImprimantes((prev) => [...prev, newPrinter]);
@@ -465,9 +483,7 @@ export function PrinterSettings({ initialData }: PrinterSettingsProps) {
         setImprimantes((prev) =>
           prev.map((p) => (p.id === id ? { ...p, actif: result.data!.actif } : p))
         );
-        toast.success(
-          result.data.actif ? "Imprimante activée" : "Imprimante désactivée"
-        );
+        toast.success(result.data.actif ? "Imprimante activée" : "Imprimante désactivée");
       } else {
         toast.error(result.error || "Erreur lors du changement d'état");
       }
@@ -480,6 +496,17 @@ export function PrinterSettings({ initialData }: PrinterSettingsProps) {
     setIsTesting(printer.id);
 
     try {
+      // Pour les imprimantes SYSTEME, utiliser window.print() directement
+      if (printer.typeConnexion === "SYSTEME") {
+        const result = await printSystemTest(printer.nom);
+        if (result.success) {
+          toast.success(`Test d'impression systeme envoyé pour "${printer.nom}"`);
+        } else {
+          toast.error(result.error || "Erreur lors du test d'impression systeme");
+        }
+        return;
+      }
+
       const response = await fetch("/api/print", {
         method: "POST",
         headers: {
@@ -507,26 +534,275 @@ export function PrinterSettings({ initialData }: PrinterSettingsProps) {
 
   return (
     <Flex direction="column" gap="5">
+      {/* ========== IMPRIMANTE SYSTEME UNIVERSELLE ========== */}
+      <Box
+        p="4"
+        role="region"
+        aria-label="Impression universelle"
+        style={{
+          background: "linear-gradient(135deg, var(--green-a2), var(--blue-a2))",
+          border: "1px solid var(--green-a6)",
+          borderRadius: 12,
+        }}
+      >
+        <Flex direction="column" gap="3">
+          <Flex align="center" gap="3">
+            <Box
+              p="2"
+              style={{
+                backgroundColor: "var(--green-a3)",
+                borderRadius: 10,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+              }}
+            >
+              <Globe size={24} weight="duotone" style={{ color: "var(--green-11)" }} />
+            </Box>
+            <Flex direction="column" gap="0">
+              <Flex align="center" gap="2">
+                <Text size="3" weight="bold">
+                  Imprimer avec n'importe quelle imprimante
+                </Text>
+                <Badge color="green" size="1" variant="soft">
+                  <CheckCircle size={12} weight="fill" aria-hidden="true" /> Aucune configuration requise
+                </Badge>
+              </Flex>
+              <Text size="2" color="gray">
+                Compatible avec <strong>toutes les imprimantes</strong> deja installees sur votre
+                ordinateur (Canon, HP, Epson, Brother, et toutes les autres)
+              </Text>
+            </Flex>
+          </Flex>
+
+          <Flex
+            p="3"
+            gap="3"
+            align="center"
+            justify="between"
+            wrap="wrap"
+            style={{
+              backgroundColor: "var(--color-background)",
+              borderRadius: 8,
+              border: "1px solid var(--gray-a4)",
+            }}
+          >
+            <Flex direction="column" gap="1">
+              <Flex align="center" gap="2">
+                <Desktop size={16} style={{ color: "var(--green-11)" }} />
+                <Text size="2" weight="medium">
+                  Fonctionne avec n'importe quelle imprimante installee
+                </Text>
+              </Flex>
+              <Text size="1" color="gray">
+                Jet d'encre, laser, thermique — aucune configuration requise. Le navigateur affichera le
+                dialogue d'impression pour choisir votre imprimante.
+              </Text>
+            </Flex>
+            <Button
+              size="3"
+              variant="soft"
+              color="green"
+              onClick={handleSystemTestPrint}
+              disabled={isSystemTesting}
+            >
+              {isSystemTesting ? (
+                <CircleNotch size={16} className="animate-spin" />
+              ) : (
+                <Printer size={16} />
+              )}
+              Tester l'impression
+            </Button>
+          </Flex>
+
+          <Callout.Root color="blue" size="1">
+            <Callout.Icon>
+              <Info size={16} weight="duotone" />
+            </Callout.Icon>
+            <Callout.Text>
+              <strong>Astuce :</strong> Cette methode ouvre la fenetre d'impression de votre
+              navigateur. Pour les imprimantes de tickets de caisse, vous pouvez configurer une
+              impression directe ci-dessous (plus rapide, sans fenetre).
+            </Callout.Text>
+          </Callout.Root>
+        </Flex>
+      </Box>
+
+      {/* ========== DIAGNOSTIC CAPACITES NAVIGATEUR ========== */}
+      <Box
+        p="3"
+        role="region"
+        aria-label="Capacites du navigateur"
+        style={{
+          border: "1px solid var(--gray-a5)",
+          borderRadius: 8,
+          backgroundColor: "var(--gray-a2)",
+        }}
+      >
+        <Flex direction="column" gap="3">
+          <Flex align="center" gap="2">
+            <Info size={18} weight="duotone" style={{ color: "var(--blue-11)" }} />
+            <Text size="2" weight="bold">
+              Capacites de detection de votre navigateur
+            </Text>
+          </Flex>
+
+          <Flex gap="3" wrap="wrap">
+            {/* Impression systeme */}
+            <Flex
+              align="center"
+              gap="2"
+              p="2"
+              style={{
+                backgroundColor: "var(--green-a3)",
+                borderRadius: 6,
+                border: "1px solid var(--green-a5)",
+              }}
+            >
+              <CheckCircle size={16} weight="fill" style={{ color: "var(--green-11)" }} />
+              <Flex direction="column" gap="0">
+                <Text size="1" weight="bold" style={{ color: "var(--green-11)" }}>
+                  Impression systeme
+                </Text>
+                <Text size="1" color="gray">
+                  Toutes imprimantes (Canon, HP, etc.)
+                </Text>
+              </Flex>
+            </Flex>
+
+            {/* Web Serial */}
+            <Flex
+              align="center"
+              gap="2"
+              p="2"
+              style={{
+                backgroundColor: webPrinter.capabilities.webSerial
+                  ? "var(--green-a3)"
+                  : "var(--red-a3)",
+                borderRadius: 6,
+                border: `1px solid ${webPrinter.capabilities.webSerial ? "var(--green-a5)" : "var(--red-a5)"}`,
+              }}
+            >
+              {webPrinter.capabilities.webSerial ? (
+                <CheckCircle size={16} weight="fill" style={{ color: "var(--green-11)" }} />
+              ) : (
+                <WarningCircle size={16} weight="fill" style={{ color: "var(--red-11)" }} />
+              )}
+              <Flex direction="column" gap="0">
+                <Text
+                  size="1"
+                  weight="bold"
+                  style={{
+                    color: webPrinter.capabilities.webSerial
+                      ? "var(--green-11)"
+                      : "var(--red-11)",
+                  }}
+                >
+                  USB (Web Serial)
+                </Text>
+                <Text size="1" color="gray">
+                  {webPrinter.capabilities.webSerial
+                    ? "Imprimantes thermiques USB"
+                    : "Chrome/Edge requis"}
+                </Text>
+              </Flex>
+            </Flex>
+
+            {/* Web Bluetooth */}
+            <Flex
+              align="center"
+              gap="2"
+              p="2"
+              style={{
+                backgroundColor: webPrinter.capabilities.webBluetooth
+                  ? "var(--green-a3)"
+                  : "var(--red-a3)",
+                borderRadius: 6,
+                border: `1px solid ${webPrinter.capabilities.webBluetooth ? "var(--green-a5)" : "var(--red-a5)"}`,
+              }}
+            >
+              {webPrinter.capabilities.webBluetooth ? (
+                <CheckCircle size={16} weight="fill" style={{ color: "var(--green-11)" }} />
+              ) : (
+                <WarningCircle size={16} weight="fill" style={{ color: "var(--red-11)" }} />
+              )}
+              <Flex direction="column" gap="0">
+                <Text
+                  size="1"
+                  weight="bold"
+                  style={{
+                    color: webPrinter.capabilities.webBluetooth
+                      ? "var(--green-11)"
+                      : "var(--red-11)",
+                  }}
+                >
+                  Bluetooth
+                </Text>
+                <Text size="1" color="gray">
+                  {webPrinter.capabilities.webBluetooth
+                    ? "Imprimantes BLE"
+                    : "Chrome/Edge + BT requis"}
+                </Text>
+              </Flex>
+            </Flex>
+
+            {/* Reseau */}
+            <Flex
+              align="center"
+              gap="2"
+              p="2"
+              style={{
+                backgroundColor: "var(--green-a3)",
+                borderRadius: 6,
+                border: "1px solid var(--green-a5)",
+              }}
+            >
+              <CheckCircle size={16} weight="fill" style={{ color: "var(--green-11)" }} />
+              <Flex direction="column" gap="0">
+                <Text size="1" weight="bold" style={{ color: "var(--green-11)" }}>
+                  Reseau (WiFi/IP)
+                </Text>
+                <Text size="1" color="gray">
+                  Imprimantes reseau
+                </Text>
+              </Flex>
+            </Flex>
+          </Flex>
+
+          <Callout.Root color="amber" size="1">
+            <Callout.Icon>
+              <WarningCircle size={14} />
+            </Callout.Icon>
+            <Callout.Text size="1">
+              <strong>Important :</strong> Les navigateurs web ne peuvent pas lister les
+              imprimantes installees sur votre systeme (limitation de securite). Pour les
+              imprimantes classiques (Canon, HP, Brother...), utilisez le type{" "}
+              <strong>&quot;Systeme&quot;</strong> qui ouvre le dialogue d&apos;impression standard.
+              La detection USB/Bluetooth ne fonctionne qu&apos;avec les imprimantes thermiques
+              de caisse compatibles ESC/POS.
+            </Callout.Text>
+          </Callout.Root>
+        </Flex>
+      </Box>
+
       {/* En-tête */}
       <Flex justify="between" align="center" wrap="wrap" gap="3">
         <Flex direction="column" gap="1">
           <Text size="4" weight="bold">
-            Imprimantes configurées
+            Imprimantes configurees
           </Text>
           <Text size="2" color="gray">
-            {imprimantes.length} imprimante{imprimantes.length > 1 ? "s" : ""} configurée{imprimantes.length > 1 ? "s" : ""}
+            {imprimantes.length} imprimante{imprimantes.length > 1 ? "s" : ""} configuree
+            {imprimantes.length > 1 ? "s" : ""}
           </Text>
         </Flex>
         <Flex gap="2" wrap="wrap">
           <Button size="3" variant="soft" onClick={() => handleScanNetwork()} disabled={isScanning}>
-            {isScanning ? (
-              <Loader2 size={16} className="animate-spin" />
-            ) : (
-              <Wifi size={16} />
-            )}
+            {isScanning ? <CircleNotch size={16} className="animate-spin" /> : <WifiHigh size={16} />}
             Reseau
           </Button>
-          {webPrinter.capabilities.webSerial ? <Tooltip content="Detecter une imprimante USB connectee a cet ordinateur">
+          {webPrinter.capabilities.webSerial ? (
+            <Tooltip content="Detecter une imprimante USB connectee a cet ordinateur">
               <Button
                 size="3"
                 variant="soft"
@@ -541,19 +817,17 @@ export function PrinterSettings({ initialData }: PrinterSettingsProps) {
                       setShowPairDialog(true);
                     }
                   } catch (error) {
-                    toast.error(
-                      error instanceof Error
-                        ? error.message
-                        : "Erreur detection USB"
-                    );
+                    toast.error(error instanceof Error ? error.message : "Erreur detection USB");
                   }
                 }}
               >
                 <Usb size={16} />
                 USB
               </Button>
-            </Tooltip> : null}
-          {webPrinter.capabilities.webBluetooth ? <Tooltip content="Detecter une imprimante Bluetooth a proximite">
+            </Tooltip>
+          ) : null}
+          {webPrinter.capabilities.webBluetooth ? (
+            <Tooltip content="Detecter une imprimante Bluetooth a proximite">
               <Button
                 size="3"
                 variant="soft"
@@ -569,9 +843,7 @@ export function PrinterSettings({ initialData }: PrinterSettingsProps) {
                     }
                   } catch (error) {
                     toast.error(
-                      error instanceof Error
-                        ? error.message
-                        : "Erreur detection Bluetooth"
+                      error instanceof Error ? error.message : "Erreur detection Bluetooth"
                     );
                   }
                 }}
@@ -579,7 +851,8 @@ export function PrinterSettings({ initialData }: PrinterSettingsProps) {
                 <Bluetooth size={16} />
                 Bluetooth
               </Button>
-            </Tooltip> : null}
+            </Tooltip>
+          ) : null}
           <Button size="3" onClick={openCreateDialog}>
             <Plus size={16} />
             Ajouter
@@ -589,14 +862,8 @@ export function PrinterSettings({ initialData }: PrinterSettingsProps) {
 
       {/* Liste des imprimantes */}
       {imprimantes.length === 0 ? (
-        <Card size="3">
-          <Flex
-            direction="column"
-            align="center"
-            justify="center"
-            gap="3"
-            py="6"
-          >
+        <Box style={{ border: "1px solid var(--gray-a6)", borderRadius: 8 }} p="4">
+          <Flex direction="column" align="center" justify="center" gap="3" py="6">
             <Printer size={48} className="text-gray-400" />
             <Text size="3" color="gray">
               Aucune imprimante configurée
@@ -606,7 +873,7 @@ export function PrinterSettings({ initialData }: PrinterSettingsProps) {
             </Text>
             <Flex gap="2">
               <Button size="2" variant="soft" onClick={() => handleScanNetwork()}>
-                <Search size={14} />
+                <MagnifyingGlass size={14} />
                 Detecter automatiquement
               </Button>
               <Button size="2" onClick={openCreateDialog}>
@@ -615,9 +882,9 @@ export function PrinterSettings({ initialData }: PrinterSettingsProps) {
               </Button>
             </Flex>
           </Flex>
-        </Card>
+        </Box>
       ) : (
-        <Card size="2">
+        <Box style={{ border: "1px solid var(--gray-a6)", borderRadius: 8 }} p="4">
           <Table.Root>
             <Table.Header>
               <Table.Row>
@@ -638,7 +905,9 @@ export function PrinterSettings({ initialData }: PrinterSettingsProps) {
                       <Printer size={16} />
                       <Flex direction="column">
                         <Text weight="medium">{printer.nom}</Text>
-                        <Text size="1" color="gray">{printer.largeurPapier}mm</Text>
+                        <Text size="1" color="gray">
+                          {printer.largeurPapier}mm
+                        </Text>
                       </Flex>
                     </Flex>
                   </Table.RowHeaderCell>
@@ -654,10 +923,10 @@ export function PrinterSettings({ initialData }: PrinterSettingsProps) {
                         {printer.typeConnexion === "RESEAU"
                           ? `${printer.adresseIp}:${printer.port}`
                           : printer.typeConnexion === "USB"
-                          ? printer.pathUsb
-                          : printer.typeConnexion === "SYSTEME"
-                          ? "Via systeme"
-                          : printer.typeConnexion}
+                            ? printer.pathUsb
+                            : printer.typeConnexion === "SYSTEME"
+                              ? "Via systeme"
+                              : printer.typeConnexion}
                       </Text>
                     </Flex>
                   </Table.Cell>
@@ -681,7 +950,9 @@ export function PrinterSettings({ initialData }: PrinterSettingsProps) {
                         )}
                       </Flex>
                     ) : (
-                      <Text size="1" color="gray">—</Text>
+                      <Text size="1" color="gray">
+                        —
+                      </Text>
                     )}
                   </Table.Cell>
                   <Table.Cell>
@@ -705,9 +976,13 @@ export function PrinterSettings({ initialData }: PrinterSettingsProps) {
                                   variant="soft"
                                   color={managed.connected ? "green" : "orange"}
                                   onClick={() => handleWebConnect(printer.id)}
-                                  title={managed.connected ? "Connecte - Cliquer pour deconnecter" : "Deconnecte - Cliquer pour connecter"}
+                                  title={
+                                    managed.connected
+                                      ? "Connecte - Cliquer pour deconnecter"
+                                      : "Deconnecte - Cliquer pour connecter"
+                                  }
                                 >
-                                  {managed.connected ? <Link2 size={14} /> : <Unplug size={14} />}
+                                  {managed.connected ? <Link size={14} /> : <LinkBreak size={14} />}
                                 </IconButton>
                               </Tooltip>
                               <Tooltip content="Tester via Web">
@@ -719,9 +994,9 @@ export function PrinterSettings({ initialData }: PrinterSettingsProps) {
                                   disabled={isTesting === printer.id}
                                 >
                                   {isTesting === printer.id ? (
-                                    <Loader2 size={14} className="animate-spin" />
+                                    <CircleNotch size={14} className="animate-spin" />
                                   ) : (
-                                    <Zap size={14} />
+                                    <Lightning size={14} />
                                   )}
                                 </IconButton>
                               </Tooltip>
@@ -784,9 +1059,9 @@ export function PrinterSettings({ initialData }: PrinterSettingsProps) {
                         title="Imprimer une page de test"
                       >
                         {isTesting === printer.id ? (
-                          <Loader2 size={14} className="animate-spin" />
+                          <CircleNotch size={14} className="animate-spin" />
                         ) : (
-                          <TestTube size={14} />
+                          <Flask size={14} />
                         )}
                       </IconButton>
                       <IconButton
@@ -795,7 +1070,7 @@ export function PrinterSettings({ initialData }: PrinterSettingsProps) {
                         onClick={() => openEditDialog(printer)}
                         title="Modifier"
                       >
-                        <Pencil size={14} />
+                        <PencilSimple size={14} />
                       </IconButton>
                       <IconButton
                         size="1"
@@ -806,9 +1081,9 @@ export function PrinterSettings({ initialData }: PrinterSettingsProps) {
                         title="Supprimer"
                       >
                         {isDeleting === printer.id ? (
-                          <Loader2 size={14} className="animate-spin" />
+                          <CircleNotch size={14} className="animate-spin" />
                         ) : (
-                          <Trash2 size={14} />
+                          <Trash size={14} />
                         )}
                       </IconButton>
                     </Flex>
@@ -817,13 +1092,13 @@ export function PrinterSettings({ initialData }: PrinterSettingsProps) {
               ))}
             </Table.Body>
           </Table.Root>
-        </Card>
+        </Box>
       )}
 
       {/* Information categories */}
       <Callout.Root color="violet" size="1">
         <Callout.Icon>
-          <Tag size={16} />
+          <Tag size={16} weight="duotone" />
         </Callout.Icon>
         <Callout.Text>
           Pour associer des catégories à une imprimante, modifiez la catégorie dans
@@ -832,10 +1107,10 @@ export function PrinterSettings({ initialData }: PrinterSettingsProps) {
       </Callout.Root>
 
       {/* Informations sur les capacites du navigateur */}
-      <Card size="1">
+      <Box style={{ border: "1px solid var(--gray-a6)", borderRadius: 8 }} p="4">
         <Flex direction="column" gap="2">
           <Flex align="center" gap="2">
-            <MonitorSmartphone size={16} />
+            <DeviceMobile size={16} />
             <Text size="2" weight="medium">
               Capacites du navigateur
             </Text>
@@ -847,8 +1122,7 @@ export function PrinterSettings({ initialData }: PrinterSettingsProps) {
               variant={webPrinter.capabilities.webSerial ? "soft" : "outline"}
             >
               <Usb size={12} />
-              USB (Web Serial){" "}
-              {webPrinter.capabilities.webSerial ? "OK" : "Non supporte"}
+              USB (Web Serial) {webPrinter.capabilities.webSerial ? "OK" : "Non supporte"}
             </Badge>
             <Badge
               size="1"
@@ -856,18 +1130,17 @@ export function PrinterSettings({ initialData }: PrinterSettingsProps) {
               variant={webPrinter.capabilities.webBluetooth ? "soft" : "outline"}
             >
               <Bluetooth size={12} />
-              Bluetooth{" "}
-              {webPrinter.capabilities.webBluetooth ? "OK" : "Non supporte"}
+              Bluetooth {webPrinter.capabilities.webBluetooth ? "OK" : "Non supporte"}
             </Badge>
             <Badge size="1" color="green" variant="soft">
-              <Wifi size={12} />
+              <WifiHigh size={12} />
               Reseau OK
             </Badge>
           </Flex>
           {!webPrinter.capabilities.webSerial && !webPrinter.capabilities.webBluetooth && (
             <Text size="1" color="gray">
-              Pour l'impression USB/Bluetooth directe, utilisez Chrome 89+ ou Edge 89+.
-              Activez les flags chrome://flags/#enable-experimental-web-platform-features si necessaire.
+              Pour l'impression USB/Bluetooth directe, utilisez Chrome 89+ ou Edge 89+. Activez les
+              flags chrome://flags/#enable-experimental-web-platform-features si necessaire.
             </Text>
           )}
           {webPrinter.managedPrinters.length > 0 && (
@@ -882,9 +1155,7 @@ export function PrinterSettings({ initialData }: PrinterSettingsProps) {
                       width: 8,
                       height: 8,
                       borderRadius: "50%",
-                      backgroundColor: mp.connected
-                        ? "var(--green-9)"
-                        : "var(--gray-8)",
+                      backgroundColor: mp.connected ? "var(--green-9)" : "var(--gray-8)",
                     }}
                   />
                   <Text size="1">
@@ -896,7 +1167,7 @@ export function PrinterSettings({ initialData }: PrinterSettingsProps) {
             </Flex>
           )}
         </Flex>
-      </Card>
+      </Box>
 
       {/* Dialog de création/édition */}
       <Dialog.Root open={isDialogOpen} onOpenChange={setIsDialogOpen}>
@@ -922,9 +1193,11 @@ export function PrinterSettings({ initialData }: PrinterSettingsProps) {
                   placeholder="Ex: Imprimante Caisse 1"
                   size="3"
                 />
-                {errors.nom ? <Text size="1" color="red" mt="1">
+                {errors.nom ? (
+                  <Text size="1" color="red" mt="1">
                     {errors.nom.message}
-                  </Text> : null}
+                  </Text>
+                ) : null}
               </Box>
 
               {/* Type et Connexion */}
@@ -940,7 +1213,7 @@ export function PrinterSettings({ initialData }: PrinterSettingsProps) {
                     }
                   >
                     <Select.Trigger />
-                    <Select.Content>
+                    <Select.Content position="popper">
                       {typeImprimanteOptions.map((option) => (
                         <Select.Item key={option.value} value={option.value}>
                           {option.label}
@@ -955,15 +1228,18 @@ export function PrinterSettings({ initialData }: PrinterSettingsProps) {
                     Connexion *
                   </Text>
                   <Select.Root
-                    defaultValue={editingPrinter?.typeConnexion || "RESEAU"}
+                    defaultValue={editingPrinter?.typeConnexion || "SYSTEME"}
                     onValueChange={(value) => {
-                      setValue("typeConnexion", value as "USB" | "RESEAU" | "SERIE" | "BLUETOOTH" | "SYSTEME");
+                      setValue(
+                        "typeConnexion",
+                        value as "USB" | "RESEAU" | "SERIE" | "BLUETOOTH" | "SYSTEME"
+                      );
                       setConnectionStatus("idle");
                       setConnectionMessage("");
                     }}
                   >
                     <Select.Trigger />
-                    <Select.Content>
+                    <Select.Content position="popper">
                       {typeConnexionOptions.map((option) => (
                         <Select.Item key={option.value} value={option.value}>
                           {option.label}
@@ -986,9 +1262,11 @@ export function PrinterSettings({ initialData }: PrinterSettingsProps) {
                       placeholder="192.168.1.100"
                       size="3"
                     />
-                    {errors.adresseIp ? <Text size="1" color="red" mt="1">
+                    {errors.adresseIp ? (
+                      <Text size="1" color="red" mt="1">
                         {errors.adresseIp.message}
-                      </Text> : null}
+                      </Text>
+                    ) : null}
                   </Box>
                   <Box style={{ flex: 1 }}>
                     <Text as="label" size="2" weight="medium" mb="1">
@@ -1014,9 +1292,11 @@ export function PrinterSettings({ initialData }: PrinterSettingsProps) {
                     placeholder="/dev/usb/lp0 ou COM3"
                     size="3"
                   />
-                  {errors.pathUsb ? <Text size="1" color="red" mt="1">
+                  {errors.pathUsb ? (
+                    <Text size="1" color="red" mt="1">
                       {errors.pathUsb.message}
-                    </Text> : null}
+                    </Text>
+                  ) : null}
                   <Text size="1" color="gray" mt="1">
                     Sous Linux: /dev/usb/lp0 | Sous Windows: COM3, COM4, etc.
                   </Text>
@@ -1030,9 +1310,9 @@ export function PrinterSettings({ initialData }: PrinterSettingsProps) {
                 >
                   <Callout.Icon>
                     {webPrinter.capabilities.webSerial ? (
-                      <CheckCircle2 size={16} />
+                      <CheckCircle size={16} />
                     ) : (
-                      <AlertCircle size={16} />
+                      <WarningCircle size={16} />
                     )}
                   </Callout.Icon>
                   <Callout.Text>
@@ -1049,9 +1329,9 @@ export function PrinterSettings({ initialData }: PrinterSettingsProps) {
                 >
                   <Callout.Icon>
                     {webPrinter.capabilities.webBluetooth ? (
-                      <CheckCircle2 size={16} />
+                      <CheckCircle size={16} />
                     ) : (
-                      <AlertCircle size={16} />
+                      <WarningCircle size={16} />
                     )}
                   </Callout.Icon>
                   <Callout.Text>
@@ -1063,16 +1343,29 @@ export function PrinterSettings({ initialData }: PrinterSettingsProps) {
               )}
 
               {typeConnexion === "SYSTEME" && (
-                <Callout.Root color="green" size="1">
-                  <Callout.Icon>
-                    <CheckCircle2 size={16} />
-                  </Callout.Icon>
-                  <Callout.Text>
-                    Utilise les imprimantes deja installees sur cet ordinateur.
-                    Lors de l'impression, le dialogue systeme s'ouvrira pour choisir l'imprimante.
-                    Aucune configuration supplementaire necessaire.
-                  </Callout.Text>
-                </Callout.Root>
+                <Box>
+                  <Callout.Root color="green" size="1">
+                    <Callout.Icon>
+                      <CheckCircle size={16} />
+                    </Callout.Icon>
+                    <Callout.Text>
+                      <strong>Recommande</strong> — Utilise les imprimantes deja installees sur cet
+                      ordinateur (Canon, HP, Epson, Brother, imprimantes thermiques...). Le dialogue
+                      d&apos;impression du navigateur s&apos;ouvrira pour choisir l&apos;imprimante. Aucune
+                      configuration supplementaire necessaire.
+                    </Callout.Text>
+                  </Callout.Root>
+                  <Flex direction="column" gap="1" mt="2">
+                    <Text size="1" color="gray">
+                      Compatible avec : jet d&apos;encre, laser, thermique, WiFi, USB, Bluetooth —
+                      toute imprimante visible dans les parametres de votre systeme.
+                    </Text>
+                    <Text size="1" color="gray">
+                      <strong>Astuce Chrome :</strong> En mode kiosque (--kiosk-printing),
+                      l&apos;impression est silencieuse sans dialogue.
+                    </Text>
+                  </Flex>
+                </Box>
               )}
 
               {/* Bouton de test de connexion */}
@@ -1087,9 +1380,9 @@ export function PrinterSettings({ initialData }: PrinterSettingsProps) {
                     style={{ width: "100%" }}
                   >
                     {isTestingConnection ? (
-                      <Loader2 size={14} className="animate-spin" />
+                      <CircleNotch size={14} className="animate-spin" />
                     ) : (
-                      <Zap size={14} />
+                      <Lightning size={14} />
                     )}
                     Tester la connexion
                   </Button>
@@ -1102,9 +1395,9 @@ export function PrinterSettings({ initialData }: PrinterSettingsProps) {
                     >
                       <Callout.Icon>
                         {connectionStatus === "success" ? (
-                          <CheckCircle2 size={16} />
+                          <CheckCircle size={16} />
                         ) : (
-                          <AlertCircle size={16} />
+                          <WarningCircle size={16} />
                         )}
                       </Callout.Icon>
                       <Callout.Text>{connectionMessage}</Callout.Text>
@@ -1123,7 +1416,7 @@ export function PrinterSettings({ initialData }: PrinterSettingsProps) {
                   onValueChange={(value) => setValue("largeurPapier", Number(value))}
                 >
                   <Select.Trigger />
-                  <Select.Content>
+                  <Select.Content position="popper">
                     {largeurPapierOptions.map((option) => (
                       <Select.Item key={option.value} value={String(option.value)}>
                         {option.label}
@@ -1142,11 +1435,7 @@ export function PrinterSettings({ initialData }: PrinterSettingsProps) {
                 </Button>
               </Dialog.Close>
               <Button type="submit" disabled={isLoading}>
-                {isLoading ? (
-                  <Loader2 size={16} className="animate-spin" />
-                ) : (
-                  <Save size={16} />
-                )}
+                {isLoading ? <CircleNotch size={16} className="animate-spin" /> : <FloppyDisk size={16} />}
                 {editingPrinter ? "Enregistrer" : "Ajouter"}
               </Button>
             </Flex>
@@ -1167,13 +1456,13 @@ export function PrinterSettings({ initialData }: PrinterSettingsProps) {
             {pendingSerialPort
               ? `Peripherique USB detecte : ${pendingSerialPort.label}`
               : pendingBTDevice
-              ? `Peripherique Bluetooth detecte : ${pendingBTDevice.name}`
-              : "Aucun peripherique detecte"}
+                ? `Peripherique Bluetooth detecte : ${pendingBTDevice.name}`
+                : "Aucun peripherique detecte"}
           </Dialog.Description>
 
           <Flex direction="column" gap="4">
             {/* Info du peripherique */}
-            <Card size="1">
+            <Box style={{ border: "1px solid var(--gray-a6)", borderRadius: 8 }} p="4">
               <Flex direction="column" gap="2">
                 <Flex align="center" gap="2">
                   {pendingSerialPort ? (
@@ -1192,15 +1481,20 @@ export function PrinterSettings({ initialData }: PrinterSettingsProps) {
                     </>
                   ) : null}
                 </Flex>
-                {pendingSerialPort?.info.usbVendorId ? <Text size="1" color="gray">
+                {pendingSerialPort?.info.usbVendorId ? (
+                  <Text size="1" color="gray">
                     Vendor ID: 0x{pendingSerialPort.info.usbVendorId.toString(16).padStart(4, "0")}
-                    {pendingSerialPort.info.usbProductId ? ` | Product ID: 0x${pendingSerialPort.info.usbProductId.toString(16).padStart(4, "0")}` : null}
-                  </Text> : null}
+                    {pendingSerialPort.info.usbProductId
+                      ? ` | Product ID: 0x${pendingSerialPort.info.usbProductId.toString(16).padStart(4, "0")}`
+                      : null}
+                  </Text>
+                ) : null}
               </Flex>
-            </Card>
+            </Box>
 
             {/* Baud rate pour serie */}
-            {pendingSerialPort ? <Box>
+            {pendingSerialPort ? (
+              <Box>
                 <Text as="label" size="2" weight="medium" mb="1">
                   Vitesse (Baud Rate)
                 </Text>
@@ -1209,7 +1503,7 @@ export function PrinterSettings({ initialData }: PrinterSettingsProps) {
                   onValueChange={(v) => setSerialBaudRate(Number(v))}
                 >
                   <Select.Trigger />
-                  <Select.Content>
+                  <Select.Content position="popper">
                     <Select.Item value="9600">9600 (standard)</Select.Item>
                     <Select.Item value="19200">19200</Select.Item>
                     <Select.Item value="38400">38400</Select.Item>
@@ -1220,7 +1514,8 @@ export function PrinterSettings({ initialData }: PrinterSettingsProps) {
                 <Text size="1" color="gray" mt="1">
                   La plupart des imprimantes thermiques utilisent 9600 ou 115200
                 </Text>
-              </Box> : null}
+              </Box>
+            ) : null}
 
             {/* Selecteur d'imprimante a associer */}
             {!pairingPrinterId && imprimantes.length > 0 && (
@@ -1228,11 +1523,9 @@ export function PrinterSettings({ initialData }: PrinterSettingsProps) {
                 <Text as="label" size="2" weight="medium" mb="1">
                   Associer a l'imprimante
                 </Text>
-                <Select.Root
-                  onValueChange={(v) => setPairingPrinterId(v)}
-                >
+                <Select.Root onValueChange={(v) => setPairingPrinterId(v)}>
                   <Select.Trigger placeholder="Choisir une imprimante..." />
-                  <Select.Content>
+                  <Select.Content position="popper">
                     {imprimantes.map((imp) => (
                       <Select.Item key={imp.id} value={imp.id}>
                         {imp.nom} ({imp.type})
@@ -1243,9 +1536,10 @@ export function PrinterSettings({ initialData }: PrinterSettingsProps) {
               </Box>
             )}
 
-            {pairingPrinterId ? <Callout.Root color="blue" size="1">
+            {pairingPrinterId ? (
+              <Callout.Root color="blue" size="1">
                 <Callout.Icon>
-                  <Link2 size={16} />
+                  <Link size={16} />
                 </Callout.Icon>
                 <Callout.Text>
                   Sera associe a :{" "}
@@ -1253,7 +1547,8 @@ export function PrinterSettings({ initialData }: PrinterSettingsProps) {
                     {imprimantes.find((i) => i.id === pairingPrinterId)?.nom || pairingPrinterId}
                   </strong>
                 </Callout.Text>
-              </Callout.Root> : null}
+              </Callout.Root>
+            ) : null}
           </Flex>
 
           <Flex gap="3" mt="5" justify="end">
@@ -1262,15 +1557,8 @@ export function PrinterSettings({ initialData }: PrinterSettingsProps) {
                 Annuler
               </Button>
             </Dialog.Close>
-            <Button
-              onClick={handleConfirmPairing}
-              disabled={isPairing || !pairingPrinterId}
-            >
-              {isPairing ? (
-                <Loader2 size={16} className="animate-spin" />
-              ) : (
-                <Link2 size={16} />
-              )}
+            <Button onClick={handleConfirmPairing} disabled={isPairing || !pairingPrinterId}>
+              {isPairing ? <CircleNotch size={16} className="animate-spin" /> : <Link size={16} />}
               Appairer
             </Button>
           </Flex>
@@ -1282,7 +1570,7 @@ export function PrinterSettings({ initialData }: PrinterSettingsProps) {
         <Dialog.Content maxWidth="450px">
           <Dialog.Title>
             <Flex align="center" gap="2">
-              <Search size={20} />
+              <MagnifyingGlass size={20} />
               Détection des imprimantes
             </Flex>
           </Dialog.Title>
@@ -1293,22 +1581,35 @@ export function PrinterSettings({ initialData }: PrinterSettingsProps) {
           <Box>
             {isScanning ? (
               <Flex direction="column" align="center" justify="center" py="6" gap="3">
-                <Loader2 size={32} className="animate-spin" style={{ color: "var(--accent-9)" }} />
-                <Text size="2" color="gray">Scan en cours (ports 9100, 515, 631)...</Text>
-                <Text size="1" color="gray">Cela peut prendre quelques secondes</Text>
+                <CircleNotch size={32} className="animate-spin" style={{ color: "var(--accent-9)" }} />
+                <Text size="2" color="gray">
+                  Scan en cours (ports 9100, 515, 631)...
+                </Text>
+                <Text size="1" color="gray">
+                  Cela peut prendre quelques secondes
+                </Text>
               </Flex>
             ) : scanDetails.length === 0 && scanResults.length === 0 ? (
               <Flex direction="column" align="center" justify="center" py="6" gap="3">
                 <Printer size={32} style={{ color: "var(--gray-8)" }} />
-                <Text size="2" color="gray">Aucune imprimante detectee</Text>
-                <Text size="1" color="gray">Verifiez que l'imprimante est allumee et connectee au reseau</Text>
+                <Text size="2" color="gray">
+                  Aucune imprimante detectee
+                </Text>
+                <Text size="1" color="gray">
+                  Verifiez que l'imprimante est allumee et connectee au reseau
+                </Text>
                 <Flex gap="2" wrap="wrap">
                   <Button size="2" variant="soft" onClick={() => handleScanNetwork(false)}>
-                    <Search size={14} />
+                    <MagnifyingGlass size={14} />
                     Relancer
                   </Button>
-                  <Button size="2" variant="soft" color="blue" onClick={() => handleScanNetwork(true)}>
-                    <Search size={14} />
+                  <Button
+                    size="2"
+                    variant="soft"
+                    color="blue"
+                    onClick={() => handleScanNetwork(true)}
+                  >
+                    <MagnifyingGlass size={14} />
                     Scan etendu (+ ports 80, 8008)
                   </Button>
                 </Flex>
@@ -1334,7 +1635,7 @@ export function PrinterSettings({ initialData }: PrinterSettingsProps) {
                       >
                         <Flex direction="column" gap="1">
                           <Flex align="center" gap="2">
-                            <Wifi size={16} style={{ color: "var(--green-9)" }} />
+                            <WifiHigh size={16} style={{ color: "var(--green-9)" }} />
                             <Text size="2" weight="medium">
                               {det.ip}:{det.port}
                             </Text>
@@ -1366,16 +1667,12 @@ export function PrinterSettings({ initialData }: PrinterSettingsProps) {
                         }}
                       >
                         <Flex align="center" gap="2">
-                          <Wifi size={16} style={{ color: "var(--green-9)" }} />
+                          <WifiHigh size={16} style={{ color: "var(--green-9)" }} />
                           <Text size="2" weight="medium">
                             {ip}
                           </Text>
                         </Flex>
-                        <Button
-                          size="1"
-                          variant="soft"
-                          onClick={() => handleUseDetectedIP(ip)}
-                        >
+                        <Button size="1" variant="soft" onClick={() => handleUseDetectedIP(ip)}>
                           <Plus size={12} />
                           Utiliser
                         </Button>
@@ -1390,7 +1687,7 @@ export function PrinterSettings({ initialData }: PrinterSettingsProps) {
                     onClick={() => handleScanNetwork(true)}
                     disabled={isScanning}
                   >
-                    <Search size={12} />
+                    <MagnifyingGlass size={12} />
                     Scanner d'autres ports (80, 8008)
                   </Button>
                 </Flex>

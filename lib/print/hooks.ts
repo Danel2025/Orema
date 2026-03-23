@@ -4,10 +4,18 @@
  * Hooks React pour l'impression
  *
  * Ces hooks facilitent l'integration de l'impression dans les composants React.
+ * Inclut un fallback automatique vers l'impression systeme (window.print)
+ * quand l'imprimante configuree est de type SYSTEME.
  */
 
 import { useState, useCallback } from "react";
 import type { PrintResult } from "./types";
+import {
+  printViaSystem,
+  generateTicketHTML,
+  generateBonPreparationHTML,
+  generateRapportZHTML,
+} from "@/lib/print/system-print";
 
 /**
  * Options pour le hook d'impression
@@ -25,7 +33,31 @@ interface UsePrintOptions {
 type PrintDocType = "ticket" | "cuisine" | "bar" | "rapport-z" | "test";
 
 /**
+ * Reponse etendue de l'API d'impression
+ * Peut inclure useSystemPrint + htmlContent quand l'imprimante est de type SYSTEME
+ */
+interface PrintApiResponse extends PrintResult {
+  useSystemPrint?: boolean;
+  htmlContent?: string;
+}
+
+/**
+ * Detecte si une erreur indique une imprimante de type SYSTEME
+ */
+function isSystemPrintError(error?: string): boolean {
+  if (!error) return false;
+  const lower = error.toLowerCase();
+  return (
+    lower.includes("systeme") ||
+    lower.includes("système") ||
+    lower.includes("printviasystem") ||
+    lower.includes("window.print")
+  );
+}
+
+/**
  * Hook pour imprimer un document
+ * Inclut un fallback automatique vers window.print() pour les imprimantes SYSTEME
  */
 export function usePrint(options: UsePrintOptions = {}) {
   const [isPrinting, setIsPrinting] = useState(false);
@@ -57,7 +89,38 @@ export function usePrint(options: UsePrintOptions = {}) {
           }),
         });
 
-        const result: PrintResult = await response.json();
+        const result: PrintApiResponse = await response.json();
+
+        // Fallback vers impression systeme si l'API indique useSystemPrint
+        if (result.useSystemPrint && result.htmlContent) {
+          const systemResult = await printViaSystem(result.htmlContent);
+          setLastResult(systemResult);
+
+          if (systemResult.success) {
+            options.onSuccess?.(systemResult);
+          } else {
+            options.onError?.(systemResult.error || "Erreur d'impression systeme");
+          }
+
+          return systemResult;
+        }
+
+        // Fallback vers impression systeme si l'erreur indique une imprimante SYSTEME
+        if (!result.success && isSystemPrintError(result.error)) {
+          // L'imprimante est de type SYSTEME mais l'API ne peut pas la gerer.
+          // On retourne un resultat indiquant que le client doit utiliser
+          // printViaSystem() avec le HTML genere manuellement.
+          const systemFallbackResult: PrintResult = {
+            success: false,
+            error:
+              "Imprimante systeme detectee. Utilisez useSystemPrint() ou " +
+              "fournissez les donnees HTML pour l'impression via le navigateur.",
+          };
+          setLastResult(systemFallbackResult);
+          options.onError?.(systemFallbackResult.error!);
+          return systemFallbackResult;
+        }
+
         setLastResult(result);
 
         if (result.success) {
@@ -68,8 +131,7 @@ export function usePrint(options: UsePrintOptions = {}) {
 
         return result;
       } catch (error) {
-        const errorMsg =
-          error instanceof Error ? error.message : "Erreur de communication";
+        const errorMsg = error instanceof Error ? error.message : "Erreur de communication";
         const result: PrintResult = {
           success: false,
           error: errorMsg,
@@ -148,6 +210,14 @@ interface UseAutoPrintOptions {
 }
 
 /**
+ * Job d'impression systeme retourne par l'API auto-route
+ */
+interface SystemPrintJob {
+  type: "ticket" | "cuisine" | "bar";
+  html: string;
+}
+
+/**
  * Resultat du routage automatique
  */
 interface AutoPrintResult {
@@ -159,6 +229,7 @@ interface AutoPrintResult {
     bar?: PrintResult;
   };
   errors: string[];
+  systemPrintJobs?: SystemPrintJob[];
 }
 
 /**
@@ -190,6 +261,14 @@ export function useAutoPrint(options: UseAutoPrintOptions = {}) {
         });
 
         const result: AutoPrintResult = await response.json();
+
+        // Gerer les jobs d'impression systeme (imprimantes SYSTEME)
+        if (result.systemPrintJobs && result.systemPrintJobs.length > 0) {
+          for (const job of result.systemPrintJobs) {
+            await printViaSystem(job.html);
+          }
+        }
+
         setLastResult(result);
 
         if (result.success || result.partialSuccess) {
@@ -202,8 +281,7 @@ export function useAutoPrint(options: UseAutoPrintOptions = {}) {
 
         return result;
       } catch (error) {
-        const errorMsg =
-          error instanceof Error ? error.message : "Erreur de communication";
+        const errorMsg = error instanceof Error ? error.message : "Erreur de communication";
         const result: AutoPrintResult = {
           success: false,
           results: {},
@@ -268,5 +346,103 @@ export function usePrinterTest() {
     isTesting,
     testResult,
     testPrinter,
+  };
+}
+
+/**
+ * Options pour l'impression systeme
+ */
+interface UseSystemPrintOptions {
+  /** Largeur du papier en mm (defaut: 80) */
+  paperWidth?: 58 | 76 | 80;
+  /** Callback apres impression reussie */
+  onSuccess?: (result: PrintResult) => void;
+  /** Callback apres erreur */
+  onError?: (error: string) => void;
+}
+
+/**
+ * Hook pour l'impression systeme via window.print()
+ *
+ * Permet d'imprimer du HTML directement via les imprimantes installees
+ * dans le systeme d'exploitation, sans passer par ESC/POS.
+ *
+ * @example
+ * ```tsx
+ * const { isPrinting, printHTML, printTicket, printBonPreparation, printRapportZ } = useSystemPrint();
+ *
+ * // Imprimer du HTML brut
+ * await printHTML('<div class="ticket">...</div>');
+ *
+ * // Imprimer un ticket a partir de donnees structurees
+ * await printTicket(ticketData);
+ * ```
+ */
+export function useSystemPrint(options: UseSystemPrintOptions = {}) {
+  const [isPrinting, setIsPrinting] = useState(false);
+
+  const printHTML = useCallback(
+    async (htmlContent: string, overrideOptions?: { paperWidth?: 58 | 76 | 80 }) => {
+      setIsPrinting(true);
+      try {
+        const result = await printViaSystem(htmlContent, {
+          paperWidth: overrideOptions?.paperWidth ?? options.paperWidth,
+        });
+
+        if (result.success) {
+          options.onSuccess?.(result);
+        } else {
+          options.onError?.(result.error || "Erreur d'impression systeme");
+        }
+
+        return result;
+      } catch (error) {
+        const errorMsg = error instanceof Error ? error.message : "Erreur d'impression systeme";
+        const result: PrintResult = {
+          success: false,
+          error: errorMsg,
+        };
+        options.onError?.(errorMsg);
+        return result;
+      } finally {
+        setIsPrinting(false);
+      }
+    },
+    [options]
+  );
+
+  const printTicket = useCallback(
+    async (data: Parameters<typeof generateTicketHTML>[0]) => {
+      const html = generateTicketHTML(data);
+      return printHTML(html);
+    },
+    [printHTML]
+  );
+
+  const printBonPreparation = useCallback(
+    async (
+      data: Parameters<typeof generateBonPreparationHTML>[0],
+      type: "cuisine" | "bar" = "cuisine"
+    ) => {
+      const html = generateBonPreparationHTML(data, type);
+      return printHTML(html);
+    },
+    [printHTML]
+  );
+
+  const printRapportZ = useCallback(
+    async (data: Parameters<typeof generateRapportZHTML>[0]) => {
+      const html = generateRapportZHTML(data);
+      return printHTML(html);
+    },
+    [printHTML]
+  );
+
+  return {
+    isPrinting,
+    printHTML,
+    printTicket,
+    printBonPreparation,
+    printRapportZ,
   };
 }

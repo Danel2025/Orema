@@ -24,11 +24,11 @@ export function PageHeader({
       position="relative"
       style={{
         background:
-          "linear-gradient(180deg, var(--violet-2) 0%, var(--color-background) 100%)",
+          "linear-gradient(180deg, var(--accent-2) 0%, var(--color-background) 100%)",
         overflow: "hidden",
       }}
     >
-      {/* Decorative elements */}
+      {/* Subtle decorative gradient */}
       <Box
         position="absolute"
         aria-hidden="true"
@@ -37,23 +37,9 @@ export function PageHeader({
           height: 600,
           borderRadius: "50%",
           background:
-            "radial-gradient(circle, var(--violet-a3) 0%, transparent 70%)",
+            "radial-gradient(circle, var(--accent-a3) 0%, transparent 70%)",
           top: -300,
           right: -200,
-          pointerEvents: "none",
-        }}
-      />
-      <Box
-        position="absolute"
-        aria-hidden="true"
-        style={{
-          width: 400,
-          height: 400,
-          borderRadius: "50%",
-          background:
-            "radial-gradient(circle, var(--purple-a3) 0%, transparent 70%)",
-          bottom: -200,
-          left: -100,
           pointerEvents: "none",
         }}
       />
@@ -65,7 +51,8 @@ export function PageHeader({
           transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
           style={{ textAlign: align }}
         >
-          {badge ? <motion.div
+          {badge ? (
+            <motion.div
               initial={{ opacity: 0, scale: 0.9 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ delay: 0.1, duration: 0.4 }}
@@ -76,16 +63,21 @@ export function PageHeader({
                 py="2"
                 style={{
                   display: "inline-block",
-                  background: "var(--violet-a3)",
-                  border: "1px solid var(--violet-a5)",
+                  background: "var(--accent-a3)",
+                  border: "1px solid var(--accent-a5)",
                   borderRadius: 9999,
                 }}
               >
-                <Text size="2" weight="medium" style={{ color: "var(--violet-11)" }}>
+                <Text
+                  size="2"
+                  weight="medium"
+                  style={{ color: "var(--accent-11)" }}
+                >
                   {badge}
                 </Text>
               </Box>
-            </motion.div> : null}
+            </motion.div>
+          ) : null}
 
           <Heading
             size="9"
@@ -102,7 +94,8 @@ export function PageHeader({
             {title}
           </Heading>
 
-          {subtitle ? <Text
+          {subtitle ? (
+            <Text
               size="5"
               color="gray"
               style={{
@@ -112,7 +105,8 @@ export function PageHeader({
               }}
             >
               {subtitle}
-            </Text> : null}
+            </Text>
+          ) : null}
 
           {children ? <Box mt="6">{children}</Box> : null}
         </motion.div>

@@ -39,11 +39,13 @@ export async function getCaisseData() {
     // Produits - seulement les champs nécessaires pour la caisse
     supabase
       .from("produits")
-      .select(`
+      .select(
+        `
         id, nom, prix_vente, taux_tva, image, gerer_stock, stock_actuel,
         categorie_id, actif, disponible_direct, disponible_table,
         disponible_livraison, disponible_emporter, code_barre
-      `)
+      `
+      )
       .eq("actif", true)
       .order("nom", { ascending: true }),
   ]);
@@ -117,11 +119,13 @@ export const getCaisseDataCached = unstable_cache(
 
       supabase
         .from("produits")
-        .select(`
+        .select(
+          `
           id, nom, prix_vente, taux_tva, image, gerer_stock, stock_actuel,
           categorie_id, actif, disponible_direct, disponible_table,
           disponible_livraison, disponible_emporter, code_barre
-        `)
+        `
+        )
         .eq("etablissement_id", etablissementId)
         .eq("actif", true)
         .order("nom", { ascending: true }),
@@ -211,25 +215,15 @@ export async function getCaisseStats() {
 
   const [ventesResult, pendingResult] = await Promise.all([
     // Ventes payées du jour
-    supabase
-      .from("ventes")
-      .select("total_final")
-      .eq("statut", "PAYEE")
-      .gte("created_at", todayISO),
+    supabase.from("ventes").select("total_final").eq("statut", "PAYEE").gte("created_at", todayISO),
 
     // Ventes en cours (toutes, pas seulement du jour)
-    supabase
-      .from("ventes")
-      .select("id", { count: "exact", head: true })
-      .eq("statut", "EN_COURS"),
+    supabase.from("ventes").select("id", { count: "exact", head: true }).eq("statut", "EN_COURS"),
   ]);
 
   const ventes = ventesResult.data ?? [];
   const totalVentes = ventes.length;
-  const chiffreAffaires = ventes.reduce(
-    (sum, v) => sum + Number(v.total_final),
-    0
-  );
+  const chiffreAffaires = ventes.reduce((sum, v) => sum + Number(v.total_final), 0);
   const pendingCount = pendingResult.count ?? 0;
 
   return {
@@ -307,6 +301,7 @@ export async function loadCaissePage() {
       email: etablissement.email,
       nif: etablissement.nif,
       rccm: etablissement.rccm,
+      impressionAutoTicket: etablissement.impressionAutoTicket,
     },
   };
 }

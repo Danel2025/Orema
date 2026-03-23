@@ -7,19 +7,19 @@
 import { useEffect, useCallback } from "react";
 import { Tooltip } from "@radix-ui/themes";
 import {
-  MousePointer2,
+  Cursor,
   Square,
   Circle,
-  RectangleHorizontal,
-  DoorOpen,
+  Rectangle,
+  Door,
   Armchair,
-  UtensilsCrossed,
+  ForkKnife,
   Wine,
-  Trash2,
-  Grid3X3,
+  Trash,
+  GridFour,
   MapPin,
-  type LucideIcon,
-} from "lucide-react";
+  type Icon,
+} from "@phosphor-icons/react";
 import { GRID_SIZES, type GridSize } from "@/lib/floorplan/snap-to-grid";
 
 export type ToolType =
@@ -41,7 +41,17 @@ export type ToolType =
 // Icone personnalisee pour le mur (plus intuitive que Minus)
 function WallIcon({ size = 16, ...props }: { size?: number; className?: string }) {
   return (
-    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      {...props}
+    >
       <rect x="2" y="10" width="20" height="4" rx="0.5" />
     </svg>
   );
@@ -50,7 +60,17 @@ function WallIcon({ size = 16, ...props }: { size?: number; className?: string }
 // Mur en L
 function WallLIcon({ size = 16, ...props }: { size?: number; className?: string }) {
   return (
-    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      {...props}
+    >
       <path d="M4 4 L4 20 L20 20" strokeWidth="4" />
     </svg>
   );
@@ -59,7 +79,17 @@ function WallLIcon({ size = 16, ...props }: { size?: number; className?: string 
 // Mur en T
 function WallTIcon({ size = 16, ...props }: { size?: number; className?: string }) {
   return (
-    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      {...props}
+    >
       <path d="M4 4 L20 4" strokeWidth="4" />
       <path d="M12 4 L12 20" strokeWidth="4" />
     </svg>
@@ -69,7 +99,17 @@ function WallTIcon({ size = 16, ...props }: { size?: number; className?: string 
 // Mur en croix
 function WallCrossIcon({ size = 16, ...props }: { size?: number; className?: string }) {
   return (
-    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      {...props}
+    >
       <path d="M4 12 L20 12" strokeWidth="4" />
       <path d="M12 4 L12 20" strokeWidth="4" />
     </svg>
@@ -79,7 +119,17 @@ function WallCrossIcon({ size = 16, ...props }: { size?: number; className?: str
 // Étagère
 function ShelfIcon({ size = 16, ...props }: { size?: number; className?: string }) {
   return (
-    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      {...props}
+    >
       <rect x="3" y="6" width="18" height="3" rx="0.5" />
       <rect x="3" y="15" width="18" height="3" rx="0.5" />
       <line x1="6" y1="9" x2="6" y2="15" />
@@ -93,25 +143,123 @@ interface Tool {
   label: string;
   description: string;
   shortcut: string;
-  icon: LucideIcon | typeof WallIcon;
+  icon: Icon | typeof WallIcon;
   category: "selection" | "zones" | "tables" | "structure" | "decoration";
 }
 
 const tools: Tool[] = [
-  { id: "select", label: "Selection", description: "Selectionner et deplacer les elements", shortcut: "V", icon: MousePointer2, category: "selection" },
-  { id: "zone", label: "Zone/Salle", description: "Creer une zone (Terrasse, Salle, etc.)", shortcut: "Z", icon: MapPin, category: "zones" },
-  { id: "table-square", label: "Table carree", description: "Ajouter une table carree", shortcut: "S", icon: Square, category: "tables" },
-  { id: "table-round", label: "Table ronde", description: "Ajouter une table ronde", shortcut: "C", icon: Circle, category: "tables" },
-  { id: "table-rect", label: "Table rect.", description: "Ajouter une table rectangulaire", shortcut: "R", icon: RectangleHorizontal, category: "tables" },
-  { id: "wall", label: "Mur droit", description: "Tracer un mur ou une cloison", shortcut: "W", icon: WallIcon, category: "structure" },
-  { id: "wall-l", label: "Mur en L", description: "Mur en forme de L (angle)", shortcut: "L", icon: WallLIcon, category: "structure" },
-  { id: "wall-t", label: "Mur en T", description: "Mur en forme de T", shortcut: "T", icon: WallTIcon, category: "structure" },
-  { id: "wall-cross", label: "Mur en +", description: "Mur en forme de croix", shortcut: "X", icon: WallCrossIcon, category: "structure" },
-  { id: "shelf", label: "Etagere", description: "Ajouter une etagere", shortcut: "E", icon: ShelfIcon, category: "structure" },
-  { id: "door", label: "Porte", description: "Ajouter une porte", shortcut: "D", icon: DoorOpen, category: "structure" },
-  { id: "counter", label: "Comptoir", description: "Ajouter un comptoir de service", shortcut: "O", icon: UtensilsCrossed, category: "structure" },
-  { id: "bar", label: "Bar", description: "Ajouter un bar", shortcut: "B", icon: Wine, category: "structure" },
-  { id: "decoration", label: "Decoration", description: "Ajouter un element decoratif", shortcut: "A", icon: Armchair, category: "decoration" },
+  {
+    id: "select",
+    label: "Selection",
+    description: "Selectionner et deplacer les elements",
+    shortcut: "V",
+    icon: Cursor,
+    category: "selection",
+  },
+  {
+    id: "zone",
+    label: "Zone/Salle",
+    description: "Créer une zone (Terrasse, Salle, etc.)",
+    shortcut: "Z",
+    icon: MapPin,
+    category: "zones",
+  },
+  {
+    id: "table-square",
+    label: "Table carree",
+    description: "Ajouter une table carree",
+    shortcut: "S",
+    icon: Square,
+    category: "tables",
+  },
+  {
+    id: "table-round",
+    label: "Table ronde",
+    description: "Ajouter une table ronde",
+    shortcut: "C",
+    icon: Circle,
+    category: "tables",
+  },
+  {
+    id: "table-rect",
+    label: "Table rect.",
+    description: "Ajouter une table rectangulaire",
+    shortcut: "R",
+    icon: Rectangle,
+    category: "tables",
+  },
+  {
+    id: "wall",
+    label: "Mur droit",
+    description: "Tracer un mur ou une cloison",
+    shortcut: "W",
+    icon: WallIcon,
+    category: "structure",
+  },
+  {
+    id: "wall-l",
+    label: "Mur en L",
+    description: "Mur en forme de L (angle)",
+    shortcut: "L",
+    icon: WallLIcon,
+    category: "structure",
+  },
+  {
+    id: "wall-t",
+    label: "Mur en T",
+    description: "Mur en forme de T",
+    shortcut: "T",
+    icon: WallTIcon,
+    category: "structure",
+  },
+  {
+    id: "wall-cross",
+    label: "Mur en +",
+    description: "Mur en forme de croix",
+    shortcut: "X",
+    icon: WallCrossIcon,
+    category: "structure",
+  },
+  {
+    id: "shelf",
+    label: "Etagere",
+    description: "Ajouter une etagere",
+    shortcut: "E",
+    icon: ShelfIcon,
+    category: "structure",
+  },
+  {
+    id: "door",
+    label: "Porte",
+    description: "Ajouter une porte",
+    shortcut: "D",
+    icon: Door,
+    category: "structure",
+  },
+  {
+    id: "counter",
+    label: "Comptoir",
+    description: "Ajouter un comptoir de service",
+    shortcut: "O",
+    icon: ForkKnife,
+    category: "structure",
+  },
+  {
+    id: "bar",
+    label: "Bar",
+    description: "Ajouter un bar",
+    shortcut: "B",
+    icon: Wine,
+    category: "structure",
+  },
+  {
+    id: "decoration",
+    label: "Decoration",
+    description: "Ajouter un element decoratif",
+    shortcut: "A",
+    icon: Armchair,
+    category: "decoration",
+  },
 ];
 
 interface FloorPlanToolbarProps {
@@ -138,30 +286,31 @@ export function FloorPlanToolbar({
   gridSize = 20,
   onGridSizeChange,
 }: FloorPlanToolbarProps) {
-  // Raccourcis clavier
-  const handleKeyDown = useCallback((e: KeyboardEvent) => {
-    // Ignorer si on est dans un input
-    if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return;
+  // Touches qui sont aussi des raccourcis d'action quand un element est selectionne
+  // R = rotation, L = verrouiller, F = focus, N = snap, G = grille
+  const ACTION_KEYS_ON_SELECTION = new Set(["R", "L", "F", "N", "G"]);
 
-    const key = e.key.toUpperCase();
-    const tool = tools.find(t => t.shortcut === key);
-    if (tool) {
-      e.preventDefault();
-      onToolChange(tool.id);
-    }
+  // Raccourcis clavier (selection d'outils uniquement - les actions sont gerees par useFloorPlanKeyboard)
+  const handleKeyDown = useCallback(
+    (e: KeyboardEvent) => {
+      // Ignorer si on est dans un input ou si un modificateur est pressé
+      if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return;
+      if (e.ctrlKey || e.metaKey || e.altKey) return;
 
-    // Supprimer avec Delete ou Backspace
-    if ((e.key === "Delete" || e.key === "Backspace") && hasSelection) {
-      e.preventDefault();
-      onDeleteSelected?.();
-    }
+      const key = e.key.toUpperCase();
 
-    // Toggle snap avec G
-    if (key === "G") {
-      e.preventDefault();
-      onSnapToggle?.(!snapEnabled);
-    }
-  }, [onToolChange, onDeleteSelected, hasSelection, onSnapToggle, snapEnabled]);
+      // Si un element est selectionne et que la touche est un raccourci d'action,
+      // laisser useFloorPlanKeyboard gerer (rotation, lock, focus, etc.)
+      if (hasSelection && ACTION_KEYS_ON_SELECTION.has(key)) return;
+
+      const tool = tools.find((t) => t.shortcut === key);
+      if (tool) {
+        e.preventDefault();
+        onToolChange(tool.id);
+      }
+    },
+    [onToolChange, hasSelection]
+  );
 
   useEffect(() => {
     if (!isEditMode) return;
@@ -222,7 +371,14 @@ export function FloorPlanToolbar({
                     key={tool.id}
                     content={
                       <span style={{ display: "flex", flexDirection: "column", gap: 2 }}>
-                        <span style={{ display: "flex", alignItems: "center", gap: 8, justifyContent: "space-between" }}>
+                        <span
+                          style={{
+                            display: "flex",
+                            alignItems: "center",
+                            gap: 8,
+                            justifyContent: "space-between",
+                          }}
+                        >
                           <span style={{ fontWeight: 600 }}>{tool.label}</span>
                           <kbd
                             style={{
@@ -299,7 +455,14 @@ export function FloorPlanToolbar({
         <Tooltip
           content={
             <span style={{ display: "flex", flexDirection: "column", gap: 2 }}>
-              <span style={{ display: "flex", alignItems: "center", gap: 8, justifyContent: "space-between" }}>
+              <span
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 8,
+                  justifyContent: "space-between",
+                }}
+              >
                 <span style={{ fontWeight: 600 }}>Supprimer</span>
                 <kbd
                   style={{
@@ -351,7 +514,7 @@ export function FloorPlanToolbar({
               e.currentTarget.style.backgroundColor = "transparent";
             }}
           >
-            <Trash2 size={16} />
+            <Trash size={16} />
             Supprimer
           </button>
         </Tooltip>
@@ -387,7 +550,14 @@ export function FloorPlanToolbar({
           <Tooltip
             content={
               <span style={{ display: "flex", flexDirection: "column", gap: 2 }}>
-                <span style={{ display: "flex", alignItems: "center", gap: 8, justifyContent: "space-between" }}>
+                <span
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 8,
+                    justifyContent: "space-between",
+                  }}
+                >
                   <span style={{ fontWeight: 600 }}>Grille magnetique</span>
                   <kbd
                     style={{
@@ -404,7 +574,9 @@ export function FloorPlanToolbar({
                   </kbd>
                 </span>
                 <span style={{ fontSize: 12, opacity: 0.8 }}>
-                  {snapEnabled ? "Desactiver l'alignement automatique" : "Activer l'alignement automatique sur la grille"}
+                  {snapEnabled
+                    ? "Desactiver l'alignement automatique"
+                    : "Activer l'alignement automatique sur la grille"}
                 </span>
               </span>
             }
@@ -441,7 +613,7 @@ export function FloorPlanToolbar({
                 }
               }}
             >
-              <Grid3X3 size={16} />
+              <GridFour size={16} />
               Magnetique
               <span
                 style={{
@@ -480,8 +652,14 @@ export function FloorPlanToolbar({
                   padding: "6px 0",
                   borderRadius: 4,
                   border: "none",
-                  backgroundColor: gridSize === size && snapEnabled ? "var(--accent-9)" : "transparent",
-                  color: gridSize === size && snapEnabled ? "white" : snapEnabled ? "var(--gray-11)" : "var(--gray-8)",
+                  backgroundColor:
+                    gridSize === size && snapEnabled ? "var(--accent-9)" : "transparent",
+                  color:
+                    gridSize === size && snapEnabled
+                      ? "white"
+                      : snapEnabled
+                        ? "var(--gray-11)"
+                        : "var(--gray-8)",
                   cursor: snapEnabled ? "pointer" : "not-allowed",
                   fontSize: 11,
                   fontWeight: gridSize === size ? 600 : 400,
@@ -493,6 +671,78 @@ export function FloorPlanToolbar({
               </button>
             ))}
           </div>
+        </div>
+      </div>
+
+      {/* Séparateur */}
+      <div
+        style={{
+          height: 1,
+          backgroundColor: "var(--gray-a5)",
+          margin: "4px 0",
+        }}
+      />
+
+      {/* Raccourcis rapides */}
+      <div>
+        <span
+          style={{
+            display: "block",
+            fontSize: 10,
+            fontWeight: 600,
+            color: "var(--gray-9)",
+            textTransform: "uppercase",
+            letterSpacing: 0.5,
+            marginBottom: 6,
+            paddingLeft: 4,
+          }}
+        >
+          Raccourcis
+        </span>
+        <div style={{ display: "flex", flexDirection: "column", gap: 3, paddingLeft: 4 }}>
+          {[
+            { keys: "Alt+Clic", desc: "Dupliquer" },
+            { keys: "Ctrl+D", desc: "Dupliquer" },
+            { keys: "Ctrl+C/V", desc: "Copier/Coller" },
+            { keys: "R / ⇧R", desc: "Rotation ±90°" },
+            { keys: "[ / ]", desc: "Reduire/Agrandir" },
+            { keys: "F", desc: "Centrer la vue" },
+            { keys: "N", desc: "Snap magnetique" },
+            { keys: "Ctrl+Z/Y", desc: "Annuler/Refaire" },
+            { keys: "Ctrl+±", desc: "Zoom" },
+            { keys: "Ctrl+0", desc: "Reset vue" },
+            { keys: "Espace", desc: "Deplacer le plan" },
+          ].map((shortcut) => (
+            <div
+              key={shortcut.keys}
+              style={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+                gap: 6,
+                fontSize: 10,
+                color: "var(--gray-10)",
+                lineHeight: 1.4,
+              }}
+            >
+              <kbd
+                style={{
+                  padding: "1px 4px",
+                  fontSize: 9,
+                  fontWeight: 600,
+                  fontFamily: "var(--font-google-sans-code), ui-monospace, monospace",
+                  backgroundColor: "var(--gray-a4)",
+                  borderRadius: 3,
+                  border: "1px solid var(--gray-a5)",
+                  whiteSpace: "nowrap",
+                  flexShrink: 0,
+                }}
+              >
+                {shortcut.keys}
+              </kbd>
+              <span style={{ opacity: 0.8 }}>{shortcut.desc}</span>
+            </div>
+          ))}
         </div>
       </div>
     </div>

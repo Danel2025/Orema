@@ -7,7 +7,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import { Popover, TextArea, Flex, Text, Button, IconButton, Box } from "@radix-ui/themes";
-import { MessageSquare, X } from "lucide-react";
+import { ChatText, X } from "@phosphor-icons/react";
 import { useCartStore } from "@/stores/cart-store";
 import type { CartItem } from "@/types";
 
@@ -37,15 +37,20 @@ export function LineNotesPopover({ item, children }: LineNotesPopoverProps) {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const updateNotes = useCartStore((state) => state.updateNotes);
 
-  // Synchroniser les notes quand le popover s'ouvre
+  // Synchroniser les notes quand le popover s'ouvre (derived-state pattern)
+  const prevOpenRef = useRef(false);
+  if (open && !prevOpenRef.current) {
+    setNotes(item.notes || "");
+  }
+  prevOpenRef.current = open;
+
+  // Auto-focus textarea when popover opens
   useEffect(() => {
     if (open) {
-      setNotes(item.notes || "");
-      setTimeout(() => {
-        textareaRef.current?.focus();
-      }, 100);
+      const timer = setTimeout(() => textareaRef.current?.focus(), 100);
+      return () => clearTimeout(timer);
     }
-  }, [open, item.notes]);
+  }, [open]);
 
   // Sauvegarder les notes
   const handleSave = () => {
@@ -79,7 +84,7 @@ export function LineNotesPopover({ item, children }: LineNotesPopoverProps) {
           {/* Header */}
           <Flex justify="between" align="center">
             <Flex align="center" gap="2">
-              <MessageSquare size={16} style={{ color: "var(--accent-9)" }} />
+              <ChatText size={16} style={{ color: "var(--accent-9)" }} />
               <Text size="2" weight="medium">
                 Notes pour {item.produit.nom}
               </Text>
@@ -118,7 +123,8 @@ export function LineNotesPopover({ item, children }: LineNotesPopoverProps) {
 
           {/* Actions */}
           <Flex gap="2" justify="end">
-            {item.notes ? <Button
+            {item.notes ? (
+              <Button
                 size="1"
                 variant="soft"
                 color="red"
@@ -127,7 +133,8 @@ export function LineNotesPopover({ item, children }: LineNotesPopoverProps) {
               >
                 <X size={14} />
                 Effacer
-              </Button> : null}
+              </Button>
+            ) : null}
             <Popover.Close>
               <Button size="1" variant="soft" color="gray">
                 Annuler

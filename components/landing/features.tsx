@@ -1,14 +1,6 @@
 "use client";
 
-import {
-  Box,
-  Container,
-  Flex,
-  Grid,
-  Heading,
-  Text,
-  Card,
-} from "@radix-ui/themes";
+import { Box, Container, Flex, Grid, Heading, Text, Card } from "@radix-ui/themes";
 import {
   Monitor,
   GridFour,
@@ -18,86 +10,46 @@ import {
   Printer,
   ArrowRight,
 } from "@phosphor-icons/react";
-import { motion } from "motion/react";
-import { FadeIn, StaggerContainer, StaggerItem, ScaleOnHover } from "./motion-wrapper";
+import { FadeIn, StaggerContainer, StaggerItem } from "./motion-wrapper";
 
 const features = [
   {
     icon: Monitor,
-    title: "Caisse tactile intuitive",
+    title: "Caisse tactile",
     description:
-      "Interface optimisée pour écrans tactiles. Vos employés sont opérationnels en quelques minutes.",
-    color: "accent" as const,
+      "Prise en main en 15 minutes. Interface optimisee pour ecrans tactiles, pensee pour la rapidite aux heures de pointe.",
   },
   {
     icon: GridFour,
-    title: "Gestion des tables",
+    title: "Plan de salle",
     description:
-      "Plan de salle interactif avec statuts en temps réel. Transferts et additions séparées.",
-    color: "blue" as const,
+      "Gerez vos tables en temps reel. Transferts, additions separees et suivi des commandes par zone.",
   },
   {
     icon: Wallet,
-    title: "Multi-paiements",
+    title: "Tous les paiements",
     description:
-      "Espèces, cartes, Airtel Money, Moov Money. Tous les modes de paiement du Gabon.",
-    color: "green" as const,
+      "Especes, cartes, Airtel Money, Moov Money. Paiements mixtes et suivi des references en un clic.",
   },
   {
     icon: WifiSlash,
-    title: "Mode hors-ligne",
+    title: "Fonctionne hors-ligne",
     description:
-      "Continuez à vendre sans internet. Synchronisation automatique au retour du réseau.",
-    color: "amber" as const,
+      "Pas de coupure d'activite en cas de panne internet. Synchronisation automatique au retour du reseau.",
   },
   {
     icon: ChartBar,
-    title: "Rapports temps réel",
+    title: "Rapports detailles",
     description:
-      "Ventes, produits populaires, heures de pointe. Décidez avec les bonnes données.",
-    color: "teal" as const,
+      "Ventes par heure, produits les plus vendus, marges. Les donnees dont vous avez besoin pour decider.",
   },
   {
     icon: Printer,
-    title: "Imprimantes thermiques",
+    title: "Impression automatique",
     description:
-      "Tickets et bons de cuisine. Routage automatique par catégorie de produit.",
-    color: "red" as const,
+      "Tickets de caisse et bons de cuisine. Routage automatique vers la bonne imprimante par categorie.",
   },
 ];
-
-const colorStyles = {
-  accent: {
-    bg: "var(--accent-a3)",
-    icon: "var(--accent-9)",
-    border: "var(--accent-a5)",
-  },
-  blue: {
-    bg: "var(--blue-a3)",
-    icon: "var(--blue-9)",
-    border: "var(--blue-a5)",
-  },
-  green: {
-    bg: "var(--green-a3)",
-    icon: "var(--green-9)",
-    border: "var(--green-a5)",
-  },
-  amber: {
-    bg: "var(--amber-a3)",
-    icon: "var(--amber-9)",
-    border: "var(--amber-a5)",
-  },
-  teal: {
-    bg: "var(--teal-a3)",
-    icon: "var(--teal-9)",
-    border: "var(--teal-a5)",
-  },
-  red: {
-    bg: "var(--red-a3)",
-    icon: "var(--red-9)",
-    border: "var(--red-a5)",
-  },
-};
 
 export function Features() {
   return (
@@ -111,79 +63,90 @@ export function Features() {
       <Container size="4">
         {/* Header */}
         <FadeIn>
-          <Flex direction="column" align="center" gap="4" mb="8">
-            <Box
-              className="rounded-full"
+          <Flex direction="column" align="center" gap="3" mb="8">
+            <Text
+              size="2"
+              weight="medium"
               style={{
-                background: "var(--accent-a3)",
-                border: "1px solid var(--accent-a5)",
-                padding: "8px 18px",
+                color: "var(--accent-11)",
+                textTransform: "uppercase",
+                letterSpacing: "0.08em",
               }}
             >
-              <Text
-                size="2"
-                weight="medium"
-                style={{ color: "var(--accent-11)" }}
-              >
-                Fonctionnalités
-              </Text>
-            </Box>
+              Fonctionnalites
+            </Text>
 
-            <Heading size="8" align="center">
-              Tout ce dont vous avez besoin
+            <Heading
+              size="8"
+              align="center"
+              weight="bold"
+              style={{ letterSpacing: "-0.02em" }}
+            >
+              Ce qui compte pour votre commerce
             </Heading>
 
-            <Text size="3" align="center" color="gray" className="max-w-lg">
-              Une solution complète pensée pour les réalités du commerce africain.
-              Fiable, rapide et adaptée à vos besoins.
+            <Text
+              size="3"
+              align="center"
+              color="gray"
+              className="max-w-md"
+              style={{ lineHeight: 1.6 }}
+            >
+              Chaque fonctionnalite repond a un besoin reel du terrain. Pas de
+              gadgets, que de l'essentiel.
             </Text>
           </Flex>
         </FadeIn>
 
         {/* Features Grid */}
-        <StaggerContainer staggerDelay={0.1}>
+        <StaggerContainer staggerDelay={0.08}>
           <Grid columns={{ initial: "1", sm: "2", lg: "3" }} gap="4">
             {features.map((feature, index) => {
-              const colors = colorStyles[feature.color];
               const Icon = feature.icon;
 
               return (
                 <StaggerItem key={index}>
-                  <ScaleOnHover>
-                    <Card size="3" className="h-full">
-                      <Flex direction="column" gap="4">
-                        {/* Icon */}
-                        <motion.div
-                          whileHover={{ rotate: [0, -10, 10, 0] }}
-                          transition={{ duration: 0.5 }}
-                        >
-                          <Flex
-                            align="center"
-                            justify="center"
-                            className="rounded-xl"
-                            style={{
-                              width: 48,
-                              height: 48,
-                              background: colors.bg,
-                              border: `1px solid ${colors.border}`,
-                            }}
-                          >
-                            <Icon size={24} style={{ color: colors.icon }} />
-                          </Flex>
-                        </motion.div>
-
-                        {/* Content */}
-                        <Flex direction="column" gap="2">
-                          <Heading size="4" weight="bold">
-                            {feature.title}
-                          </Heading>
-                          <Text size="2" color="gray" style={{ lineHeight: 1.6 }}>
-                            {feature.description}
-                          </Text>
-                        </Flex>
+                  <Card
+                    size="3"
+                    className="h-full transition-colors duration-200"
+                    style={{
+                      cursor: "default",
+                    }}
+                  >
+                    <Flex direction="column" gap="4">
+                      {/* Icon */}
+                      <Flex
+                        align="center"
+                        justify="center"
+                        className="rounded-lg"
+                        style={{
+                          width: 44,
+                          height: 44,
+                          background: "var(--accent-a3)",
+                        }}
+                      >
+                        <Icon
+                          size={22}
+                          weight="duotone"
+                          style={{ color: "var(--accent-9)" }}
+                        />
                       </Flex>
-                    </Card>
-                  </ScaleOnHover>
+
+                      {/* Content */}
+                      <Flex direction="column" gap="2">
+                        <Heading size="3" weight="bold">
+                          {feature.title}
+                        </Heading>
+                        <Text
+                          size="2"
+                          color="gray"
+                          style={{ lineHeight: 1.6 }}
+                        >
+                          {feature.description}
+                        </Text>
+                      </Flex>
+                    </Flex>
+                  </Card>
                 </StaggerItem>
               );
             })}
@@ -191,13 +154,14 @@ export function Features() {
         </StaggerContainer>
 
         {/* CTA Banner */}
-        <FadeIn delay={0.3}>
-          <Card
-            size="3"
+        <FadeIn delay={0.2}>
+          <Box
             mt="8"
+            p="6"
+            className="rounded-xl"
             style={{
-              background: "var(--accent-a3)",
-              border: "1px solid var(--accent-a5)",
+              background: "var(--gray-a3)",
+              border: "1px solid var(--gray-a4)",
             }}
           >
             <Flex
@@ -207,30 +171,28 @@ export function Features() {
               gap="4"
             >
               <Flex direction="column" gap="1">
-                <Heading size="4">
-                  Besoin d&apos;une fonctionnalité spécifique ?
-                </Heading>
+                <Text size="3" weight="bold">
+                  Besoin d&apos;une fonctionnalite specifique ?
+                </Text>
                 <Text size="2" color="gray">
-                  Notre équipe peut personnaliser Oréma N+ selon vos besoins
-                  métier.
+                  Notre equipe peut adapter Orema N+ a vos processus metier.
                 </Text>
               </Flex>
-              <motion.a
+              <a
                 href="#contact"
-                whileHover={{ scale: 1.02, x: 5 }}
-                whileTap={{ scale: 0.98 }}
-                className="flex cursor-pointer items-center gap-2 rounded-lg font-medium text-white transition-opacity hover:opacity-90"
+                className="flex items-center gap-2 rounded-lg font-medium text-white transition-opacity hover:opacity-90"
                 style={{
                   background: "var(--accent-9)",
                   flexShrink: 0,
-                  padding: "12px 20px",
+                  padding: "10px 18px",
+                  fontSize: "14px",
                 }}
               >
                 Nous contacter
                 <ArrowRight size={16} />
-              </motion.a>
+              </a>
             </Flex>
-          </Card>
+          </Box>
         </FadeIn>
       </Container>
     </Box>

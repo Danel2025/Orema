@@ -2,7 +2,7 @@
  * Requêtes Supabase pour les catégories
  */
 
-import type { DbClient } from '../client'
+import type { DbClient } from "../client";
 import type {
   Categorie,
   CategorieInsert,
@@ -10,12 +10,8 @@ import type {
   CategorieWithRelations,
   PaginationOptions,
   PaginatedResult,
-} from '../types'
-import {
-  getPaginationParams,
-  createPaginatedResult,
-  getErrorMessage,
-} from '../utils'
+} from "../types";
+import { getPaginationParams, createPaginatedResult, getErrorMessage } from "../utils";
 
 /**
  * Récupère toutes les catégories d'un établissement
@@ -24,28 +20,28 @@ export async function getCategories(
   client: DbClient,
   etablissementId: string,
   options?: {
-    actif?: boolean
-    withProduits?: boolean
-    withImprimante?: boolean
+    actif?: boolean;
+    withProduits?: boolean;
+    withImprimante?: boolean;
   }
 ): Promise<Categorie[]> {
   let query = client
-    .from('categories')
-    .select('*')
-    .eq('etablissement_id', etablissementId)
-    .order('ordre', { ascending: true })
+    .from("categories")
+    .select("*")
+    .eq("etablissement_id", etablissementId)
+    .order("ordre", { ascending: true });
 
   if (options?.actif !== undefined) {
-    query = query.eq('actif', options.actif)
+    query = query.eq("actif", options.actif);
   }
 
-  const { data, error } = await query
+  const { data, error } = await query;
 
   if (error) {
-    throw new Error(getErrorMessage(error))
+    throw new Error(getErrorMessage(error));
   }
 
-  return (data ?? []) as Categorie[]
+  return (data ?? []) as Categorie[];
 }
 
 /**
@@ -56,26 +52,26 @@ export async function getCategoriesPaginated(
   etablissementId: string,
   options?: PaginationOptions & { actif?: boolean }
 ): Promise<PaginatedResult<Categorie>> {
-  const { offset, limit, page, pageSize } = getPaginationParams(options)
+  const { offset, limit, page, pageSize } = getPaginationParams(options);
 
   let query = client
-    .from('categories')
-    .select('*', { count: 'exact' })
-    .eq('etablissement_id', etablissementId)
-    .order('ordre', { ascending: true })
-    .range(offset, offset + limit - 1)
+    .from("categories")
+    .select("*", { count: "exact" })
+    .eq("etablissement_id", etablissementId)
+    .order("ordre", { ascending: true })
+    .range(offset, offset + limit - 1);
 
   if (options?.actif !== undefined) {
-    query = query.eq('actif', options.actif)
+    query = query.eq("actif", options.actif);
   }
 
-  const { data, error, count } = await query
+  const { data, error, count } = await query;
 
   if (error) {
-    throw new Error(getErrorMessage(error))
+    throw new Error(getErrorMessage(error));
   }
 
-  return createPaginatedResult(data ?? [], count ?? 0, { page, pageSize })
+  return createPaginatedResult(data ?? [], count ?? 0, { page, pageSize });
 }
 
 /**
@@ -86,38 +82,27 @@ export async function getCategorieById(
   id: string,
   options?: { withProduits?: boolean; withImprimante?: boolean }
 ): Promise<CategorieWithRelations | null> {
-  const { data, error } = await client
-    .from('categories')
-    .select('*')
-    .eq('id', id)
-    .single()
+  const { data, error } = await client.from("categories").select("*").eq("id", id).single();
 
   if (error) {
-    if (error.code === 'PGRST116') return null // Not found
-    throw new Error(getErrorMessage(error))
+    if (error.code === "PGRST116") return null; // Not found
+    throw new Error(getErrorMessage(error));
   }
 
-  return data as CategorieWithRelations
+  return data as CategorieWithRelations;
 }
 
 /**
  * Crée une nouvelle catégorie
  */
-export async function createCategorie(
-  client: DbClient,
-  data: CategorieInsert
-): Promise<Categorie> {
-  const { data: categorie, error } = await client
-    .from('categories')
-    .insert(data)
-    .select()
-    .single()
+export async function createCategorie(client: DbClient, data: CategorieInsert): Promise<Categorie> {
+  const { data: categorie, error } = await client.from("categories").insert(data).select().single();
 
   if (error) {
-    throw new Error(getErrorMessage(error))
+    throw new Error(getErrorMessage(error));
   }
 
-  return categorie
+  return categorie;
 }
 
 /**
@@ -129,33 +114,27 @@ export async function updateCategorie(
   data: CategorieUpdate
 ): Promise<Categorie> {
   const { data: categorie, error } = await client
-    .from('categories')
+    .from("categories")
     .update({ ...data, updated_at: new Date().toISOString() })
-    .eq('id', id)
+    .eq("id", id)
     .select()
-    .single()
+    .single();
 
   if (error) {
-    throw new Error(getErrorMessage(error))
+    throw new Error(getErrorMessage(error));
   }
 
-  return categorie
+  return categorie;
 }
 
 /**
  * Supprime une catégorie
  */
-export async function deleteCategorie(
-  client: DbClient,
-  id: string
-): Promise<void> {
-  const { error } = await client
-    .from('categories')
-    .delete()
-    .eq('id', id)
+export async function deleteCategorie(client: DbClient, id: string): Promise<void> {
+  const { error } = await client.from("categories").delete().eq("id", id);
 
   if (error) {
-    throw new Error(getErrorMessage(error))
+    throw new Error(getErrorMessage(error));
   }
 }
 
@@ -168,14 +147,78 @@ export async function updateCategoriesOrder(
 ): Promise<void> {
   for (const { id, ordre } of categories) {
     const { error } = await client
-      .from('categories')
+      .from("categories")
       .update({ ordre, updated_at: new Date().toISOString() })
-      .eq('id', id)
+      .eq("id", id);
 
     if (error) {
-      throw new Error(getErrorMessage(error))
+      throw new Error(getErrorMessage(error));
     }
   }
+}
+
+/**
+ * Récupère les catégories avec le nombre de produits en une seule requête
+ * Résout le problème N+1 de getCategories + countProduits par catégorie
+ */
+export async function getCategoriesWithProductCount(
+  client: DbClient,
+  etablissementId: string,
+  options?: { actif?: boolean }
+): Promise<(Categorie & { _count: { produits: number } })[]> {
+  let query = client
+    .from("categories")
+    .select("*, produits(count)")
+    .eq("etablissement_id", etablissementId)
+    .order("ordre", { ascending: true });
+
+  if (options?.actif !== undefined) {
+    query = query.eq("actif", options.actif);
+  }
+
+  const { data, error } = await query;
+
+  if (error) {
+    throw new Error(getErrorMessage(error));
+  }
+
+  return (data ?? []).map((cat) => {
+    const { produits, ...rest } = cat as Categorie & { produits: { count: number }[] };
+    return {
+      ...rest,
+      _count: { produits: produits?.[0]?.count ?? 0 },
+    };
+  });
+}
+
+/**
+ * Recherche une catégorie par nom exact (case-insensitive)
+ * Utilisé pour la vérification d'unicité sans charger toutes les catégories
+ */
+export async function findCategorieByNom(
+  client: DbClient,
+  etablissementId: string,
+  nom: string,
+  excludeId?: string
+): Promise<Categorie | null> {
+  let query = client
+    .from("categories")
+    .select("*")
+    .eq("etablissement_id", etablissementId)
+    .ilike("nom", nom);
+
+  if (excludeId) {
+    query = query.neq("id", excludeId);
+  }
+
+  const { data, error } = await query.limit(1);
+
+  if (error) {
+    throw new Error(getErrorMessage(error));
+  }
+
+  if (!data || data.length === 0) return null;
+  return data[0] as Categorie;
 }
 
 /**
@@ -187,19 +230,19 @@ export async function countCategories(
   options?: { actif?: boolean }
 ): Promise<number> {
   let query = client
-    .from('categories')
-    .select('*', { count: 'exact', head: true })
-    .eq('etablissement_id', etablissementId)
+    .from("categories")
+    .select("*", { count: "exact", head: true })
+    .eq("etablissement_id", etablissementId);
 
   if (options?.actif !== undefined) {
-    query = query.eq('actif', options.actif)
+    query = query.eq("actif", options.actif);
   }
 
-  const { count, error } = await query
+  const { count, error } = await query;
 
   if (error) {
-    throw new Error(getErrorMessage(error))
+    throw new Error(getErrorMessage(error));
   }
 
-  return count ?? 0
+  return count ?? 0;
 }

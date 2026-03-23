@@ -25,7 +25,7 @@ const bloomPass = new UnrealBloomPass(
   new THREE.Vector2(window.innerWidth, window.innerHeight),
   1.5, // strength
   0.4, // radius
-  0.85, // threshold
+  0.85 // threshold
 );
 composer.addPass(bloomPass);
 
@@ -78,7 +78,7 @@ const bloomPass = new UnrealBloomPass(
   new THREE.Vector2(window.innerWidth, window.innerHeight),
   1.5, // strength - intensity of glow
   0.4, // radius - spread of glow
-  0.85, // threshold - brightness threshold
+  0.85 // threshold - brightness threshold
 );
 
 composer.addPass(bloomPass);
@@ -142,19 +142,13 @@ import { ShaderPass } from "three/addons/postprocessing/ShaderPass.js";
 import { FXAAShader } from "three/addons/shaders/FXAAShader.js";
 
 const fxaaPass = new ShaderPass(FXAAShader);
-fxaaPass.material.uniforms["resolution"].value.set(
-  1 / window.innerWidth,
-  1 / window.innerHeight,
-);
+fxaaPass.material.uniforms["resolution"].value.set(1 / window.innerWidth, 1 / window.innerHeight);
 
 composer.addPass(fxaaPass);
 
 // Update on resize
 function onResize() {
-  fxaaPass.material.uniforms["resolution"].value.set(
-    1 / window.innerWidth,
-    1 / window.innerHeight,
-  );
+  fxaaPass.material.uniforms["resolution"].value.set(1 / window.innerWidth, 1 / window.innerHeight);
 }
 ```
 
@@ -165,7 +159,7 @@ import { SMAAPass } from "three/addons/postprocessing/SMAAPass.js";
 
 const smaaPass = new SMAAPass(
   window.innerWidth * renderer.getPixelRatio(),
-  window.innerHeight * renderer.getPixelRatio(),
+  window.innerHeight * renderer.getPixelRatio()
 );
 
 composer.addPass(smaaPass);
@@ -176,12 +170,7 @@ composer.addPass(smaaPass);
 ```javascript
 import { SSAOPass } from "three/addons/postprocessing/SSAOPass.js";
 
-const ssaoPass = new SSAOPass(
-  scene,
-  camera,
-  window.innerWidth,
-  window.innerHeight,
-);
+const ssaoPass = new SSAOPass(scene, camera, window.innerWidth, window.innerHeight);
 ssaoPass.kernelRadius = 16;
 ssaoPass.minDistance = 0.005;
 ssaoPass.maxDistance = 0.1;
@@ -223,7 +212,7 @@ const filmPass = new FilmPass(
   0.35, // noise intensity
   0.5, // scanline intensity
   648, // scanline count
-  false, // grayscale
+  false // grayscale
 );
 
 composer.addPass(filmPass);
@@ -313,7 +302,7 @@ import { OutlinePass } from "three/addons/postprocessing/OutlinePass.js";
 const outlinePass = new OutlinePass(
   new THREE.Vector2(window.innerWidth, window.innerHeight),
   scene,
-  camera,
+  camera
 );
 
 outlinePass.edgeStrength = 3;
@@ -456,7 +445,7 @@ const bloomPass = new UnrealBloomPass(
   new THREE.Vector2(window.innerWidth, window.innerHeight),
   0.5,
   0.4,
-  0.85,
+  0.85
 );
 composer.addPass(bloomPass);
 
@@ -471,10 +460,7 @@ composer.addPass(new ShaderPass(GammaCorrectionShader));
 
 // 5. Anti-aliasing (always last before output)
 const fxaaPass = new ShaderPass(FXAAShader);
-fxaaPass.uniforms["resolution"].value.set(
-  1 / window.innerWidth,
-  1 / window.innerHeight,
-);
+fxaaPass.uniforms["resolution"].value.set(1 / window.innerWidth, 1 / window.innerHeight);
 composer.addPass(fxaaPass);
 ```
 
@@ -555,7 +541,7 @@ const bloomPass = new UnrealBloomPass(
   new THREE.Vector2(window.innerWidth / 2, window.innerHeight / 2),
   strength,
   radius,
-  threshold,
+  threshold
 );
 
 // Only apply effects in high-performance scenarios
@@ -583,7 +569,7 @@ function onWindowResize() {
   if (fxaaPass) {
     fxaaPass.material.uniforms["resolution"].value.set(
       1 / (width * pixelRatio),
-      1 / (height * pixelRatio),
+      1 / (height * pixelRatio)
     );
   }
 

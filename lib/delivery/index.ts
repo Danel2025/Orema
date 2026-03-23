@@ -26,4 +26,4 @@ export {
   type LivraisonAvecHistorique,
   type StatistiquesLivraison,
   type ActionResult,
-} from './types';
+} from "./types";

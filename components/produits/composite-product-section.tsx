@@ -8,7 +8,13 @@
 
 import { useState, useCallback, useMemo } from "react";
 import { Box, Flex, Text, Button, TextField, Checkbox } from "@radix-ui/themes";
-import { Plus as PlusIcon, Trash2 as TrashIcon, Search as MagnifyingGlassIcon, Package as PackageIcon, Layers as StackIcon } from "lucide-react";
+import {
+  Plus as PlusIcon,
+  Trash as TrashIcon,
+  MagnifyingGlass as MagnifyingGlassIcon,
+  Package as PackageIcon,
+  Stack as StackIcon,
+} from "@phosphor-icons/react";
 import { formatCurrency } from "@/lib/utils";
 
 export interface CompositeComponent {
@@ -104,9 +110,7 @@ export function CompositeProductSection({
   const handleUpdateQuantity = useCallback(
     (index: number, quantite: number) => {
       if (quantite < 1) return;
-      onComposantsChange(
-        composants.map((c, i) => (i === index ? { ...c, quantite } : c))
-      );
+      onComposantsChange(composants.map((c, i) => (i === index ? { ...c, quantite } : c)));
     },
     [composants, onComposantsChange]
   );
@@ -142,7 +146,8 @@ export function CompositeProductSection({
         </Text>
       </Flex>
 
-      {isComposite ? <Flex direction="column" gap="3">
+      {isComposite ? (
+        <Flex direction="column" gap="3">
           {/* Components list */}
           {composants.length > 0 && (
             <Flex direction="column" gap="2">
@@ -167,8 +172,7 @@ export function CompositeProductSection({
                       color="gray"
                       ml="3"
                       style={{
-                        fontFamily:
-                          "var(--font-google-sans-code), ui-monospace, monospace",
+                        fontFamily: "var(--font-google-sans-code), ui-monospace, monospace",
                       }}
                     >
                       {formatCurrency(composant.prixUnitaire)}
@@ -181,9 +185,7 @@ export function CompositeProductSection({
                       type="button"
                       variant="outline"
                       size="1"
-                      onClick={() =>
-                        handleUpdateQuantity(index, composant.quantite - 1)
-                      }
+                      onClick={() => handleUpdateQuantity(index, composant.quantite - 1)}
                       disabled={composant.quantite <= 1}
                       style={{ width: 28, height: 28 }}
                     >
@@ -193,8 +195,7 @@ export function CompositeProductSection({
                       size="2"
                       weight="bold"
                       style={{
-                        fontFamily:
-                          "var(--font-google-sans-code), ui-monospace, monospace",
+                        fontFamily: "var(--font-google-sans-code), ui-monospace, monospace",
                         minWidth: 20,
                         textAlign: "center",
                       }}
@@ -205,9 +206,7 @@ export function CompositeProductSection({
                       type="button"
                       variant="outline"
                       size="1"
-                      onClick={() =>
-                        handleUpdateQuantity(index, composant.quantite + 1)
-                      }
+                      onClick={() => handleUpdateQuantity(index, composant.quantite + 1)}
                       style={{ width: 28, height: 28 }}
                     >
                       +
@@ -246,8 +245,7 @@ export function CompositeProductSection({
                   size="3"
                   weight="bold"
                   style={{
-                    fontFamily:
-                      "var(--font-google-sans-code), ui-monospace, monospace",
+                    fontFamily: "var(--font-google-sans-code), ui-monospace, monospace",
                     color: "var(--accent-11)",
                   }}
                 >
@@ -256,8 +254,8 @@ export function CompositeProductSection({
               </Flex>
 
               <Text size="1" color="gray" style={{ fontStyle: "italic" }}>
-                Definissez le prix de vente ci-dessus. Il peut etre inferieur au
-                total des composants pour offrir une remise menu.
+                Definissez le prix de vente ci-dessus. Il peut etre inferieur au total des
+                composants pour offrir une remise menu.
               </Text>
             </Flex>
           )}
@@ -286,12 +284,7 @@ export function CompositeProductSection({
               </Box>
 
               {/* Product list */}
-              <Flex
-                direction="column"
-                gap="1"
-                p="2"
-                style={{ maxHeight: 200, overflowY: "auto" }}
-              >
+              <Flex direction="column" gap="1" p="2" style={{ maxHeight: 200, overflowY: "auto" }}>
                 {availableProduits.length === 0 ? (
                   <Flex align="center" justify="center" py="5">
                     <Text size="2" color="gray">
@@ -300,9 +293,7 @@ export function CompositeProductSection({
                   </Flex>
                 ) : (
                   availableProduits.slice(0, 20).map((produit) => {
-                    const categorie = categories.find(
-                      (c) => c.id === produit.categorieId
-                    );
+                    const categorie = categories.find((c) => c.id === produit.categorieId);
                     return (
                       <Flex
                         key={produit.id}
@@ -319,34 +310,25 @@ export function CompositeProductSection({
                           width: "100%",
                         }}
                       >
-                        <button
-                          type="button"
-                          onClick={() => handleAddProduct(produit)}
-                        >
+                        <button type="button" onClick={() => handleAddProduct(produit)}>
                           <Flex align="center" gap="2">
-                            <PackageIcon
-                              size={16}
-                              color={categorie?.couleur ?? "var(--gray-9)"}
-                            />
+                            <PackageIcon size={16} color={categorie?.couleur ?? "var(--gray-9)"} />
                             <Box>
                               <Text size="2" weight="medium">
                                 {produit.nom}
                               </Text>
-                              {categorie ? <Text
-                                  size="1"
-                                  color="gray"
-                                  style={{ display: "block" }}
-                                >
+                              {categorie ? (
+                                <Text size="1" color="gray" style={{ display: "block" }}>
                                   {categorie.nom}
-                                </Text> : null}
+                                </Text>
+                              ) : null}
                             </Box>
                           </Flex>
                           <Flex align="center" gap="2">
                             <Text
                               size="2"
                               style={{
-                                fontFamily:
-                                  "var(--font-google-sans-code), ui-monospace, monospace",
+                                fontFamily: "var(--font-google-sans-code), ui-monospace, monospace",
                                 color: "var(--gray-11)",
                               }}
                             >
@@ -362,11 +344,7 @@ export function CompositeProductSection({
               </Flex>
 
               {/* Cancel */}
-              <Flex
-                justify="center"
-                p="2"
-                style={{ borderTop: "1px solid var(--gray-a4)" }}
-              >
+              <Flex justify="center" p="2" style={{ borderTop: "1px solid var(--gray-a4)" }}>
                 <Button
                   type="button"
                   variant="ghost"
@@ -395,7 +373,8 @@ export function CompositeProductSection({
               Ajouter un produit au menu
             </Button>
           )}
-        </Flex> : null}
+        </Flex>
+      ) : null}
     </Box>
   );
 }

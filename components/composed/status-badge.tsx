@@ -19,11 +19,17 @@ export type StatusType =
   | "bill-requested"
   | "needs-cleaning";
 
-interface StatusBadgeProps extends Omit<ComponentPropsWithoutRef<typeof Badge>, "color" | "variant"> {
+interface StatusBadgeProps extends Omit<
+  ComponentPropsWithoutRef<typeof Badge>,
+  "color" | "variant"
+> {
   status: StatusType;
 }
 
-const statusConfig: Record<StatusType, { color: ComponentPropsWithoutRef<typeof Badge>["color"]; label: string }> = {
+const statusConfig: Record<
+  StatusType,
+  { color: ComponentPropsWithoutRef<typeof Badge>["color"]; label: string }
+> = {
   active: { color: "green", label: "Actif" },
   inactive: { color: "gray", label: "Inactif" },
   pending: { color: "amber", label: "En attente" },

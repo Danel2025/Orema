@@ -27,22 +27,22 @@ import {
 } from "@radix-ui/themes";
 import { ScrollArea } from "@/components/ui";
 import {
-  DoorClosed,
-  Banknote,
+  Door,
+  Money,
   CreditCard,
-  Smartphone,
+  DeviceMobile,
   Receipt,
-  AlertTriangle,
+  Warning,
   CheckCircle,
-  TrendingUp,
-  TrendingDown,
+  TrendUp,
+  TrendDown,
   Clock,
   User,
   ShoppingCart,
   Calculator,
   FileText,
   Info,
-} from "lucide-react";
+} from "@phosphor-icons/react";
 import { toast } from "sonner";
 import { closeSession, getSessionStats } from "@/actions/sessions";
 import { formatCurrency, formatTime, formatDate, COUPURES_FCFA } from "@/lib/utils";
@@ -170,7 +170,7 @@ export function CloseSessionDialog({
               color: "white",
             }}
           >
-            <DoorClosed size={24} />
+            <Door size={24} weight="fill" />
           </Box>
           <Box>
             <Dialog.Title size="5" mb="1">
@@ -239,7 +239,7 @@ export function CloseSessionDialog({
                   </Card>
                   <Card>
                     <Flex direction="column" align="center" gap="1">
-                      <TrendingUp size={20} color="var(--green-10)" />
+                      <TrendUp size={20} color="var(--green-10)" />
                       <Text
                         size="4"
                         weight="bold"
@@ -274,7 +274,7 @@ export function CloseSessionDialog({
                   </Card>
                   <Card>
                     <Flex direction="column" align="center" gap="1">
-                      <Banknote size={20} color="var(--accent-10)" />
+                      <Money size={20} color="var(--accent-10)" />
                       <Text
                         size="4"
                         weight="bold"
@@ -298,7 +298,7 @@ export function CloseSessionDialog({
                     <DataList.Item>
                       <DataList.Label minWidth="140px">
                         <Flex align="center" gap="2">
-                          <Banknote size={14} color="var(--green-10)" />
+                          <Money size={14} color="var(--green-10)" />
                           Especes
                         </Flex>
                       </DataList.Label>
@@ -344,7 +344,7 @@ export function CloseSessionDialog({
                     <DataList.Item>
                       <DataList.Label minWidth="140px">
                         <Flex align="center" gap="2">
-                          <Smartphone size={14} color="var(--accent-10)" />
+                          <DeviceMobile size={14} color="var(--accent-10)" />
                           Mobile Money
                         </Flex>
                       </DataList.Label>
@@ -383,7 +383,7 @@ export function CloseSessionDialog({
                 {session.nombreAnnulations > 0 && (
                   <Callout.Root color="red" size="1">
                     <Callout.Icon>
-                      <AlertTriangle size={16} />
+                      <Warning size={16} />
                     </Callout.Icon>
                     <Callout.Text>
                       {session.nombreAnnulations} vente(s) annulee(s) durant cette session
@@ -392,9 +392,7 @@ export function CloseSessionDialog({
                 )}
 
                 <Flex justify="end">
-                  <Button onClick={() => setStep("counting")}>
-                    Passer au comptage
-                  </Button>
+                  <Button onClick={() => setStep("counting")}>Passer au comptage</Button>
                 </Flex>
               </Flex>
             </Tabs.Content>
@@ -419,7 +417,8 @@ export function CloseSessionDialog({
                         Especes attendues (fond + encaissements)
                       </Text>
                       <Text size="1" color="gray">
-                        {formatCurrency(session.fondCaisse)} + {formatCurrency(session.totalEspeces)}
+                        {formatCurrency(session.fondCaisse)} +{" "}
+                        {formatCurrency(session.totalEspeces)}
                       </Text>
                     </Box>
                     <Text
@@ -452,7 +451,7 @@ export function CloseSessionDialog({
                       >
                         <Flex align="center" gap="2" style={{ minWidth: 80 }}>
                           {c.type === "billet" ? (
-                            <Banknote size={14} color="var(--green-10)" />
+                            <Money size={14} color="var(--green-10)" />
                           ) : (
                             <Box
                               style={{
@@ -535,14 +534,14 @@ export function CloseSessionDialog({
                       ecart === 0
                         ? "var(--green-a2)"
                         : ecart > 0
-                        ? "var(--blue-a2)"
-                        : "var(--red-a2)",
+                          ? "var(--blue-a2)"
+                          : "var(--red-a2)",
                     borderColor:
                       ecart === 0
                         ? "var(--green-a5)"
                         : ecart > 0
-                        ? "var(--blue-a5)"
-                        : "var(--red-a5)",
+                          ? "var(--blue-a5)"
+                          : "var(--red-a5)",
                   }}
                 >
                   <Flex direction="column" gap="3">
@@ -564,9 +563,9 @@ export function CloseSessionDialog({
                         {ecart === 0 ? (
                           <CheckCircle size={18} color="var(--green-10)" />
                         ) : ecart > 0 ? (
-                          <TrendingUp size={18} color="var(--blue-10)" />
+                          <TrendUp size={18} color="var(--blue-10)" />
                         ) : (
-                          <TrendingDown size={18} color="var(--red-10)" />
+                          <TrendDown size={18} color="var(--red-10)" />
                         )}
                         <Text size="2" weight="medium">
                           Ecart de caisse
@@ -580,8 +579,8 @@ export function CloseSessionDialog({
                             ecart === 0
                               ? "var(--green-11)"
                               : ecart > 0
-                              ? "var(--blue-11)"
-                              : "var(--red-11)",
+                                ? "var(--blue-11)"
+                                : "var(--red-11)",
                           fontFamily: "var(--font-google-sans-code), monospace",
                         }}
                       >
@@ -596,9 +595,7 @@ export function CloseSessionDialog({
                   <Button variant="soft" color="gray" onClick={() => setStep("summary")}>
                     Retour
                   </Button>
-                  <Button onClick={() => setStep("confirm")}>
-                    Confirmer le comptage
-                  </Button>
+                  <Button onClick={() => setStep("confirm")}>Confirmer le comptage</Button>
                 </Flex>
               </Flex>
             </Tabs.Content>
@@ -661,10 +658,7 @@ export function CloseSessionDialog({
                     <DataList.Item>
                       <DataList.Label minWidth="160px">Ecart</DataList.Label>
                       <DataList.Value>
-                        <Badge
-                          color={ecart === 0 ? "green" : ecart > 0 ? "blue" : "red"}
-                          size="2"
-                        >
+                        <Badge color={ecart === 0 ? "green" : ecart > 0 ? "blue" : "red"} size="2">
                           {ecart >= 0 ? "+" : ""}
                           {formatCurrency(ecart)}
                         </Badge>
@@ -676,7 +670,7 @@ export function CloseSessionDialog({
                 {ecart !== 0 && (
                   <Callout.Root color={ecart > 0 ? "blue" : "red"} size="1">
                     <Callout.Icon>
-                      <AlertTriangle size={16} />
+                      <Warning size={16} />
                     </Callout.Icon>
                     <Callout.Text>
                       {ecart > 0
@@ -704,13 +698,9 @@ export function CloseSessionDialog({
                   <Button variant="soft" color="gray" onClick={() => setStep("counting")}>
                     Retour
                   </Button>
-                  <Button
-                   
-                    onClick={handleClose}
-                    disabled={isSubmitting}
-                  >
-                    <DoorClosed size={16} />
-                    {isSubmitting ? "Cloture en cours..." : "Cloturer la caisse"}
+                  <Button onClick={handleClose} disabled={isSubmitting}>
+                    <Door size={16} weight="fill" />
+                    {isSubmitting ? "Clôture en cours..." : "Clôturer la caisse"}
                   </Button>
                 </Flex>
               </Flex>

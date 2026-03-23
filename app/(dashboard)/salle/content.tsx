@@ -3,7 +3,7 @@
 import { useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { Box, Flex, Text, Button, Select, Heading, Tooltip } from "@radix-ui/themes";
-import { Plus, Filter, RefreshCw } from "lucide-react";
+import { Plus, Funnel, ArrowsClockwise } from "@phosphor-icons/react";
 import {
   FloorPlan,
   TableFormDialog,
@@ -193,19 +193,18 @@ export function SalleContent({
   } | null>(null);
 
   // Ajouter une table depuis la toolbar du plan
-  const handleAddTableFromPlan = useCallback((
-    forme: "CARREE" | "RONDE" | "RECTANGULAIRE",
-    positionX?: number,
-    positionY?: number
-  ) => {
-    setEditingTable(null);
-    setPrefilledTableData({
-      forme,
-      positionX: positionX ?? 100,
-      positionY: positionY ?? 100,
-    });
-    setIsFormOpen(true);
-  }, []);
+  const handleAddTableFromPlan = useCallback(
+    (forme: "CARREE" | "RONDE" | "RECTANGULAIRE", positionX?: number, positionY?: number) => {
+      setEditingTable(null);
+      setPrefilledTableData({
+        forme,
+        positionX: positionX ?? 100,
+        positionY: positionY ?? 100,
+      });
+      setIsFormOpen(true);
+    },
+    []
+  );
 
   // Fermer le formulaire
   const handleCloseForm = useCallback(() => {
@@ -230,7 +229,7 @@ export function SalleContent({
         <Flex gap="2">
           {canEdit ? <ZoneManager zones={zones} onRefresh={handleRefresh} /> : null}
           <Button variant="soft" color="gray" onClick={handleRefresh}>
-            <RefreshCw size={14} />
+            <ArrowsClockwise size={14} />
             Actualiser
           </Button>
           {canEdit ? (
@@ -257,10 +256,10 @@ export function SalleContent({
       {/* Filters & Legend */}
       <Flex justify="between" align="center" mb="4" gap="4">
         <Flex align="center" gap="3">
-          <Filter size={14} className="text-gray-500" />
+          <Funnel size={14} className="text-gray-500" />
           <Select.Root value={zoneFilter || "all"} onValueChange={handleZoneChange}>
             <Select.Trigger placeholder="Toutes les zones" />
-            <Select.Content>
+            <Select.Content position="popper">
               <Select.Item value="all">Toutes les zones</Select.Item>
               {zones.map((zone) => (
                 <Select.Item key={zone.id} value={zone.id}>

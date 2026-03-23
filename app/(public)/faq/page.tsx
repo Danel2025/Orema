@@ -12,140 +12,141 @@ import {
 import { motion, AnimatePresence } from "motion/react";
 import { PageHeader } from "@/components/public";
 import {
-  HelpCircle,
-  Search,
-  ChevronDown,
+  Question,
+  MagnifyingGlass,
+  CaretDown,
   CreditCard,
-  Settings,
-  Shield,
-  Smartphone,
+  GearSix,
+  ShieldCheck,
+  DeviceMobile,
   Printer,
+  Lightning,
+  ChatCircle,
   Users,
-  BarChart3,
-  Zap,
-  MessageCircle,
-} from "lucide-react";
+  ChartBar,
+} from "@phosphor-icons/react";
 import Link from "next/link";
 import { useState } from "react";
 
 const categories = [
-  { id: "all", label: "Toutes", icon: HelpCircle },
-  { id: "getting-started", label: "Démarrage", icon: Zap },
+  { id: "all", label: "Toutes", icon: Question },
+  { id: "getting-started", label: "Demarrage", icon: Lightning },
   { id: "payments", label: "Paiements", icon: CreditCard },
-  { id: "configuration", label: "Configuration", icon: Settings },
+  { id: "configuration", label: "Configuration", icon: GearSix },
   { id: "printing", label: "Impression", icon: Printer },
-  { id: "security", label: "Sécurité", icon: Shield },
-  { id: "mobile", label: "Mobile", icon: Smartphone },
+  { id: "security", label: "Securite", icon: ShieldCheck },
+  { id: "mobile", label: "Mobile", icon: DeviceMobile },
 ];
 
 const faqs = [
   {
     category: "getting-started",
-    question: "Combien de temps faut-il pour configurer Oréma N+ ?",
+    question: "Combien de temps faut-il pour configurer Orema N+ ?",
     answer:
-      "La configuration initiale prend environ 30 minutes. Cela inclut la création de votre compte, l'ajout de vos premiers produits et la configuration de votre imprimante. Vous pouvez ensuite ajouter d'autres produits et affiner vos paramètres progressivement.",
+      "La configuration initiale prend environ 30 minutes. Cela inclut la creation de votre compte, l'ajout de vos premiers produits et la configuration de votre imprimante. Vous pouvez ensuite ajouter d'autres produits et affiner vos parametres progressivement.",
   },
   {
     category: "getting-started",
-    question: "Y a-t-il une période d'essai gratuite ?",
+    question: "Y a-t-il une periode d'essai gratuite ?",
     answer:
-      "Oui ! Nous offrons 14 jours d'essai gratuit avec accès complet à toutes les fonctionnalités. Aucune carte bancaire n'est requise pour commencer. À la fin de l'essai, vous pouvez choisir le plan qui vous convient.",
+      "Oui. 14 jours d'essai gratuit avec acces complet a toutes les fonctionnalites. Aucune carte bancaire requise. A la fin de l'essai, choisissez le plan qui correspond a votre activite.",
   },
   {
     category: "getting-started",
     question: "Puis-je importer mes produits existants ?",
     answer:
-      "Absolument ! Vous pouvez importer vos produits via un fichier CSV. Nous fournissons un modèle de fichier et des instructions détaillées. Notre équipe support peut également vous aider gratuitement pour votre première importation.",
+      "Oui, via un fichier CSV. Nous fournissons un modele de fichier avec des instructions detaillees. Notre equipe support peut egalement vous accompagner gratuitement pour votre premiere importation.",
   },
   {
     category: "payments",
-    question: "Quels moyens de paiement sont supportés ?",
+    question: "Quels moyens de paiement sont supportes ?",
     answer:
-      "Oréma N+ supporte : les espèces, les cartes bancaires (via terminal externe), Airtel Money, Moov Money, les chèques, les virements bancaires et le compte client (crédit). Vous pouvez également accepter des paiements mixtes (partie cash, partie Mobile Money).",
+      "Especes, cartes bancaires (via terminal externe), Airtel Money, Moov Money, cheques, virements bancaires et compte client (credit). Le paiement mixte est egalement supporte : partie cash, partie Mobile Money par exemple.",
   },
   {
     category: "payments",
     question: "Comment configurer Airtel Money et Moov Money ?",
     answer:
-      "Rendez-vous dans Paramètres > Paiements et activez les options Mobile Money. Vous devrez renseigner vos numéros marchands respectifs. Les transactions sont ensuite enregistrées avec leur référence pour faciliter le rapprochement.",
+      "Dans Parametres > Paiements, activez les options Mobile Money et renseignez vos numeros marchands respectifs. Les transactions sont ensuite enregistrees avec leur reference pour faciliter le rapprochement.",
   },
   {
     category: "payments",
-    question: "Puis-je offrir du crédit à mes clients ?",
+    question: "Puis-je offrir du credit a mes clients ?",
     answer:
-      "Oui, vous pouvez activer l'option 'Compte client' pour certains clients de confiance. Définissez une limite de crédit par client et suivez facilement les soldes dus. Des rappels peuvent être envoyés automatiquement.",
+      "Oui. Activez l'option Compte client pour certains clients. Definissez une limite de credit par client et suivez les soldes dus. Des rappels peuvent etre envoyes automatiquement.",
   },
   {
     category: "configuration",
     question: "Comment configurer les taxes (TVA) ?",
     answer:
-      "Par défaut, Oréma N+ est configuré avec la TVA gabonaise standard de 18%. Vous pouvez définir des taux différents (10% réduit, 0% exonéré) par produit dans Paramètres > Fiscalité. La TVA est calculée automatiquement sur chaque ticket.",
+      "Par defaut, la TVA gabonaise standard de 18% est configuree. Vous pouvez definir des taux differents (10% reduit, 0% exonere) par produit dans Parametres > Fiscalite. La TVA est calculee automatiquement sur chaque ticket.",
   },
   {
     category: "configuration",
-    question: "Puis-je avoir plusieurs établissements ?",
+    question: "Puis-je avoir plusieurs etablissements ?",
     answer:
-      "Oui, notre plan Business permet de gérer plusieurs établissements depuis un seul compte. Chaque établissement a ses propres produits, stocks et rapports, mais vous avez une vue consolidée de toute votre activité.",
+      "Oui, avec le plan Business. Chaque etablissement a ses propres produits, stocks et rapports, mais vous disposez d'une vue consolidee de toute votre activite.",
   },
   {
     category: "configuration",
     question: "Comment personnaliser mes tickets de caisse ?",
     answer:
-      "Dans Paramètres > Impression > Format ticket, vous pouvez ajouter votre logo, personnaliser l'en-tête et le pied de page, et choisir les informations à afficher (NIF, RCCM, message promotionnel, etc.).",
+      "Dans Parametres > Impression > Format ticket. Ajoutez votre logo, personnalisez l'en-tete et le pied de page, choisissez les informations a afficher (NIF, RCCM, message promotionnel, etc.).",
   },
   {
     category: "printing",
     question: "Quelles imprimantes sont compatibles ?",
     answer:
-      "Oréma N+ est compatible avec toutes les imprimantes thermiques utilisant le protocole ESC/POS. Les marques les plus courantes (Epson, Star, Bixolon) fonctionnent parfaitement. Nous supportons les connexions USB, réseau (Ethernet/WiFi) et Bluetooth.",
+      "Toutes les imprimantes thermiques utilisant le protocole ESC/POS. Les marques courantes (Epson, Star, Bixolon) fonctionnent parfaitement. Connexions supportees : USB, reseau (Ethernet/WiFi) et Bluetooth.",
   },
   {
     category: "printing",
-    question: "Puis-je avoir une imprimante pour la cuisine et une pour les tickets ?",
+    question:
+      "Puis-je avoir une imprimante pour la cuisine et une pour les tickets ?",
     answer:
-      "Oui ! Vous pouvez configurer plusieurs imprimantes avec des rôles différents : tickets clients, bons de commande cuisine, bons de commande bar. Assignez ensuite chaque catégorie de produits à l'imprimante correspondante.",
+      "Oui. Configurez plusieurs imprimantes avec des roles differents : tickets clients, bons de commande cuisine, bons de commande bar. Assignez ensuite chaque categorie de produits a l'imprimante correspondante.",
   },
   {
     category: "printing",
     question: "Que faire si mon imprimante ne fonctionne pas ?",
     answer:
-      "Vérifiez d'abord la connexion (câble USB, réseau). Ensuite, allez dans Paramètres > Impression et cliquez sur 'Tester'. Si le problème persiste, consultez notre guide de dépannage ou contactez notre support technique.",
+      "Verifiez d'abord la connexion (cable USB, reseau). Dans Parametres > Impression, cliquez sur 'Tester'. Si le probleme persiste, consultez notre guide de depannage ou contactez le support technique.",
   },
   {
     category: "security",
-    question: "Mes données sont-elles sécurisées ?",
+    question: "Mes donnees sont-elles securisees ?",
     answer:
-      "Absolument. Toutes les données sont chiffrées en transit (SSL/TLS) et au repos. Nous effectuons des sauvegardes quotidiennes. Nos serveurs sont hébergés chez Vercel/Supabase avec des certifications de sécurité internationales.",
+      "Toutes les donnees sont chiffrees en transit (SSL/TLS) et au repos. Sauvegardes quotidiennes. Serveurs heberges chez Vercel/Supabase avec certifications de securite internationales.",
   },
   {
     category: "security",
-    question: "Comment gérer les accès de mon équipe ?",
+    question: "Comment gerer les acces de mon equipe ?",
     answer:
-      "Créez des comptes utilisateurs avec différents rôles : Admin, Manager, Caissier, Serveur. Chaque rôle a des permissions spécifiques. Les caissiers peuvent se connecter rapidement via un code PIN à 4 chiffres.",
+      "Creez des comptes utilisateurs avec differents roles : Admin, Manager, Caissier, Serveur. Chaque role a des permissions specifiques. Les caissiers peuvent se connecter rapidement via un code PIN a 4 chiffres.",
   },
   {
     category: "security",
-    question: "Oréma N+ fonctionne-t-il hors connexion ?",
+    question: "Orema N+ fonctionne-t-il hors connexion ?",
     answer:
-      "Oui ! Notre mode hors-ligne vous permet de continuer à encaisser même sans Internet. Les transactions sont stockées localement et synchronisées automatiquement dès que la connexion est rétablie.",
+      "Oui. Le mode hors-ligne permet de continuer a encaisser sans Internet. Les transactions sont stockees localement et synchronisees automatiquement des que la connexion est retablie.",
   },
   {
     category: "mobile",
-    question: "Puis-je utiliser Oréma N+ sur une tablette ?",
+    question: "Puis-je utiliser Orema N+ sur une tablette ?",
     answer:
-      "Oui, Oréma N+ est optimisé pour les tablettes (iPad, Android). L'interface tactile est conçue pour les écrans de 10 pouces et plus. C'est la configuration idéale pour un restaurant ou un food truck.",
+      "Oui, l'interface est optimisee pour les tablettes (iPad, Android) de 10 pouces et plus. C'est la configuration ideale pour un restaurant ou un food truck.",
   },
   {
     category: "mobile",
     question: "Y a-t-il une application mobile ?",
     answer:
-      "L'application mobile est en cours de développement. Elle permettra aux managers et propriétaires de consulter les statistiques et suivre l'activité en temps réel. En attendant, vous pouvez accéder à Oréma N+ depuis le navigateur de votre smartphone ou tablette.",
+      "L'application mobile est en cours de developpement pour les managers et proprietaires (consultation des statistiques, suivi en temps reel). En attendant, Orema N+ est accessible depuis le navigateur de tout smartphone.",
   },
   {
     category: "mobile",
-    question: "Comment prendre les commandes à table avec un smartphone ?",
+    question: "Comment prendre les commandes a table avec un smartphone ?",
     answer:
-      "Oréma N+ est accessible depuis le navigateur de tout smartphone. Vos serveurs peuvent prendre les commandes directement à table via l'interface web. La commande est envoyée instantanément à la cuisine et associée à la table.",
+      "Via le navigateur de tout smartphone. Vos serveurs prennent les commandes directement a table. La commande est envoyee instantanement a la cuisine et associee a la table.",
   },
 ];
 
@@ -185,8 +186,8 @@ export default function FAQPage() {
         }}
       />
       <PageHeader
-        title="Questions fréquentes"
-        subtitle="Trouvez rapidement les réponses à vos questions sur Oréma N+."
+        title="Questions frequentes"
+        subtitle="Trouvez rapidement les reponses a vos questions sur Orema N+."
         badge="FAQ"
       >
         {/* Search bar */}
@@ -197,7 +198,7 @@ export default function FAQPage() {
             transition={{ delay: 0.3, duration: 0.5 }}
           >
             <Box position="relative">
-              <Search
+              <MagnifyingGlass
                 size={18}
                 aria-hidden="true"
                 style={{
@@ -232,9 +233,16 @@ export default function FAQPage() {
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.2, duration: 0.6 }}
+          transition={{ delay: 0.2, duration: 0.5 }}
         >
-          <Flex gap="2" wrap="wrap" justify="center" mb="8" role="group" aria-label="Filtrer par categorie">
+          <Flex
+            gap="2"
+            wrap="wrap"
+            justify="center"
+            mb="8"
+            role="group"
+            aria-label="Filtrer par categorie"
+          >
             {categories.map((category, index) => (
               <motion.button
                 key={category.id}
@@ -252,10 +260,12 @@ export default function FAQPage() {
                   border: "none",
                   background:
                     activeCategory === category.id
-                      ? "linear-gradient(135deg, var(--violet-9) 0%, var(--purple-9) 100%)"
+                      ? "var(--accent-9)"
                       : "var(--gray-a3)",
                   color:
-                    activeCategory === category.id ? "white" : "var(--gray-11)",
+                    activeCategory === category.id
+                      ? "white"
+                      : "var(--gray-11)",
                   fontSize: 14,
                   fontWeight: 500,
                   cursor: "pointer",
@@ -273,7 +283,7 @@ export default function FAQPage() {
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.4, duration: 0.6 }}
+          transition={{ delay: 0.4, duration: 0.5 }}
         >
           {filteredFaqs.length === 0 ? (
             <Box
@@ -284,7 +294,7 @@ export default function FAQPage() {
                 textAlign: "center",
               }}
             >
-              <Search
+              <MagnifyingGlass
                 size={48}
                 style={{ color: "var(--gray-8)", marginBottom: 16 }}
               />
@@ -297,13 +307,15 @@ export default function FAQPage() {
                 style={{ display: "block", marginBottom: 16 }}
               >
                 Aucune question ne correspond a{" "}
-                {searchQuery
-                  ? <>votre recherche &quot;{searchQuery}&quot;</>
-                  : <>cette categorie</>
-                }
+                {searchQuery ? (
+                  <>votre recherche &quot;{searchQuery}&quot;</>
+                ) : (
+                  <>cette categorie</>
+                )}
               </Text>
               <Flex gap="2" justify="center" wrap="wrap">
-                {searchQuery ? <button
+                {searchQuery ? (
+                  <button
                     onClick={() => setSearchQuery("")}
                     style={{
                       padding: "10px 20px",
@@ -314,11 +326,11 @@ export default function FAQPage() {
                       fontSize: 14,
                       fontWeight: 500,
                       cursor: "pointer",
-                      transition: "all 0.2s ease",
                     }}
                   >
                     Effacer la recherche
-                  </button> : null}
+                  </button>
+                ) : null}
                 {activeCategory !== "all" && (
                   <button
                     onClick={() => setActiveCategory("all")}
@@ -331,7 +343,6 @@ export default function FAQPage() {
                       fontSize: 14,
                       fontWeight: 500,
                       cursor: "pointer",
-                      transition: "all 0.2s ease",
                     }}
                   >
                     Toutes les categories
@@ -346,7 +357,10 @@ export default function FAQPage() {
                   key={index}
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.5 + index * 0.03, duration: 0.4 }}
+                  transition={{
+                    delay: 0.5 + index * 0.03,
+                    duration: 0.4,
+                  }}
                 >
                   <Box
                     style={{
@@ -375,15 +389,21 @@ export default function FAQPage() {
                         textAlign: "left",
                       }}
                     >
-                      <Text size="3" weight="medium" style={{ color: "var(--gray-12)" }}>
+                      <Text
+                        size="3"
+                        weight="medium"
+                        style={{ color: "var(--gray-12)" }}
+                      >
                         {faq.question}
                       </Text>
                       <motion.div
-                        animate={{ rotate: openIndex === index ? 180 : 0 }}
+                        animate={{
+                          rotate: openIndex === index ? 180 : 0,
+                        }}
                         transition={{ duration: 0.2 }}
                         style={{ flexShrink: 0 }}
                       >
-                        <ChevronDown
+                        <CaretDown
                           size={20}
                           style={{ color: "var(--gray-10)" }}
                           aria-hidden="true"
@@ -400,7 +420,10 @@ export default function FAQPage() {
                           initial={{ height: 0, opacity: 0 }}
                           animate={{ height: "auto", opacity: 1 }}
                           exit={{ height: 0, opacity: 0 }}
-                          transition={{ duration: 0.3, ease: "easeInOut" }}
+                          transition={{
+                            duration: 0.3,
+                            ease: "easeInOut",
+                          }}
                         >
                           <Box
                             px="6"
@@ -431,77 +454,67 @@ export default function FAQPage() {
           )}
         </motion.div>
 
-        {/* Stats */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.8, duration: 0.6 }}
-        >
-          <Grid columns={{ initial: "1", sm: "3" }} gap="4" mt="9" mb="9">
-            {[
-              { icon: Users, value: "6j/7", label: "Support disponible" },
-              { icon: MessageCircle, value: "< 24h", label: "Délai de réponse" },
-              { icon: BarChart3, value: "Dédié", label: "Accompagnement" },
-            ].map((stat, index) => (
-              <motion.div
-                key={stat.label}
-                initial={{ opacity: 0, scale: 0.9 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ delay: 0.9 + index * 0.1, duration: 0.4 }}
+        {/* Support stats */}
+        <Grid columns={{ initial: "1", sm: "3" }} gap="4" mt="9" mb="9">
+          {[
+            { icon: Users, value: "6j/7", label: "Support disponible" },
+            { icon: ChatCircle, value: "< 24h", label: "Delai de reponse" },
+            { icon: ChartBar, value: "Dedie", label: "Accompagnement" },
+          ].map((stat, index) => (
+            <motion.div
+              key={stat.label}
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ delay: 0.8 + index * 0.1, duration: 0.4 }}
+            >
+              <Box
+                p="5"
+                style={{
+                  background: "var(--gray-a2)",
+                  borderRadius: 16,
+                  border: "1px solid var(--gray-a4)",
+                  textAlign: "center",
+                }}
               >
-                <Box
-                  p="5"
+                <stat.icon
+                  size={24}
+                  weight="duotone"
                   style={{
-                    background: "var(--gray-a2)",
-                    borderRadius: 16,
-                    border: "1px solid var(--gray-a4)",
-                    textAlign: "center",
+                    color: "var(--accent-9)",
+                    marginBottom: 8,
                   }}
+                />
+                <Text
+                  size="6"
+                  weight="bold"
+                  style={{ display: "block", color: "var(--gray-12)" }}
                 >
-                  <stat.icon
-                    size={24}
-                    style={{
-                      color: "var(--violet-9)",
-                      marginBottom: 8,
-                    }}
-                  />
-                  <Text
-                    size="6"
-                    weight="bold"
-                    style={{ display: "block", color: "var(--gray-12)" }}
-                  >
-                    {stat.value}
-                  </Text>
-                  <Text size="2" color="gray">
-                    {stat.label}
-                  </Text>
-                </Box>
-              </motion.div>
-            ))}
-          </Grid>
-        </motion.div>
+                  {stat.value}
+                </Text>
+                <Text size="2" color="gray">
+                  {stat.label}
+                </Text>
+              </Box>
+            </motion.div>
+          ))}
+        </Grid>
 
         {/* Contact CTA */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 1.1, duration: 0.6 }}
+          transition={{ delay: 1, duration: 0.5 }}
         >
           <Box
             p="8"
             style={{
-              background:
-                "linear-gradient(135deg, var(--violet-9) 0%, var(--purple-9) 100%)",
-              borderRadius: 24,
+              background: "var(--accent-9)",
+              borderRadius: 20,
               textAlign: "center",
             }}
           >
-            <MessageCircle
-              size={48}
-              style={{ color: "white", marginBottom: 16, opacity: 0.9 }}
-            />
             <Heading size="5" mb="3" style={{ color: "white" }}>
-              Vous ne trouvez pas votre réponse ?
+              Vous ne trouvez pas votre reponse ?
             </Heading>
             <Text
               size="3"
@@ -513,8 +526,8 @@ export default function FAQPage() {
                 display: "block",
               }}
             >
-              Notre équipe support est disponible du lundi au samedi, de 8h à 18h
-              (heure de Libreville).
+              Notre equipe support est disponible du lundi au samedi, de 8h a
+              18h (heure de Libreville).
             </Text>
             <Flex gap="3" justify="center" wrap="wrap">
               <Link
@@ -522,7 +535,7 @@ export default function FAQPage() {
                 style={{
                   textDecoration: "none",
                   background: "white",
-                  color: "var(--violet-9)",
+                  color: "var(--accent-9)",
                   padding: "12px 24px",
                   borderRadius: 9999,
                   fontWeight: 600,
@@ -532,7 +545,7 @@ export default function FAQPage() {
                 Contacter le support
               </Link>
               <Link
-                href="/docs"
+                href="/guide"
                 style={{
                   textDecoration: "none",
                   background: "rgba(255,255,255,0.2)",
@@ -544,7 +557,7 @@ export default function FAQPage() {
                   border: "1px solid rgba(255,255,255,0.3)",
                 }}
               >
-                Voir la documentation
+                Guide de demarrage
               </Link>
             </Flex>
           </Box>

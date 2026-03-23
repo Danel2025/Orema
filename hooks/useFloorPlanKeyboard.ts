@@ -22,8 +22,28 @@ export interface FloorPlanKeyboardCallbacks {
   onEscape?: () => void;
   /** Deplacer l'element (fleches, deltaX et deltaY en pixels) */
   onMove?: (deltaX: number, deltaY: number) => void;
-  /** Rotation de l'element (+90 degres avec R) */
+  /** Rotation de l'element (+90 degres avec R, -90 avec Shift+R) */
   onRotate?: (degrees: number) => void;
+  /** Zoom avant (Ctrl/Cmd + =) */
+  onZoomIn?: () => void;
+  /** Zoom arriere (Ctrl/Cmd + -) */
+  onZoomOut?: () => void;
+  /** Reinitialiser la vue (Ctrl/Cmd + 0) */
+  onResetView?: () => void;
+  /** Basculer la grille (G) */
+  onToggleGrid?: () => void;
+  /** Basculer le snap-to-grid (S quand outil select) */
+  onToggleSnap?: () => void;
+  /** Tout selectionner (Ctrl/Cmd + A) */
+  onSelectAll?: () => void;
+  /** Verrouiller/deverrouiller la position (L) */
+  onToggleLock?: () => void;
+  /** Augmenter la taille (]) */
+  onIncreaseSize?: () => void;
+  /** Reduire la taille ([) */
+  onDecreaseSize?: () => void;
+  /** Centrer la vue sur la selection (F) */
+  onFocusSelected?: () => void;
 }
 
 /**
@@ -60,16 +80,13 @@ export function useFloorPlanKeyboard(
   callbacks: FloorPlanKeyboardCallbacks,
   options: UseFloorPlanKeyboardOptions = {}
 ): void {
-  const {
-    enabled = true,
-    moveStep = 1,
-    fastMoveStep = 10,
-    rotationAngle = 90,
-  } = options;
+  const { enabled = true, moveStep = 1, fastMoveStep = 10, rotationAngle = 90 } = options;
 
   // Utiliser useRef pour eviter les problemes de closure avec les callbacks
   const callbacksRef = useRef(callbacks);
-  callbacksRef.current = callbacks;
+  useEffect(() => {
+    callbacksRef.current = callbacks;
+  });
 
   const handleKeyDown = useCallback(
     (event: KeyboardEvent) => {
@@ -101,14 +118,54 @@ export function useFloorPlanKeyboard(
         return;
       }
 
-      // Rotation (R)
+      // Rotation (R = +90°, Shift+R = -90°)
       if (event.key === "r" || event.key === "R") {
-        // Ne pas activer si un modificateur est presse (sauf Shift pour rotation inverse potentielle)
         if (!modifierKey && !event.altKey) {
           event.preventDefault();
-          callbacksRef.current.onRotate?.(rotationAngle);
+          const angle = event.shiftKey ? -rotationAngle : rotationAngle;
+          callbacksRef.current.onRotate?.(angle);
           return;
         }
+      }
+
+      // Basculer la grille (G, sans modificateur)
+      if ((event.key === "g" || event.key === "G") && !modifierKey && !event.altKey && !event.shiftKey) {
+        event.preventDefault();
+        callbacksRef.current.onToggleGrid?.();
+        return;
+      }
+
+      // Basculer le snap-to-grid (N pour magNetic)
+      if ((event.key === "n" || event.key === "N") && !modifierKey && !event.altKey && !event.shiftKey) {
+        event.preventDefault();
+        callbacksRef.current.onToggleSnap?.();
+        return;
+      }
+
+      // Verrouiller/deverrouiller (L)
+      if ((event.key === "l" || event.key === "L") && !modifierKey && !event.altKey) {
+        event.preventDefault();
+        callbacksRef.current.onToggleLock?.();
+        return;
+      }
+
+      // Centrer la vue sur la selection (F pour Focus)
+      if ((event.key === "f" || event.key === "F") && !modifierKey && !event.altKey) {
+        event.preventDefault();
+        callbacksRef.current.onFocusSelected?.();
+        return;
+      }
+
+      // Resize avec [ et ]
+      if (event.key === "]") {
+        event.preventDefault();
+        callbacksRef.current.onIncreaseSize?.();
+        return;
+      }
+      if (event.key === "[") {
+        event.preventDefault();
+        callbacksRef.current.onDecreaseSize?.();
+        return;
       }
 
       // Raccourcis avec Ctrl/Cmd
@@ -131,6 +188,34 @@ export function useFloorPlanKeyboard(
         if (event.key === "v" || event.key === "V") {
           event.preventDefault();
           callbacksRef.current.onPaste?.();
+          return;
+        }
+
+        // Tout selectionner (Ctrl/Cmd+A)
+        if (event.key === "a" || event.key === "A") {
+          event.preventDefault();
+          callbacksRef.current.onSelectAll?.();
+          return;
+        }
+
+        // Zoom avant (Ctrl/Cmd + = ou +)
+        if (event.key === "=" || event.key === "+") {
+          event.preventDefault();
+          callbacksRef.current.onZoomIn?.();
+          return;
+        }
+
+        // Zoom arriere (Ctrl/Cmd + -)
+        if (event.key === "-") {
+          event.preventDefault();
+          callbacksRef.current.onZoomOut?.();
+          return;
+        }
+
+        // Reinitialiser la vue (Ctrl/Cmd + 0)
+        if (event.key === "0") {
+          event.preventDefault();
+          callbacksRef.current.onResetView?.();
           return;
         }
 

@@ -5,10 +5,10 @@
  * pour imprimantes thermiques et réseau.
  */
 
-import type { NextRequest} from "next/server";
+import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
 import * as os from "os";
-import { getSession } from "@/lib/auth/session";
+import { getCurrentUser } from "@/lib/auth";
 
 /**
  * Ports courants pour imprimantes réseau :
@@ -20,8 +20,8 @@ import { getSession } from "@/lib/auth/session";
  * - 8008 : HTTP alternatif (certaines imprimantes Star, Epson)
  * - 8043 : HTTPS alternatif
  */
-const DEFAULT_PRINTER_PORTS = [9100, 515, 631];
-const EXTENDED_PRINTER_PORTS = [9100, 515, 631, 80, 8008];
+const DEFAULT_PRINTER_PORTS = [9100, 631, 515];
+const EXTENDED_PRINTER_PORTS = [9100, 631, 515, 80, 443, 8008, 8043];
 const SCAN_TIMEOUT = 500; // 500ms par IP/port
 const MAX_PARALLEL_SCANS = 50; // Limiter les connexions parallèles
 
@@ -48,15 +48,15 @@ export async function POST(request: NextRequest): Promise<NextResponse<ScanResul
   const startTime = Date.now();
 
   try {
-    const session = await getSession();
-    if (!session) {
+    const user = await getCurrentUser();
+    if (!user) {
       return NextResponse.json({ success: false, error: "Non authentifie" }, { status: 401 });
     }
 
     // Network scan is restricted to ADMIN, MANAGER, and SUPER_ADMIN roles
     const allowedRoles = ["ADMIN", "MANAGER", "SUPER_ADMIN"];
-    if (!allowedRoles.includes(session.role)) {
-      return NextResponse.json({ success: false, error: "Acces non autorise" }, { status: 403 });
+    if (!allowedRoles.includes(user.role)) {
+      return NextResponse.json({ success: false, error: "Accès non autorisé" }, { status: 403 });
     }
 
     // Lire les options du body (optionnel)
@@ -145,10 +145,13 @@ export async function POST(request: NextRequest): Promise<NextResponse<ScanResul
     });
   } catch (error) {
     console.error("[API Scan] Erreur:", error);
-    return NextResponse.json({
-      success: false,
-      error: error instanceof Error ? error.message : "Erreur lors du scan",
-    }, { status: 500 });
+    return NextResponse.json(
+      {
+        success: false,
+        error: error instanceof Error ? error.message : "Erreur lors du scan",
+      },
+      { status: 500 }
+    );
   }
 }
 
@@ -157,14 +160,22 @@ export async function POST(request: NextRequest): Promise<NextResponse<ScanResul
  */
 function getProtocolLabel(port: number): string {
   switch (port) {
-    case 9100: return "RAW/JetDirect (ESC/POS)";
-    case 515: return "LPD/LPR";
-    case 631: return "IPP (CUPS)";
-    case 80: return "HTTP";
-    case 443: return "HTTPS";
-    case 8008: return "HTTP (alt)";
-    case 8043: return "HTTPS (alt)";
-    default: return `Port ${port}`;
+    case 9100:
+      return "RAW/JetDirect (impression directe ESC/POS)";
+    case 515:
+      return "LPD/LPR (impression reseau classique)";
+    case 631:
+      return "IPP/CUPS (Canon, HP, Epson, Brother, etc.)";
+    case 80:
+      return "HTTP (interface web imprimante)";
+    case 443:
+      return "HTTPS (interface web securisee)";
+    case 8008:
+      return "HTTP alt (Star, Epson Cloud)";
+    case 8043:
+      return "HTTPS alt (Star, Epson Cloud)";
+    default:
+      return `Port ${port}`;
   }
 }
 
@@ -218,27 +229,29 @@ function getLocalNetworkInfo(): { baseIP: string; startRange: number; endRange: 
 async function testPort(ip: string, port: number, timeout: number): Promise<boolean> {
   return new Promise((resolve) => {
     // Import dynamique pour éviter les erreurs côté client
-    import("net").then((net) => {
-      const socket = new net.Socket();
+    import("net")
+      .then((net) => {
+        const socket = new net.Socket();
 
-      const timeoutId = setTimeout(() => {
-        socket.destroy();
+        const timeoutId = setTimeout(() => {
+          socket.destroy();
+          resolve(false);
+        }, timeout);
+
+        socket.connect(port, ip, () => {
+          clearTimeout(timeoutId);
+          socket.destroy();
+          resolve(true);
+        });
+
+        socket.on("error", () => {
+          clearTimeout(timeoutId);
+          socket.destroy();
+          resolve(false);
+        });
+      })
+      .catch(() => {
         resolve(false);
-      }, timeout);
-
-      socket.connect(port, ip, () => {
-        clearTimeout(timeoutId);
-        socket.destroy();
-        resolve(true);
       });
-
-      socket.on("error", () => {
-        clearTimeout(timeoutId);
-        socket.destroy();
-        resolve(false);
-      });
-    }).catch(() => {
-      resolve(false);
-    });
   });
 }

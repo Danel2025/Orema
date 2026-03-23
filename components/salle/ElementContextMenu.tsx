@@ -6,16 +6,16 @@
 
 import { useEffect, useRef } from "react";
 import {
-  RotateCw,
-  RotateCcw,
-  Maximize2,
-  Minimize2,
+  ArrowClockwise,
+  ArrowCounterClockwise,
+  ArrowsOut,
+  ArrowsIn,
   Copy,
-  Trash2,
+  Trash,
   FlipHorizontal,
-  MoveHorizontal,
-  MoveVertical,
-} from "lucide-react";
+  ArrowsHorizontal,
+  ArrowsVertical,
+} from "@phosphor-icons/react";
 
 interface ContextMenuProps {
   x: number;
@@ -79,17 +79,17 @@ export function ElementContextMenu({
   }, [onClose]);
 
   const menuItems: MenuItem[] = [
-    { label: "Rotation -90°", icon: <RotateCcw size={14} />, onClick: onRotateLeft },
-    { label: "Rotation +90°", icon: <RotateCw size={14} />, onClick: onRotateRight },
+    { label: "Rotation -90°", icon: <ArrowCounterClockwise size={14} />, onClick: onRotateLeft },
+    { label: "Rotation +90°", icon: <ArrowClockwise size={14} />, onClick: onRotateRight },
     { label: "Rotation 180°", icon: <FlipHorizontal size={14} />, onClick: onRotate180 },
     { label: "", icon: null, onClick: () => {}, separator: true },
-    { label: "Agrandir", icon: <Maximize2 size={14} />, onClick: onIncreaseSize },
-    { label: "Réduire", icon: <Minimize2 size={14} />, onClick: onDecreaseSize },
-    { label: "Plus large", icon: <MoveHorizontal size={14} />, onClick: onIncreaseWidth },
-    { label: "Plus haut", icon: <MoveVertical size={14} />, onClick: onIncreaseHeight },
+    { label: "Agrandir", icon: <ArrowsOut size={14} />, onClick: onIncreaseSize },
+    { label: "Réduire", icon: <ArrowsIn size={14} />, onClick: onDecreaseSize },
+    { label: "Plus large", icon: <ArrowsHorizontal size={14} />, onClick: onIncreaseWidth },
+    { label: "Plus haut", icon: <ArrowsVertical size={14} />, onClick: onIncreaseHeight },
     { label: "", icon: null, onClick: () => {}, separator: true },
     { label: "Dupliquer", icon: <Copy size={14} />, onClick: onDuplicate },
-    { label: "Supprimer", icon: <Trash2 size={14} />, onClick: onDelete, danger: true },
+    { label: "Supprimer", icon: <Trash size={14} />, onClick: onDelete, danger: true },
   ];
 
   // Ajuster la position pour ne pas sortir de l'écran

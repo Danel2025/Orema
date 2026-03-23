@@ -24,7 +24,6 @@ function formatDateTime(date: Date | string): string {
   return `${d.toLocaleDateString("fr-FR", { day: "2-digit", month: "2-digit", year: "numeric" })} ${d.toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" })}`;
 }
 
- 
 export function generateBonCuisineCommands(
   printer: any,
   data: BonCuisineData,

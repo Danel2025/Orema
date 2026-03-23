@@ -1,4 +1,4 @@
-'use client'
+"use client";
 
 /**
  * Providers du dashboard
@@ -7,16 +7,17 @@
  * pour le dashboard (Auth, etc.)
  */
 
-import { type ReactNode } from 'react'
-import { AuthProvider, type AuthUser } from '@/lib/auth/context'
-import { DashboardShell } from './dashboard-shell'
-import { RouteGuard } from './route-guard'
-import type { Permission } from '@/lib/permissions'
+import { type ReactNode } from "react";
+import { AuthProvider, type AuthUser } from "@/lib/auth/context";
+import { DashboardShell } from "./dashboard-shell";
+import { RouteGuard } from "./route-guard";
+import { NotificationBridgeProvider } from "./notification-bridge-provider";
+import type { Permission } from "@/lib/permissions";
 
 interface DashboardProvidersProps {
-  children: ReactNode
-  user: AuthUser | null
-  permissions?: Permission[]
+  children: ReactNode;
+  user: AuthUser | null;
+  permissions?: Permission[];
 }
 
 /**
@@ -28,11 +29,11 @@ interface DashboardProvidersProps {
 export function DashboardProviders({ children, user, permissions }: DashboardProvidersProps) {
   return (
     <AuthProvider initialUser={user} initialPermissions={permissions}>
-      <DashboardShell>
-        <RouteGuard>
-          {children}
-        </RouteGuard>
-      </DashboardShell>
+      <NotificationBridgeProvider>
+        <DashboardShell>
+          <RouteGuard>{children}</RouteGuard>
+        </DashboardShell>
+      </NotificationBridgeProvider>
     </AuthProvider>
-  )
+  );
 }

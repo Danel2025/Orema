@@ -44,10 +44,7 @@ export {
 } from "./ticket-client";
 
 // Addition (pre-note)
-export {
-  generateAddition,
-  createAdditionDataFromCart,
-} from "./addition";
+export { generateAddition, createAdditionDataFromCart } from "./addition";
 
 // Bon cuisine
 export {
@@ -66,10 +63,7 @@ export {
 } from "./bon-bar";
 
 // Rapport Z
-export {
-  generateRapportZ,
-  createRapportZDataFromSession,
-} from "./rapport-z";
+export { generateRapportZ, createRapportZDataFromSession } from "./rapport-z";
 
 // Router
 export {

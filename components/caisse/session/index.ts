@@ -10,9 +10,4 @@ export { SessionHistory } from "../session-history";
 export { SessionRequired, useSessionRequired } from "../session-required";
 
 // Types re-exports
-export type {
-  SessionActive,
-  SessionHistoryItem,
-  SessionStats,
-  RapportZ,
-} from "@/actions/sessions";
+export type { SessionActive, SessionHistoryItem, SessionStats, RapportZ } from "@/actions/sessions";

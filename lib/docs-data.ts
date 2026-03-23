@@ -1,5 +1,4 @@
-import type {
-  LucideIcon} from "lucide-react";
+import type { LucideIcon } from "lucide-react";
 import {
   Rocket,
   Settings,
@@ -9,7 +8,7 @@ import {
   Printer,
   BarChart3,
   Shield,
-  Code
+  Code,
 } from "lucide-react";
 
 export interface DocArticle {

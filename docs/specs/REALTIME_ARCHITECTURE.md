@@ -17,12 +17,14 @@ L'application utilise Supabase Realtime pour les fonctionnalités de temps réel
 Permet de voir en temps réel quels utilisateurs sont connectés à l'application.
 
 **Fichiers :**
+
 - `lib/realtime/types.ts` - Types TypeScript
 - `lib/realtime/presence.ts` - Classe PresenceManager
 - `lib/realtime/hooks.ts` - Hooks React
 - `stores/presence-store.ts` - Store Zustand
 
 **Données trackées :**
+
 ```typescript
 interface UserPresenceState {
   userId: string;
@@ -31,22 +33,23 @@ interface UserPresenceState {
   role: Role;
   etablissementId: string;
   onlineAt: string;
-  currentPage?: string;      // Page actuelle
-  sessionCaisseId?: string;  // Session de caisse active
+  currentPage?: string; // Page actuelle
+  sessionCaisseId?: string; // Session de caisse active
   status?: "actif" | "absent" | "occupé" | "en_pause";
 }
 ```
 
 **Utilisation :**
+
 ```tsx
-import { usePresence, useOnlineUsers } from '@/lib/realtime';
+import { usePresence, useOnlineUsers } from "@/lib/realtime";
 
 // Hook complet avec callbacks
 function Dashboard() {
   const { onlineUsers, broadcast, updateStatus } = usePresence({
     onUserJoin: (user) => toast.success(`${user.prenom} est connecté`),
     onUserLeave: (user) => toast.info(`${user.prenom} s'est déconnecté`),
-    currentPage: '/dashboard',
+    currentPage: "/dashboard",
   });
 
   return <div>{onlineUsers.length} utilisateurs en ligne</div>;
@@ -65,32 +68,33 @@ Permet d'envoyer des événements à tous les clients connectés du même établ
 
 **Types d'événements :**
 
-| Événement | Description | Destinataires |
-|-----------|-------------|---------------|
-| `table:status_change` | Changement de statut d'une table | Salle, Caisse |
-| `commande:nouvelle` | Nouvelle commande passée | Cuisine, Bar |
-| `commande:status_change` | Statut de préparation modifié | Salle, Caisse |
-| `alerte:stock_bas` | Stock en dessous du minimum | Manager |
-| `alerte:demande_addition` | Client demande l'addition | Serveurs |
-| `session:ouverture` | Ouverture de session caisse | Manager |
-| `session:fermeture` | Fermeture de session caisse | Manager |
-| `notification:generale` | Notification personnalisée | Configurable |
+| Événement                 | Description                      | Destinataires |
+| ------------------------- | -------------------------------- | ------------- |
+| `table:status_change`     | Changement de statut d'une table | Salle, Caisse |
+| `commande:nouvelle`       | Nouvelle commande passée         | Cuisine, Bar  |
+| `commande:status_change`  | Statut de préparation modifié    | Salle, Caisse |
+| `alerte:stock_bas`        | Stock en dessous du minimum      | Manager       |
+| `alerte:demande_addition` | Client demande l'addition        | Serveurs      |
+| `session:ouverture`       | Ouverture de session caisse      | Manager       |
+| `session:fermeture`       | Fermeture de session caisse      | Manager       |
+| `notification:generale`   | Notification personnalisée       | Configurable  |
 
 **Exemple d'envoi :**
+
 ```tsx
 const { broadcast } = usePresence();
 
 // Notifier une nouvelle commande
 await broadcast({
-  type: 'commande:nouvelle',
+  type: "commande:nouvelle",
   data: {
-    venteId: 'xxx',
-    numeroTicket: '20250128001',
-    typeVente: 'TABLE',
-    tableNumero: 'T5',
+    venteId: "xxx",
+    numeroTicket: "20250128001",
+    typeVente: "TABLE",
+    tableNumero: "T5",
     lignes: [
-      { produitNom: 'Poulet DG', quantite: 2, destination: 'cuisine' },
-      { produitNom: 'Coca-Cola', quantite: 2, destination: 'bar' },
+      { produitNom: "Poulet DG", quantite: 2, destination: "cuisine" },
+      { produitNom: "Coca-Cola", quantite: 2, destination: "bar" },
     ],
     timestamp: new Date().toISOString(),
   },
@@ -98,6 +102,7 @@ await broadcast({
 ```
 
 **Réception :**
+
 ```tsx
 useCuisineEvents({
   onNouvelleCommande: (data) => {

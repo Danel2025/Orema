@@ -67,8 +67,7 @@ serve(async (req: Request) => {
 
   // Permettre l'appel depuis Supabase CRON ou avec le secret
   const isFromSupabaseCron = req.headers.get("X-Supabase-Cron") === "true";
-  const isValidSecret =
-    cronSecret && authHeader === `Bearer ${cronSecret}`;
+  const isValidSecret = cronSecret && authHeader === `Bearer ${cronSecret}`;
 
   if (!isFromSupabaseCron && !isValidSecret) {
     return new Response("Unauthorized", { status: 401 });
@@ -89,10 +88,10 @@ serve(async (req: Request) => {
 
     if (!etablissements || etablissements.length === 0) {
       console.log("[Rapport Z] Aucun établissement actif");
-      return new Response(
-        JSON.stringify({ message: "Aucun établissement actif" }),
-        { status: 200, headers: { "Content-Type": "application/json" } }
-      );
+      return new Response(JSON.stringify({ message: "Aucun établissement actif" }), {
+        status: 200,
+        headers: { "Content-Type": "application/json" },
+      });
     }
 
     // Date de la veille (on génère le rapport pour hier)
@@ -156,35 +155,29 @@ serve(async (req: Request) => {
         }
 
         // Calculer le rapport
-        const rapport = calculerRapportZ(
-          etab.id,
-          hier.toISOString().split("T")[0],
-          ventes || []
-        );
+        const rapport = calculerRapportZ(etab.id, hier.toISOString().split("T")[0], ventes || []);
 
         // Sauvegarder le rapport
-        const { error: insertError } = await supabase
-          .from("rapports_z")
-          .insert({
-            etablissementId: rapport.etablissementId,
-            date: rapport.date,
-            nombreVentes: rapport.nombreVentes,
-            nombreArticles: rapport.nombreArticles,
-            totalHT: rapport.totalHT,
-            totalTVA: rapport.totalTVA,
-            totalTTC: rapport.totalTTC,
-            totalEspeces: rapport.totalEspeces,
-            totalCartes: rapport.totalCartes,
-            totalAirtelMoney: rapport.totalAirtelMoney,
-            totalMoovMoney: rapport.totalMoovMoney,
-            totalCheques: rapport.totalCheques,
-            totalVirements: rapport.totalVirements,
-            totalCompteClient: rapport.totalCompteClient,
-            panierMoyen: rapport.panierMoyen,
-            premierTicket: rapport.premierTicket,
-            dernierTicket: rapport.dernierTicket,
-            data: rapport, // JSON complet avec détails
-          });
+        const { error: insertError } = await supabase.from("rapports_z").insert({
+          etablissementId: rapport.etablissementId,
+          date: rapport.date,
+          nombreVentes: rapport.nombreVentes,
+          nombreArticles: rapport.nombreArticles,
+          totalHT: rapport.totalHT,
+          totalTVA: rapport.totalTVA,
+          totalTTC: rapport.totalTTC,
+          totalEspeces: rapport.totalEspeces,
+          totalCartes: rapport.totalCartes,
+          totalAirtelMoney: rapport.totalAirtelMoney,
+          totalMoovMoney: rapport.totalMoovMoney,
+          totalCheques: rapport.totalCheques,
+          totalVirements: rapport.totalVirements,
+          totalCompteClient: rapport.totalCompteClient,
+          panierMoyen: rapport.panierMoyen,
+          premierTicket: rapport.premierTicket,
+          dernierTicket: rapport.dernierTicket,
+          data: rapport, // JSON complet avec détails
+        });
 
         if (insertError) {
           throw new Error(`Erreur insertion ${etab.nom}: ${insertError.message}`);
@@ -226,11 +219,7 @@ serve(async (req: Request) => {
 /**
  * Calcule le rapport Z à partir des ventes
  */
-function calculerRapportZ(
-  etablissementId: string,
-  date: string,
-  ventes: any[]
-): RapportZ {
+function calculerRapportZ(etablissementId: string, date: string, ventes: any[]): RapportZ {
   // Initialiser le rapport
   const rapport: RapportZ = {
     date,
@@ -275,10 +264,8 @@ function calculerRapportZ(
     rapport.totalTTC += Number(vente.totalTTC) || 0;
 
     // Nombre d'articles
-    const nbArticles = vente.lignes?.reduce(
-      (sum: number, ligne: any) => sum + (ligne.quantite || 0),
-      0
-    ) ?? 0;
+    const nbArticles =
+      vente.lignes?.reduce((sum: number, ligne: any) => sum + (ligne.quantite || 0), 0) ?? 0;
     rapport.nombreArticles += nbArticles;
 
     // Ventes par type
@@ -326,9 +313,7 @@ function calculerRapportZ(
 
   // Panier moyen
   rapport.panierMoyen =
-    rapport.nombreVentes > 0
-      ? Math.round(rapport.totalTTC / rapport.nombreVentes)
-      : 0;
+    rapport.nombreVentes > 0 ? Math.round(rapport.totalTTC / rapport.nombreVentes) : 0;
 
   return rapport;
 }

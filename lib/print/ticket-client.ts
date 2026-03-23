@@ -14,25 +14,16 @@ import {
   formatPrintAmount,
   formatPrintDateTime,
 } from "./escpos";
-import {
-  type TicketClientData,
-  PAIEMENT_LABELS,
-  TYPE_VENTE_LABELS,
-} from "./types";
+import { type TicketClientData, PAIEMENT_LABELS, TYPE_VENTE_LABELS } from "./types";
 
 /**
  * Genere les commandes ESC/POS pour un ticket client
  */
-export function generateTicketClient(
-  data: TicketClientData,
-  paperWidth: 58 | 80 = 80
-): string {
+export function generateTicketClient(data: TicketClientData, paperWidth: 58 | 80 = 80): string {
   const builder = createESCPOSBuilder(paperWidth);
   const charsPerLine = builder.getCharsPerLine();
 
-  builder
-    .init()
-    .align("center");
+  builder.init().align("center");
 
   // ============================================
   // EN-TETE
@@ -216,8 +207,7 @@ export function generateTicketClient(
 
   // Message de remerciement personnalise ou par defaut
   const messageRemerciement =
-    data.etablissement.messageTicket ||
-    "Merci de votre visite!\nA bientot!";
+    data.etablissement.messageTicket || "Merci de votre visite!\nA bientot!";
 
   const lignesMessage = messageRemerciement.split("\n");
   for (const ligneMsg of lignesMessage) {

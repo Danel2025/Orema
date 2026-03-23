@@ -76,14 +76,11 @@ export class MoovMoneyClient {
   constructor() {
     this.apiKey = process.env.MOOV_MONEY_API_KEY || "";
     this.merchantId = process.env.MOOV_MONEY_MERCHANT_ID || "";
-    this.baseUrl =
-      process.env.MOOV_MONEY_BASE_URL || "https://api.moov-africa.ga";
+    this.baseUrl = process.env.MOOV_MONEY_BASE_URL || "https://api.moov-africa.ga";
     this.callbackUrl = process.env.MOOV_MONEY_CALLBACK_URL || "";
 
     if (!this.apiKey || !this.merchantId) {
-      console.warn(
-        "[MoovMoney] Credentials manquantes. Les paiements ne fonctionneront pas."
-      );
+      console.warn("[MoovMoney] Credentials manquantes. Les paiements ne fonctionneront pas.");
     }
   }
 
@@ -91,9 +88,7 @@ export class MoovMoneyClient {
    * Initie un paiement C2B (Customer to Business)
    * Le client recevra une notification USSD pour confirmer le paiement.
    */
-  async initiatePayment(
-    params: InitiatePaymentParams
-  ): Promise<InitiatePaymentResult> {
+  async initiatePayment(params: InitiatePaymentParams): Promise<InitiatePaymentResult> {
     const payload: MoovPaymentRequest = {
       merchantId: this.merchantId,
       amount: params.amount,
@@ -104,25 +99,19 @@ export class MoovMoneyClient {
       description: params.description || `Paiement Orema N+ - ${params.reference}`,
     };
 
-    const response = await this.fetchWithRetry(
-      `${this.baseUrl}/v1/merchant/payment/init`,
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${this.apiKey}`,
-          "X-Merchant-ID": this.merchantId,
-        },
-        body: JSON.stringify(payload),
-      }
-    );
+    const response = await this.fetchWithRetry(`${this.baseUrl}/v1/merchant/payment/init`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${this.apiKey}`,
+        "X-Merchant-ID": this.merchantId,
+      },
+      body: JSON.stringify(payload),
+    });
 
     if (!response.ok) {
       const text = await response.text();
-      console.error(
-        `[MoovMoney] Erreur initiation paiement: ${response.status}`,
-        text
-      );
+      console.error(`[MoovMoney] Erreur initiation paiement: ${response.status}`, text);
       return {
         success: false,
         error: `Erreur API Moov Money: ${response.status}`,
@@ -166,10 +155,7 @@ export class MoovMoneyClient {
 
     if (!response.ok) {
       const text = await response.text();
-      console.error(
-        `[MoovMoney] Erreur verification statut: ${response.status}`,
-        text
-      );
+      console.error(`[MoovMoney] Erreur verification statut: ${response.status}`, text);
       return {
         success: false,
         error: `Erreur API Moov Money: ${response.status}`,

@@ -18,23 +18,9 @@ import {
   Box,
 } from "@radix-ui/themes";
 import { ScrollArea } from "@/components/ui";
-import {
-  MapPin,
-  Plus,
-  Pencil,
-  Trash2,
-  GripVertical,
-  X,
-  Check,
-  Palette,
-} from "lucide-react";
+import { MapPin, Plus, PencilSimple, Trash, DotsSixVertical, X, Check, Palette } from "@phosphor-icons/react";
 import { toast } from "sonner";
-import {
-  createZone,
-  updateZone,
-  deleteZone,
-  reorderZones,
-} from "@/actions/tables";
+import { createZone, updateZone, deleteZone, reorderZones } from "@/actions/tables";
 
 // Couleurs predefinies pour les zones
 const ZONE_COLORS = [
@@ -90,8 +76,7 @@ export function ZoneManager({ zones, onRefresh }: ZoneManagerProps) {
             </Flex>
           </Dialog.Title>
           <Dialog.Description size="2" mb="4" color="gray">
-            Creez et organisez les zones de votre etablissement (Salle, Terrasse, Bar,
-            VIP, etc.)
+            Creez et organisez les zones de votre etablissement (Salle, Terrasse, Bar, VIP, etc.)
           </Dialog.Description>
 
           {/* Bouton ajouter */}
@@ -220,12 +205,22 @@ function ZoneItem({
 
       {/* Infos de la zone */}
       <Flex direction="column" style={{ flex: 1, minWidth: 0 }}>
-        <Text size="2" weight="medium" style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+        <Text
+          size="2"
+          weight="medium"
+          style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}
+        >
           {zone.nom}
         </Text>
-        {zone.description ? <Text size="1" color="gray" style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+        {zone.description ? (
+          <Text
+            size="1"
+            color="gray"
+            style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}
+          >
             {zone.description}
-          </Text> : null}
+          </Text>
+        ) : null}
       </Flex>
 
       {/* Badge nombre de tables */}
@@ -237,7 +232,7 @@ function ZoneItem({
       <Flex gap="1">
         <Tooltip content="Modifier">
           <IconButton variant="ghost" size="1" onClick={onEdit}>
-            <Pencil size={14} />
+            <PencilSimple size={14} />
           </IconButton>
         </Tooltip>
 
@@ -255,22 +250,14 @@ function ZoneItem({
               </IconButton>
             </Tooltip>
             <Tooltip content="Annuler">
-              <IconButton
-                variant="ghost"
-                size="1"
-                onClick={() => setShowDeleteConfirm(false)}
-              >
+              <IconButton variant="ghost" size="1" onClick={() => setShowDeleteConfirm(false)}>
                 <X size={14} />
               </IconButton>
             </Tooltip>
           </Flex>
         ) : (
           <Tooltip
-            content={
-              tableCount > 0
-                ? "Impossible de supprimer: tables associees"
-                : "Supprimer"
-            }
+            content={tableCount > 0 ? "Impossible de supprimer: tables associees" : "Supprimer"}
           >
             <IconButton
               variant="ghost"
@@ -279,7 +266,7 @@ function ZoneItem({
               onClick={() => setShowDeleteConfirm(true)}
               disabled={tableCount > 0}
             >
-              <Trash2 size={14} />
+              <Trash size={14} />
             </IconButton>
           </Tooltip>
         )}
@@ -341,9 +328,7 @@ function ZoneFormDialog({
           couleur,
         };
 
-        const result = isEdit
-          ? await updateZone(zone.id, data)
-          : await createZone(data);
+        const result = isEdit ? await updateZone(zone.id, data) : await createZone(data);
 
         if (result.success) {
           toast.success(isEdit ? "Zone mise a jour" : "Zone creee");
@@ -360,9 +345,7 @@ function ZoneFormDialog({
   return (
     <Dialog.Root open={open} onOpenChange={handleOpenChange}>
       <Dialog.Content maxWidth="420px">
-        <Dialog.Title>
-          {isEdit ? "Modifier la zone" : "Nouvelle zone"}
-        </Dialog.Title>
+        <Dialog.Title>{isEdit ? "Modifier la zone" : "Nouvelle zone"}</Dialog.Title>
         <Dialog.Description size="2" mb="4" color="gray">
           {isEdit
             ? "Modifiez les informations de la zone"
@@ -417,9 +400,7 @@ function ZoneFormDialog({
                       borderRadius: 6,
                       backgroundColor: c.value,
                       border:
-                        couleur === c.value
-                          ? "3px solid var(--gray-12)"
-                          : "2px solid transparent",
+                        couleur === c.value ? "3px solid var(--gray-12)" : "2px solid transparent",
                       cursor: "pointer",
                       display: "flex",
                       alignItems: "center",
@@ -427,9 +408,7 @@ function ZoneFormDialog({
                       transition: "transform 0.15s",
                     }}
                   >
-                    {couleur === c.value && (
-                      <Check size={14} style={{ color: "white" }} />
-                    )}
+                    {couleur === c.value && <Check size={14} style={{ color: "white" }} />}
                   </button>
                 ))}
               </Flex>
@@ -457,9 +436,11 @@ function ZoneFormDialog({
                   {nom || "Nom de la zone"}
                 </Text>
               </Flex>
-              {description ? <Text size="1" color="gray" mt="1">
+              {description ? (
+                <Text size="1" color="gray" mt="1">
                   {description}
-                </Text> : null}
+                </Text>
+              ) : null}
             </Box>
           </Flex>
 

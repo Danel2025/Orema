@@ -8,9 +8,9 @@
  * Pour le middleware, utilisez le client specifique dans middleware.ts
  */
 
-import { createServerClient } from '@supabase/ssr'
-import { cookies } from 'next/headers'
-import type { Database } from '@/types/supabase'
+import { createServerClient } from "@supabase/ssr";
+import { cookies } from "next/headers";
+import type { Database } from "@/types/supabase";
 
 /**
  * Cree un client Supabase pour utilisation cote serveur.
@@ -40,31 +40,32 @@ import type { Database } from '@/types/supabase'
  * ```
  */
 export async function createClient() {
-  const cookieStore = await cookies()
+  const cookieStore = await cookies();
 
-  return createServerClient<Database>(
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  return createServerClient<any>(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
       cookies: {
         getAll() {
-          return cookieStore.getAll()
+          return cookieStore.getAll();
         },
         setAll(cookiesToSet) {
           try {
             cookiesToSet.forEach(({ name, value, options }) => {
-              cookieStore.set(name, value, options)
-            })
+              cookieStore.set(name, value, options);
+            });
           } catch (error) {
             // La mutation de cookies peut echouer dans certains contextes
             // (ex: Server Components en lecture seule)
             // Ce n'est pas critique car le middleware gere le refresh des sessions
-            console.warn('[Supabase Server] Cookie mutation failed:', error)
+            console.warn("[Supabase Server] Cookie mutation failed:", error);
           }
         },
       },
     }
-  )
+  );
 }
 
 /**
@@ -83,30 +84,25 @@ export async function createClient() {
  * ```
  */
 export function createServiceClient() {
-  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY
+  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
   if (!serviceRoleKey) {
-    throw new Error(
-      'SUPABASE_SERVICE_ROLE_KEY is required for admin operations'
-    )
+    throw new Error("SUPABASE_SERVICE_ROLE_KEY is required for admin operations");
   }
 
-  return createServerClient<Database>(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    serviceRoleKey,
-    {
-      cookies: {
-        getAll() {
-          return []
-        },
-        setAll() {
-          // Service client n'a pas besoin de cookies
-        },
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  return createServerClient<any>(process.env.NEXT_PUBLIC_SUPABASE_URL!, serviceRoleKey, {
+    cookies: {
+      getAll() {
+        return [];
       },
-      auth: {
-        autoRefreshToken: false,
-        persistSession: false,
+      setAll() {
+        // Service client n'a pas besoin de cookies
       },
-    }
-  )
+    },
+    auth: {
+      autoRefreshToken: false,
+      persistSession: false,
+    },
+  });
 }

@@ -13,8 +13,7 @@ import {
 } from "@radix-ui/themes";
 import { MarkdownRenderer } from "@/components/public/markdown-renderer";
 import { motion } from "motion/react";
-import type {
-  LucideIcon} from "lucide-react";
+import type { LucideIcon } from "lucide-react";
 import {
   ChevronRight,
   ChevronLeft,
@@ -36,7 +35,11 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { useParams, notFound } from "next/navigation";
-import { getPublishedBlogPostBySlug, getRelatedBlogPosts, getPublishedBlogPosts } from "@/actions/admin/blog";
+import {
+  getPublishedBlogPostBySlug,
+  getRelatedBlogPosts,
+  getPublishedBlogPosts,
+} from "@/actions/admin/blog";
 import { useState, useEffect } from "react";
 
 // Map des icônes par nom
@@ -93,7 +96,9 @@ export default function BlogPostPage() {
 
   const [post, setPost] = useState<BlogPost | null>(null);
   const [relatedPosts, setRelatedPosts] = useState<RelatedPost[]>([]);
-  const [allPosts, setAllPosts] = useState<{ id: string; slug: string; title: string; color: string | null }[]>([]);
+  const [allPosts, setAllPosts] = useState<
+    { id: string; slug: string; title: string; color: string | null }[]
+  >([]);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
@@ -114,12 +119,14 @@ export default function BlogPostPage() {
             setRelatedPosts(related as RelatedPost[]);
           }
         }
-        setAllPosts(postsData.map((p: BlogPost) => ({
-          id: p.id,
-          slug: p.slug,
-          title: p.title,
-          color: p.color
-        })));
+        setAllPosts(
+          postsData.map((p: BlogPost) => ({
+            id: p.id,
+            slug: p.slug,
+            title: p.title,
+            color: p.color,
+          }))
+        );
       } catch (error) {
         console.error("Erreur chargement post:", error);
         setPost(null);
@@ -234,7 +241,11 @@ export default function BlogPostPage() {
                   Blog
                 </Link>
                 <ChevronRight size={14} style={{ color: "var(--gray-8)" }} aria-hidden="true" />
-                <Text size="2" style={{ color: `var(--${post.color || "violet"}-9)` }} aria-current="page">
+                <Text
+                  size="2"
+                  style={{ color: `var(--${post.color || "violet"}-9)` }}
+                  aria-current="page"
+                >
                   {post.title.length > 30 ? `${post.title.slice(0, 30)}...` : post.title}
                 </Text>
               </Flex>
@@ -401,70 +412,70 @@ export default function BlogPostPage() {
       <Container size="3" py="9">
         {/* Article content */}
         <article aria-label={post.title}>
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.3, duration: 0.5 }}
-        >
-          <Box
-            p={{ initial: "5", sm: "8" }}
-            style={{
-              background: "var(--color-background)",
-              borderRadius: 20,
-              border: "1px solid var(--gray-a4)",
-            }}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.3, duration: 0.5 }}
           >
-            <MarkdownRenderer content={post.content} accentColor={post.color || "violet"} />
-          </Box>
-        </motion.div>
+            <Box
+              p={{ initial: "5", sm: "8" }}
+              style={{
+                background: "var(--color-background)",
+                borderRadius: 20,
+                border: "1px solid var(--gray-a4)",
+              }}
+            >
+              <MarkdownRenderer content={post.content} accentColor={post.color || "violet"} />
+            </Box>
+          </motion.div>
 
-        {/* Author box */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.5, duration: 0.5 }}
-        >
-          <Box
-            mt="8"
-            p="6"
-            style={{
-              background: `var(--${post.color || "violet"}-a2)`,
-              borderRadius: 16,
-              border: `1px solid var(--${post.color || "violet"}-a4)`,
-            }}
+          {/* Author box */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.5, duration: 0.5 }}
           >
-            <Flex gap="4" align="center">
-              <Box
-                style={{
-                  width: 64,
-                  height: 64,
-                  borderRadius: "50%",
-                  background: `var(--${post.color || "violet"}-a4)`,
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  fontSize: 24,
-                  fontWeight: 700,
-                  color: `var(--${post.color || "violet"}-9)`,
-                }}
-              >
-                {post.author?.name.charAt(0)}
-              </Box>
-              <Box>
-                <Text size="4" weight="bold" style={{ display: "block" }}>
-                  {post.author?.name}
-                </Text>
-                <Text size="2" color="gray" style={{ display: "block" }}>
-                  {post.author?.role}
-                </Text>
-                <Text size="2" color="gray" mt="1">
-                  {post.author?.bio || "Passionné par la transformation digitale du commerce africain."}
-                </Text>
-              </Box>
-            </Flex>
-          </Box>
-        </motion.div>
-
+            <Box
+              mt="8"
+              p="6"
+              style={{
+                background: `var(--${post.color || "violet"}-a2)`,
+                borderRadius: 16,
+                border: `1px solid var(--${post.color || "violet"}-a4)`,
+              }}
+            >
+              <Flex gap="4" align="center">
+                <Box
+                  style={{
+                    width: 64,
+                    height: 64,
+                    borderRadius: "50%",
+                    background: `var(--${post.color || "violet"}-a4)`,
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    fontSize: 24,
+                    fontWeight: 700,
+                    color: `var(--${post.color || "violet"}-9)`,
+                  }}
+                >
+                  {post.author?.name.charAt(0)}
+                </Box>
+                <Box>
+                  <Text size="4" weight="bold" style={{ display: "block" }}>
+                    {post.author?.name}
+                  </Text>
+                  <Text size="2" color="gray" style={{ display: "block" }}>
+                    {post.author?.role}
+                  </Text>
+                  <Text size="2" color="gray" mt="1">
+                    {post.author?.bio ||
+                      "Passionné par la transformation digitale du commerce africain."}
+                  </Text>
+                </Box>
+              </Flex>
+            </Box>
+          </motion.div>
         </article>
 
         <Separator size="4" my="8" />
@@ -530,10 +541,8 @@ export default function BlogPostPage() {
           transition={{ delay: 0.7, duration: 0.5 }}
         >
           <Grid columns={{ initial: "1", sm: "2" }} gap="4">
-            {prevPost ? <Link
-                href={`/blog/${prevPost.slug}`}
-                style={{ textDecoration: "none" }}
-              >
+            {prevPost ? (
+              <Link href={`/blog/${prevPost.slug}`} style={{ textDecoration: "none" }}>
                 <Box
                   p="5"
                   style={{
@@ -556,13 +565,17 @@ export default function BlogPostPage() {
                         Article précédent
                       </Text>
                       <Text size="3" weight="medium">
-                        {prevPost.title.length > 40 ? `${prevPost.title.slice(0, 40)}...` : prevPost.title}
+                        {prevPost.title.length > 40
+                          ? `${prevPost.title.slice(0, 40)}...`
+                          : prevPost.title}
                       </Text>
                     </Box>
                   </Flex>
                 </Box>
-              </Link> : null}
-            {nextPost ? <Link
+              </Link>
+            ) : null}
+            {nextPost ? (
+              <Link
                 href={`/blog/${nextPost.slug}`}
                 style={{
                   textDecoration: "none",
@@ -590,13 +603,16 @@ export default function BlogPostPage() {
                         Article suivant
                       </Text>
                       <Text size="3" weight="medium">
-                        {nextPost.title.length > 40 ? `${nextPost.title.slice(0, 40)}...` : nextPost.title}
+                        {nextPost.title.length > 40
+                          ? `${nextPost.title.slice(0, 40)}...`
+                          : nextPost.title}
                       </Text>
                     </Box>
                     <ChevronRight size={20} style={{ color: "var(--gray-10)" }} />
                   </Flex>
                 </Box>
-              </Link> : null}
+              </Link>
+            ) : null}
           </Grid>
         </motion.div>
 

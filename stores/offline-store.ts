@@ -5,72 +5,68 @@
  * Persiste dans localStorage pour survivre aux rechargements de page.
  */
 
-import { create } from 'zustand'
-import { persist } from 'zustand/middleware'
-import type { ConflictRecord } from '@/lib/offline/conflict-resolver'
+import { create } from "zustand";
+import { persist } from "zustand/middleware";
+import type { ConflictRecord } from "@/lib/offline/conflict-resolver";
 
 // ============================================================================
 // Types
 // ============================================================================
 
 export interface SyncError {
-  id: string
-  message: string
-  entity?: string
-  entityId?: string
-  timestamp: number
+  id: string;
+  message: string;
+  entity?: string;
+  entityId?: string;
+  timestamp: number;
 }
 
 interface OfflineState {
   /** true si le navigateur est en ligne */
-  isOnline: boolean
+  isOnline: boolean;
   /** true si une synchronisation est en cours */
-  isSyncing: boolean
+  isSyncing: boolean;
   /** Nombre de mutations en attente */
-  pendingCount: number
+  pendingCount: number;
   /** Nombre de mutations echouees */
-  failedCount: number
+  failedCount: number;
   /** Timestamp du dernier sync reussi */
-  lastSyncAt: number | null
+  lastSyncAt: number | null;
   /** Conflits detectes non resolus */
-  conflicts: ConflictRecord[]
+  conflicts: ConflictRecord[];
   /** Erreurs de synchronisation recentes */
-  syncErrors: SyncError[]
+  syncErrors: SyncError[];
 }
 
 interface OfflineActions {
-  setOnline: (isOnline: boolean) => void
-  startSync: () => void
-  completeSync: (stats: {
-    pendingCount: number
-    failedCount: number
-    lastSyncAt: number
-  }) => void
-  setPendingCount: (count: number) => void
-  setFailedCount: (count: number) => void
-  addConflict: (conflict: ConflictRecord) => void
-  resolveConflict: (id: string) => void
-  clearConflicts: () => void
-  addSyncError: (error: Omit<SyncError, 'id' | 'timestamp'>) => void
-  clearErrors: () => void
-  reset: () => void
+  setOnline: (isOnline: boolean) => void;
+  startSync: () => void;
+  completeSync: (stats: { pendingCount: number; failedCount: number; lastSyncAt: number }) => void;
+  setPendingCount: (count: number) => void;
+  setFailedCount: (count: number) => void;
+  addConflict: (conflict: ConflictRecord) => void;
+  resolveConflict: (id: string) => void;
+  clearConflicts: () => void;
+  addSyncError: (error: Omit<SyncError, "id" | "timestamp">) => void;
+  clearErrors: () => void;
+  reset: () => void;
 }
 
-type OfflineStore = OfflineState & OfflineActions
+type OfflineStore = OfflineState & OfflineActions;
 
 // ============================================================================
 // Initial state
 // ============================================================================
 
 const initialState: OfflineState = {
-  isOnline: typeof navigator !== 'undefined' ? navigator.onLine : true,
+  isOnline: typeof navigator !== "undefined" ? navigator.onLine : true,
   isSyncing: false,
   pendingCount: 0,
   failedCount: 0,
   lastSyncAt: null,
   conflicts: [],
   syncErrors: [],
-}
+};
 
 // ============================================================================
 // Store
@@ -114,11 +110,11 @@ export const useOfflineStore = create<OfflineStore>()(
           ...error,
           id: `err_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`,
           timestamp: Date.now(),
-        }
-        const current = get().syncErrors
+        };
+        const current = get().syncErrors;
         // Garder les 50 dernieres erreurs maximum
-        const updated = [entry, ...current].slice(0, 50)
-        set({ syncErrors: updated })
+        const updated = [entry, ...current].slice(0, 50);
+        set({ syncErrors: updated });
       },
 
       clearErrors: () => set({ syncErrors: [] }),
@@ -126,7 +122,7 @@ export const useOfflineStore = create<OfflineStore>()(
       reset: () => set(initialState),
     }),
     {
-      name: 'offline-sync-storage',
+      name: "offline-sync-storage",
       partialize: (state) => ({
         lastSyncAt: state.lastSyncAt,
         conflicts: state.conflicts,
@@ -134,4 +130,4 @@ export const useOfflineStore = create<OfflineStore>()(
       }),
     }
   )
-)
+);

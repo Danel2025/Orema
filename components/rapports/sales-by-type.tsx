@@ -7,7 +7,7 @@
 import { useState, useEffect } from "react";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from "recharts";
 import { Box, Card, Flex, Text, Select, Skeleton, Badge } from "@radix-ui/themes";
-import { Store, UtensilsCrossed, Truck, ShoppingBag } from "lucide-react";
+import { Storefront, ForkKnife, Truck, ShoppingBag } from "@phosphor-icons/react";
 import { getSalesByType, type SalesByTypeData, type PeriodeType } from "@/actions/rapports";
 import { formatCurrency } from "@/lib/utils";
 
@@ -16,18 +16,15 @@ interface SalesByTypeProps {
 }
 
 // Couleurs et icones pour chaque type
-const TYPE_CONFIG: Record<
-  string,
-  { color: string; icon: React.ReactNode; label: string }
-> = {
+const TYPE_CONFIG: Record<string, { color: string; icon: React.ReactNode; label: string }> = {
   DIRECT: {
     color: "var(--green-9)",
-    icon: <Store size={18} />,
+    icon: <Storefront size={18} />,
     label: "Vente directe",
   },
   TABLE: {
     color: "var(--blue-9)",
-    icon: <UtensilsCrossed size={18} />,
+    icon: <ForkKnife size={18} />,
     label: "Service en salle",
   },
   LIVRAISON: {
@@ -129,19 +126,13 @@ export function SalesByType({ initialData }: SalesByTypeProps) {
 
   return (
     <Card size="3">
-      <Flex
-        justify="between"
-        align="center"
-        mb="4"
-        wrap="wrap"
-        gap="3"
-      >
+      <Flex justify="between" align="center" mb="4" wrap="wrap" gap="3">
         <Text size="4" weight="bold">
           Ventes par type
         </Text>
         <Select.Root value={periode} onValueChange={(v) => setPeriode(v as PeriodeType)}>
           <Select.Trigger placeholder="Periode" />
-          <Select.Content>
+          <Select.Content position="popper">
             <Select.Item value="jour">Aujourd'hui</Select.Item>
             <Select.Item value="semaine">Cette semaine</Select.Item>
             <Select.Item value="mois">Ce mois</Select.Item>
@@ -151,11 +142,7 @@ export function SalesByType({ initialData }: SalesByTypeProps) {
       </Flex>
 
       {!hasData ? (
-        <Flex
-          align="center"
-          justify="center"
-          style={{ height: 200 }}
-        >
+        <Flex align="center" justify="center" style={{ height: 200 }}>
           <Text size="3" color="gray">
             Aucune vente pour cette periode
           </Text>
@@ -180,11 +167,7 @@ export function SalesByType({ initialData }: SalesByTypeProps) {
                   width={120}
                 />
                 <Tooltip content={<CustomTooltip />} />
-                <Bar
-                  dataKey="montant"
-                  radius={[0, 4, 4, 0]}
-                  maxBarSize={32}
-                >
+                <Bar dataKey="montant" radius={[0, 4, 4, 0]} maxBarSize={32}>
                   {data.map((entry, index) => (
                     <Cell
                       key={`cell-${index}`}
@@ -260,9 +243,7 @@ export function SalesByType({ initialData }: SalesByTypeProps) {
               <Text size="2" weight="bold">
                 Total
               </Text>
-              <Badge variant="soft">
-                {totalVentes} ventes
-              </Badge>
+              <Badge variant="soft">{totalVentes} ventes</Badge>
             </Flex>
             <Text
               size="3"

@@ -107,6 +107,10 @@ enum ActionAudit {
   CAISSE_CLOTURE
   ANNULATION_VENTE
   REMISE_APPLIQUEE
+  SUSPENSION
+  REACTIVATION
+  IMPERSONATION
+  EXPORT
 }
 
 enum MethodeValuation {
@@ -197,6 +201,14 @@ model Etablissement {
   createdAt            DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
   updatedAt            DateTime @default(now()) @map("updated_at") @db.Timestamptz(6)
 
+  // ============================================================================
+  // STATUT & SUSPENSION (admin super)
+  // ============================================================================
+  statut              String    @default("actif") // 'actif', 'suspendu', 'en_essai'
+  dateSuspension      DateTime? @map("date_suspension") @db.Timestamptz(6)
+  motifSuspension     String?   @map("motif_suspension")
+  suspenduPar         String?   @map("suspendu_par") @db.Uuid
+
   // Relations
   utilisateurs    Utilisateur[]
   categories      Categorie[]
@@ -209,8 +221,12 @@ model Etablissement {
   ventes          Vente[]
   auditLogs       AuditLog[]
   rolePermissions RolePermission[]
+  abonnements     Abonnement[]
+  factures        Facture[]
+  notificationsAdmin NotificationAdmin[]
 
   @@index([nom], map: "idx_etablissements_nom")
+  @@index([statut], map: "idx_etablissements_statut")
   @@map("etablissements")
 }
 
@@ -605,6 +621,7 @@ model AuditLog {
   ancienneValeur  String?     @map("ancienne_valeur")
   nouvelleValeur  String?     @map("nouvelle_valeur")
   adresseIp       String?     @map("adresse_ip")
+  details         Json?       @default("{}") // Métadonnées enrichies JSONB
   utilisateurId   String?     @map("utilisateur_id") @db.Uuid
   etablissementId String      @map("etablissement_id") @db.Uuid
   createdAt       DateTime    @default(now()) @map("created_at") @db.Timestamptz(6)
@@ -754,4 +771,80 @@ model PaiementMobile {
   @@index([etablissementId], map: "idx_paiements_mobile_etablissement")
   @@index([expireAt], map: "idx_paiements_mobile_expire")
   @@map("paiements_mobile")
+}
+
+// ============================================================================
+// ADMIN SUPER - GESTION DES ÉTABLISSEMENTS
+// ============================================================================
+
+/// Abonnements et plans tarifaires par établissement
+model Abonnement {
+  id                String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  etablissementId   String   @map("etablissement_id") @db.Uuid
+  plan              String   @default("gratuit") // 'gratuit', 'starter', 'pro', 'enterprise'
+  dateDebut         DateTime @default(now()) @map("date_debut") @db.Timestamptz(6)
+  dateFin           DateTime? @map("date_fin") @db.Timestamptz(6)
+  statut            String   @default("actif") // 'actif', 'expire', 'annule'
+  quotaUtilisateurs Int      @default(3) @map("quota_utilisateurs")
+  quotaProduits     Int      @default(50) @map("quota_produits")
+  quotaVentesJour   Int      @default(100) @map("quota_ventes_jour")
+  prixMensuel       Decimal  @default(0) @map("prix_mensuel") @db.Decimal(10, 0)
+  createdAt         DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt         DateTime @default(now()) @map("updated_at") @db.Timestamptz(6)
+
+  // Relations
+  etablissement Etablissement @relation(fields: [etablissementId], references: [id], onDelete: Cascade)
+  factures      Facture[]
+
+  @@index([etablissementId], map: "idx_abonnements_etablissement")
+  @@index([statut], map: "idx_abonnements_statut")
+  @@index([plan], map: "idx_abonnements_plan")
+  @@index([dateFin], map: "idx_abonnements_date_fin")
+  @@map("abonnements")
+}
+
+/// Factures liées aux abonnements des établissements
+model Facture {
+  id              String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  etablissementId String    @map("etablissement_id") @db.Uuid
+  abonnementId    String?   @map("abonnement_id") @db.Uuid
+  numero          String    @unique
+  montant         Decimal   @db.Decimal(10, 0)
+  devise          String    @default("XAF")
+  statut          String    @default("brouillon") // 'brouillon', 'envoyee', 'payee', 'annulee'
+  dateEmission    DateTime  @default(now()) @map("date_emission") @db.Timestamptz(6)
+  dateEcheance    DateTime? @map("date_echeance") @db.Timestamptz(6)
+  pdfUrl          String?   @map("pdf_url")
+  notes           String?
+  createdAt       DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  // Relations
+  etablissement Etablissement @relation(fields: [etablissementId], references: [id], onDelete: Cascade)
+  abonnement    Abonnement?   @relation(fields: [abonnementId], references: [id])
+
+  @@index([etablissementId], map: "idx_factures_etablissement")
+  @@index([abonnementId], map: "idx_factures_abonnement")
+  @@index([statut], map: "idx_factures_statut")
+  @@index([numero], map: "idx_factures_numero")
+  @@index([dateEmission], map: "idx_factures_date_emission")
+  @@map("factures")
+}
+
+/// Notifications destinées au super admin (quotas, expirations, alertes)
+model NotificationAdmin {
+  id              String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  type            String    // 'quota_atteint', 'inactivite', 'expiration', 'erreur', 'info', 'alerte'
+  titre           String
+  message         String
+  etablissementId String?   @map("etablissement_id") @db.Uuid
+  lu              Boolean   @default(false)
+  createdAt       DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  // Relations
+  etablissement Etablissement? @relation(fields: [etablissementId], references: [id], onDelete: Cascade)
+
+  @@index([lu, createdAt], map: "idx_notifications_admin_lu")
+  @@index([type], map: "idx_notifications_admin_type")
+  @@index([etablissementId], map: "idx_notifications_admin_etablissement")
+  @@map("notifications_admin")
 }

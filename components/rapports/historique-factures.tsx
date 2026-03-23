@@ -24,25 +24,25 @@ import {
 } from "@radix-ui/themes";
 import {
   Receipt,
-  Search,
-  Calendar,
+  MagnifyingGlass,
+  CalendarBlank,
   User,
   Eye,
   Printer,
-  ChevronLeft,
-  ChevronRight,
+  CaretLeft,
+  CaretRight,
   X,
   MapPin,
   CreditCard,
   Wallet,
-  Smartphone,
+  DeviceMobile,
   FileText,
   Clock,
   ShoppingBag,
-  Utensils,
+  ForkKnife,
   Truck,
   Package,
-} from "lucide-react";
+} from "@phosphor-icons/react";
 import {
   getHistoriqueFactures,
   getFactureDetail,
@@ -55,7 +55,7 @@ import { formatCurrency, formatDate, formatTime } from "@/lib/utils";
 // Labels pour les types de vente
 const TYPE_VENTE_LABELS: Record<string, { label: string; icon: React.ReactNode }> = {
   DIRECT: { label: "Vente directe", icon: <ShoppingBag size={14} /> },
-  TABLE: { label: "Service table", icon: <Utensils size={14} /> },
+  TABLE: { label: "Service table", icon: <ForkKnife size={14} /> },
   LIVRAISON: { label: "Livraison", icon: <Truck size={14} /> },
   EMPORTER: { label: "A emporter", icon: <Package size={14} /> },
 };
@@ -71,8 +71,8 @@ const STATUT_CONFIG: Record<string, { label: string; color: "green" | "yellow" |
 const MODE_PAIEMENT_LABELS: Record<string, { label: string; icon: React.ReactNode }> = {
   ESPECES: { label: "Especes", icon: <Wallet size={14} /> },
   CARTE_BANCAIRE: { label: "Carte bancaire", icon: <CreditCard size={14} /> },
-  AIRTEL_MONEY: { label: "Airtel Money", icon: <Smartphone size={14} /> },
-  MOOV_MONEY: { label: "Moov Money", icon: <Smartphone size={14} /> },
+  AIRTEL_MONEY: { label: "Airtel Money", icon: <DeviceMobile size={14} /> },
+  MOOV_MONEY: { label: "Moov Money", icon: <DeviceMobile size={14} /> },
   CHEQUE: { label: "Cheque", icon: <FileText size={14} /> },
   VIREMENT: { label: "Virement", icon: <CreditCard size={14} /> },
   COMPTE_CLIENT: { label: "Compte client", icon: <User size={14} /> },
@@ -194,7 +194,7 @@ export function HistoriqueFactures() {
               onChange={(e) => setSearchTicket(e.target.value)}
             >
               <TextField.Slot>
-                <Search size={14} />
+                <MagnifyingGlass size={14} />
               </TextField.Slot>
             </TextField.Root>
           </Box>
@@ -210,7 +210,7 @@ export function HistoriqueFactures() {
               onChange={(e) => handleFilterChange("dateDebut", e.target.value)}
             >
               <TextField.Slot>
-                <Calendar size={14} />
+                <CalendarBlank size={14} />
               </TextField.Slot>
             </TextField.Root>
           </Box>
@@ -226,7 +226,7 @@ export function HistoriqueFactures() {
               onChange={(e) => handleFilterChange("dateFin", e.target.value)}
             >
               <TextField.Slot>
-                <Calendar size={14} />
+                <CalendarBlank size={14} />
               </TextField.Slot>
             </TextField.Root>
           </Box>
@@ -241,7 +241,7 @@ export function HistoriqueFactures() {
               onValueChange={(v) => handleFilterChange("type", v === "all" ? undefined : v)}
             >
               <Select.Trigger placeholder="Tous les types" style={{ width: "100%" }} />
-              <Select.Content>
+              <Select.Content position="popper">
                 <Select.Item value="all">Tous les types</Select.Item>
                 <Select.Item value="DIRECT">Vente directe</Select.Item>
                 <Select.Item value="TABLE">Service table</Select.Item>
@@ -261,7 +261,7 @@ export function HistoriqueFactures() {
               onValueChange={(v) => handleFilterChange("statut", v === "all" ? undefined : v)}
             >
               <Select.Trigger placeholder="Tous" style={{ width: "100%" }} />
-              <Select.Content>
+              <Select.Content position="popper">
                 <Select.Item value="all">Tous</Select.Item>
                 <Select.Item value="PAYEE">Payee</Select.Item>
                 <Select.Item value="EN_COURS">En cours</Select.Item>
@@ -271,10 +271,12 @@ export function HistoriqueFactures() {
           </Box>
 
           {/* Reset */}
-          {hasActiveFilters ? <Button variant="ghost" color="gray" onClick={handleResetFilters}>
+          {hasActiveFilters ? (
+            <Button variant="ghost" color="gray" onClick={handleResetFilters}>
               <X size={14} />
               Effacer
-            </Button> : null}
+            </Button>
+          ) : null}
         </Flex>
       </Box>
 
@@ -317,7 +319,7 @@ export function HistoriqueFactures() {
                     <Table.RowHeaderCell>
                       <Flex direction="column" gap="1">
                         <Flex align="center" gap="1">
-                          <Calendar size={12} />
+                          <CalendarBlank size={12} />
                           <Text size="2" weight="medium">
                             {formatDate(facture.createdAt, "short")}
                           </Text>
@@ -363,10 +365,12 @@ export function HistoriqueFactures() {
                         </Flex>
                       ) : facture.table ? (
                         <Flex align="center" gap="1">
-                          <Utensils size={14} />
+                          <ForkKnife size={14} />
                           <Text size="2">
                             Table {facture.table.numero}
-                            {facture.table.zones ? <Text color="gray"> ({facture.table.zones.nom})</Text> : null}
+                            {facture.table.zones ? (
+                              <Text color="gray"> ({facture.table.zones.nom})</Text>
+                            ) : null}
                           </Text>
                         </Flex>
                       ) : (
@@ -390,8 +394,7 @@ export function HistoriqueFactures() {
                         weight="bold"
                         style={{
                           fontFamily: "var(--font-google-sans-code), ui-monospace, monospace",
-                          color:
-                            facture.statut === "ANNULEE" ? "var(--red-9)" : "var(--gray-12)",
+                          color: facture.statut === "ANNULEE" ? "var(--red-9)" : "var(--gray-12)",
                           textDecoration: facture.statut === "ANNULEE" ? "line-through" : "none",
                         }}
                       >
@@ -420,7 +423,13 @@ export function HistoriqueFactures() {
 
           {/* Pagination */}
           {totalPages > 1 && (
-            <Flex justify="between" align="center" mt="4" pt="4" style={{ borderTop: "1px solid var(--gray-a5)" }}>
+            <Flex
+              justify="between"
+              align="center"
+              mt="4"
+              pt="4"
+              style={{ borderTop: "1px solid var(--gray-a5)" }}
+            >
               <Text size="2" color="gray">
                 Page {page} sur {totalPages} ({total} resultats)
               </Text>
@@ -431,7 +440,7 @@ export function HistoriqueFactures() {
                   disabled={page <= 1}
                   onClick={() => setPage((p) => p - 1)}
                 >
-                  <ChevronLeft size={16} />
+                  <CaretLeft size={16} />
                   Precedent
                 </Button>
                 <Button
@@ -441,7 +450,7 @@ export function HistoriqueFactures() {
                   onClick={() => setPage((p) => p + 1)}
                 >
                   Suivant
-                  <ChevronRight size={16} />
+                  <CaretRight size={16} />
                 </Button>
               </Flex>
             </Flex>
@@ -530,34 +539,43 @@ export function HistoriqueFactures() {
                         </Text>
                       </Flex>
                     </Box>
-                    {selectedFacture.utilisateur ? <Box>
+                    {selectedFacture.utilisateur ? (
+                      <Box>
                         <Text size="1" color="gray">
                           Caissier
                         </Text>
                         <Text size="2">
                           {selectedFacture.utilisateur.prenom} {selectedFacture.utilisateur.nom}
                         </Text>
-                      </Box> : null}
-                    {selectedFacture.client ? <Box>
+                      </Box>
+                    ) : null}
+                    {selectedFacture.client ? (
+                      <Box>
                         <Text size="1" color="gray">
                           Client
                         </Text>
                         <Text size="2">
                           {selectedFacture.client.prenom} {selectedFacture.client.nom}
                         </Text>
-                      </Box> : null}
-                    {selectedFacture.table ? <Box>
+                      </Box>
+                    ) : null}
+                    {selectedFacture.table ? (
+                      <Box>
                         <Text size="1" color="gray">
                           Table
                         </Text>
                         <Text size="2">
                           Table {selectedFacture.table.numero}
-                          {selectedFacture.table.zones ? ` (${selectedFacture.table.zones.nom})` : null}
+                          {selectedFacture.table.zones
+                            ? ` (${selectedFacture.table.zones.nom})`
+                            : null}
                         </Text>
-                      </Box> : null}
+                      </Box>
+                    ) : null}
                   </Flex>
 
-                  {selectedFacture.adresseLivraison ? <Box mt="3">
+                  {selectedFacture.adresseLivraison ? (
+                    <Box mt="3">
                       <Text size="1" color="gray">
                         Adresse de livraison
                       </Text>
@@ -565,7 +583,8 @@ export function HistoriqueFactures() {
                         <MapPin size={14} />
                         <Text size="2">{selectedFacture.adresseLivraison}</Text>
                       </Flex>
-                    </Box> : null}
+                    </Box>
+                  ) : null}
                 </Box>
 
                 {/* Articles */}
@@ -594,9 +613,11 @@ export function HistoriqueFactures() {
                                 + {ligne.supplements.map((s) => s.nom).join(", ")}
                               </Text>
                             )}
-                            {ligne.notes ? <Text size="1" color="violet">
+                            {ligne.notes ? (
+                              <Text size="1" color="violet">
                                 Note: {ligne.notes}
-                              </Text> : null}
+                              </Text>
+                            ) : null}
                           </Flex>
                         </Table.Cell>
                         <Table.Cell align="right">
@@ -665,7 +686,9 @@ export function HistoriqueFactures() {
                         <Text size="2" color="green">
                           Remise
                           {selectedFacture.typeRemise === "POURCENTAGE" &&
-                            selectedFacture.valeurRemise ? ` (${selectedFacture.valeurRemise}%)` : null}
+                          selectedFacture.valeurRemise
+                            ? ` (${selectedFacture.valeurRemise}%)`
+                            : null}
                         </Text>
                         <Text
                           size="2"
@@ -714,9 +737,11 @@ export function HistoriqueFactures() {
                                   {modeConfig?.icon}
                                   <Text size="2">{modeConfig?.label || paiement.modePaiement}</Text>
                                 </Flex>
-                                {paiement.reference ? <Text size="1" color="gray">
+                                {paiement.reference ? (
+                                  <Text size="1" color="gray">
                                     Ref: {paiement.reference}
-                                  </Text> : null}
+                                  </Text>
+                                ) : null}
                               </Table.Cell>
                               <Table.Cell align="right">
                                 <Text
@@ -749,14 +774,16 @@ export function HistoriqueFactures() {
                 )}
 
                 {/* Notes */}
-                {selectedFacture.notes ? <Box mt="4">
+                {selectedFacture.notes ? (
+                  <Box mt="4">
                     <Text size="2" weight="bold" mb="1">
                       Notes
                     </Text>
                     <Text size="2" color="gray">
                       {selectedFacture.notes}
                     </Text>
-                  </Box> : null}
+                  </Box>
+                ) : null}
               </Box>
             </ScrollArea>
           ) : (

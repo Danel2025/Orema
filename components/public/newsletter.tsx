@@ -101,8 +101,7 @@ export function Newsletter({
                   padding: "10px 18px",
                   borderRadius: 8,
                   border: "none",
-                  background:
-                    "linear-gradient(135deg, var(--violet-9) 0%, var(--purple-9) 100%)",
+                  background: "linear-gradient(135deg, var(--violet-9) 0%, var(--purple-9) 100%)",
                   color: "white",
                   fontSize: 14,
                   fontWeight: 600,
@@ -113,11 +112,7 @@ export function Newsletter({
                   gap: 6,
                 }}
               >
-                {isLoading ? (
-                  <Loader2 size={16} className="animate-spin" />
-                ) : (
-                  "S'abonner"
-                )}
+                {isLoading ? <Loader2 size={16} className="animate-spin" /> : "S'abonner"}
               </button>
             </Flex>
           </form>
@@ -130,16 +125,12 @@ export function Newsletter({
     <Box
       p="8"
       style={{
-        background:
-          "linear-gradient(135deg, var(--violet-9) 0%, var(--purple-9) 100%)",
+        background: "linear-gradient(135deg, var(--violet-9) 0%, var(--purple-9) 100%)",
         borderRadius: 24,
         textAlign: "center",
       }}
     >
-      <BookOpen
-        size={48}
-        style={{ color: "white", marginBottom: 16, opacity: 0.9 }}
-      />
+      <BookOpen size={48} style={{ color: "white", marginBottom: 16, opacity: 0.9 }} />
       <Heading size="5" mb="3" style={{ color: "white" }}>
         {title}
       </Heading>

@@ -9,7 +9,6 @@ import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
   Box,
-  Card,
   Flex,
   Text,
   TextField,
@@ -22,16 +21,16 @@ import {
 } from "@radix-ui/themes";
 import {
   Database,
-  AlertTriangle,
-  Trash2,
-  FileSpreadsheet,
-  Loader2,
-  CheckCircle2,
-  AlertCircle,
-  Download,
-  Upload,
-  RefreshCw,
-} from "lucide-react";
+  Warning,
+  Trash,
+  Table as TableIcon,
+  CircleNotch,
+  CheckCircle,
+  WarningCircle,
+  DownloadSimple,
+  UploadSimple,
+  ArrowsClockwise,
+} from "@phosphor-icons/react";
 import { toast } from "sonner";
 
 import { resetData, getDataStatistics } from "@/actions/parametres";
@@ -50,7 +49,11 @@ interface DataSettingsProps {
   initialBackupStats?: Record<string, number>;
 }
 
-export function DataSettings({ initialStats, initialBackups, initialBackupStats }: DataSettingsProps) {
+export function DataSettings({
+  initialStats,
+  initialBackups,
+  initialBackupStats,
+}: DataSettingsProps) {
   const [isLoading, setIsLoading] = useState(false);
   const [isLoadingStats, setIsLoadingStats] = useState(false);
   const [stats, setStats] = useState<Record<string, number>>(initialStats || {});
@@ -95,9 +98,9 @@ export function DataSettings({ initialStats, initialBackups, initialBackupStats 
   const isConfirmationValid = confirmationText === "CONFIRMER LA SUPPRESSION";
   const canSubmit = hasSelectedCategory && isConfirmationValid && !isLoading;
 
-  // Charger les statistiques au montage
+  // Charger les statistiques au montage uniquement si pas de données initiales
   useEffect(() => {
-    loadStats();
+    if (!initialStats || Object.keys(initialStats).length === 0) loadStats();
   }, []);
 
   const loadStats = async () => {
@@ -175,10 +178,10 @@ export function DataSettings({ initialStats, initialBackups, initialBackupStats 
       <Separator size="4" />
 
       {/* Section Import/Export CSV */}
-      <Card size="3">
+      <Box style={{ border: "1px solid var(--gray-a6)", borderRadius: 8 }} p="4">
         <Flex direction="column" gap="4">
           <Flex align="center" gap="2">
-            <FileSpreadsheet size={20} style={{ color: "var(--accent-9)" }} />
+            <TableIcon size={20} weight="duotone" style={{ color: "var(--accent-9)" }} />
             <Text size="4" weight="bold">
               Import / Export de donnees
             </Text>
@@ -186,7 +189,7 @@ export function DataSettings({ initialStats, initialBackups, initialBackupStats 
 
           <Callout.Root color="blue" size="2">
             <Callout.Icon>
-              <Download size={16} />
+              <DownloadSimple size={16} />
             </Callout.Icon>
             <Callout.Text>
               Exportez vos donnees au format CSV pour les sauvegarder ou les utiliser dans un
@@ -196,30 +199,25 @@ export function DataSettings({ initialStats, initialBackups, initialBackupStats 
 
           <CSVImportExport />
         </Flex>
-      </Card>
+      </Box>
 
       <Separator size="4" />
 
       {/* Section Remise a zero */}
-      <Card size="3">
+      <Box style={{ border: "1px solid var(--gray-a6)", borderRadius: 8 }} p="4">
         <Flex direction="column" gap="4">
           <Flex align="center" justify="between">
             <Flex align="center" gap="2">
-              <Database size={20} style={{ color: "var(--red-9)" }} />
+              <Database size={20} weight="duotone" style={{ color: "var(--red-9)" }} />
               <Text size="4" weight="bold" color="red">
                 Remise a zero des donnees
               </Text>
             </Flex>
-            <Button
-              variant="ghost"
-              size="1"
-              onClick={loadStats}
-              disabled={isLoadingStats}
-            >
+            <Button variant="ghost" size="1" onClick={loadStats} disabled={isLoadingStats}>
               {isLoadingStats ? (
-                <Loader2 size={14} className="animate-spin" />
+                <CircleNotch size={14} className="animate-spin" />
               ) : (
-                <RefreshCw size={14} />
+                <ArrowsClockwise size={14} />
               )}
               Actualiser
             </Button>
@@ -228,10 +226,10 @@ export function DataSettings({ initialStats, initialBackups, initialBackupStats 
           {/* Avertissement */}
           <Callout.Root color="red" size="2">
             <Callout.Icon>
-              <AlertTriangle size={18} />
+              <Warning size={18} />
             </Callout.Icon>
             <Callout.Text>
-              <Text weight="bold">ATTENTION : Action irreversible !</Text>
+              <Text weight="bold">ATTENTION : Action irréversible !</Text>
               <br />
               Cette operation supprime definitivement les donnees selectionnees. Les parametres de
               l'etablissement (nom, adresse, TVA, etc.) seront conserves. Cette action est reservee
@@ -259,13 +257,9 @@ export function DataSettings({ initialStats, initialBackups, initialBackupStats 
                         justify="between"
                         p="3"
                         style={{
-                          backgroundColor: field.value
-                            ? "var(--red-a3)"
-                            : "var(--gray-a2)",
+                          backgroundColor: field.value ? "var(--red-a3)" : "var(--gray-a2)",
                           borderRadius: "var(--radius-2)",
-                          border: field.value
-                            ? "1px solid var(--red-6)"
-                            : "1px solid transparent",
+                          border: field.value ? "1px solid var(--red-6)" : "1px solid transparent",
                           transition: "all 0.2s",
                         }}
                       >
@@ -284,12 +278,10 @@ export function DataSettings({ initialStats, initialBackups, initialBackupStats 
                             </Text>
                           </Box>
                         </Flex>
-                        <Badge
-                          color={count > 0 ? "amber" : "gray"}
-                          variant="soft"
-                          size="1"
-                        >
-                          {isLoadingStats ? "..." : `${count} enregistrement${count > 1 ? "s" : ""}`}
+                        <Badge color={count > 0 ? "amber" : "gray"} variant="soft" size="1">
+                          {isLoadingStats
+                            ? "..."
+                            : `${count} enregistrement${count > 1 ? "s" : ""}`}
                         </Badge>
                       </Flex>
                     )}
@@ -324,22 +316,26 @@ export function DataSettings({ initialStats, initialBackups, initialBackupStats 
               size="3"
               color={isConfirmationValid ? "green" : undefined}
             />
-            {errors.confirmationText ? <Text size="1" color="red" mt="1">
+            {errors.confirmationText ? (
+              <Text size="1" color="red" mt="1">
                 {errors.confirmationText.message}
-              </Text> : null}
-            {isConfirmationValid ? <Flex align="center" gap="1" mt="2">
-                <CheckCircle2 size={14} style={{ color: "var(--green-9)" }} />
+              </Text>
+            ) : null}
+            {isConfirmationValid ? (
+              <Flex align="center" gap="1" mt="2">
+                <CheckCircle size={14} style={{ color: "var(--green-9)" }} />
                 <Text size="1" color="green">
                   Confirmation valide
                 </Text>
-              </Flex> : null}
+              </Flex>
+            ) : null}
           </Box>
 
           {/* Bouton de remise a zero */}
           <Flex justify="end" gap="3" align="center" mt="2">
             {resetStatus === "success" && (
               <Flex align="center" gap="2">
-                <CheckCircle2 size={16} style={{ color: "var(--green-9)" }} />
+                <CheckCircle size={16} style={{ color: "var(--green-9)" }} />
                 <Text size="2" color="green">
                   Donnees supprimees
                 </Text>
@@ -347,7 +343,7 @@ export function DataSettings({ initialStats, initialBackups, initialBackupStats 
             )}
             {resetStatus === "error" && (
               <Flex align="center" gap="2">
-                <AlertCircle size={16} style={{ color: "var(--red-9)" }} />
+                <WarningCircle size={16} style={{ color: "var(--red-9)" }} />
                 <Text size="2" color="red">
                   Erreur de suppression
                 </Text>
@@ -356,19 +352,15 @@ export function DataSettings({ initialStats, initialBackups, initialBackupStats 
 
             <AlertDialog.Root open={dialogOpen} onOpenChange={setDialogOpen}>
               <AlertDialog.Trigger>
-                <Button
-                  color="red"
-                  size="3"
-                  disabled={!canSubmit}
-                >
-                  <Trash2 size={16} />
+                <Button color="red" size="3" disabled={!canSubmit}>
+                  <Trash size={16} />
                   Remettre a zero
                 </Button>
               </AlertDialog.Trigger>
               <AlertDialog.Content maxWidth="500px">
                 <AlertDialog.Title>
                   <Flex align="center" gap="2">
-                    <AlertTriangle size={20} style={{ color: "var(--red-9)" }} />
+                    <Warning size={20} style={{ color: "var(--red-9)" }} />
                     Confirmer la suppression
                   </Flex>
                 </AlertDialog.Title>
@@ -390,7 +382,7 @@ export function DataSettings({ initialStats, initialBackups, initialBackupStats 
                   </Box>
                   <Callout.Root color="red" size="1">
                     <Callout.Icon>
-                      <AlertTriangle size={14} />
+                      <Warning size={14} />
                     </Callout.Icon>
                     <Callout.Text size="1">
                       Cette action est IRREVERSIBLE. Les donnees supprimees ne pourront pas etre
@@ -406,15 +398,11 @@ export function DataSettings({ initialStats, initialBackups, initialBackupStats 
                     </Button>
                   </AlertDialog.Cancel>
                   <AlertDialog.Action>
-                    <Button
-                      color="red"
-                      onClick={handleSubmit(onSubmit)}
-                      disabled={isLoading}
-                    >
+                    <Button color="red" onClick={handleSubmit(onSubmit)} disabled={isLoading}>
                       {isLoading ? (
-                        <Loader2 size={16} className="animate-spin" />
+                        <CircleNotch size={16} className="animate-spin" />
                       ) : (
-                        <Trash2 size={16} />
+                        <Trash size={16} />
                       )}
                       Supprimer definitivement
                     </Button>
@@ -424,7 +412,7 @@ export function DataSettings({ initialStats, initialBackups, initialBackupStats 
             </AlertDialog.Root>
           </Flex>
         </Flex>
-      </Card>
+      </Box>
     </Flex>
   );
 }

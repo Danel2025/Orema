@@ -7,7 +7,7 @@
 
 import { useState, useEffect } from "react";
 import { Box, Card, Flex, Text, Table, Badge, Select, Skeleton } from "@radix-ui/themes";
-import { Trophy, TrendingUp } from "lucide-react";
+import { Trophy, TrendUp } from "@phosphor-icons/react";
 import { getTopProducts, type TopProduct, type PeriodeType } from "@/actions/rapports";
 import { formatCurrency } from "@/lib/utils";
 
@@ -90,13 +90,7 @@ export function TopProducts({ initialData }: TopProductsProps) {
 
   return (
     <Card size="3">
-      <Flex
-        justify="between"
-        align="center"
-        mb="4"
-        wrap="wrap"
-        gap="3"
-      >
+      <Flex justify="between" align="center" mb="4" wrap="wrap" gap="3">
         <Flex align="center" gap="2">
           <Trophy size={20} style={{ color: "var(--purple-9)" }} />
           <Text size="4" weight="bold">
@@ -106,7 +100,7 @@ export function TopProducts({ initialData }: TopProductsProps) {
         <Flex gap="2">
           <Select.Root value={periode} onValueChange={(v) => setPeriode(v as PeriodeType)}>
             <Select.Trigger placeholder="Periode" />
-            <Select.Content>
+            <Select.Content position="popper">
               <Select.Item value="jour">Aujourd'hui</Select.Item>
               <Select.Item value="semaine">Cette semaine</Select.Item>
               <Select.Item value="mois">Ce mois</Select.Item>
@@ -116,7 +110,7 @@ export function TopProducts({ initialData }: TopProductsProps) {
 
           <Select.Root value={sortBy} onValueChange={(v) => setSortBy(v as "quantite" | "ca")}>
             <Select.Trigger placeholder="Trier par" />
-            <Select.Content>
+            <Select.Content position="popper">
               <Select.Item value="quantite">Par quantite</Select.Item>
               <Select.Item value="ca">Par CA</Select.Item>
             </Select.Content>
@@ -125,11 +119,7 @@ export function TopProducts({ initialData }: TopProductsProps) {
       </Flex>
 
       {sortedData.length === 0 ? (
-        <Flex
-          align="center"
-          justify="center"
-          style={{ height: 200 }}
-        >
+        <Flex align="center" justify="center" style={{ height: 200 }}>
           <Text size="3" color="gray">
             Aucune vente pour cette periode
           </Text>

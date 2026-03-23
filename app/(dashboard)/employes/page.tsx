@@ -1,4 +1,4 @@
-'use client'
+"use client";
 
 /**
  * Page de gestion des employes
@@ -8,7 +8,7 @@
  * les actions selon les permissions de l'utilisateur.
  */
 
-import { useState, useEffect, useMemo, useCallback } from 'react'
+import { useState, useEffect, useMemo, useCallback } from "react";
 import {
   Flex,
   Text,
@@ -18,29 +18,28 @@ import {
   Badge,
   IconButton,
   DropdownMenu,
-  Card,
+  Box,
   Skeleton,
   AlertDialog,
   Switch,
   Tooltip,
-} from '@radix-ui/themes'
+  Heading,
+} from "@radix-ui/themes";
 import {
   Users,
   Plus,
-  Search,
-  MoreHorizontal,
-  Pencil,
+  MagnifyingGlass,
+  DotsThree,
+  PencilSimple,
   Key,
-  BarChart3,
-  Trash2,
+  ChartBar,
+  Trash,
   Shield,
-  UserCheck,
-  UserX,
-  RefreshCw,
+  ArrowsClockwise,
   Lock,
-  LayoutGrid,
-} from 'lucide-react'
-import { toast } from 'sonner'
+  SquaresFour,
+} from "@phosphor-icons/react";
+import { toast } from "sonner";
 
 import {
   EmployeeFormModal,
@@ -50,243 +49,244 @@ import {
   PageAccessModal,
   RolePageAccessModal,
   ResetPasswordModal,
-} from '@/components/employes'
-import { EmptyState } from '@/components/composed'
-import {
-  ROLE_LABELS,
-  ROLE_COLORS,
-  type RoleType,
-} from '@/schemas/employe'
+} from "@/components/employes";
+import { EmptyState } from "@/components/composed";
+import { ROLE_LABELS, ROLE_COLORS, type RoleType } from "@/schemas/employe";
 import {
   getEmployes,
   deleteEmploye,
   toggleEmployeStatus,
   getRoleAllowedRoutes,
   saveRoleAllowedRoutes,
-} from '@/actions/employes'
-import { useAuth } from '@/lib/auth/context'
+} from "@/actions/employes";
+import { useAuth } from "@/lib/auth/context";
 
 interface Employee {
-  id: string
-  nom: string
-  prenom: string
-  email: string
-  role: string
-  actif: boolean
-  createdAt: Date
-  hasPin: boolean
-  allowed_routes?: string[]
+  id: string;
+  nom: string;
+  prenom: string;
+  email: string;
+  role: string;
+  actif: boolean;
+  createdAt: Date;
+  hasPin: boolean;
+  allowed_routes?: string[];
 }
 
 export default function EmployesPage() {
   // Auth context - permissions
-  const { can, canManage, user } = useAuth()
+  const { can, canManage, user } = useAuth();
 
   // Permissions pour cette page
-  const canCreate = can('employe:creer')
-  const canModify = can('employe:modifier')
-  const canDelete = can('employe:supprimer')
-  const canResetPin = can('employe:reset_pin')
-  const canModifyRole = can('employe:modifier_role')
+  const canCreate = can("employe:creer");
+  const canModify = can("employe:modifier");
+  const canDelete = can("employe:supprimer");
+  const canResetPin = can("employe:reset_pin");
+  const canModifyRole = can("employe:modifier_role");
 
   // State
-  const [employees, setEmployees] = useState<Employee[]>([])
-  const [isLoading, setIsLoading] = useState(true)
-  const [searchQuery, setSearchQuery] = useState('')
+  const [employees, setEmployees] = useState<Employee[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [searchQuery, setSearchQuery] = useState("");
 
   // Modals state
-  const [formModalOpen, setFormModalOpen] = useState(false)
-  const [selectedEmployee, setSelectedEmployee] = useState<Employee | undefined>()
-  const [pinModalOpen, setPinModalOpen] = useState(false)
-  const [pinEmployee, setPinEmployee] = useState<Employee | null>(null)
-  const [permissionsModalOpen, setPermissionsModalOpen] = useState(false)
-  const [permissionsRole, setPermissionsRole] = useState<RoleType | undefined>()
-  const [statsModalOpen, setStatsModalOpen] = useState(false)
-  const [statsEmployee, setStatsEmployee] = useState<Employee | null>(null)
-  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
-  const [employeeToDelete, setEmployeeToDelete] = useState<Employee | null>(null)
-  const [isDeleting, setIsDeleting] = useState(false)
-  const [pageAccessModalOpen, setPageAccessModalOpen] = useState(false)
-  const [pageAccessEmployee, setPageAccessEmployee] = useState<Employee | null>(null)
-  const [rolePageAccessModalOpen, setRolePageAccessModalOpen] = useState(false)
-  const [rolePageAccessConfig, setRolePageAccessConfig] = useState<Record<string, string[] | null>>({})
-  const [isLoadingRoleConfig, setIsLoadingRoleConfig] = useState(false)
-  const [resetPasswordModalOpen, setResetPasswordModalOpen] = useState(false)
-  const [resetPasswordEmployee, setResetPasswordEmployee] = useState<Employee | null>(null)
+  const [formModalOpen, setFormModalOpen] = useState(false);
+  const [selectedEmployee, setSelectedEmployee] = useState<Employee | undefined>();
+  const [pinModalOpen, setPinModalOpen] = useState(false);
+  const [pinEmployee, setPinEmployee] = useState<Employee | null>(null);
+  const [permissionsModalOpen, setPermissionsModalOpen] = useState(false);
+  const [permissionsRole, setPermissionsRole] = useState<RoleType | undefined>();
+  const [statsModalOpen, setStatsModalOpen] = useState(false);
+  const [statsEmployee, setStatsEmployee] = useState<Employee | null>(null);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [employeeToDelete, setEmployeeToDelete] = useState<Employee | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [pageAccessModalOpen, setPageAccessModalOpen] = useState(false);
+  const [pageAccessEmployee, setPageAccessEmployee] = useState<Employee | null>(null);
+  const [rolePageAccessModalOpen, setRolePageAccessModalOpen] = useState(false);
+  const [rolePageAccessConfig, setRolePageAccessConfig] = useState<Record<string, string[] | null>>(
+    {}
+  );
+  const [isLoadingRoleConfig, setIsLoadingRoleConfig] = useState(false);
+  const [resetPasswordModalOpen, setResetPasswordModalOpen] = useState(false);
+  const [resetPasswordEmployee, setResetPasswordEmployee] = useState<Employee | null>(null);
 
   // Load employees
   const loadEmployees = useCallback(async () => {
-    setIsLoading(true)
+    setIsLoading(true);
     try {
-      const result = await getEmployes()
+      const result = await getEmployes();
       if (result.success && result.data) {
-        setEmployees(result.data)
+        setEmployees(result.data);
       } else {
-        toast.error(result.error || 'Erreur lors du chargement')
+        toast.error(result.error || "Erreur lors du chargement");
       }
     } catch (error) {
-      toast.error('Une erreur est survenue')
+      toast.error("Une erreur est survenue");
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
-  }, [])
+  }, []);
 
   useEffect(() => {
-    loadEmployees()
-  }, [loadEmployees])
+    loadEmployees();
+  }, [loadEmployees]);
 
   // Filtered employees
   const filteredEmployees = useMemo(() => {
-    if (!searchQuery.trim()) return employees
+    if (!searchQuery.trim()) return employees;
 
-    const query = searchQuery.toLowerCase()
+    const query = searchQuery.toLowerCase();
     return employees.filter(
       (e) =>
         e.nom.toLowerCase().includes(query) ||
         e.prenom.toLowerCase().includes(query) ||
         e.email.toLowerCase().includes(query) ||
         ROLE_LABELS[e.role as RoleType].toLowerCase().includes(query)
-    )
-  }, [employees, searchQuery])
+    );
+  }, [employees, searchQuery]);
 
   // Stats
-  const stats = useMemo(() => ({
-    total: employees.length,
-    actifs: employees.filter((e) => e.actif).length,
-    inactifs: employees.filter((e) => !e.actif).length,
-  }), [employees])
+  const stats = useMemo(
+    () => ({
+      total: employees.length,
+      actifs: employees.filter((e) => e.actif).length,
+      inactifs: employees.filter((e) => !e.actif).length,
+    }),
+    [employees]
+  );
 
   // Handlers
   const handleCreateEmployee = () => {
-    setSelectedEmployee(undefined)
-    setFormModalOpen(true)
-  }
+    setSelectedEmployee(undefined);
+    setFormModalOpen(true);
+  };
 
   const handleEditEmployee = (employee: Employee) => {
-    setSelectedEmployee(employee)
-    setFormModalOpen(true)
-  }
+    setSelectedEmployee(employee);
+    setFormModalOpen(true);
+  };
 
   const handleManagePin = (employee: Employee) => {
-    setPinEmployee(employee)
-    setPinModalOpen(true)
-  }
+    setPinEmployee(employee);
+    setPinModalOpen(true);
+  };
 
   const handleViewStats = (employee: Employee) => {
-    setStatsEmployee(employee)
-    setStatsModalOpen(true)
-  }
+    setStatsEmployee(employee);
+    setStatsModalOpen(true);
+  };
 
   const handleViewPermissions = (role?: RoleType) => {
-    setPermissionsRole(role)
-    setPermissionsModalOpen(true)
-  }
+    setPermissionsRole(role);
+    setPermissionsModalOpen(true);
+  };
 
   const handleManagePageAccess = (employee: Employee) => {
-    setPageAccessEmployee(employee)
-    setPageAccessModalOpen(true)
-  }
+    setPageAccessEmployee(employee);
+    setPageAccessModalOpen(true);
+  };
 
   const handleOpenRolePageAccess = async () => {
-    setIsLoadingRoleConfig(true)
+    setIsLoadingRoleConfig(true);
     try {
-      const result = await getRoleAllowedRoutes()
+      const result = await getRoleAllowedRoutes();
       if (result.success && result.data) {
-        setRolePageAccessConfig(result.data)
+        setRolePageAccessConfig(result.data);
       }
     } catch (error) {
-      toast.error('Erreur lors du chargement de la configuration')
+      toast.error("Erreur lors du chargement de la configuration");
     } finally {
-      setIsLoadingRoleConfig(false)
-      setRolePageAccessModalOpen(true)
+      setIsLoadingRoleConfig(false);
+      setRolePageAccessModalOpen(true);
     }
-  }
+  };
 
-  const handleSaveRolePageAccess = async (
-    role: RoleType,
-    allowedRoutes: string[] | null
-  ) => {
+  const handleSaveRolePageAccess = async (role: RoleType, allowedRoutes: string[] | null) => {
     // Les admins ont accès à tout, pas besoin de sauvegarder
-    if (role === 'SUPER_ADMIN' || role === 'ADMIN') {
-      return { success: true }
+    if (role === "SUPER_ADMIN" || role === "ADMIN") {
+      return { success: true };
     }
-    const result = await saveRoleAllowedRoutes({ role: role as 'MANAGER' | 'CAISSIER' | 'SERVEUR', allowedRoutes })
+    const result = await saveRoleAllowedRoutes({
+      role: role as "MANAGER" | "CAISSIER" | "SERVEUR",
+      allowedRoutes,
+    });
     if (result.success) {
       // Mettre à jour la config locale
-      setRolePageAccessConfig((prev) => ({ ...prev, [role]: allowedRoutes }))
+      setRolePageAccessConfig((prev) => ({ ...prev, [role]: allowedRoutes }));
     }
-    return result
-  }
+    return result;
+  };
 
   const handleToggleStatus = async (employee: Employee) => {
     try {
       const result = await toggleEmployeStatus({
         employeId: employee.id,
         actif: !employee.actif,
-      })
+      });
 
       if (result.success) {
-        toast.success(
-          employee.actif ? 'Employe desactive' : 'Employe active'
-        )
-        loadEmployees()
+        toast.success(employee.actif ? "Employe desactive" : "Employe active");
+        loadEmployees();
       } else {
-        toast.error(result.error || 'Erreur lors du changement de statut')
+        toast.error(result.error || "Erreur lors du changement de statut");
       }
     } catch (error) {
-      toast.error('Une erreur est survenue')
+      toast.error("Une erreur est survenue");
     }
-  }
+  };
 
   const handleResetPassword = (employee: Employee) => {
-    setResetPasswordEmployee(employee)
-    setResetPasswordModalOpen(true)
-  }
+    setResetPasswordEmployee(employee);
+    setResetPasswordModalOpen(true);
+  };
 
   const handleDeleteEmployee = async () => {
-    if (!employeeToDelete) return
+    if (!employeeToDelete) return;
 
-    setIsDeleting(true)
+    setIsDeleting(true);
     try {
-      const result = await deleteEmploye(employeeToDelete.id)
+      const result = await deleteEmploye(employeeToDelete.id);
 
       if (result.success) {
-        toast.success('Employe supprime')
-        setDeleteDialogOpen(false)
-        setEmployeeToDelete(null)
-        loadEmployees()
+        toast.success("Employe supprime");
+        setDeleteDialogOpen(false);
+        setEmployeeToDelete(null);
+        loadEmployees();
       } else {
-        toast.error(result.error || 'Erreur lors de la suppression')
+        toast.error(result.error || "Erreur lors de la suppression");
       }
     } catch (error) {
-      toast.error('Une erreur est survenue')
+      toast.error("Une erreur est survenue");
     } finally {
-      setIsDeleting(false)
+      setIsDeleting(false);
     }
-  }
+  };
 
   const confirmDelete = (employee: Employee) => {
-    setEmployeeToDelete(employee)
-    setDeleteDialogOpen(true)
-  }
+    setEmployeeToDelete(employee);
+    setDeleteDialogOpen(true);
+  };
 
   return (
-    <Flex direction="column" gap="5">
+    <Box p="4">
+    <Flex direction="column" gap="4">
       {/* Header */}
-      <Flex justify="between" align="start">
-        <Flex direction="column" gap="1">
-          <Flex align="center" gap="2">
-            <Users size={28} style={{ color: 'var(--accent-9)' }} />
-            <Text size="7" weight="bold">
-              Employes
-            </Text>
-          </Flex>
+      <Flex justify="between" align="center" wrap="wrap" gap="3">
+        <Box>
+          <Heading size="6" weight="bold">
+            Gestion des employes
+          </Heading>
           <Text size="2" color="gray">
-            Gestion du personnel et des acces
+            Personnel, acces et permissions
           </Text>
-        </Flex>
+        </Box>
 
         <Flex gap="2">
+          <Button variant="soft" color="gray" onClick={loadEmployees} disabled={isLoading}>
+            <ArrowsClockwise size={16} className={isLoading ? "animate-spin" : ""} />
+            Actualiser
+          </Button>
           <Button variant="soft" color="gray" onClick={() => handleViewPermissions()}>
             <Shield size={16} />
             Permissions
@@ -297,114 +297,99 @@ export default function EmployesPage() {
             onClick={handleOpenRolePageAccess}
             disabled={isLoadingRoleConfig}
           >
-            <LayoutGrid size={16} />
-            Pages par rôle
+            <SquaresFour size={16} />
+            Pages par role
           </Button>
-          {canCreate ? <Button onClick={handleCreateEmployee}>
+          {canCreate ? (
+            <Button onClick={handleCreateEmployee}>
               <Plus size={16} />
               Nouvel employe
-            </Button> : null}
+            </Button>
+          ) : null}
         </Flex>
       </Flex>
 
-      {/* Stats Cards */}
-      <Flex gap="3">
-        <Card style={{ flex: 1 }}>
-          <Flex direction="column" gap="1">
-            <Text size="2" color="gray">
-              Total employes
-            </Text>
-            <Text
-              size="6"
-              weight="bold"
-              style={{ fontFamily: 'var(--font-google-sans-code), monospace' }}
-            >
-              {isLoading ? <Skeleton width="40px" height="24px" /> : stats.total}
-            </Text>
-          </Flex>
-        </Card>
-        <Card style={{ flex: 1 }}>
-          <Flex direction="column" gap="1">
-            <Flex align="center" gap="1">
-              <UserCheck size={14} style={{ color: 'var(--green-9)' }} />
-              <Text size="2" color="gray">
-                Actifs
-              </Text>
-            </Flex>
-            <Text
-              size="6"
-              weight="bold"
-              style={{
-                fontFamily: 'var(--font-google-sans-code), monospace',
-                color: 'var(--green-9)',
-              }}
-            >
-              {isLoading ? <Skeleton width="40px" height="24px" /> : stats.actifs}
-            </Text>
-          </Flex>
-        </Card>
-        <Card style={{ flex: 1 }}>
-          <Flex direction="column" gap="1">
-            <Flex align="center" gap="1">
-              <UserX size={14} style={{ color: 'var(--red-9)' }} />
-              <Text size="2" color="gray">
-                Inactifs
-              </Text>
-            </Flex>
-            <Text
-              size="6"
-              weight="bold"
-              style={{
-                fontFamily: 'var(--font-google-sans-code), monospace',
-                color: 'var(--red-9)',
-              }}
-            >
-              {isLoading ? <Skeleton width="40px" height="24px" /> : stats.inactifs}
-            </Text>
-          </Flex>
-        </Card>
+      {/* Inline stat bar - style stocks */}
+      <Flex
+        align="center"
+        gap="5"
+        py="2"
+        px="3"
+        style={{
+          backgroundColor: "var(--color-panel-solid)",
+          borderRadius: 8,
+          border: "1px solid var(--gray-a4)",
+        }}
+      >
+        <Flex align="center" gap="2">
+          <Users size={16} weight="duotone" style={{ color: "var(--gray-11)" }} />
+          <Text size="2" color="gray">Employés</Text>
+          <Text size="3" weight="bold" style={{ fontFamily: "var(--font-google-sans-code), monospace", fontVariantNumeric: "tabular-nums" }}>
+            {isLoading ? <Skeleton width="24px" height="18px" /> : stats.total}
+          </Text>
+        </Flex>
+
+        <Box style={{ width: 1, height: 20, backgroundColor: "var(--gray-a4)" }} />
+
+        <Flex align="center" gap="2">
+          <Box style={{ width: 8, height: 8, borderRadius: "50%", backgroundColor: "var(--green-9)" }} />
+          <Text size="2" color="gray">Actifs</Text>
+          <Text size="3" weight="bold" color="green" style={{ fontFamily: "var(--font-google-sans-code), monospace", fontVariantNumeric: "tabular-nums" }}>
+            {isLoading ? <Skeleton width="24px" height="18px" /> : stats.actifs}
+          </Text>
+        </Flex>
+
+        <Flex align="center" gap="2">
+          <Box style={{ width: 8, height: 8, borderRadius: "50%", backgroundColor: "var(--red-9)" }} />
+          <Text size="2" color="gray">Inactifs</Text>
+          <Text size="3" weight="bold" color="red" style={{ fontFamily: "var(--font-google-sans-code), monospace", fontVariantNumeric: "tabular-nums" }}>
+            {isLoading ? <Skeleton width="24px" height="18px" /> : stats.inactifs}
+          </Text>
+        </Flex>
       </Flex>
 
-      {/* Search and filters */}
-      <Flex gap="3" align="center">
-        <TextField.Root
-          placeholder="Rechercher un employe..."
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-          style={{ flex: 1, maxWidth: 400 }}
-        >
-          <TextField.Slot>
-            <Search size={16} />
-          </TextField.Slot>
-        </TextField.Root>
-
-        <IconButton
-          variant="soft"
-          color="gray"
-          onClick={loadEmployees}
-          disabled={isLoading}
-        >
-          <RefreshCw size={16} className={isLoading ? 'animate-spin' : ''} />
-        </IconButton>
+      {/* Search */}
+      <Flex gap="3" wrap="wrap" align="end">
+        <Box style={{ flex: "1 1 300px" }}>
+          <Text as="label" size="2" weight="medium" mb="1">
+            Rechercher
+          </Text>
+          <TextField.Root
+            placeholder="Nom, prenom, email..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+          >
+            <TextField.Slot>
+              <MagnifyingGlass size={16} />
+            </TextField.Slot>
+          </TextField.Root>
+        </Box>
       </Flex>
 
       {/* Employees Table */}
       {isLoading ? (
-        <Card>
-          <Flex direction="column" gap="3" p="4">
+        <Box
+          style={{
+            border: "1px solid var(--gray-a6)",
+            borderRadius: 8,
+            overflow: "hidden",
+            padding: "var(--space-4)",
+          }}
+        >
+          <Flex direction="column" gap="3">
             {[1, 2, 3, 4, 5].map((i) => (
               <Skeleton key={i} height="48px" />
             ))}
           </Flex>
-        </Card>
+        </Box>
       ) : filteredEmployees.length === 0 ? (
         <EmptyState
           icon={Users}
-          title={searchQuery ? 'Aucun resultat' : 'Aucun employe'}
+          title={searchQuery ? "Aucun resultat" : "Aucun employe"}
           description={
             searchQuery
-              ? 'Modifiez votre recherche pour trouver des employes'
-              : 'Commencez par ajouter votre premier employe'
+              ? "Modifiez votre recherche pour trouver des employes"
+              : "Commencez par ajouter votre premier employe"
           }
           action={
             !searchQuery && (
@@ -416,7 +401,13 @@ export default function EmployesPage() {
           }
         />
       ) : (
-        <Card>
+        <Box
+          style={{
+            border: "1px solid var(--gray-a6)",
+            borderRadius: 8,
+            overflow: "hidden",
+          }}
+        >
           <Table.Root>
             <Table.Header>
               <Table.Row>
@@ -432,13 +423,11 @@ export default function EmployesPage() {
             <Table.Body>
               {filteredEmployees.map((employee) => (
                 <Table.Row key={employee.id}>
-                  <Table.Cell>
-                    <Flex direction="column" gap="1">
-                      <Text weight="medium">
-                        {employee.prenom} {employee.nom}
-                      </Text>
-                    </Flex>
-                  </Table.Cell>
+                  <Table.RowHeaderCell>
+                    <Text weight="medium">
+                      {employee.prenom} {employee.nom}
+                    </Text>
+                  </Table.RowHeaderCell>
 
                   <Table.Cell>
                     <Text size="2" color="gray">
@@ -450,7 +439,7 @@ export default function EmployesPage() {
                     <Badge
                       color={ROLE_COLORS[employee.role as RoleType]}
                       variant="soft"
-                      style={{ cursor: 'pointer' }}
+                      style={{ cursor: "pointer" }}
                       onClick={() => handleViewPermissions(employee.role as RoleType)}
                     >
                       {ROLE_LABELS[employee.role as RoleType]}
@@ -483,8 +472,8 @@ export default function EmployesPage() {
                         onCheckedChange={() => handleToggleStatus(employee)}
                         disabled={!canModify || !canManage(employee.role as RoleType)}
                       />
-                      <Text size="2" color={employee.actif ? 'green' : 'red'}>
-                        {employee.actif ? 'Actif' : 'Inactif'}
+                      <Text size="2" color={employee.actif ? "green" : "red"}>
+                        {employee.actif ? "Actif" : "Inactif"}
                       </Text>
                     </Flex>
                   </Table.Cell>
@@ -493,52 +482,43 @@ export default function EmployesPage() {
                     <DropdownMenu.Root>
                       <DropdownMenu.Trigger>
                         <IconButton variant="ghost" size="1">
-                          <MoreHorizontal size={16} />
+                          <DotsThree size={16} weight="bold" />
                         </IconButton>
                       </DropdownMenu.Trigger>
 
                       <DropdownMenu.Content>
-                        {/* Actions de modification - seulement si permissions */}
-                        {canModify && canManage(employee.role as RoleType) ? <>
-                            <DropdownMenu.Item
-                              onClick={() => handleEditEmployee(employee)}
-                            >
-                              <Pencil size={14} />
+                        {canModify && canManage(employee.role as RoleType) ? (
+                          <>
+                            <DropdownMenu.Item onClick={() => handleEditEmployee(employee)}>
+                              <PencilSimple size={14} />
                               Modifier
                             </DropdownMenu.Item>
 
-                            {canResetPin ? <DropdownMenu.Item
-                                onClick={() => handleManagePin(employee)}
-                              >
+                            {canResetPin ? (
+                              <DropdownMenu.Item onClick={() => handleManagePin(employee)}>
                                 <Key size={14} />
-                                {employee.hasPin ? 'Modifier PIN' : 'Definir PIN'}
-                              </DropdownMenu.Item> : null}
+                                {employee.hasPin ? "Modifier PIN" : "Definir PIN"}
+                              </DropdownMenu.Item>
+                            ) : null}
 
-                            <DropdownMenu.Item
-                              onClick={() => handleResetPassword(employee)}
-                            >
+                            <DropdownMenu.Item onClick={() => handleResetPassword(employee)}>
                               <Lock size={14} />
                               Reset mot de passe
                             </DropdownMenu.Item>
 
-                            {/* Acces aux pages - seulement pour les non-admins */}
-                            {employee.role !== 'SUPER_ADMIN' && employee.role !== 'ADMIN' && (
-                              <DropdownMenu.Item
-                                onClick={() => handleManagePageAccess(employee)}
-                              >
-                                <LayoutGrid size={14} />
+                            {employee.role !== "SUPER_ADMIN" && employee.role !== "ADMIN" && (
+                              <DropdownMenu.Item onClick={() => handleManagePageAccess(employee)}>
+                                <SquaresFour size={14} />
                                 Acces aux pages
                               </DropdownMenu.Item>
                             )}
 
                             <DropdownMenu.Separator />
-                          </> : null}
+                          </>
+                        ) : null}
 
-                        {/* Actions de consultation - toujours visibles */}
-                        <DropdownMenu.Item
-                          onClick={() => handleViewStats(employee)}
-                        >
-                          <BarChart3 size={14} />
+                        <DropdownMenu.Item onClick={() => handleViewStats(employee)}>
+                          <ChartBar size={14} />
                           Statistiques
                         </DropdownMenu.Item>
 
@@ -549,14 +529,12 @@ export default function EmployesPage() {
                           Permissions
                         </DropdownMenu.Item>
 
-                        {/* Action de suppression - seulement si permissions */}
-                        {canDelete && canManage(employee.role as RoleType) ? <DropdownMenu.Item
-                            color="red"
-                            onClick={() => confirmDelete(employee)}
-                          >
-                            <Trash2 size={14} />
+                        {canDelete && canManage(employee.role as RoleType) ? (
+                          <DropdownMenu.Item color="red" onClick={() => confirmDelete(employee)}>
+                            <Trash size={14} />
                             Supprimer
-                          </DropdownMenu.Item> : null}
+                          </DropdownMenu.Item>
+                        ) : null}
                       </DropdownMenu.Content>
                     </DropdownMenu.Root>
                   </Table.Cell>
@@ -564,7 +542,7 @@ export default function EmployesPage() {
               ))}
             </Table.Body>
           </Table.Root>
-        </Card>
+        </Box>
       )}
 
       {/* Modals */}
@@ -575,12 +553,14 @@ export default function EmployesPage() {
         onSuccess={loadEmployees}
       />
 
-      {pinEmployee ? <PinManagement
+      {pinEmployee ? (
+        <PinManagement
           open={pinModalOpen}
           onOpenChange={setPinModalOpen}
           employee={pinEmployee}
           onSuccess={loadEmployees}
-        /> : null}
+        />
+      ) : null}
 
       <RolePermissionsModal
         open={permissionsModalOpen}
@@ -588,11 +568,13 @@ export default function EmployesPage() {
         selectedRole={permissionsRole}
       />
 
-      {statsEmployee ? <EmployeeStats
+      {statsEmployee ? (
+        <EmployeeStats
           open={statsModalOpen}
           onOpenChange={setStatsModalOpen}
           employee={statsEmployee}
-        /> : null}
+        />
+      ) : null}
 
       {/* Page Access Modal (individuel) */}
       <PageAccessModal
@@ -611,21 +593,23 @@ export default function EmployesPage() {
       />
 
       {/* Reset Password Modal */}
-      {resetPasswordEmployee ? <ResetPasswordModal
+      {resetPasswordEmployee ? (
+        <ResetPasswordModal
           open={resetPasswordModalOpen}
           onOpenChange={setResetPasswordModalOpen}
           employee={resetPasswordEmployee}
-        /> : null}
+        />
+      ) : null}
 
       {/* Delete Confirmation Dialog */}
       <AlertDialog.Root open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
         <AlertDialog.Content maxWidth="450px">
           <AlertDialog.Title>Supprimer l'employe</AlertDialog.Title>
           <AlertDialog.Description size="2">
-            Etes-vous sur de vouloir supprimer{' '}
+            Etes-vous sur de vouloir supprimer{" "}
             <Text weight="bold">
               {employeeToDelete?.prenom} {employeeToDelete?.nom}
-            </Text>{' '}
+            </Text>{" "}
             ? Cette action est irreversible.
           </AlertDialog.Description>
 
@@ -635,23 +619,32 @@ export default function EmployesPage() {
                 Annuler
               </Button>
             </AlertDialog.Cancel>
-            <AlertDialog.Action>
-              <Button
-                color="red"
-                onClick={handleDeleteEmployee}
-                disabled={isDeleting}
-              >
-                {isDeleting ? (
-                  <RefreshCw className="animate-spin" size={16} />
-                ) : (
-                  <Trash2 size={16} />
-                )}
-                Supprimer
-              </Button>
-            </AlertDialog.Action>
+            <Button
+              color="red"
+              disabled={isDeleting}
+              onClick={async (e) => {
+                e.preventDefault();
+                await handleDeleteEmployee();
+              }}
+            >
+              {isDeleting ? (
+                <ArrowsClockwise className="animate-spin" size={16} />
+              ) : (
+                <Trash size={16} />
+              )}
+              Supprimer
+            </Button>
           </Flex>
         </AlertDialog.Content>
       </AlertDialog.Root>
+
+      {/* Resume */}
+      <Flex justify="between" align="center">
+        <Text size="2" color="gray">
+          {filteredEmployees.length} employe(s) sur {employees.length}
+        </Text>
+      </Flex>
     </Flex>
-  )
+    </Box>
+  );
 }

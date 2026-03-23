@@ -5,14 +5,7 @@
  * Affiche les KPIs principaux du dashboard rapports
  */
 
-import {
-  TrendingUp,
-  TrendingDown,
-  DollarSign,
-  ShoppingCart,
-  Receipt,
-  Percent,
-} from "lucide-react";
+import { TrendUp, TrendDown, CurrencyCircleDollar, ShoppingCart, Receipt, Percent } from "@phosphor-icons/react";
 import { Flex, Grid, Text, Skeleton } from "@radix-ui/themes";
 import { formatCurrency } from "@/lib/utils";
 import type { KPIs } from "@/actions/rapports";
@@ -133,11 +126,7 @@ function KPICard({
               color: trend >= 0 ? "var(--green-9)" : "var(--red-9)",
             }}
           >
-            {trend >= 0 ? (
-              <TrendingUp size={14} />
-            ) : (
-              <TrendingDown size={14} />
-            )}
+            {trend >= 0 ? <TrendUp size={14} /> : <TrendDown size={14} />}
             <Text size="2" weight="medium">
               {trend >= 0 ? "+" : ""}
               {trend}%
@@ -157,14 +146,7 @@ export function KPICards({ kpis, isLoading }: KPICardsProps) {
     return (
       <Grid columns={{ initial: "1", sm: "2", lg: "3", xl: "6" }} gap="4">
         {Array.from({ length: 6 }).map((_, i) => (
-          <KPICard
-            key={i}
-            title=""
-            value=""
-            icon={null}
-            color="violet"
-            isLoading
-          />
+          <KPICard key={i} title="" value="" icon={null} color="violet" isLoading />
         ))}
       </Grid>
     );
@@ -175,7 +157,7 @@ export function KPICards({ kpis, isLoading }: KPICardsProps) {
       <KPICard
         title="CA du jour"
         value={formatCurrency(kpis.caJour)}
-        icon={<DollarSign size={24} />}
+        icon={<CurrencyCircleDollar size={24} />}
         trend={kpis.comparaisonJour}
         trendLabel="vs. hier"
         color="violet"
@@ -184,7 +166,7 @@ export function KPICards({ kpis, isLoading }: KPICardsProps) {
       <KPICard
         title="CA de la semaine"
         value={formatCurrency(kpis.caSemaine)}
-        icon={<DollarSign size={24} />}
+        icon={<CurrencyCircleDollar size={24} />}
         trend={kpis.comparaisonSemaine}
         trendLabel="vs. sem. prec."
         color="blue"
@@ -193,7 +175,7 @@ export function KPICards({ kpis, isLoading }: KPICardsProps) {
       <KPICard
         title="CA du mois"
         value={formatCurrency(kpis.caMois)}
-        icon={<DollarSign size={24} />}
+        icon={<CurrencyCircleDollar size={24} />}
         trend={kpis.comparaisonMois}
         trendLabel="vs. mois prec."
         color="green"

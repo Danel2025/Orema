@@ -63,12 +63,14 @@ export async function getPublishedBlogPosts(options?: {
 
   let query = supabase
     .from("blog_posts")
-    .select(`
+    .select(
+      `
       *,
       blog_categories(id, slug, name, color),
       blog_authors(id, name, role, avatar_url),
       blog_post_tags(blog_tags(id, name, slug))
-    `)
+    `
+    )
     .eq("status", "PUBLISHED")
     .order("published_at", { ascending: false });
 
@@ -98,7 +100,10 @@ export async function getPublishedBlogPosts(options?: {
   // Transformer les tags
   return data.map((post) => ({
     ...post,
-    tags: post.blog_post_tags?.map((pt: { blog_tags: { id: string; name: string; slug: string } }) => pt.blog_tags) || [],
+    tags:
+      post.blog_post_tags?.map(
+        (pt: { blog_tags: { id: string; name: string; slug: string } }) => pt.blog_tags
+      ) || [],
     category: post.blog_categories,
     author: post.blog_authors,
   }));
@@ -112,12 +117,14 @@ export async function getPublishedBlogPostBySlug(slug: string) {
 
   const { data, error } = await supabase
     .from("blog_posts")
-    .select(`
+    .select(
+      `
       *,
       blog_categories(id, slug, name, color),
       blog_authors(id, name, role, avatar_url, bio),
       blog_post_tags(blog_tags(id, name, slug))
-    `)
+    `
+    )
     .eq("slug", slug)
     .eq("status", "PUBLISHED")
     .single();
@@ -128,7 +135,10 @@ export async function getPublishedBlogPostBySlug(slug: string) {
 
   return {
     ...data,
-    tags: data.blog_post_tags?.map((pt: { blog_tags: { id: string; name: string; slug: string } }) => pt.blog_tags) || [],
+    tags:
+      data.blog_post_tags?.map(
+        (pt: { blog_tags: { id: string; name: string; slug: string } }) => pt.blog_tags
+      ) || [],
     category: data.blog_categories,
     author: data.blog_authors,
   };
@@ -150,11 +160,13 @@ export async function getRelatedBlogPosts(postId: string, categoryId: string, li
 
   const { data } = await supabase
     .from("blog_posts")
-    .select(`
+    .select(
+      `
       id, slug, title, excerpt, icon, color, published_at,
       blog_categories(slug, name, color),
       blog_authors(name)
-    `)
+    `
+    )
     .eq("status", "PUBLISHED")
     .eq("category_id", categoryId)
     .neq("id", postId)
@@ -196,13 +208,15 @@ export async function getBlogPosts(filters?: BlogFilterData) {
 
   let query = supabase
     .from("blog_posts")
-    .select(`
+    .select(
+      `
       *,
       blog_categories(id, slug, name, color),
       blog_authors(id, name),
       blog_post_tags(blog_tags(id, name, slug)),
       created_by_user:utilisateurs!blog_posts_created_by_fkey(nom, prenom)
-    `)
+    `
+    )
     .order("created_at", { ascending: false });
 
   if (filters?.status) {
@@ -222,7 +236,7 @@ export async function getBlogPosts(filters?: BlogFilterData) {
   }
 
   if (filters?.search) {
-    const sanitized = filters.search.replace(/[%_\\'"(),.*]/g, '');
+    const sanitized = filters.search.replace(/[%_\\'"(),.*]/g, "");
     query = query.or(`title.ilike.%${sanitized}%,excerpt.ilike.%${sanitized}%`);
   }
 
@@ -235,7 +249,10 @@ export async function getBlogPosts(filters?: BlogFilterData) {
 
   return data.map((post) => ({
     ...post,
-    tags: post.blog_post_tags?.map((pt: { blog_tags: { id: string; name: string; slug: string } }) => pt.blog_tags) || [],
+    tags:
+      post.blog_post_tags?.map(
+        (pt: { blog_tags: { id: string; name: string; slug: string } }) => pt.blog_tags
+      ) || [],
     category: post.blog_categories,
     author: post.blog_authors,
   }));
@@ -250,12 +267,14 @@ export async function getBlogPostById(id: string) {
 
   const { data, error } = await supabase
     .from("blog_posts")
-    .select(`
+    .select(
+      `
       *,
       blog_categories(id, slug, name, color),
       blog_authors(id, name, role, avatar_url),
       blog_post_tags(blog_tags(id, name, slug))
-    `)
+    `
+    )
     .eq("id", id)
     .single();
 
@@ -265,7 +284,10 @@ export async function getBlogPostById(id: string) {
 
   return {
     ...data,
-    tags: data.blog_post_tags?.map((pt: { blog_tags: { id: string; name: string; slug: string } }) => pt.blog_tags) || [],
+    tags:
+      data.blog_post_tags?.map(
+        (pt: { blog_tags: { id: string; name: string; slug: string } }) => pt.blog_tags
+      ) || [],
     category: data.blog_categories,
     author: data.blog_authors,
   };
@@ -484,10 +506,7 @@ export async function deleteBlogPost(id: string) {
     await requireSuperAdmin();
     const supabase = createServiceClient();
 
-    const { error } = await supabase
-      .from("blog_posts")
-      .delete()
-      .eq("id", id);
+    const { error } = await supabase.from("blog_posts").delete().eq("id", id);
 
     if (error) {
       return {
@@ -620,14 +639,17 @@ export async function toggleBlogPostFeatured(id: string) {
  * Récupère toutes les catégories de blog
  */
 export async function getBlogCategories() {
+  await requireSuperAdmin();
   const supabase = createServiceClient();
 
   const { data, error } = await supabase
     .from("blog_categories")
-    .select(`
+    .select(
+      `
       *,
       blog_posts(id)
-    `)
+    `
+    )
     .order("name", { ascending: true });
 
   if (error) {
@@ -750,10 +772,7 @@ export async function deleteBlogCategory(id: string) {
       };
     }
 
-    const { error } = await supabase
-      .from("blog_categories")
-      .delete()
-      .eq("id", id);
+    const { error } = await supabase.from("blog_categories").delete().eq("id", id);
 
     if (error) {
       return {
@@ -781,14 +800,17 @@ export async function deleteBlogCategory(id: string) {
  * Récupère tous les auteurs
  */
 export async function getBlogAuthors() {
+  await requireSuperAdmin();
   const supabase = createServiceClient();
 
   const { data, error } = await supabase
     .from("blog_authors")
-    .select(`
+    .select(
+      `
       *,
       blog_posts(id)
-    `)
+    `
+    )
     .order("name", { ascending: true });
 
   if (error) {
@@ -901,10 +923,7 @@ export async function deleteBlogAuthor(id: string) {
       };
     }
 
-    const { error } = await supabase
-      .from("blog_authors")
-      .delete()
-      .eq("id", id);
+    const { error } = await supabase.from("blog_authors").delete().eq("id", id);
 
     if (error) {
       return {
@@ -930,14 +949,17 @@ export async function deleteBlogAuthor(id: string) {
  * Récupère tous les tags
  */
 export async function getBlogTags() {
+  await requireSuperAdmin();
   const supabase = createServiceClient();
 
   const { data, error } = await supabase
     .from("blog_tags")
-    .select(`
+    .select(
+      `
       *,
       blog_post_tags(post_id)
-    `)
+    `
+    )
     .order("name", { ascending: true });
 
   if (error) {
@@ -1012,10 +1034,7 @@ export async function deleteBlogTag(id: string) {
     await supabase.from("blog_post_tags").delete().eq("tag_id", id);
 
     // Puis supprimer le tag
-    const { error } = await supabase
-      .from("blog_tags")
-      .delete()
-      .eq("id", id);
+    const { error } = await supabase.from("blog_tags").delete().eq("id", id);
 
     if (error) {
       return {
@@ -1048,11 +1067,7 @@ export async function generateUniquePostSlug(title: string) {
   let counter = 1;
 
   while (true) {
-    const { data } = await supabase
-      .from("blog_posts")
-      .select("id")
-      .eq("slug", slug)
-      .single();
+    const { data } = await supabase.from("blog_posts").select("id").eq("slug", slug).single();
 
     if (!data) break;
 
@@ -1070,21 +1085,13 @@ export async function getBlogStats() {
   await requireSuperAdmin();
   const supabase = createServiceClient();
 
-  const { data: posts } = await supabase
-    .from("blog_posts")
-    .select("id, status, featured");
+  const { data: posts } = await supabase.from("blog_posts").select("id, status, featured");
 
-  const { data: categories } = await supabase
-    .from("blog_categories")
-    .select("id");
+  const { data: categories } = await supabase.from("blog_categories").select("id");
 
-  const { data: authors } = await supabase
-    .from("blog_authors")
-    .select("id");
+  const { data: authors } = await supabase.from("blog_authors").select("id");
 
-  const { data: tags } = await supabase
-    .from("blog_tags")
-    .select("id");
+  const { data: tags } = await supabase.from("blog_tags").select("id");
 
   return {
     posts: {

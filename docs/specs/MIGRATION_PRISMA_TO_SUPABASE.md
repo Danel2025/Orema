@@ -16,13 +16,13 @@
 
 ### Code migré (Prisma → Supabase)
 
-| Catégorie | Fichiers | Statut |
-|-----------|----------|--------|
-| **Server Actions** | 15 fichiers dans `/actions/` | ✅ Migré |
-| **API Routes** | 12 fichiers dans `/app/api/` | ✅ Migré |
-| **Lib** | Tous les utilitaires dans `/lib/` | ✅ Migré |
-| **Types** | Imports `@prisma/client` → `@/lib/db/types` | ✅ Remplacé |
-| **Composants** | Types Role, etc. | ✅ Migré |
+| Catégorie          | Fichiers                                    | Statut      |
+| ------------------ | ------------------------------------------- | ----------- |
+| **Server Actions** | 15 fichiers dans `/actions/`                | ✅ Migré    |
+| **API Routes**     | 12 fichiers dans `/app/api/`                | ✅ Migré    |
+| **Lib**            | Tous les utilitaires dans `/lib/`           | ✅ Migré    |
+| **Types**          | Imports `@prisma/client` → `@/lib/db/types` | ✅ Remplacé |
+| **Composants**     | Types Role, etc.                            | ✅ Migré    |
 
 ### Infrastructure Supabase
 
@@ -52,12 +52,14 @@
 **Objectif** : S'assurer que Supabase Cloud est prêt
 
 **Tâches** :
+
 1. [x] Vérifier que la base Supabase contient le schéma complet
 2. [x] Appliquer les RLS policies via `/prisma/rls-policies.sql`
 3. [x] Créer les index nécessaires pour les performances
 4. [x] Configurer les variables d'environnement production
 
 **Fichiers concernés** :
+
 - `.env.local` - Variables Supabase
 - `/prisma/rls-policies.sql` - À exécuter dans Supabase SQL Editor
 
@@ -68,6 +70,7 @@
 **Objectif** : Créer des fonctions utilitaires pour remplacer Prisma
 
 **Fichiers créés** :
+
 ```
 /lib/db/
   ├── index.ts           # Export principal ✅
@@ -90,23 +93,22 @@
 ```
 
 **Patterns à implémenter** :
+
 ```typescript
 // Exemple de helper pour les requêtes
 export async function findMany<T>(
   table: string,
   options: {
-    select?: string
-    where?: Record<string, unknown>
-    orderBy?: { column: string; ascending?: boolean }
-    limit?: number
-    offset?: number
+    select?: string;
+    where?: Record<string, unknown>;
+    orderBy?: { column: string; ascending?: boolean };
+    limit?: number;
+    offset?: number;
   }
-): Promise<T[]>
+): Promise<T[]>;
 
 // Exemple de transaction
-export async function transaction<T>(
-  fn: (client: SupabaseClient) => Promise<T>
-): Promise<T>
+export async function transaction<T>(fn: (client: SupabaseClient) => Promise<T>): Promise<T>;
 ```
 
 ---
@@ -116,6 +118,7 @@ export async function transaction<T>(
 **Objectif** : Remplacer les types Prisma par des types natifs
 
 **Prisma Enums à remplacer** :
+
 - `Role` → Type union TypeScript
 - `TypeVente` → Type union
 - `StatutVente` → Type union
@@ -129,15 +132,16 @@ export async function transaction<T>(
 - `TypeConnexion` → Type union
 
 **Fichier à créer** : `/types/enums.ts`
+
 ```typescript
 export const Role = {
-  SUPER_ADMIN: 'SUPER_ADMIN',
-  ADMIN: 'ADMIN',
-  MANAGER: 'MANAGER',
-  CAISSIER: 'CAISSIER',
-  SERVEUR: 'SERVEUR',
-} as const
-export type Role = typeof Role[keyof typeof Role]
+  SUPER_ADMIN: "SUPER_ADMIN",
+  ADMIN: "ADMIN",
+  MANAGER: "MANAGER",
+  CAISSIER: "CAISSIER",
+  SERVEUR: "SERVEUR",
+} as const;
+export type Role = (typeof Role)[keyof typeof Role];
 
 // ... autres enums
 ```
@@ -149,6 +153,7 @@ export type Role = typeof Role[keyof typeof Role]
 **Ordre de migration recommandé** (du plus simple au plus complexe) :
 
 #### 4.1 Actions simples (CRUD basique)
+
 1. [x] `/actions/categories.ts` - CRUD simple ✅
 2. [x] `/actions/clients.ts` - CRUD avec pagination ✅
 3. [x] `/actions/produits.ts` - CRUD + filtres + supplements ✅
@@ -157,11 +162,13 @@ export type Role = typeof Role[keyof typeof Role]
 6. N/A `/actions/zones.ts` - Intégré dans tables.ts
 
 #### 4.2 Actions moyennes
+
 7. [x] `/actions/employes.ts` - CRUD + auth ✅
 8. [x] `/actions/stocks.ts` - Mouvements stock ✅
 9. [x] `/actions/audit.ts` - Logging ✅
 
 #### 4.3 Actions complexes
+
 10. [x] `/actions/caisse.ts` - Données POS temps réel ✅
 11. [x] `/actions/rapports.ts` - Agrégations complexes ✅ (692→581 lignes)
 12. [x] `/actions/ventes.ts` - Transactions multi-étapes ✅ (1320→960 lignes)
@@ -170,26 +177,28 @@ export type Role = typeof Role[keyof typeof Role]
 15. [x] `/actions/supplements.ts` - Suppléments produits ✅ (186→168 lignes)
 
 #### 4.4 Actions auth
+
 16. [x] `/actions/auth-supabase.ts` - Auth Supabase ✅ (399→293 lignes)
 17. [x] `/actions/parametres.ts` - Config établissement ✅ (1020→777 lignes)
 
 **Mapping Prisma → Supabase** :
 
-| Prisma | Supabase |
-|--------|----------|
-| `prisma.table.findMany()` | `supabase.from('table').select()` |
-| `prisma.table.findUnique({ where: { id } })` | `supabase.from('table').select().eq('id', id).single()` |
-| `prisma.table.create({ data })` | `supabase.from('table').insert(data).select().single()` |
-| `prisma.table.update({ where, data })` | `supabase.from('table').update(data).eq('id', id).select().single()` |
-| `prisma.table.delete({ where })` | `supabase.from('table').delete().eq('id', id)` |
-| `prisma.table.count()` | `supabase.from('table').select('*', { count: 'exact', head: true })` |
-| `prisma.$transaction([])` | `supabase.rpc('transaction_fn')` ou séquentiel |
+| Prisma                                       | Supabase                                                             |
+| -------------------------------------------- | -------------------------------------------------------------------- |
+| `prisma.table.findMany()`                    | `supabase.from('table').select()`                                    |
+| `prisma.table.findUnique({ where: { id } })` | `supabase.from('table').select().eq('id', id).single()`              |
+| `prisma.table.create({ data })`              | `supabase.from('table').insert(data).select().single()`              |
+| `prisma.table.update({ where, data })`       | `supabase.from('table').update(data).eq('id', id).select().single()` |
+| `prisma.table.delete({ where })`             | `supabase.from('table').delete().eq('id', id)`                       |
+| `prisma.table.count()`                       | `supabase.from('table').select('*', { count: 'exact', head: true })` |
+| `prisma.$transaction([])`                    | `supabase.rpc('transaction_fn')` ou séquentiel                       |
 
 ---
 
 ### Phase 5 : Migrer les API Routes ✅ COMPLÉTÉ
 
 **Fichiers migrés** :
+
 - [x] `/app/api/health/route.ts` - Health check ✅
 - [x] `/app/api/categories/cache/route.ts` - Cache catégories ✅
 - [x] `/app/api/produits/cache/route.ts` - Cache produits ✅
@@ -214,6 +223,7 @@ export type Role = typeof Role[keyof typeof Role]
 **Solutions** :
 
 #### Option A : RPC Functions (Recommandé)
+
 Créer des fonctions PostgreSQL pour les opérations atomiques :
 
 ```sql
@@ -245,9 +255,11 @@ $$ LANGUAGE plpgsql;
 ```
 
 #### Option B : Séquentiel avec rollback manuel
+
 Pour les cas simples où l'atomicité n'est pas critique.
 
 **Fichiers RPC à créer** :
+
 - [ ] `create_vente_complete` - Vente + lignes + paiements
 - [ ] `split_bill` - Division d'addition
 - [ ] `transfer_table` - Transfert de table
@@ -264,12 +276,12 @@ Pour les cas simples où l'atomicité n'est pas critique.
 ```typescript
 // /lib/db/utils.ts
 export function parseDecimal(value: string | number | null): number {
-  if (value === null) return 0
-  return typeof value === 'string' ? parseFloat(value) : value
+  if (value === null) return 0;
+  return typeof value === "string" ? parseFloat(value) : value;
 }
 
 export function toDecimal(value: number): string {
-  return value.toFixed(0) // FCFA sans décimales
+  return value.toFixed(0); // FCFA sans décimales
 }
 
 // Wrapper pour les requêtes
@@ -277,13 +289,13 @@ export function serializePrices<T extends Record<string, unknown>>(
   row: T,
   priceFields: (keyof T)[]
 ): T {
-  const result = { ...row }
+  const result = { ...row };
   for (const field of priceFields) {
     if (result[field] !== undefined) {
-      result[field] = parseDecimal(result[field] as string) as T[typeof field]
+      result[field] = parseDecimal(result[field] as string) as T[typeof field];
     }
   }
-  return result
+  return result;
 }
 ```
 
@@ -292,6 +304,7 @@ export function serializePrices<T extends Record<string, unknown>>(
 ### Phase 8 : Nettoyage Final ✅ COMPLÉTÉ
 
 **Fichiers supprimés** :
+
 - [x] `/lib/prisma.ts` ✅ Supprimé
 - [x] `/tests/mocks/prisma.ts` ✅ Supprimé
 - [ ] `/prisma/schema.prisma` (conservé en archive pour référence)
@@ -299,17 +312,20 @@ export function serializePrices<T extends Record<string, unknown>>(
 - [ ] `/prisma/seed.ts` (conservé en archive)
 
 **Dépendances supprimées** :
+
 - [x] `@prisma/client` supprimé de package.json ✅
 - [x] `prisma` supprimé de devDependencies ✅
 - [x] Section `prisma` config supprimée ✅
 
 **Fichiers mis à jour** :
+
 - [x] `package.json` - Scripts Prisma supprimés, script `db:types` ajouté pour Supabase ✅
 - [x] `.env.example` - Variables Prisma supprimées ✅
 - [ ] `README.md` - À mettre à jour si nécessaire
 - [ ] `/docs/guides/SETUP.md` - À mettre à jour si nécessaire
 
 **Autres fichiers migrés dans cette phase** :
+
 - [x] `/lib/etablissement.ts` - Migré vers Supabase ✅
 - [x] Tous les imports `@prisma/client` remplacés par `@/lib/db/types` ✅
 
@@ -320,6 +336,7 @@ export function serializePrices<T extends Record<string, unknown>>(
 ### Tests de validation
 
 Pour chaque module migré :
+
 1. [ ] Toutes les opérations CRUD fonctionnent
 2. [ ] La pagination fonctionne
 3. [ ] Les filtres fonctionnent
@@ -328,6 +345,7 @@ Pour chaque module migré :
 6. [ ] RLS policies bloquent les accès non autorisés
 
 ### Tests de régression
+
 1. [ ] Login/Logout fonctionne
 2. [ ] Création de vente complète fonctionne
 3. [ ] Rapports Z génèrent correctement
@@ -338,16 +356,16 @@ Pour chaque module migré :
 
 ## Estimation de Complexité
 
-| Phase | Complexité | Fichiers | Priorité |
-|-------|------------|----------|----------|
-| Phase 1 | Faible | 2-3 | P0 |
-| Phase 2 | Moyenne | 10-12 | P0 |
-| Phase 3 | Faible | 1-2 | P1 |
-| Phase 4 | **HAUTE** | 15+ | P0 |
-| Phase 5 | Moyenne | 3-5 | P1 |
-| Phase 6 | Haute | 4-6 SQL | P1 |
-| Phase 7 | Faible | 1 | P0 |
-| Phase 8 | Faible | 5-10 | P2 |
+| Phase   | Complexité | Fichiers | Priorité |
+| ------- | ---------- | -------- | -------- |
+| Phase 1 | Faible     | 2-3      | P0       |
+| Phase 2 | Moyenne    | 10-12    | P0       |
+| Phase 3 | Faible     | 1-2      | P1       |
+| Phase 4 | **HAUTE**  | 15+      | P0       |
+| Phase 5 | Moyenne    | 3-5      | P1       |
+| Phase 6 | Haute      | 4-6 SQL  | P1       |
+| Phase 7 | Faible     | 1        | P0       |
+| Phase 8 | Faible     | 5-10     | P2       |
 
 ---
 
@@ -374,20 +392,23 @@ Output <promise>MIGRATION COMPLETE</promise> quand toutes les phases sont termin
 ## Notes Importantes
 
 ### Naming Convention
+
 - Prisma utilise **camelCase** pour les modèles
 - Supabase/PostgreSQL utilise **snake_case** pour les tables
 - Le mapping est déjà fait dans `/types/supabase.ts`
 
 ### RLS et Authentification
+
 - Toutes les requêtes doivent passer par un client authentifié
 - Utiliser `createServiceClient()` uniquement pour les opérations admin
 - Les policies RLS sont déjà définies dans `/prisma/rls-policies.sql`
 
 ### Offline Mode
+
 - L'architecture offline reste la même (IndexedDB)
 - Seule la synchronisation change (Supabase au lieu de Prisma)
 
 ---
 
-*Document créé le : 2026-01-29*
-*Dernière mise à jour : 2026-01-29*
+_Document créé le : 2026-01-29_
+_Dernière mise à jour : 2026-01-29_

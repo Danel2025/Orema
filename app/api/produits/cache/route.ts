@@ -6,12 +6,12 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/db";
 import { getEtablissementId } from "@/lib/etablissement";
-import { getSession } from "@/lib/auth/session";
+import { getCurrentUser } from "@/lib/auth";
 
 export async function GET() {
   try {
-    const session = await getSession();
-    if (!session) {
+    const user = await getCurrentUser();
+    if (!user) {
       return NextResponse.json({ error: "Non authentifie" }, { status: 401 });
     }
 
@@ -20,18 +20,20 @@ export async function GET() {
 
     const { data: produits } = await supabase
       .from("produits")
-      .select(`
+      .select(
+        `
         id, nom, prix_vente, taux_tva, categorie_id,
         disponible_direct, disponible_table, disponible_livraison, disponible_emporter,
         gerer_stock, stock_actuel, image,
         categories(nom)
-      `)
+      `
+      )
       .eq("etablissement_id", etablissementId)
       .eq("actif", true)
       .order("nom", { ascending: true });
 
     // Transformer pour compatibilité frontend
-    const transformed = (produits || []).map(p => ({
+    const transformed = (produits || []).map((p) => ({
       id: p.id,
       nom: p.nom,
       prixVente: Number(p.prix_vente),

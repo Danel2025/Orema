@@ -16,8 +16,7 @@ export const metadata: Metadata = {
   ],
   openGraph: {
     title: "À propos | Oréma N+",
-    description:
-      "Découvrez Oréma N+, la solution de caisse moderne née au Gabon pour l'Afrique.",
+    description: "Découvrez Oréma N+, la solution de caisse moderne née au Gabon pour l'Afrique.",
     type: "website",
   },
 };

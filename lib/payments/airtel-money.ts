@@ -109,15 +109,11 @@ export class AirtelMoneyClient {
   constructor() {
     this.clientId = process.env.AIRTEL_MONEY_CLIENT_ID || "";
     this.clientSecret = process.env.AIRTEL_MONEY_CLIENT_SECRET || "";
-    this.baseUrl =
-      process.env.AIRTEL_MONEY_BASE_URL ||
-      "https://openapiuat.airtel.africa";
+    this.baseUrl = process.env.AIRTEL_MONEY_BASE_URL || "https://openapiuat.airtel.africa";
     this.callbackUrl = process.env.AIRTEL_MONEY_CALLBACK_URL || "";
 
     if (!this.clientId || !this.clientSecret) {
-      console.warn(
-        "[AirtelMoney] Credentials manquantes. Les paiements ne fonctionneront pas."
-      );
+      console.warn("[AirtelMoney] Credentials manquantes. Les paiements ne fonctionneront pas.");
     }
   }
 
@@ -131,26 +127,21 @@ export class AirtelMoneyClient {
       return cachedToken.token;
     }
 
-    const response = await this.fetchWithRetry(
-      `${this.baseUrl}/auth/oauth2/token`,
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          client_id: this.clientId,
-          client_secret: this.clientSecret,
-          grant_type: "client_credentials",
-        }),
-      }
-    );
+    const response = await this.fetchWithRetry(`${this.baseUrl}/auth/oauth2/token`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        client_id: this.clientId,
+        client_secret: this.clientSecret,
+        grant_type: "client_credentials",
+      }),
+    });
 
     if (!response.ok) {
       const text = await response.text();
-      throw new Error(
-        `[AirtelMoney] Echec authentification: ${response.status} - ${text}`
-      );
+      throw new Error(`[AirtelMoney] Echec authentification: ${response.status} - ${text}`);
     }
 
     const data: AirtelAuthResponse = await response.json();
@@ -169,9 +160,7 @@ export class AirtelMoneyClient {
    * Initie un paiement C2B (Customer to Business)
    * Le client recevra une notification USSD pour confirmer le paiement.
    */
-  async initiatePayment(
-    params: InitiatePaymentParams
-  ): Promise<InitiatePaymentResult> {
+  async initiatePayment(params: InitiatePaymentParams): Promise<InitiatePaymentResult> {
     const token = await this.getAccessToken();
 
     const payload: AirtelPaymentRequest = {
@@ -189,26 +178,20 @@ export class AirtelMoneyClient {
       },
     };
 
-    const response = await this.fetchWithRetry(
-      `${this.baseUrl}/merchant/v1/payments/`,
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-          "X-Country": "GA",
-          "X-Currency": "XAF",
-        },
-        body: JSON.stringify(payload),
-      }
-    );
+    const response = await this.fetchWithRetry(`${this.baseUrl}/merchant/v1/payments/`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+        "X-Country": "GA",
+        "X-Currency": "XAF",
+      },
+      body: JSON.stringify(payload),
+    });
 
     if (!response.ok) {
       const text = await response.text();
-      console.error(
-        `[AirtelMoney] Erreur initiation paiement: ${response.status}`,
-        text
-      );
+      console.error(`[AirtelMoney] Erreur initiation paiement: ${response.status}`, text);
       return {
         success: false,
         error: `Erreur API Airtel Money: ${response.status}`,
@@ -255,10 +238,7 @@ export class AirtelMoneyClient {
 
     if (!response.ok) {
       const text = await response.text();
-      console.error(
-        `[AirtelMoney] Erreur verification statut: ${response.status}`,
-        text
-      );
+      console.error(`[AirtelMoney] Erreur verification statut: ${response.status}`, text);
       return {
         success: false,
         error: `Erreur API Airtel Money: ${response.status}`,

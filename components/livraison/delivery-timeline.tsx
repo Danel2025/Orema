@@ -1,23 +1,15 @@
-'use client';
+"use client";
 
-import { Flex, Text } from '@/components/ui';
-import {
-  ChefHat,
-  Package,
-  Truck,
-  Check,
-  X,
-  Ban,
-  RotateCcw,
-} from 'lucide-react';
+import { Flex, Text } from "@/components/ui";
+import { ChefHat, Package, Truck, Check, X, Ban, RotateCcw } from "lucide-react";
 import {
   type HistoriqueLivraison,
   type StatutLivraison,
   STATUT_LIVRAISON,
   STATUT_LIVRAISON_LABELS,
   STATUT_LIVRAISON_COLORS,
-} from '@/lib/delivery';
-import { formatTime, formatDate } from '@/lib/utils';
+} from "@/lib/delivery";
+import { formatTime, formatDate } from "@/lib/utils";
 
 // ============================================================================
 // TYPES
@@ -52,23 +44,23 @@ export function DeliveryTimeline({ historique }: DeliveryTimelineProps) {
 
   if (sorted.length === 0) {
     return (
-      <Text size="2" color="gray" style={{ textAlign: 'center', padding: 16 }}>
+      <Text size="2" color="gray" style={{ textAlign: "center", padding: 16 }}>
         Aucun historique disponible
       </Text>
     );
   }
 
   return (
-    <div style={{ position: 'relative', paddingLeft: 28 }}>
+    <div style={{ position: "relative", paddingLeft: 28 }}>
       {/* Ligne verticale */}
       <div
         style={{
-          position: 'absolute',
+          position: "absolute",
           left: 11,
           top: 12,
           bottom: 12,
           width: 2,
-          backgroundColor: 'var(--gray-a5)',
+          backgroundColor: "var(--gray-a5)",
           borderRadius: 1,
         }}
       />
@@ -84,32 +76,30 @@ export function DeliveryTimeline({ historique }: DeliveryTimelineProps) {
             <div
               key={entry.id}
               style={{
-                position: 'relative',
+                position: "relative",
                 paddingBottom: isLast ? 0 : 16,
               }}
             >
               {/* Cercle de statut */}
               <div
                 style={{
-                  position: 'absolute',
+                  position: "absolute",
                   left: -28,
                   top: 2,
                   width: 24,
                   height: 24,
-                  borderRadius: '50%',
-                  backgroundColor: isLast
-                    ? `var(--${color}-9)`
-                    : `var(--${color}-a4)`,
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
+                  borderRadius: "50%",
+                  backgroundColor: isLast ? `var(--${color}-9)` : `var(--${color}-a4)`,
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
                   zIndex: 1,
                 }}
               >
                 <Icon
                   size={12}
                   style={{
-                    color: isLast ? 'white' : `var(--${color}-11)`,
+                    color: isLast ? "white" : `var(--${color}-11)`,
                   }}
                 />
               </div>
@@ -117,7 +107,7 @@ export function DeliveryTimeline({ historique }: DeliveryTimelineProps) {
               {/* Contenu */}
               <Flex direction="column" gap="1">
                 <Flex align="center" gap="2">
-                  <Text size="2" weight={isLast ? 'bold' : 'medium'}>
+                  <Text size="2" weight={isLast ? "bold" : "medium"}>
                     {label}
                   </Text>
                 </Flex>
@@ -127,27 +117,30 @@ export function DeliveryTimeline({ historique }: DeliveryTimelineProps) {
                     size="1"
                     color="gray"
                     style={{
-                      fontFamily:
-                        'var(--font-google-sans-code), ui-monospace, monospace',
+                      fontFamily: "var(--font-google-sans-code), ui-monospace, monospace",
                     }}
                   >
                     {formatDate(entry.timestamp)} {formatTime(entry.timestamp)}
                   </Text>
-                  {entry.acteurNom ? <Text size="1" color="gray">
+                  {entry.acteurNom ? (
+                    <Text size="1" color="gray">
                       par {entry.acteurNom}
-                    </Text> : null}
+                    </Text>
+                  ) : null}
                 </Flex>
 
-                {entry.note ? <Text
+                {entry.note ? (
+                  <Text
                     size="1"
                     color="gray"
                     style={{
-                      fontStyle: 'italic',
+                      fontStyle: "italic",
                       marginTop: 2,
                     }}
                   >
                     {entry.note}
-                  </Text> : null}
+                  </Text>
+                ) : null}
               </Flex>
             </div>
           );

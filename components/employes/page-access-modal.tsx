@@ -1,197 +1,179 @@
-'use client'
+"use client";
 
 /**
  * Modal de gestion des pages autorisees pour un employe
  * Permet aux admins de definir quelles pages un non-admin peut voir
  */
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect } from "react";
+import { Dialog, Button, Flex, Text, Checkbox, Badge, Separator, Callout } from "@radix-ui/themes";
 import {
-  Dialog,
-  Button,
-  Flex,
-  Text,
-  Checkbox,
-  Badge,
-  Separator,
-  Callout,
-} from '@radix-ui/themes'
-import {
-  Loader2,
-  Save,
-  LayoutDashboard,
+  SpinnerGap,
+  FloppyDisk,
+  SquaresFour,
   ShoppingCart,
-  UtensilsCrossed,
+  ForkKnife,
   Package,
   Warehouse,
   Users,
   UserCircle,
-  BarChart3,
-  Settings,
+  ChartBar,
+  GearSix,
   Info,
-  RotateCcw,
-} from 'lucide-react'
-import { toast } from 'sonner'
-import { updateEmployeAllowedRoutes } from '@/actions/employes'
+  ArrowCounterClockwise,
+} from "@phosphor-icons/react";
+import { toast } from "sonner";
+import { updateEmployeAllowedRoutes } from "@/actions/employes";
 
 interface PageConfig {
-  path: string
-  label: string
-  description: string
-  icon: React.ComponentType<{ size?: number }>
+  path: string;
+  label: string;
+  description: string;
+  icon: React.ComponentType<{ size?: number }>;
 }
 
 const AVAILABLE_PAGES: PageConfig[] = [
   {
-    path: '/',
-    label: 'Tableau de bord',
-    description: 'Vue globale de l\'activite',
-    icon: LayoutDashboard,
+    path: "/",
+    label: "Tableau de bord",
+    description: "Vue globale de l'activite",
+    icon: SquaresFour,
   },
   {
-    path: '/caisse',
-    label: 'Caisse',
-    description: 'Point de vente et encaissement',
+    path: "/caisse",
+    label: "Caisse",
+    description: "Point de vente et encaissement",
     icon: ShoppingCart,
   },
   {
-    path: '/salle',
-    label: 'Plan de salle',
-    description: 'Gestion des tables et service',
-    icon: UtensilsCrossed,
+    path: "/salle",
+    label: "Plan de salle",
+    description: "Gestion des tables et service",
+    icon: ForkKnife,
   },
   {
-    path: '/produits',
-    label: 'Produits',
-    description: 'Catalogue des produits',
+    path: "/produits",
+    label: "Produits",
+    description: "Catalogue des produits",
     icon: Package,
   },
   {
-    path: '/stocks',
-    label: 'Stocks',
-    description: 'Gestion des stocks et inventaire',
+    path: "/stocks",
+    label: "Stocks",
+    description: "Gestion des stocks et inventaire",
     icon: Warehouse,
   },
   {
-    path: '/clients',
-    label: 'Clients',
-    description: 'Fichier clients et fidelite',
+    path: "/clients",
+    label: "Clients",
+    description: "Fichier clients et fidelite",
     icon: Users,
   },
   {
-    path: '/employes',
-    label: 'Employes',
-    description: 'Gestion du personnel',
+    path: "/employes",
+    label: "Employés",
+    description: "Gestion du personnel",
     icon: UserCircle,
   },
   {
-    path: '/rapports',
-    label: 'Rapports',
-    description: 'Statistiques et analyses',
-    icon: BarChart3,
+    path: "/rapports",
+    label: "Rapports",
+    description: "Statistiques et analyses",
+    icon: ChartBar,
   },
   {
-    path: '/parametres',
-    label: 'Parametres',
-    description: 'Configuration du systeme',
-    icon: Settings,
+    path: "/parametres",
+    label: "Paramètres",
+    description: "Configuration du système",
+    icon: GearSix,
   },
-]
+];
 
 interface Employee {
-  id: string
-  nom: string
-  prenom: string
-  role: string
-  allowed_routes?: string[]
+  id: string;
+  nom: string;
+  prenom: string;
+  role: string;
+  allowed_routes?: string[];
 }
 
 interface PageAccessModalProps {
-  open: boolean
-  onOpenChange: (open: boolean) => void
-  employee: Employee | null
-  onSuccess?: () => void
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  employee: Employee | null;
+  onSuccess?: () => void;
 }
 
-export function PageAccessModal({
-  open,
-  onOpenChange,
-  employee,
-  onSuccess,
-}: PageAccessModalProps) {
-  const [selectedRoutes, setSelectedRoutes] = useState<string[]>([])
-  const [isSubmitting, setIsSubmitting] = useState(false)
-  const [useCustomAccess, setUseCustomAccess] = useState(false)
+export function PageAccessModal({ open, onOpenChange, employee, onSuccess }: PageAccessModalProps) {
+  const [selectedRoutes, setSelectedRoutes] = useState<string[]>([]);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [useCustomAccess, setUseCustomAccess] = useState(false);
 
   // Initialiser avec les routes actuelles de l'employe
   useEffect(() => {
     if (employee) {
-      const currentRoutes = employee.allowed_routes || []
-      setSelectedRoutes(currentRoutes)
-      setUseCustomAccess(currentRoutes.length > 0)
+      const currentRoutes = employee.allowed_routes || [];
+      setSelectedRoutes(currentRoutes);
+      setUseCustomAccess(currentRoutes.length > 0);
     }
-  }, [employee])
+  }, [employee]);
 
   const handleToggleRoute = (path: string) => {
     setSelectedRoutes((prev) =>
-      prev.includes(path)
-        ? prev.filter((r) => r !== path)
-        : [...prev, path]
-    )
-  }
+      prev.includes(path) ? prev.filter((r) => r !== path) : [...prev, path]
+    );
+  };
 
   const handleSelectAll = () => {
-    setSelectedRoutes(AVAILABLE_PAGES.map((p) => p.path))
-  }
+    setSelectedRoutes(AVAILABLE_PAGES.map((p) => p.path));
+  };
 
   const handleDeselectAll = () => {
-    setSelectedRoutes([])
-  }
+    setSelectedRoutes([]);
+  };
 
   const handleResetToDefault = () => {
-    setSelectedRoutes([])
-    setUseCustomAccess(false)
-  }
+    setSelectedRoutes([]);
+    setUseCustomAccess(false);
+  };
 
   const handleSubmit = async () => {
-    if (!employee) return
+    if (!employee) return;
 
-    setIsSubmitting(true)
+    setIsSubmitting(true);
 
     try {
       // Si useCustomAccess est false, on envoie un tableau vide
       // ce qui signifie que les permissions du role s'appliquent
-      const routesToSave = useCustomAccess ? selectedRoutes : []
+      const routesToSave = useCustomAccess ? selectedRoutes : [];
 
       const result = await updateEmployeAllowedRoutes({
         employeId: employee.id,
         allowedRoutes: routesToSave,
-      })
+      });
 
       if (result.success) {
-        toast.success('Acces aux pages mis a jour')
-        onOpenChange(false)
-        onSuccess?.()
+        toast.success("Accès aux pages mis à jour");
+        onOpenChange(false);
+        onSuccess?.();
       } else {
-        toast.error(result.error || 'Erreur lors de la mise a jour')
+        toast.error(result.error || "Erreur lors de la mise a jour");
       }
     } catch (error) {
-      toast.error('Une erreur est survenue')
+      toast.error("Une erreur est survenue");
     } finally {
-      setIsSubmitting(false)
+      setIsSubmitting(false);
     }
-  }
+  };
 
-  const isAdmin = employee?.role === 'SUPER_ADMIN' || employee?.role === 'ADMIN'
+  const isAdmin = employee?.role === "SUPER_ADMIN" || employee?.role === "ADMIN";
 
   return (
     <Dialog.Root open={open} onOpenChange={onOpenChange}>
       <Dialog.Content maxWidth="550px">
-        <Dialog.Title>
-          Acces aux pages
-        </Dialog.Title>
+        <Dialog.Title>Acces aux pages</Dialog.Title>
         <Dialog.Description size="2" mb="4">
-          Definir les pages accessibles pour{' '}
+          Definir les pages accessibles pour{" "}
           <Text weight="bold">
             {employee?.prenom} {employee?.nom}
           </Text>
@@ -203,8 +185,8 @@ export function PageAccessModal({
               <Info size={16} />
             </Callout.Icon>
             <Callout.Text>
-              Les administrateurs ont acces a toutes les pages par defaut.
-              Cette configuration ne s'applique qu'aux non-administrateurs.
+              Les administrateurs ont acces a toutes les pages par defaut. Cette configuration ne
+              s'applique qu'aux non-administrateurs.
             </Callout.Text>
           </Callout.Root>
         ) : (
@@ -216,9 +198,9 @@ export function PageAccessModal({
                   <Checkbox
                     checked={useCustomAccess}
                     onCheckedChange={(checked) => {
-                      setUseCustomAccess(checked === true)
+                      setUseCustomAccess(checked === true);
                       if (!checked) {
-                        setSelectedRoutes([])
+                        setSelectedRoutes([]);
                       }
                     }}
                   />
@@ -227,22 +209,18 @@ export function PageAccessModal({
               </Text>
               <Text size="1" color="gray">
                 {useCustomAccess
-                  ? 'Seules les pages cochees ci-dessous seront accessibles'
-                  : 'Les permissions du role s\'appliquent (acces standard)'}
+                  ? "Seules les pages cochees ci-dessous seront accessibles"
+                  : "Les permissions du role s'appliquent (acces standard)"}
               </Text>
             </Flex>
 
-            {useCustomAccess ? <>
+            {useCustomAccess ? (
+              <>
                 <Separator size="4" mb="4" />
 
                 {/* Actions rapides */}
                 <Flex gap="2" mb="4">
-                  <Button
-                    type="button"
-                    variant="soft"
-                    size="1"
-                    onClick={handleSelectAll}
-                  >
+                  <Button type="button" variant="soft" size="1" onClick={handleSelectAll}>
                     Tout selectionner
                   </Button>
                   <Button
@@ -261,16 +239,16 @@ export function PageAccessModal({
                     color="gray"
                     onClick={handleResetToDefault}
                   >
-                    <RotateCcw size={14} />
+                    <ArrowCounterClockwise size={14} />
                     Defaut
                   </Button>
                 </Flex>
 
                 {/* Liste des pages */}
-                <Flex direction="column" gap="2" style={{ maxHeight: '350px', overflowY: 'auto' }}>
+                <Flex direction="column" gap="2" style={{ maxHeight: "350px", overflowY: "auto" }}>
                   {AVAILABLE_PAGES.map((page) => {
-                    const Icon = page.icon
-                    const isSelected = selectedRoutes.includes(page.path)
+                    const Icon = page.icon;
+                    const isSelected = selectedRoutes.includes(page.path);
 
                     return (
                       <Text
@@ -278,16 +256,14 @@ export function PageAccessModal({
                         size="2"
                         key={page.path}
                         style={{
-                          cursor: 'pointer',
-                          padding: '12px',
-                          borderRadius: '8px',
-                          backgroundColor: isSelected
-                            ? 'var(--accent-a3)'
-                            : 'var(--gray-a2)',
+                          cursor: "pointer",
+                          padding: "12px",
+                          borderRadius: "8px",
+                          backgroundColor: isSelected ? "var(--accent-a3)" : "var(--gray-a2)",
                           border: isSelected
-                            ? '1px solid var(--accent-6)'
-                            : '1px solid transparent',
-                          transition: 'all 0.15s ease',
+                            ? "1px solid var(--accent-6)"
+                            : "1px solid transparent",
+                          transition: "all 0.15s ease",
                         }}
                       >
                         <Flex gap="3" align="center">
@@ -302,10 +278,8 @@ export function PageAccessModal({
                               width: 32,
                               height: 32,
                               borderRadius: 6,
-                              backgroundColor: isSelected
-                                ? 'var(--accent-9)'
-                                : 'var(--gray-a4)',
-                              color: isSelected ? 'white' : 'var(--gray-11)',
+                              backgroundColor: isSelected ? "var(--accent-9)" : "var(--gray-a4)",
+                              color: isSelected ? "white" : "var(--gray-11)",
                             }}
                           >
                             <Icon size={16} />
@@ -318,17 +292,18 @@ export function PageAccessModal({
                           </Flex>
                         </Flex>
                       </Text>
-                    )
+                    );
                   })}
                 </Flex>
 
                 {/* Compteur */}
                 <Flex justify="end" mt="3">
-                  <Badge color={selectedRoutes.length > 0 ? 'green' : 'gray'}>
+                  <Badge color={selectedRoutes.length > 0 ? "green" : "gray"}>
                     {selectedRoutes.length} / {AVAILABLE_PAGES.length} pages
                   </Badge>
                 </Flex>
-              </> : null}
+              </>
+            ) : null}
           </>
         )}
 
@@ -341,16 +316,12 @@ export function PageAccessModal({
           </Dialog.Close>
           {!isAdmin && (
             <Button onClick={handleSubmit} disabled={isSubmitting}>
-              {isSubmitting ? (
-                <Loader2 className="animate-spin" size={16} />
-              ) : (
-                <Save size={16} />
-              )}
+              {isSubmitting ? <SpinnerGap className="animate-spin" size={16} /> : <FloppyDisk size={16} />}
               Enregistrer
             </Button>
           )}
         </Flex>
       </Dialog.Content>
     </Dialog.Root>
-  )
+  );
 }

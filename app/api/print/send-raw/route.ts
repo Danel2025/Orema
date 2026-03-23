@@ -5,19 +5,16 @@
  * est connectee en reseau (TCP/IP) et que l'envoi se fait via le serveur.
  */
 
-import type { NextRequest} from "next/server";
+import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
-import { getSession } from "@/lib/auth/session";
+import { getCurrentUser } from "@/lib/auth";
 import { db, createClient } from "@/lib/db";
 
 export async function POST(request: NextRequest) {
   try {
-    const session = await getSession();
-    if (!session) {
-      return NextResponse.json(
-        { success: false, error: "Non authentifie" },
-        { status: 401 }
-      );
+    const user = await getCurrentUser();
+    if (!user) {
+      return NextResponse.json({ success: false, error: "Non authentifie" }, { status: 401 });
     }
 
     const body = await request.json();

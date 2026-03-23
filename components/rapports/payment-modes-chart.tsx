@@ -8,7 +8,7 @@
 import { useState, useEffect } from "react";
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer, Legend } from "recharts";
 import { Box, Card, Flex, Text, Select, Skeleton } from "@radix-ui/themes";
-import { CreditCard, Wallet, Smartphone, Banknote } from "lucide-react";
+import { CreditCard, Wallet, DeviceMobile, Money } from "@phosphor-icons/react";
 import { getSalesByPaymentMode, type PaymentModeData, type PeriodeType } from "@/actions/rapports";
 import { formatCurrency } from "@/lib/utils";
 
@@ -30,10 +30,10 @@ const PAYMENT_COLORS: Record<string, string> = {
 
 // Icones pour chaque mode
 const PAYMENT_ICONS: Record<string, React.ReactNode> = {
-  ESPECES: <Banknote size={16} />,
+  ESPECES: <Money size={16} />,
   CARTE_BANCAIRE: <CreditCard size={16} />,
-  AIRTEL_MONEY: <Smartphone size={16} />,
-  MOOV_MONEY: <Smartphone size={16} />,
+  AIRTEL_MONEY: <DeviceMobile size={16} />,
+  MOOV_MONEY: <DeviceMobile size={16} />,
   CHEQUE: <Wallet size={16} />,
   VIREMENT: <CreditCard size={16} />,
   COMPTE_CLIENT: <Wallet size={16} />,
@@ -83,9 +83,7 @@ export function PaymentModesChart({ initialData }: PaymentModesChartProps) {
           }}
         >
           <Flex align="center" gap="2" mb="2">
-            <Box style={{ color: PAYMENT_COLORS[item.mode] }}>
-              {PAYMENT_ICONS[item.mode]}
-            </Box>
+            <Box style={{ color: PAYMENT_COLORS[item.mode] }}>{PAYMENT_ICONS[item.mode]}</Box>
             <Text size="2" weight="bold">
               {item.label}
             </Text>
@@ -168,13 +166,7 @@ export function PaymentModesChart({ initialData }: PaymentModesChartProps) {
 
   return (
     <Card size="3">
-      <Flex
-        justify="between"
-        align="center"
-        mb="4"
-        wrap="wrap"
-        gap="3"
-      >
+      <Flex justify="between" align="center" mb="4" wrap="wrap" gap="3">
         <Flex align="center" gap="2">
           <CreditCard size={20} style={{ color: "var(--blue-9)" }} />
           <Text size="4" weight="bold">
@@ -183,7 +175,7 @@ export function PaymentModesChart({ initialData }: PaymentModesChartProps) {
         </Flex>
         <Select.Root value={periode} onValueChange={(v) => setPeriode(v as PeriodeType)}>
           <Select.Trigger placeholder="Periode" />
-          <Select.Content>
+          <Select.Content position="popper">
             <Select.Item value="jour">Aujourd'hui</Select.Item>
             <Select.Item value="semaine">Cette semaine</Select.Item>
             <Select.Item value="mois">Ce mois</Select.Item>
@@ -193,11 +185,7 @@ export function PaymentModesChart({ initialData }: PaymentModesChartProps) {
       </Flex>
 
       {!hasData ? (
-        <Flex
-          align="center"
-          justify="center"
-          style={{ height: 250 }}
-        >
+        <Flex align="center" justify="center" style={{ height: 250 }}>
           <Text size="3" color="gray">
             Aucune vente pour cette periode
           </Text>
@@ -251,9 +239,7 @@ export function PaymentModesChart({ initialData }: PaymentModesChartProps) {
                       backgroundColor: PAYMENT_COLORS[item.mode] || "var(--gray-7)",
                     }}
                   />
-                  <Box style={{ color: PAYMENT_COLORS[item.mode] }}>
-                    {PAYMENT_ICONS[item.mode]}
-                  </Box>
+                  <Box style={{ color: PAYMENT_COLORS[item.mode] }}>{PAYMENT_ICONS[item.mode]}</Box>
                   <Text size="2" weight="medium">
                     {item.label}
                   </Text>

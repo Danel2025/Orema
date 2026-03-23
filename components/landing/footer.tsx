@@ -5,11 +5,17 @@ import {
   Container,
   Flex,
   Grid,
-  Heading,
   Text,
   Separator,
 } from "@radix-ui/themes";
-import { MapPin, Phone, EnvelopeSimple, FacebookLogo, InstagramLogo, LinkedinLogo } from "@phosphor-icons/react";
+import {
+  MapPin,
+  Phone,
+  EnvelopeSimple,
+  FacebookLogo,
+  InstagramLogo,
+  LinkedinLogo,
+} from "@phosphor-icons/react";
 import Link from "next/link";
 import Image from "next/image";
 
@@ -27,9 +33,11 @@ const footerLinks = {
     title: "Ressources",
     links: [
       { label: "Documentation", href: "/docs" },
+      { label: "API", href: "/docs/api" },
       { label: "Guide de démarrage", href: "/guide" },
       { label: "FAQ", href: "/faq" },
       { label: "Blog", href: "/blog" },
+      { label: "Changelog", href: "/changelog" },
     ],
   },
   company: {
@@ -37,7 +45,9 @@ const footerLinks = {
     links: [
       { label: "À propos", href: "/about" },
       { label: "Partenaires", href: "/partners" },
-      { label: "Contact", href: "#contact" },
+      { label: "Carrières", href: "/careers" },
+      { label: "Contact", href: "/contact" },
+      { label: "Support", href: "/support" },
     ],
   },
   legal: {
@@ -46,6 +56,8 @@ const footerLinks = {
       { label: "CGU", href: "/terms" },
       { label: "Confidentialité", href: "/privacy" },
       { label: "Mentions légales", href: "/legal" },
+      { label: "Accessibilité", href: "/accessibility" },
+      { label: "Statut des services", href: "/status" },
     ],
   },
 };
@@ -62,7 +74,7 @@ export function Footer() {
       id="contact"
       asChild
       style={{
-        background: "var(--gray-1)",
+        background: "var(--gray-2)",
         borderTop: "1px solid var(--gray-a4)",
       }}
     >
@@ -73,48 +85,65 @@ export function Footer() {
             gap={{ initial: "8", lg: "6" }}
           >
             {/* Brand column */}
-            <Flex direction="column" gap="4" className="lg:col-span-2">
+            <Flex direction="column" gap="5" className="lg:col-span-2">
               {/* Logo */}
               <Flex align="center" gap="3">
                 <Image
                   src="/images/logos/ic-lg.webp"
                   alt="Oréma N+"
-                  width={44}
-                  height={44}
+                  width={40}
+                  height={40}
                   style={{ objectFit: "contain" }}
                 />
-                <Heading size="5">Oréma N+</Heading>
+                <Text size="5" weight="bold" style={{ color: "var(--gray-12)" }}>
+                  Oréma N+
+                </Text>
               </Flex>
 
-              <Text size="2" color="gray" style={{ maxWidth: 280 }}>
-                Le cœur de votre commerce. Système de caisse moderne conçu pour
-                l&apos;Afrique.
+              <Text
+                size="2"
+                style={{ color: "var(--gray-10)", maxWidth: 280, lineHeight: 1.7 }}
+              >
+                Système de caisse moderne conçu pour les commerces gabonais et
+                africains.
               </Text>
 
               {/* Contact info */}
-              <Flex direction="column" gap="2">
+              <Flex direction="column" gap="3">
                 <Flex align="center" gap="2">
-                  <MapPin size={14} style={{ color: "var(--gray-10)" }} aria-hidden="true" />
-                  <Text size="2" color="gray">
+                  <MapPin
+                    size={14}
+                    style={{ color: "var(--gray-9)", flexShrink: 0 }}
+                    aria-hidden="true"
+                  />
+                  <Text size="2" style={{ color: "var(--gray-10)" }}>
                     Libreville, Gabon
                   </Text>
                 </Flex>
                 <Flex align="center" gap="2">
-                  <Phone size={14} style={{ color: "var(--gray-10)" }} aria-hidden="true" />
-                  <Text size="2" color="gray">
+                  <Phone
+                    size={14}
+                    style={{ color: "var(--gray-9)", flexShrink: 0 }}
+                    aria-hidden="true"
+                  />
+                  <Text size="2" style={{ color: "var(--gray-10)" }}>
                     +241 77 00 00 00
                   </Text>
                 </Flex>
                 <Flex align="center" gap="2">
-                  <EnvelopeSimple size={14} style={{ color: "var(--gray-10)" }} aria-hidden="true" />
-                  <Text size="2" color="gray">
+                  <EnvelopeSimple
+                    size={14}
+                    style={{ color: "var(--gray-9)", flexShrink: 0 }}
+                    aria-hidden="true"
+                  />
+                  <Text size="2" style={{ color: "var(--gray-10)" }}>
                     contact@orema-nplus.ga
                   </Text>
                 </Flex>
               </Flex>
 
               {/* Social links */}
-              <Flex gap="2">
+              <Flex gap="3">
                 {socialLinks.map((social, i) => (
                   <a
                     key={i}
@@ -124,26 +153,24 @@ export function Footer() {
                     aria-label={social.label}
                     style={{
                       display: "flex",
-                      width: 36,
-                      height: 36,
+                      width: 34,
+                      height: 34,
                       alignItems: "center",
                       justifyContent: "center",
-                      borderRadius: 8,
-                      background: "var(--gray-a3)",
-                      cursor: "pointer",
-                      transition: "background-color 0.2s ease"
+                      borderRadius: 6,
+                      color: "var(--gray-10)",
+                      transition: "color 0.2s ease",
                     }}
                     onMouseEnter={(e) => {
-                      e.currentTarget.style.backgroundColor = "var(--gray-a4)";
+                      e.currentTarget.style.color = "var(--gray-12)";
                     }}
                     onMouseLeave={(e) => {
-                      e.currentTarget.style.backgroundColor = "var(--gray-a3)";
+                      e.currentTarget.style.color = "var(--gray-10)";
                     }}
                   >
                     <social.icon
-                      size={16}
-                      weight="fill"
-                      style={{ color: "var(--gray-11)" }}
+                      size={18}
+                      weight="regular"
                       aria-hidden="true"
                     />
                   </a>
@@ -154,31 +181,30 @@ export function Footer() {
             {/* Links columns */}
             {Object.values(footerLinks).map((section, index) => (
               <Flex key={index} direction="column" gap="4">
-                <Text size="2" weight="bold">
+                <Text
+                  size="2"
+                  weight="bold"
+                  style={{ color: "var(--gray-12)", letterSpacing: "0.02em" }}
+                >
                   {section.title}
                 </Text>
-                <Flex direction="column" gap="1">
+                <Flex direction="column" gap="2">
                   {section.links.map((link, i) => (
                     <Link
                       key={i}
                       href={link.href}
                       style={{
                         textDecoration: "none",
-                        display: "inline-block",
-                        padding: "6px 10px",
-                        marginLeft: "-10px",
-                        borderRadius: 6,
                         fontSize: 14,
-                        color: "var(--gray-11)",
-                        transition: "all 0.2s ease"
+                        color: "var(--gray-10)",
+                        transition: "color 0.2s ease",
+                        lineHeight: 1.8,
                       }}
                       onMouseEnter={(e) => {
-                        e.currentTarget.style.backgroundColor = "var(--gray-a3)";
-                        e.currentTarget.style.color = "var(--accent-9)";
+                        e.currentTarget.style.color = "var(--gray-12)";
                       }}
                       onMouseLeave={(e) => {
-                        e.currentTarget.style.backgroundColor = "transparent";
-                        e.currentTarget.style.color = "var(--gray-11)";
+                        e.currentTarget.style.color = "var(--gray-10)";
                       }}
                     >
                       {link.label}
@@ -189,38 +215,23 @@ export function Footer() {
             ))}
           </Grid>
 
-          <Separator size="4" my="6" />
+          <Separator size="4" my="6" style={{ opacity: 0.5 }} />
 
           {/* Bottom bar */}
           <Flex
             direction={{ initial: "column", sm: "row" }}
             justify="between"
-            align="center"
-            gap="4"
+            align={{ initial: "start", sm: "center" }}
+            gap="3"
           >
-            <Text size="1" color="gray">
-              © {new Date().getFullYear()} Oréma N+. Tous droits réservés.
+            <Text size="1" style={{ color: "var(--gray-9)" }}>
+              &copy; {new Date().getFullYear()} Oréma N+. Tous droits
+              réservés.
             </Text>
 
-            <Box
-              px="3"
-              py="1"
-              className="rounded-md"
-              style={{
-                background: "var(--green-a3)",
-                border: "1px solid var(--green-a5)",
-              }}
-            >
-              <Flex align="center" gap="2">
-                <Box
-                  className="h-2 w-2 animate-pulse rounded-full"
-                  style={{ background: "var(--green-9)" }}
-                />
-                <Text size="1" style={{ color: "var(--green-11)" }}>
-                  Systèmes opérationnels
-                </Text>
-              </Flex>
-            </Box>
+            <Text size="1" style={{ color: "var(--gray-9)" }}>
+              Conçu au Gabon
+            </Text>
           </Flex>
         </Container>
       </footer>

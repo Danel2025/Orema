@@ -9,20 +9,20 @@
 // Types
 // ============================================================================
 
-export type ConflictStrategy = 'local-wins' | 'remote-wins' | 'last-write-wins'
+export type ConflictStrategy = "local-wins" | "remote-wins" | "last-write-wins";
 
 export interface ConflictRecord {
-  id: string
-  entity: string
-  entityId: string
-  localData: Record<string, unknown>
-  remoteData: Record<string, unknown>
-  localUpdatedAt: string
-  remoteUpdatedAt: string
-  detectedAt: number
-  resolved: boolean
-  resolution?: ConflictStrategy
-  resolvedAt?: number
+  id: string;
+  entity: string;
+  entityId: string;
+  localData: Record<string, unknown>;
+  remoteData: Record<string, unknown>;
+  localUpdatedAt: string;
+  remoteUpdatedAt: string;
+  detectedAt: number;
+  resolved: boolean;
+  resolution?: ConflictStrategy;
+  resolvedAt?: number;
 }
 
 // ============================================================================
@@ -38,14 +38,14 @@ export function detectConflict(
   remoteUpdatedAt: string,
   lastSyncedAt: number
 ): boolean {
-  const localTime = new Date(localUpdatedAt).getTime()
-  const remoteTime = new Date(remoteUpdatedAt).getTime()
+  const localTime = new Date(localUpdatedAt).getTime();
+  const remoteTime = new Date(remoteUpdatedAt).getTime();
 
   // Conflit si les deux ont ete modifies depuis le dernier sync
-  const localModifiedSinceSync = localTime > lastSyncedAt
-  const remoteModifiedSinceSync = remoteTime > lastSyncedAt
+  const localModifiedSinceSync = localTime > lastSyncedAt;
+  const remoteModifiedSinceSync = remoteTime > lastSyncedAt;
 
-  return localModifiedSinceSync && remoteModifiedSinceSync
+  return localModifiedSinceSync && remoteModifiedSinceSync;
 }
 
 // ============================================================================
@@ -61,21 +61,21 @@ export function resolveConflict(
   strategy: ConflictStrategy
 ): Record<string, unknown> {
   switch (strategy) {
-    case 'local-wins':
-      return local
+    case "local-wins":
+      return local;
 
-    case 'remote-wins':
-      return remote
+    case "remote-wins":
+      return remote;
 
-    case 'last-write-wins': {
+    case "last-write-wins": {
       const localTime = new Date(
-        (local.updated_at as string) || (local.created_at as string) || '1970-01-01'
-      ).getTime()
+        (local.updated_at as string) || (local.created_at as string) || "1970-01-01"
+      ).getTime();
       const remoteTime = new Date(
-        (remote.updated_at as string) || (remote.created_at as string) || '1970-01-01'
-      ).getTime()
+        (remote.updated_at as string) || (remote.created_at as string) || "1970-01-01"
+      ).getTime();
 
-      return localTime >= remoteTime ? local : remote
+      return localTime >= remoteTime ? local : remote;
     }
   }
 }
@@ -88,10 +88,10 @@ export function resolveConflict(
  * Cree un enregistrement de conflit.
  */
 export function createConflictRecord(params: {
-  entity: string
-  entityId: string
-  localData: Record<string, unknown>
-  remoteData: Record<string, unknown>
+  entity: string;
+  entityId: string;
+  localData: Record<string, unknown>;
+  remoteData: Record<string, unknown>;
 }): ConflictRecord {
   return {
     id: `conflict_${Date.now()}_${Math.random().toString(36).slice(2, 9)}`,
@@ -103,7 +103,7 @@ export function createConflictRecord(params: {
     remoteUpdatedAt: (params.remoteData.updated_at as string) || new Date().toISOString(),
     detectedAt: Date.now(),
     resolved: false,
-  }
+  };
 }
 
 /**
@@ -118,7 +118,7 @@ export function markConflictResolved(
     resolved: true,
     resolution: strategy,
     resolvedAt: Date.now(),
-  }
+  };
 }
 
 /**
@@ -128,5 +128,5 @@ export function getWinningData(
   conflict: ConflictRecord,
   strategy: ConflictStrategy
 ): Record<string, unknown> {
-  return resolveConflict(conflict.localData, conflict.remoteData, strategy)
+  return resolveConflict(conflict.localData, conflict.remoteData, strategy);
 }

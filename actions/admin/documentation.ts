@@ -53,10 +53,12 @@ export async function getPublishedDocCategories() {
 
   const { data, error } = await supabase
     .from("doc_categories")
-    .select(`
+    .select(
+      `
       *,
       doc_articles(id, slug, title, read_time, status)
-    `)
+    `
+    )
     .eq("status", "PUBLISHED")
     .order("ordre", { ascending: true });
 
@@ -85,10 +87,12 @@ export async function getPublishedDocCategoryBySlug(slug: string) {
 
   const { data, error } = await supabase
     .from("doc_categories")
-    .select(`
+    .select(
+      `
       *,
       doc_articles(*)
-    `)
+    `
+    )
     .eq("slug", slug)
     .eq("status", "PUBLISHED")
     .single();
@@ -111,10 +115,7 @@ export async function getPublishedDocCategoryBySlug(slug: string) {
 /**
  * Récupère un article par ses slugs (public: publié uniquement)
  */
-export async function getPublishedDocArticleBySlugs(
-  categorySlug: string,
-  articleSlug: string
-) {
+export async function getPublishedDocArticleBySlugs(categorySlug: string, articleSlug: string) {
   const supabase = await createClient();
 
   // Récupérer la catégorie
@@ -170,11 +171,13 @@ export async function getDocCategories() {
 
   const { data, error } = await supabase
     .from("doc_categories")
-    .select(`
+    .select(
+      `
       *,
       doc_articles(id, status),
       created_by_user:utilisateurs!doc_categories_created_by_fkey(nom, prenom)
-    `)
+    `
+    )
     .order("ordre", { ascending: true });
 
   if (error) {
@@ -185,9 +188,9 @@ export async function getDocCategories() {
   return data.map((cat) => ({
     ...cat,
     articleCount: cat.doc_articles?.length || 0,
-    publishedArticleCount: cat.doc_articles?.filter(
-      (a: { status: ContentStatus }) => a.status === "PUBLISHED"
-    ).length || 0,
+    publishedArticleCount:
+      cat.doc_articles?.filter((a: { status: ContentStatus }) => a.status === "PUBLISHED").length ||
+      0,
   }));
 }
 
@@ -200,10 +203,12 @@ export async function getDocCategoryById(id: string) {
 
   const { data, error } = await supabase
     .from("doc_categories")
-    .select(`
+    .select(
+      `
       *,
       doc_articles(*)
-    `)
+    `
+    )
     .eq("id", id)
     .single();
 
@@ -424,10 +429,7 @@ export async function deleteDocCategory(id: string) {
     }
 
     // Supprimer (CASCADE supprimera les articles)
-    const { error } = await supabase
-      .from("doc_categories")
-      .delete()
-      .eq("id", id);
+    const { error } = await supabase.from("doc_categories").delete().eq("id", id);
 
     if (error) {
       console.error("Erreur deleteDocCategory:", error);
@@ -544,10 +546,12 @@ export async function getPublishedDocArticleBySlug(categorySlug: string, article
   // Puis récupérer l'article
   const { data: article } = await supabase
     .from("doc_articles")
-    .select(`
+    .select(
+      `
       *,
       doc_categories(slug, title, icon, color)
-    `)
+    `
+    )
     .eq("category_id", category.id)
     .eq("slug", articleSlug)
     .eq("status", "PUBLISHED")
@@ -569,10 +573,12 @@ export async function getDocArticles(categoryId: string) {
 
   const { data, error } = await supabase
     .from("doc_articles")
-    .select(`
+    .select(
+      `
       *,
       created_by_user:utilisateurs!doc_articles_created_by_fkey(nom, prenom)
-    `)
+    `
+    )
     .eq("category_id", categoryId)
     .order("ordre", { ascending: true });
 
@@ -593,10 +599,12 @@ export async function getDocArticleById(id: string) {
 
   const { data, error } = await supabase
     .from("doc_articles")
-    .select(`
+    .select(
+      `
       *,
       doc_categories(id, slug, title, icon, color)
-    `)
+    `
+    )
     .eq("id", id)
     .single();
 
@@ -816,10 +824,7 @@ export async function deleteDocArticle(id: string) {
     await requireSuperAdmin();
     const supabase = createServiceClient();
 
-    const { error } = await supabase
-      .from("doc_articles")
-      .delete()
-      .eq("id", id);
+    const { error } = await supabase.from("doc_articles").delete().eq("id", id);
 
     if (error) {
       return {
@@ -921,11 +926,7 @@ export async function generateUniqueCategorySlug(title: string) {
   let counter = 1;
 
   while (true) {
-    const { data } = await supabase
-      .from("doc_categories")
-      .select("id")
-      .eq("slug", slug)
-      .single();
+    const { data } = await supabase.from("doc_categories").select("id").eq("slug", slug).single();
 
     if (!data) break;
 
@@ -970,13 +971,9 @@ export async function getDocStats() {
   await requireSuperAdmin();
   const supabase = createServiceClient();
 
-  const { data: categories } = await supabase
-    .from("doc_categories")
-    .select("id, status");
+  const { data: categories } = await supabase.from("doc_categories").select("id, status");
 
-  const { data: articles } = await supabase
-    .from("doc_articles")
-    .select("id, status");
+  const { data: articles } = await supabase.from("doc_articles").select("id, status");
 
   return {
     categories: {

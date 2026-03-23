@@ -9,7 +9,6 @@ import { useForm, Controller, type Resolver } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
   Box,
-  Card,
   Flex,
   Text,
   TextField,
@@ -24,14 +23,15 @@ import {
   Truck,
   MapPin,
   Plus,
-  Pencil,
-  Trash2,
-  Save,
-  Loader2,
+  PencilSimple,
+  Trash,
+  FloppyDisk,
+  CircleNotch,
   Clock,
-  Banknote,
-  AlertCircle,
-} from "lucide-react";
+  Money,
+  WarningCircle,
+  Info,
+} from "@phosphor-icons/react";
 import { toast } from "sonner";
 
 import {
@@ -40,10 +40,7 @@ import {
   deleteZoneLivraison,
   toggleZoneLivraisonActif,
 } from "@/actions/parametres";
-import {
-  zoneLivraisonSchema,
-  type ZoneLivraisonFormData,
-} from "@/schemas/parametres.schema";
+import { zoneLivraisonSchema, type ZoneLivraisonFormData } from "@/schemas/parametres.schema";
 import { formatCurrency } from "@/lib/utils";
 
 interface ZoneLivraison {
@@ -120,9 +117,7 @@ export function DeliverySettings({ initialData }: DeliverySettingsProps) {
       if (result.success && result.data) {
         const updatedZone = result.data as ZoneLivraison;
         if (editingZone) {
-          setZones((prev) =>
-            prev.map((z) => (z.id === editingZone.id ? updatedZone : z))
-          );
+          setZones((prev) => prev.map((z) => (z.id === editingZone.id ? updatedZone : z)));
           toast.success("Zone modifiee avec succes");
         } else {
           setZones((prev) => [...prev, updatedZone]);
@@ -169,12 +164,8 @@ export function DeliverySettings({ initialData }: DeliverySettingsProps) {
 
       if (result.success && result.data) {
         const updatedZone = result.data as ZoneLivraison;
-        setZones((prev) =>
-          prev.map((z) => (z.id === id ? updatedZone : z))
-        );
-        toast.success(
-          updatedZone.active ? "Zone activee" : "Zone desactivee"
-        );
+        setZones((prev) => prev.map((z) => (z.id === id ? updatedZone : z)));
+        toast.success(updatedZone.active ? "Zone activee" : "Zone desactivee");
       } else {
         toast.error(result.error || "Erreur lors du changement d'etat");
       }
@@ -189,16 +180,14 @@ export function DeliverySettings({ initialData }: DeliverySettingsProps) {
   const zonesActives = zones.filter((z) => z.active).length;
   const fraisMoyen =
     zones.length > 0
-      ? Math.round(
-          zones.reduce((acc, z) => acc + z.frais_livraison, 0) / zones.length
-        )
+      ? Math.round(zones.reduce((acc, z) => acc + z.frais_livraison, 0) / zones.length)
       : 0;
 
   return (
     <Flex direction="column" gap="5">
       {/* Statistiques */}
       <Flex gap="4" wrap="wrap">
-        <Card size="2" style={{ flex: "1 1 150px" }}>
+        <Box style={{ border: "1px solid var(--gray-a6)", borderRadius: 8, flex: "1 1 150px" }} p="3">
           <Flex direction="column" gap="1">
             <Text size="1" color="gray">
               Zones de livraison
@@ -210,8 +199,8 @@ export function DeliverySettings({ initialData }: DeliverySettingsProps) {
               {zonesActives} active{zonesActives > 1 ? "s" : ""}
             </Text>
           </Flex>
-        </Card>
-        <Card size="2" style={{ flex: "1 1 150px" }}>
+        </Box>
+        <Box style={{ border: "1px solid var(--gray-a6)", borderRadius: 8, flex: "1 1 150px" }} p="3">
           <Flex direction="column" gap="1">
             <Text size="1" color="gray">
               Frais moyen
@@ -220,7 +209,7 @@ export function DeliverySettings({ initialData }: DeliverySettingsProps) {
               {formatCurrency(fraisMoyen)}
             </Text>
           </Flex>
-        </Card>
+        </Box>
       </Flex>
 
       {/* En-tete */}
@@ -241,15 +230,9 @@ export function DeliverySettings({ initialData }: DeliverySettingsProps) {
 
       {/* Liste des zones */}
       {zones.length === 0 ? (
-        <Card size="3">
-          <Flex
-            direction="column"
-            align="center"
-            justify="center"
-            gap="3"
-            py="6"
-          >
-            <Truck size={48} className="text-gray-400" />
+        <Box style={{ border: "1px solid var(--gray-a6)", borderRadius: 8 }} p="4">
+          <Flex direction="column" align="center" justify="center" gap="3" py="6">
+            <Truck size={48} style={{ color: "var(--gray-8)" }} />
             <Text size="3" color="gray">
               Aucune zone de livraison configuree
             </Text>
@@ -261,9 +244,9 @@ export function DeliverySettings({ initialData }: DeliverySettingsProps) {
               Ajouter une zone
             </Button>
           </Flex>
-        </Card>
+        </Box>
       ) : (
-        <Card size="2">
+        <Box style={{ border: "1px solid var(--gray-a6)", borderRadius: 8 }} p="3">
           <Table.Root>
             <Table.Header>
               <Table.Row>
@@ -286,7 +269,7 @@ export function DeliverySettings({ initialData }: DeliverySettingsProps) {
                   </Table.RowHeaderCell>
                   <Table.Cell>
                     <Flex align="center" gap="2">
-                      <Banknote size={14} className="text-green-500" />
+                      <Money size={14} style={{ color: "var(--green-9)" }} />
                       <Text size="2" weight="medium">
                         {formatCurrency(zone.frais_livraison)}
                       </Text>
@@ -314,12 +297,8 @@ export function DeliverySettings({ initialData }: DeliverySettingsProps) {
                   </Table.Cell>
                   <Table.Cell>
                     <Flex gap="2">
-                      <IconButton
-                        size="1"
-                        variant="soft"
-                        onClick={() => openEditDialog(zone)}
-                      >
-                        <Pencil size={14} />
+                      <IconButton size="1" variant="soft" onClick={() => openEditDialog(zone)}>
+                        <PencilSimple size={14} />
                       </IconButton>
                       <IconButton
                         size="1"
@@ -329,9 +308,9 @@ export function DeliverySettings({ initialData }: DeliverySettingsProps) {
                         disabled={isDeleting === zone.id}
                       >
                         {isDeleting === zone.id ? (
-                          <Loader2 size={14} className="animate-spin" />
+                          <CircleNotch size={14} className="animate-spin" />
                         ) : (
-                          <Trash2 size={14} />
+                          <Trash size={14} />
                         )}
                       </IconButton>
                     </Flex>
@@ -340,17 +319,17 @@ export function DeliverySettings({ initialData }: DeliverySettingsProps) {
               ))}
             </Table.Body>
           </Table.Root>
-        </Card>
+        </Box>
       )}
 
       {/* Information */}
       <Callout.Root color="blue" size="1">
         <Callout.Icon>
-          <AlertCircle size={16} />
+          <Info size={16} />
         </Callout.Icon>
         <Callout.Text>
-          Les frais de livraison sont automatiquement ajoutes au total de la commande
-          lorsque le mode &quot;Livraison&quot; est selectionne en caisse.
+          Les frais de livraison sont automatiquement ajoutes au total de la commande lorsque le
+          mode &quot;Livraison&quot; est selectionne en caisse.
         </Callout.Text>
       </Callout.Root>
 
@@ -417,7 +396,7 @@ export function DeliverySettings({ initialData }: DeliverySettingsProps) {
                       size="3"
                     >
                       <TextField.Slot>
-                        <Banknote size={16} />
+                        <Money size={16} />
                       </TextField.Slot>
                       <TextField.Slot side="right">
                         <Text size="1" color="gray">
@@ -481,10 +460,7 @@ export function DeliverySettings({ initialData }: DeliverySettingsProps) {
                   control={control}
                   render={({ field }) => (
                     <Flex align="center" gap="2" mt="2">
-                      <Switch
-                        checked={field.value}
-                        onCheckedChange={field.onChange}
-                      />
+                      <Switch checked={field.value} onCheckedChange={field.onChange} />
                       <Text size="2">Zone active</Text>
                     </Flex>
                   )}
@@ -500,11 +476,7 @@ export function DeliverySettings({ initialData }: DeliverySettingsProps) {
                 </Button>
               </Dialog.Close>
               <Button type="submit" disabled={isLoading}>
-                {isLoading ? (
-                  <Loader2 size={16} className="animate-spin" />
-                ) : (
-                  <Save size={16} />
-                )}
+                {isLoading ? <CircleNotch size={16} className="animate-spin" /> : <FloppyDisk size={16} />}
                 {editingZone ? "Enregistrer" : "Ajouter"}
               </Button>
             </Flex>

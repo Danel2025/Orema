@@ -1,9 +1,9 @@
 import type { Metadata, Viewport } from "next";
-import { Gabarito , JetBrains_Mono } from "next/font/google";
+import { Gabarito, Source_Sans_3, JetBrains_Mono } from "next/font/google";
 import { Providers } from "./providers";
 import "./globals.css";
 
-// Font principale pour l'interface - Gabarito (spécifications Oréma N+)
+// Font d'interface - Gabarito : titres, navigation, boutons (spécifications Oréma N+)
 const gabarito = Gabarito({
   variable: "--font-gabarito",
   subsets: ["latin"],
@@ -11,8 +11,16 @@ const gabarito = Gabarito({
   weight: ["400", "500", "600", "700", "800", "900"],
 });
 
+// Font de lecture - Source Sans 3 (ex Source Sans Pro) : texte courant, descriptions, paragraphes
+// Conçue par Adobe pour la lisibilité écran, style neutre et professionnel
+const sourceSans3 = Source_Sans_3({
+  variable: "--font-body",
+  subsets: ["latin"],
+  display: "swap",
+  weight: ["300", "400", "500", "600", "700"],
+});
+
 // Font monospace pour les prix, quantités et tickets
-// Note: Google Sans Code n'est pas disponible sur Google Fonts, JetBrains Mono est un excellent substitut
 const jetbrainsMono = JetBrains_Mono({
   variable: "--font-google-sans-code",
   subsets: ["latin"],
@@ -26,10 +34,7 @@ export const metadata: Metadata = {
   keywords: ["POS", "caisse", "restaurant", "Gabon", "Afrique", "point de vente"],
   authors: [{ name: "Oréma N+" }],
   icons: {
-    icon: [
-      { url: "/images/logos/ic-lg.svg", type: "image/svg+xml" },
-      { url: "/favicon.ico", sizes: "32x32" },
-    ],
+    icon: "/favicon.ico",
     apple: { url: "/images/logos/ic-lg.webp", type: "image/webp" },
   },
 };
@@ -102,7 +107,7 @@ export default function RootLayout({
         />
       </head>
       <body
-        className={`${gabarito.variable} ${jetbrainsMono.variable} antialiased`}
+        className={`${gabarito.variable} ${sourceSans3.variable} ${jetbrainsMono.variable} antialiased`}
       >
         <Providers>{children}</Providers>
       </body>

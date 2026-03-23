@@ -25,17 +25,17 @@ import {
   Clock,
   User,
   Receipt,
-  TrendingUp,
-  TrendingDown,
-  Banknote,
+  TrendUp,
+  TrendDown,
+  Money,
   CreditCard,
-  Smartphone,
+  DeviceMobile,
   Eye,
-  ChevronLeft,
-  ChevronRight,
-  AlertTriangle,
+  CaretLeft,
+  CaretRight,
+  Warning,
   CheckCircle,
-} from "lucide-react";
+} from "@phosphor-icons/react";
 import { formatCurrency, formatDate, formatTime } from "@/lib/utils";
 import { getSessionsHistory, generateRapportZ } from "@/actions/sessions";
 import type { SessionHistoryItem, RapportZ } from "@/actions/sessions";
@@ -206,9 +206,9 @@ export function SessionHistory({ onRefresh }: SessionHistoryProps) {
                       {session.ecart === 0 ? (
                         <CheckCircle size={14} color="var(--green-10)" />
                       ) : session.ecart > 0 ? (
-                        <TrendingUp size={14} color="var(--blue-10)" />
+                        <TrendUp size={14} color="var(--blue-10)" />
                       ) : (
-                        <TrendingDown size={14} color="var(--red-10)" />
+                        <TrendDown size={14} color="var(--red-10)" />
                       )}
                       <Text
                         size="2"
@@ -217,8 +217,8 @@ export function SessionHistory({ onRefresh }: SessionHistoryProps) {
                             session.ecart === 0
                               ? "var(--green-11)"
                               : session.ecart > 0
-                              ? "var(--blue-11)"
-                              : "var(--red-11)",
+                                ? "var(--blue-11)"
+                                : "var(--red-11)",
                           fontFamily: "var(--font-google-sans-code), monospace",
                         }}
                       >
@@ -229,11 +229,7 @@ export function SessionHistory({ onRefresh }: SessionHistoryProps) {
                   )}
                 </Table.Cell>
                 <Table.Cell>
-                  <Button
-                    variant="ghost"
-                    size="1"
-                    onClick={() => handleViewDetails(session)}
-                  >
+                  <Button variant="ghost" size="1" onClick={() => handleViewDetails(session)}>
                     <Eye size={14} />
                     Details
                   </Button>
@@ -257,7 +253,7 @@ export function SessionHistory({ onRefresh }: SessionHistoryProps) {
                 disabled={page === 0}
                 onClick={() => setPage(page - 1)}
               >
-                <ChevronLeft size={14} />
+                <CaretLeft size={14} />
                 Precedent
               </Button>
               <Button
@@ -268,7 +264,7 @@ export function SessionHistory({ onRefresh }: SessionHistoryProps) {
                 onClick={() => setPage(page + 1)}
               >
                 Suivant
-                <ChevronRight size={14} />
+                <CaretRight size={14} />
               </Button>
             </Flex>
           </Flex>
@@ -308,9 +304,7 @@ export function SessionHistory({ onRefresh }: SessionHistoryProps) {
                     </Flex>
                     <Flex align="center" gap="2">
                       <Calendar size={16} color="var(--gray-10)" />
-                      <Text size="2">
-                        {formatDate(rapportZ.session.dateCloture, "short")}
-                      </Text>
+                      <Text size="2">{formatDate(rapportZ.session.dateCloture, "short")}</Text>
                     </Flex>
                     <Flex align="center" gap="2">
                       <Clock size={16} color="var(--gray-10)" />
@@ -380,7 +374,7 @@ export function SessionHistory({ onRefresh }: SessionHistoryProps) {
                     <DataList.Item>
                       <DataList.Label minWidth="140px">
                         <Flex align="center" gap="2">
-                          <Banknote size={14} color="var(--green-10)" />
+                          <Money size={14} color="var(--green-10)" />
                           Especes
                         </Flex>
                       </DataList.Label>
@@ -406,7 +400,7 @@ export function SessionHistory({ onRefresh }: SessionHistoryProps) {
                     <DataList.Item>
                       <DataList.Label minWidth="140px">
                         <Flex align="center" gap="2">
-                          <Smartphone size={14} color="var(--accent-10)" />
+                          <DeviceMobile size={14} color="var(--accent-10)" />
                           Mobile Money
                         </Flex>
                       </DataList.Label>
@@ -436,8 +430,8 @@ export function SessionHistory({ onRefresh }: SessionHistoryProps) {
                       rapportZ.caisse.ecart === 0
                         ? "var(--green-a2)"
                         : rapportZ.caisse.ecart > 0
-                        ? "var(--blue-a2)"
-                        : "var(--red-a2)",
+                          ? "var(--blue-a2)"
+                          : "var(--red-a2)",
                   }}
                 >
                   <Text size="3" weight="bold" mb="3">
@@ -478,9 +472,9 @@ export function SessionHistory({ onRefresh }: SessionHistoryProps) {
                           {rapportZ.caisse.ecart === 0 ? (
                             <CheckCircle size={16} color="var(--green-10)" />
                           ) : rapportZ.caisse.ecart > 0 ? (
-                            <TrendingUp size={16} color="var(--blue-10)" />
+                            <TrendUp size={16} color="var(--blue-10)" />
                           ) : (
-                            <TrendingDown size={16} color="var(--red-10)" />
+                            <TrendDown size={16} color="var(--red-10)" />
                           )}
                           <Text
                             weight="bold"
@@ -489,8 +483,8 @@ export function SessionHistory({ onRefresh }: SessionHistoryProps) {
                                 rapportZ.caisse.ecart === 0
                                   ? "var(--green-11)"
                                   : rapportZ.caisse.ecart > 0
-                                  ? "var(--blue-11)"
-                                  : "var(--red-11)",
+                                    ? "var(--blue-11)"
+                                    : "var(--red-11)",
                               fontFamily: "var(--font-google-sans-code), monospace",
                             }}
                           >
@@ -574,7 +568,7 @@ export function SessionHistory({ onRefresh }: SessionHistoryProps) {
             </ScrollArea>
           ) : (
             <Flex direction="column" align="center" gap="3" py="6">
-              <AlertTriangle size={32} color="var(--red-9)" />
+              <Warning size={32} color="var(--red-9)" />
               <Text color="red">Impossible de charger le rapport</Text>
             </Flex>
           )}

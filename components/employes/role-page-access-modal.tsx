@@ -1,11 +1,11 @@
-'use client'
+"use client";
 
 /**
  * Modal de configuration des pages autorisées par rôle
  * Permet aux admins de définir quelles pages chaque rôle peut voir
  */
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect } from "react";
 import {
   Dialog,
   Button,
@@ -17,102 +17,105 @@ import {
   Tabs,
   Callout,
   Switch,
-} from '@radix-ui/themes'
+} from "@radix-ui/themes";
 import {
-  Loader2,
-  Save,
-  LayoutDashboard,
+  SpinnerGap,
+  FloppyDisk,
+  SquaresFour,
   ShoppingCart,
-  UtensilsCrossed,
+  ForkKnife,
   Package,
   Warehouse,
   Users,
   UserCircle,
-  BarChart3,
-  Settings,
+  ChartBar,
+  GearSix,
   Info,
-  RotateCcw,
-} from 'lucide-react'
-import { toast } from 'sonner'
-import { ROLE_LABELS, ROLE_COLORS, type RoleType } from '@/schemas/employe'
+  ArrowCounterClockwise,
+} from "@phosphor-icons/react";
+import { toast } from "sonner";
+import { ROLE_LABELS, ROLE_COLORS, type RoleType } from "@/schemas/employe";
 
 interface PageConfig {
-  path: string
-  label: string
-  description: string
-  icon: React.ComponentType<{ size?: number }>
+  path: string;
+  label: string;
+  description: string;
+  icon: React.ComponentType<{ size?: number }>;
 }
 
 const AVAILABLE_PAGES: PageConfig[] = [
   {
-    path: '/',
-    label: 'Tableau de bord',
-    description: 'Vue globale de l\'activite',
-    icon: LayoutDashboard,
+    path: "/",
+    label: "Tableau de bord",
+    description: "Vue globale de l'activité",
+    icon: SquaresFour,
   },
   {
-    path: '/caisse',
-    label: 'Caisse',
-    description: 'Point de vente et encaissement',
+    path: "/caisse",
+    label: "Caisse",
+    description: "Point de vente et encaissement",
     icon: ShoppingCart,
   },
   {
-    path: '/salle',
-    label: 'Plan de salle',
-    description: 'Gestion des tables et service',
-    icon: UtensilsCrossed,
+    path: "/salle",
+    label: "Plan de salle",
+    description: "Gestion des tables et service",
+    icon: ForkKnife,
   },
   {
-    path: '/produits',
-    label: 'Produits',
-    description: 'Catalogue des produits',
+    path: "/produits",
+    label: "Produits",
+    description: "Catalogue des produits",
     icon: Package,
   },
   {
-    path: '/stocks',
-    label: 'Stocks',
-    description: 'Gestion des stocks et inventaire',
+    path: "/stocks",
+    label: "Stocks",
+    description: "Gestion des stocks et inventaire",
     icon: Warehouse,
   },
   {
-    path: '/clients',
-    label: 'Clients',
-    description: 'Fichier clients et fidelite',
+    path: "/clients",
+    label: "Clients",
+    description: "Fichier clients et fidélité",
     icon: Users,
   },
   {
-    path: '/employes',
-    label: 'Employes',
-    description: 'Gestion du personnel',
+    path: "/employes",
+    label: "Employés",
+    description: "Gestion du personnel",
     icon: UserCircle,
   },
   {
-    path: '/rapports',
-    label: 'Rapports',
-    description: 'Statistiques et analyses',
-    icon: BarChart3,
+    path: "/rapports",
+    label: "Rapports",
+    description: "Statistiques et analyses",
+    icon: ChartBar,
   },
   {
-    path: '/parametres',
-    label: 'Parametres',
-    description: 'Configuration du systeme',
-    icon: Settings,
+    path: "/parametres",
+    label: "Paramètres",
+    description: "Configuration du système",
+    icon: GearSix,
   },
-]
+];
 
 // Rôles non-admin configurables
-const CONFIGURABLE_ROLES: RoleType[] = ['MANAGER', 'CAISSIER', 'SERVEUR']
+const CONFIGURABLE_ROLES: RoleType[] = ["MANAGER", "CAISSIER", "SERVEUR"];
 
 interface RoleConfig {
-  useCustomAccess: boolean
-  allowedRoutes: string[]
+  useCustomAccess: boolean;
+  allowedRoutes: string[];
 }
 
 interface RolePageAccessModalProps {
-  open: boolean
-  onOpenChange: (open: boolean) => void
-  initialConfig?: Record<string, string[] | null>
-  onSave: (role: RoleType, allowedRoutes: string[] | null) => Promise<{ success: boolean; error?: string }>
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  initialConfig?: Record<string, string[] | null>;
+  onSave: (
+    role: RoleType,
+    allowedRoutes: string[] | null
+  ) => Promise<{ success: boolean; error?: string }>;
 }
 
 export function RolePageAccessModal({
@@ -121,30 +124,30 @@ export function RolePageAccessModal({
   initialConfig,
   onSave,
 }: RolePageAccessModalProps) {
-  const [activeTab, setActiveTab] = useState<RoleType>('MANAGER')
-  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [activeTab, setActiveTab] = useState<RoleType>("MANAGER");
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [configs, setConfigs] = useState<Record<RoleType, RoleConfig>>({
     MANAGER: { useCustomAccess: false, allowedRoutes: [] },
     CAISSIER: { useCustomAccess: false, allowedRoutes: [] },
     SERVEUR: { useCustomAccess: false, allowedRoutes: [] },
     SUPER_ADMIN: { useCustomAccess: false, allowedRoutes: [] },
     ADMIN: { useCustomAccess: false, allowedRoutes: [] },
-  })
+  });
 
   // Initialiser avec la config existante
   useEffect(() => {
     if (initialConfig) {
-      const newConfigs = { ...configs }
+      const newConfigs = { ...configs };
       for (const role of CONFIGURABLE_ROLES) {
-        const routes = initialConfig[role]
+        const routes = initialConfig[role];
         newConfigs[role] = {
           useCustomAccess: routes !== null && routes !== undefined,
           allowedRoutes: routes || [],
-        }
+        };
       }
-      setConfigs(newConfigs)
+      setConfigs(newConfigs);
     }
-  }, [initialConfig])
+  }, [initialConfig]);
 
   const handleToggleCustomAccess = (role: RoleType, enabled: boolean) => {
     setConfigs((prev) => ({
@@ -154,8 +157,8 @@ export function RolePageAccessModal({
         useCustomAccess: enabled,
         allowedRoutes: enabled ? prev[role].allowedRoutes : [],
       },
-    }))
-  }
+    }));
+  };
 
   const handleToggleRoute = (role: RoleType, path: string) => {
     setConfigs((prev) => ({
@@ -166,8 +169,8 @@ export function RolePageAccessModal({
           ? prev[role].allowedRoutes.filter((r) => r !== path)
           : [...prev[role].allowedRoutes, path],
       },
-    }))
-  }
+    }));
+  };
 
   const handleSelectAll = (role: RoleType) => {
     setConfigs((prev) => ({
@@ -176,8 +179,8 @@ export function RolePageAccessModal({
         ...prev[role],
         allowedRoutes: AVAILABLE_PAGES.map((p) => p.path),
       },
-    }))
-  }
+    }));
+  };
 
   const handleDeselectAll = (role: RoleType) => {
     setConfigs((prev) => ({
@@ -186,32 +189,32 @@ export function RolePageAccessModal({
         ...prev[role],
         allowedRoutes: [],
       },
-    }))
-  }
+    }));
+  };
 
   const handleSave = async (role: RoleType) => {
-    setIsSubmitting(true)
+    setIsSubmitting(true);
 
     try {
-      const config = configs[role]
+      const config = configs[role];
       // Si useCustomAccess est false, envoyer null (pas de restriction)
-      const routesToSave = config.useCustomAccess ? config.allowedRoutes : null
+      const routesToSave = config.useCustomAccess ? config.allowedRoutes : null;
 
-      const result = await onSave(role, routesToSave)
+      const result = await onSave(role, routesToSave);
 
       if (result.success) {
-        toast.success(`Configuration sauvegardée pour ${ROLE_LABELS[role]}`)
+        toast.success(`Configuration sauvegardée pour ${ROLE_LABELS[role]}`);
       } else {
-        toast.error(result.error || 'Erreur lors de la sauvegarde')
+        toast.error(result.error || "Erreur lors de la sauvegarde");
       }
     } catch {
-      toast.error('Une erreur est survenue')
+      toast.error("Une erreur est survenue");
     } finally {
-      setIsSubmitting(false)
+      setIsSubmitting(false);
     }
-  }
+  };
 
-  const currentConfig = configs[activeTab]
+  const currentConfig = configs[activeTab];
 
   return (
     <Dialog.Root open={open} onOpenChange={onOpenChange}>
@@ -229,9 +232,11 @@ export function RolePageAccessModal({
                   <Badge color={ROLE_COLORS[role]} size="1" variant="soft">
                     {ROLE_LABELS[role]}
                   </Badge>
-                  {configs[role].useCustomAccess ? <Badge color="violet" size="1">
+                  {configs[role].useCustomAccess ? (
+                    <Badge color="violet" size="1">
                       {configs[role].allowedRoutes.length}
-                    </Badge> : null}
+                    </Badge>
+                  ) : null}
                 </Flex>
               </Tabs.Trigger>
             ))}
@@ -246,7 +251,7 @@ export function RolePageAccessModal({
                   justify="between"
                   p="3"
                   style={{
-                    backgroundColor: 'var(--gray-a2)',
+                    backgroundColor: "var(--gray-a2)",
                     borderRadius: 8,
                   }}
                 >
@@ -254,8 +259,8 @@ export function RolePageAccessModal({
                     <Text weight="medium">Restreindre l'accès aux pages</Text>
                     <Text size="1" color="gray">
                       {configs[role].useCustomAccess
-                        ? 'Seules les pages cochées seront accessibles'
-                        : 'Accès standard selon les permissions du rôle'}
+                        ? "Seules les pages cochées seront accessibles"
+                        : "Accès standard selon les permissions du rôle"}
                     </Text>
                   </Flex>
                   <Switch
@@ -291,11 +296,11 @@ export function RolePageAccessModal({
                     <Flex
                       direction="column"
                       gap="2"
-                      style={{ maxHeight: '300px', overflowY: 'auto' }}
+                      style={{ maxHeight: "300px", overflowY: "auto" }}
                     >
                       {AVAILABLE_PAGES.map((page) => {
-                        const Icon = page.icon
-                        const isSelected = configs[role].allowedRoutes.includes(page.path)
+                        const Icon = page.icon;
+                        const isSelected = configs[role].allowedRoutes.includes(page.path);
 
                         return (
                           <Text
@@ -303,16 +308,14 @@ export function RolePageAccessModal({
                             size="2"
                             key={page.path}
                             style={{
-                              cursor: 'pointer',
-                              padding: '12px',
-                              borderRadius: '8px',
-                              backgroundColor: isSelected
-                                ? 'var(--accent-a3)'
-                                : 'var(--gray-a2)',
+                              cursor: "pointer",
+                              padding: "12px",
+                              borderRadius: "8px",
+                              backgroundColor: isSelected ? "var(--accent-a3)" : "var(--gray-a2)",
                               border: isSelected
-                                ? '1px solid var(--accent-6)'
-                                : '1px solid transparent',
-                              transition: 'all 0.15s ease',
+                                ? "1px solid var(--accent-6)"
+                                : "1px solid transparent",
+                              transition: "all 0.15s ease",
                             }}
                           >
                             <Flex gap="3" align="center">
@@ -328,9 +331,9 @@ export function RolePageAccessModal({
                                   height: 32,
                                   borderRadius: 6,
                                   backgroundColor: isSelected
-                                    ? 'var(--accent-9)'
-                                    : 'var(--gray-a4)',
-                                  color: isSelected ? 'white' : 'var(--gray-11)',
+                                    ? "var(--accent-9)"
+                                    : "var(--gray-a4)",
+                                  color: isSelected ? "white" : "var(--gray-11)",
                                 }}
                               >
                                 <Icon size={16} />
@@ -343,7 +346,7 @@ export function RolePageAccessModal({
                               </Flex>
                             </Flex>
                           </Text>
-                        )
+                        );
                       })}
                     </Flex>
 
@@ -354,7 +357,7 @@ export function RolePageAccessModal({
                           <Text color="red">Attention : aucune page sélectionnée</Text>
                         )}
                       </Text>
-                      <Badge color={configs[role].allowedRoutes.length > 0 ? 'green' : 'red'}>
+                      <Badge color={configs[role].allowedRoutes.length > 0 ? "green" : "red"}>
                         {configs[role].allowedRoutes.length} / {AVAILABLE_PAGES.length} pages
                       </Badge>
                     </Flex>
@@ -377,9 +380,9 @@ export function RolePageAccessModal({
                 <Flex justify="end">
                   <Button onClick={() => handleSave(role)} disabled={isSubmitting}>
                     {isSubmitting ? (
-                      <Loader2 className="animate-spin" size={16} />
+                      <SpinnerGap className="animate-spin" size={16} />
                     ) : (
-                      <Save size={16} />
+                      <FloppyDisk size={16} />
                     )}
                     Enregistrer pour {ROLE_LABELS[role]}
                   </Button>
@@ -399,5 +402,5 @@ export function RolePageAccessModal({
         </Flex>
       </Dialog.Content>
     </Dialog.Root>
-  )
+  );
 }

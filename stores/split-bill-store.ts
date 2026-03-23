@@ -149,9 +149,7 @@ export const useSplitBillStore = create<SplitBillStore>()((set, get) => ({
       if (existingParts.length < 2) {
         set({
           mode,
-          parts: [
-            { id: generatePartId(), montant: total, paye: false, nom: "Part 1" },
-          ],
+          parts: [{ id: generatePartId(), montant: total, paye: false, nom: "Part 1" }],
         });
       } else {
         set({ mode });
@@ -238,9 +236,7 @@ export const useSplitBillStore = create<SplitBillStore>()((set, get) => ({
   updatePart: (partId, updates) => {
     const { parts } = get();
     set({
-      parts: parts.map((p) =>
-        p.id === partId ? { ...p, ...updates } : p
-      ),
+      parts: parts.map((p) => (p.id === partId ? { ...p, ...updates } : p)),
     });
   },
 
@@ -248,9 +244,7 @@ export const useSplitBillStore = create<SplitBillStore>()((set, get) => ({
     const { parts } = get();
     set({
       parts: parts.map((p) =>
-        p.id === partId
-          ? { ...p, paye: true, modePaiement, reference }
-          : p
+        p.id === partId ? { ...p, paye: true, modePaiement, reference } : p
       ),
     });
   },

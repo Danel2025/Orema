@@ -16,16 +16,23 @@ export function DashboardShell({ children }: DashboardShellProps) {
   // Les non-admins n'ont pas de sidebar
   const showSidebar = isAdmin;
   const sidebarWidth = showSidebar
-    ? (sidebarOpen ? SIDEBAR_WIDTH_EXPANDED : SIDEBAR_WIDTH_COLLAPSED)
+    ? sidebarOpen
+      ? SIDEBAR_WIDTH_EXPANDED
+      : SIDEBAR_WIDTH_COLLAPSED
     : 0;
 
   return (
     <div style={{ display: "flex", height: "100%", minHeight: 0 }}>
       {/* Sidebar - Visible uniquement pour les admins */}
-      {showSidebar ? <Sidebar /> : null}
+      {showSidebar ? (
+        <div className="kds-sidebar-wrapper">
+          <Sidebar />
+        </div>
+      ) : null}
 
       {/* Main wrapper - Pleine largeur pour non-admins, décalé pour admins */}
       <div
+        className="kds-main-wrapper"
         style={{
           flex: 1,
           marginLeft: sidebarWidth,
@@ -39,12 +46,13 @@ export function DashboardShell({ children }: DashboardShellProps) {
         }}
       >
         {/* Header sticky en haut avec z-index */}
-        <div style={{ flexShrink: 0, zIndex: 10 }}>
+        <div className="kds-header-wrapper" style={{ flexShrink: 0, zIndex: 10 }}>
           <Header />
         </div>
 
         {/* Contenu principal avec padding et scroll interne */}
         <main
+          id="main-content"
           style={{
             flex: 1,
             padding: "24px 32px",

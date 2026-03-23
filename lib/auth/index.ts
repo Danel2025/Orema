@@ -6,7 +6,7 @@
  */
 
 // Fonctions de hachage (utilisées par les deux modes)
-export * from './password'
+export * from "./password";
 
 // Sessions JWT custom - exports renommés (utilisé pour PIN auth)
 export {
@@ -16,7 +16,7 @@ export {
   setSessionCookie,
   deleteSessionCookie,
   type SessionPayload,
-} from './session'
+} from "./session";
 
 // Supabase Auth - MODE PRINCIPAL
 export {
@@ -31,7 +31,7 @@ export {
   hasAnyRole,
   signOut,
   type AuthUser,
-} from './supabase'
+} from "./supabase";
 
 // Contexte et hooks client
 export {
@@ -41,4 +41,4 @@ export {
   useCanAccessRoute,
   type AuthUser as AuthUserContext,
   type AuthContextValue,
-} from './context'
+} from "./context";

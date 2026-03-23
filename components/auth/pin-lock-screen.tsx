@@ -1,4 +1,4 @@
-'use client'
+"use client";
 
 /**
  * Écran de verrouillage par PIN
@@ -7,138 +7,138 @@
  * entrer son PIN pour accéder à l'application.
  */
 
-import { useState, useRef, useEffect, type ReactNode } from 'react'
-import { Box, Button, Flex, Heading, Text, Spinner } from '@radix-ui/themes'
-import { LockKeyhole, LogOut, AlertCircle, User } from 'lucide-react'
-import { toast } from 'sonner'
-import { useAuth } from '@/lib/auth/context'
-import { usePinLockStore } from '@/stores/pin-lock-store'
-import { verifyPinForUnlock } from '@/actions/pin-unlock'
-import { logoutSupabase } from '@/actions/auth-supabase'
-import { useMounted } from '@/hooks/use-mounted'
+import { useState, useRef, useEffect, type ReactNode } from "react";
+import { Box, Button, Flex, Heading, Text, Spinner } from "@radix-ui/themes";
+import { LockKeyhole, LogOut, AlertCircle, User } from "lucide-react";
+import { toast } from "sonner";
+import { useAuth } from "@/lib/auth/context";
+import { usePinLockStore } from "@/stores/pin-lock-store";
+import { verifyPinForUnlock } from "@/actions/pin-unlock";
+import { logoutSupabase } from "@/actions/auth-supabase";
+import { useMounted } from "@/hooks/use-mounted";
 
 interface PinLockScreenProps {
-  children: ReactNode
+  children: ReactNode;
 }
 
 export function PinLockScreen({ children }: PinLockScreenProps) {
-  const { user } = useAuth()
-  const mounted = useMounted()
-  const { isLocked, unlock, incrementFailedAttempts, failedAttempts } = usePinLockStore()
+  const { user } = useAuth();
+  const mounted = useMounted();
+  const { isLocked, unlock, incrementFailedAttempts, failedAttempts } = usePinLockStore();
 
-  const [pin, setPin] = useState(['', '', '', ''])
-  const [isVerifying, setIsVerifying] = useState(false)
-  const [error, setError] = useState<string | null>(null)
-  const [isLoggingOut, setIsLoggingOut] = useState(false)
+  const [pin, setPin] = useState(["", "", "", ""]);
+  const [isVerifying, setIsVerifying] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
 
   const inputRefs = [
     useRef<HTMLInputElement>(null),
     useRef<HTMLInputElement>(null),
     useRef<HTMLInputElement>(null),
     useRef<HTMLInputElement>(null),
-  ]
+  ];
 
   // Focus sur le premier input quand le lock screen apparaît
   useEffect(() => {
     if (isLocked && mounted) {
       // Petit délai pour laisser le DOM se stabiliser
       const timer = setTimeout(() => {
-        inputRefs[0].current?.focus()
-      }, 100)
-      return () => clearTimeout(timer)
+        inputRefs[0].current?.focus();
+      }, 100);
+      return () => clearTimeout(timer);
     }
-  }, [isLocked, mounted])
+  }, [isLocked, mounted]);
 
   // Réinitialiser le PIN quand il y a une erreur
   useEffect(() => {
     if (error) {
-      setPin(['', '', '', ''])
-      inputRefs[0].current?.focus()
+      setPin(["", "", "", ""]);
+      inputRefs[0].current?.focus();
     }
-  }, [error])
+  }, [error]);
 
   const handlePinChange = (index: number, value: string) => {
     // Autoriser seulement les chiffres
-    if (!/^\d*$/.test(value)) return
+    if (!/^\d*$/.test(value)) return;
 
-    const newPin = [...pin]
-    newPin[index] = value
-    setPin(newPin)
-    setError(null)
+    const newPin = [...pin];
+    newPin[index] = value;
+    setPin(newPin);
+    setError(null);
 
     // Auto-focus sur le prochain input
     if (value && index < 3) {
-      inputRefs[index + 1].current?.focus()
+      inputRefs[index + 1].current?.focus();
     }
 
     // Auto-submit quand le PIN est complet
     if (value && index === 3) {
-      const fullPin = newPin.join('')
+      const fullPin = newPin.join("");
       if (fullPin.length === 4) {
-        handleVerifyPin(fullPin)
+        handleVerifyPin(fullPin);
       }
     }
-  }
+  };
 
   const handleKeyDown = (index: number, e: React.KeyboardEvent) => {
-    if (e.key === 'Backspace' && !pin[index] && index > 0) {
-      inputRefs[index - 1].current?.focus()
+    if (e.key === "Backspace" && !pin[index] && index > 0) {
+      inputRefs[index - 1].current?.focus();
     }
-  }
+  };
 
   const handleVerifyPin = async (pinCode: string) => {
-    if (isVerifying) return
+    if (isVerifying) return;
 
-    setIsVerifying(true)
-    setError(null)
+    setIsVerifying(true);
+    setError(null);
 
     try {
-      const result = await verifyPinForUnlock(pinCode)
+      const result = await verifyPinForUnlock(pinCode);
 
       if (result.success) {
-        unlock()
-        toast.success('Session déverrouillée')
+        unlock();
+        toast.success("Session déverrouillée");
       } else {
-        incrementFailedAttempts()
-        setError(result.error || 'PIN incorrect')
+        incrementFailedAttempts();
+        setError(result.error || "PIN incorrect");
 
         // Après 5 tentatives, afficher un avertissement
         if (failedAttempts >= 4) {
-          toast.error('Trop de tentatives échouées. Veuillez vous déconnecter.')
+          toast.error("Trop de tentatives échouées. Veuillez vous déconnecter.");
         }
       }
     } catch (err) {
-      setError('Une erreur est survenue')
-      console.error('[PIN Lock] Verification error:', err)
+      setError("Une erreur est survenue");
+      console.error("[PIN Lock] Verification error:", err);
     } finally {
-      setIsVerifying(false)
+      setIsVerifying(false);
     }
-  }
+  };
 
   const handleLogout = async () => {
-    setIsLoggingOut(true)
+    setIsLoggingOut(true);
     try {
-      await logoutSupabase()
+      await logoutSupabase();
     } catch (err) {
-      console.error('[PIN Lock] Logout error:', err)
-      setIsLoggingOut(false)
+      console.error("[PIN Lock] Logout error:", err);
+      setIsLoggingOut(false);
     }
-  }
+  };
 
   // Obtenir les initiales
   const getInitials = () => {
-    if (!user) return '??'
-    return `${user.prenom.charAt(0)}${user.nom.charAt(0)}`.toUpperCase()
-  }
+    if (!user) return "??";
+    return `${user.prenom.charAt(0)}${user.nom.charAt(0)}`.toUpperCase();
+  };
 
   // Éviter les erreurs d'hydratation - ne rien afficher avant le montage
   if (!mounted) {
-    return <>{children}</>
+    return <>{children}</>;
   }
 
   // Si pas verrouillé ou pas d'utilisateur, afficher les enfants
   if (!isLocked || !user) {
-    return <>{children}</>
+    return <>{children}</>;
   }
 
   // Afficher l'écran de verrouillage
@@ -147,11 +147,11 @@ export function PinLockScreen({ children }: PinLockScreenProps) {
       position="fixed"
       inset="0"
       style={{
-        backgroundColor: 'var(--color-background)',
+        backgroundColor: "var(--color-background)",
         zIndex: 9999,
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
       }}
     >
       <Flex
@@ -161,7 +161,7 @@ export function PinLockScreen({ children }: PinLockScreenProps) {
         p="6"
         style={{
           maxWidth: 400,
-          width: '100%',
+          width: "100%",
         }}
       >
         {/* Logo/Icône */}
@@ -171,16 +171,16 @@ export function PinLockScreen({ children }: PinLockScreenProps) {
           style={{
             width: 80,
             height: 80,
-            borderRadius: '50%',
-            backgroundColor: 'var(--accent-3)',
+            borderRadius: "50%",
+            backgroundColor: "var(--accent-3)",
           }}
         >
-          <LockKeyhole size={40} style={{ color: 'var(--accent-9)' }} />
+          <LockKeyhole size={40} style={{ color: "var(--accent-9)" }} />
         </Flex>
 
         {/* Titre */}
         <Flex direction="column" align="center" gap="1">
-          <Heading size="6" weight="bold" style={{ color: 'var(--accent-9)' }}>
+          <Heading size="6" weight="bold" style={{ color: "var(--accent-9)" }}>
             Session verrouillée
           </Heading>
           <Text size="2" color="gray">
@@ -194,9 +194,9 @@ export function PinLockScreen({ children }: PinLockScreenProps) {
           gap="3"
           p="3"
           style={{
-            backgroundColor: 'var(--gray-a2)',
-            borderRadius: 'var(--radius-3)',
-            width: '100%',
+            backgroundColor: "var(--gray-a2)",
+            borderRadius: "var(--radius-3)",
+            width: "100%",
           }}
         >
           <Flex
@@ -205,9 +205,9 @@ export function PinLockScreen({ children }: PinLockScreenProps) {
             style={{
               width: 44,
               height: 44,
-              borderRadius: '50%',
-              backgroundColor: 'var(--accent-9)',
-              color: 'white',
+              borderRadius: "50%",
+              backgroundColor: "var(--accent-9)",
+              color: "white",
               fontWeight: 600,
               fontSize: 16,
             }}
@@ -225,7 +225,7 @@ export function PinLockScreen({ children }: PinLockScreenProps) {
         </Flex>
 
         {/* Inputs PIN */}
-        <Flex direction="column" gap="3" align="center" style={{ width: '100%' }}>
+        <Flex direction="column" gap="3" align="center" style={{ width: "100%" }}>
           <Flex gap="3" justify="center">
             {pin.map((digit, index) => (
               <input
@@ -243,26 +243,24 @@ export function PinLockScreen({ children }: PinLockScreenProps) {
                   width: 60,
                   height: 70,
                   fontSize: 32,
-                  textAlign: 'center',
-                  border: error
-                    ? '2px solid var(--red-9)'
-                    : '2px solid var(--gray-6)',
+                  textAlign: "center",
+                  border: error ? "2px solid var(--red-9)" : "2px solid var(--gray-6)",
                   borderRadius: 8,
-                  outline: 'none',
-                  transition: 'all 0.2s',
-                  backgroundColor: 'var(--gray-1)',
-                  color: 'var(--gray-12)',
+                  outline: "none",
+                  transition: "all 0.2s",
+                  backgroundColor: "var(--gray-1)",
+                  color: "var(--gray-12)",
                 }}
                 onFocus={(e) => {
                   if (!error) {
-                    e.target.style.borderColor = 'var(--accent-9)'
-                    e.target.style.boxShadow = '0 0 0 3px var(--accent-3)'
+                    e.target.style.borderColor = "var(--accent-9)";
+                    e.target.style.boxShadow = "0 0 0 3px var(--accent-3)";
                   }
                 }}
                 onBlur={(e) => {
                   if (!error) {
-                    e.target.style.borderColor = 'var(--gray-6)'
-                    e.target.style.boxShadow = 'none'
+                    e.target.style.borderColor = "var(--gray-6)";
+                    e.target.style.boxShadow = "none";
                   }
                 }}
               />
@@ -270,20 +268,24 @@ export function PinLockScreen({ children }: PinLockScreenProps) {
           </Flex>
 
           {/* Message d'erreur */}
-          {error ? <Flex gap="2" align="center">
+          {error ? (
+            <Flex gap="2" align="center">
               <AlertCircle size={14} color="var(--red-9)" />
               <Text size="2" color="red">
                 {error}
               </Text>
-            </Flex> : null}
+            </Flex>
+          ) : null}
 
           {/* Indicateur de vérification */}
-          {isVerifying ? <Flex gap="2" align="center">
+          {isVerifying ? (
+            <Flex gap="2" align="center">
               <Spinner size="1" />
               <Text size="2" color="gray">
                 Vérification...
               </Text>
-            </Flex> : null}
+            </Flex>
+          ) : null}
         </Flex>
 
         {/* Bouton de déconnexion */}
@@ -293,7 +295,7 @@ export function PinLockScreen({ children }: PinLockScreenProps) {
           size="2"
           onClick={handleLogout}
           disabled={isLoggingOut}
-          style={{ cursor: isLoggingOut ? 'not-allowed' : 'pointer' }}
+          style={{ cursor: isLoggingOut ? "not-allowed" : "pointer" }}
         >
           {isLoggingOut ? (
             <>
@@ -316,5 +318,5 @@ export function PinLockScreen({ children }: PinLockScreenProps) {
         )}
       </Flex>
     </Box>
-  )
+  );
 }

@@ -27,7 +27,6 @@ function formatDateTime(date: Date | string): string {
   return `${d.toLocaleDateString("fr-FR", { day: "2-digit", month: "2-digit", year: "numeric" })} ${d.toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" })}`;
 }
 
- 
 export function generateTicketCommands(
   printer: any,
   etablissement: EtablissementInfo,
@@ -109,8 +108,8 @@ export function generateTicketCommands(
     printer.bold(true);
     printer.tableCustom([
       { text: "Article", align: "LEFT", width: 0.45 },
-      { text: "Qte", align: "CENTER", width: 0.10 },
-      { text: "P.U.", align: "RIGHT", width: 0.20 },
+      { text: "Qte", align: "CENTER", width: 0.1 },
+      { text: "P.U.", align: "RIGHT", width: 0.2 },
       { text: "Total", align: "RIGHT", width: 0.25 },
     ]);
     printer.bold(false);
@@ -124,8 +123,8 @@ export function generateTicketCommands(
       const nomTronque = ligne.nom.substring(0, 20);
       printer.tableCustom([
         { text: nomTronque, align: "LEFT", width: 0.45 },
-        { text: ligne.quantite.toString(), align: "CENTER", width: 0.10 },
-        { text: formatAmount(ligne.prixUnitaire), align: "RIGHT", width: 0.20 },
+        { text: ligne.quantite.toString(), align: "CENTER", width: 0.1 },
+        { text: formatAmount(ligne.prixUnitaire), align: "RIGHT", width: 0.2 },
         { text: formatAmount(ligne.total), align: "RIGHT", width: 0.25 },
       ]);
     } else {

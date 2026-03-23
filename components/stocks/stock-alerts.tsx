@@ -6,26 +6,9 @@
  */
 
 import { useState } from "react";
-import {
-  Card,
-  Flex,
-  Text,
-  Badge,
-  Button,
-  Box,
-  IconButton,
-  Tooltip,
-  Tabs,
-} from "@radix-ui/themes";
+import { Card, Flex, Text, Badge, Button, Box, IconButton, Tooltip, Tabs } from "@radix-ui/themes";
 import { ScrollArea } from "@/components/ui";
-import {
-  AlertTriangle,
-  XCircle,
-  Plus,
-  Bell,
-  BellOff,
-  Package,
-} from "lucide-react";
+import { Warning, XCircle, Plus, Bell, BellSlash, Package } from "@phosphor-icons/react";
 import type { AlerteStock } from "@/schemas/stock.schema";
 
 interface StockAlertsProps {
@@ -40,22 +23,12 @@ export function StockAlerts({ alertes, onCreateMovement }: StockAlertsProps) {
   const alertesOnly = alertes.filter((a) => a.statut === "ALERTE");
 
   const filteredAlertes =
-    filter === "all"
-      ? alertes
-      : filter === "RUPTURE"
-      ? ruptures
-      : alertesOnly;
+    filter === "all" ? alertes : filter === "RUPTURE" ? ruptures : alertesOnly;
 
   if (alertes.length === 0) {
     return (
       <Card>
-        <Flex
-          direction="column"
-          align="center"
-          justify="center"
-          py="6"
-          gap="3"
-        >
+        <Flex direction="column" align="center" justify="center" py="6" gap="3">
           <Box
             style={{
               width: 64,
@@ -67,7 +40,7 @@ export function StockAlerts({ alertes, onCreateMovement }: StockAlertsProps) {
               justifyContent: "center",
             }}
           >
-            <BellOff size={28} style={{ color: "var(--green-9)" }} />
+            <BellSlash size={28} style={{ color: "var(--green-9)" }} />
           </Box>
           <Text size="3" weight="medium" color="green">
             Aucune alerte de stock
@@ -122,7 +95,7 @@ export function StockAlerts({ alertes, onCreateMovement }: StockAlertsProps) {
             }}
           >
             <Flex align="center" gap="2">
-              <AlertTriangle size={16} style={{ color: "var(--accent-9)" }} />
+              <Warning size={16} style={{ color: "var(--accent-9)" }} />
               <Text size="2" color="violet" weight="medium">
                 Alertes: {alertesOnly.length}
               </Text>
@@ -133,9 +106,7 @@ export function StockAlerts({ alertes, onCreateMovement }: StockAlertsProps) {
         {/* Onglets de filtrage */}
         <Tabs.Root value={filter} onValueChange={(v) => setFilter(v as typeof filter)}>
           <Tabs.List>
-            <Tabs.Trigger value="all">
-              Tous ({alertes.length})
-            </Tabs.Trigger>
+            <Tabs.Trigger value="all">Tous ({alertes.length})</Tabs.Trigger>
             <Tabs.Trigger value="RUPTURE">
               <Flex align="center" gap="1">
                 <XCircle size={12} />
@@ -144,7 +115,7 @@ export function StockAlerts({ alertes, onCreateMovement }: StockAlertsProps) {
             </Tabs.Trigger>
             <Tabs.Trigger value="ALERTE">
               <Flex align="center" gap="1">
-                <AlertTriangle size={12} />
+                <Warning size={12} />
                 Alertes ({alertesOnly.length})
               </Flex>
             </Tabs.Trigger>
@@ -161,13 +132,9 @@ export function StockAlerts({ alertes, onCreateMovement }: StockAlertsProps) {
                   padding: 12,
                   borderRadius: 8,
                   backgroundColor:
-                    alerte.statut === "RUPTURE"
-                      ? "var(--red-a2)"
-                      : "var(--violet-a2)",
+                    alerte.statut === "RUPTURE" ? "var(--red-a2)" : "var(--violet-a2)",
                   border: `1px solid ${
-                    alerte.statut === "RUPTURE"
-                      ? "var(--red-a6)"
-                      : "var(--violet-a6)"
+                    alerte.statut === "RUPTURE" ? "var(--red-a6)" : "var(--violet-a6)"
                   }`,
                 }}
               >
@@ -177,10 +144,7 @@ export function StockAlerts({ alertes, onCreateMovement }: StockAlertsProps) {
                       {alerte.statut === "RUPTURE" ? (
                         <XCircle size={14} style={{ color: "var(--red-9)" }} />
                       ) : (
-                        <AlertTriangle
-                          size={14}
-                          style={{ color: "var(--accent-9)" }}
-                        />
+                        <Warning size={14} style={{ color: "var(--accent-9)" }} />
                       )}
                       <Text size="2" weight="medium">
                         {alerte.nom}
@@ -201,17 +165,13 @@ export function StockAlerts({ alertes, onCreateMovement }: StockAlertsProps) {
                         </Text>
                       </Flex>
                       <Text size="1" color="gray">
-                        Stock: {alerte.stockActuel} / Min: {alerte.stockMin}{" "}
-                        {alerte.unite || ""}
+                        Stock: {alerte.stockActuel} / Min: {alerte.stockMin} {alerte.unite || ""}
                       </Text>
                     </Flex>
                   </Flex>
 
                   <Flex align="center" gap="2">
-                    <Badge
-                      color={alerte.statut === "RUPTURE" ? "red" : "violet"}
-                      variant="soft"
-                    >
+                    <Badge color={alerte.statut === "RUPTURE" ? "red" : "violet"} variant="soft">
                       {alerte.statut === "RUPTURE" ? "Rupture" : "Alerte"}
                     </Badge>
                     <Tooltip content="Réapprovisionner">
@@ -257,11 +217,8 @@ export function StockAlertsWidget({
       style={{
         padding: 12,
         borderRadius: 8,
-        backgroundColor:
-          ruptures > 0 ? "var(--red-a3)" : "var(--violet-a3)",
-        border: `1px solid ${
-          ruptures > 0 ? "var(--red-a6)" : "var(--violet-a6)"
-        }`,
+        backgroundColor: ruptures > 0 ? "var(--red-a3)" : "var(--violet-a3)",
+        border: `1px solid ${ruptures > 0 ? "var(--red-a6)" : "var(--violet-a6)"}`,
       }}
     >
       <Flex justify="between" align="center">
@@ -269,16 +226,14 @@ export function StockAlertsWidget({
           {ruptures > 0 ? (
             <XCircle size={16} style={{ color: "var(--red-9)" }} />
           ) : (
-            <AlertTriangle size={16} style={{ color: "var(--accent-9)" }} />
+            <Warning size={16} style={{ color: "var(--accent-9)" }} />
           )}
           <Flex direction="column">
             <Text size="2" weight="medium">
               {ruptures > 0 ? `${ruptures} rupture(s)` : `${alertesCount} alerte(s)`}
             </Text>
             <Text size="1" color="gray">
-              {ruptures > 0 && alertesCount > 0
-                ? `+ ${alertesCount} alerte(s)`
-                : "Stock bas"}
+              {ruptures > 0 && alertesCount > 0 ? `+ ${alertesCount} alerte(s)` : "Stock bas"}
             </Text>
           </Flex>
         </Flex>

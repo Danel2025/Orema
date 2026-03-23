@@ -7,11 +7,13 @@ Guide ultra-rapide pour démarrer le projet en 5 minutes.
 ## 🚀 Démarrage Rapide (5 étapes)
 
 ### 1️⃣ Installer les dépendances
+
 ```bash
 pnpm install
 ```
 
 ### 2️⃣ Configurer la base de données
+
 ```bash
 # Copier le template d'environnement
 cp .env.example .env
@@ -21,6 +23,7 @@ cp .env.example .env
 ```
 
 ### 3️⃣ Initialiser Prisma
+
 ```bash
 # Générer le client Prisma
 pnpm prisma generate
@@ -33,11 +36,13 @@ pnpm db:seed
 ```
 
 ### 4️⃣ Vérifier l'environnement (optionnel)
+
 ```bash
 pnpm check
 ```
 
 ### 5️⃣ Démarrer le serveur
+
 ```bash
 pnpm dev
 ```

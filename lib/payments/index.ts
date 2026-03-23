@@ -1,29 +1,74 @@
 /**
- * Module de paiements Mobile Money
+ * Module de paiements
  *
- * Point d'entree pour les clients de paiement Airtel Money et Moov Money.
+ * Point d'entree pour tous les clients de paiement:
+ * - Mobile Money POS: Airtel Money et Moov Money (paiements en caisse)
+ * - Abonnements: Monetbil (Airtel Money widget) et Stripe (cartes bancaires)
  *
  * @example
  * ```ts
- * import { airtelMoneyClient, moovMoneyClient, getPaymentClient } from '@/lib/payments'
- *
- * // Utilisation directe
+ * // Mobile Money POS
+ * import { airtelMoneyClient, getPaymentClient } from '@/lib/payments'
  * const result = await airtelMoneyClient.initiatePayment({ amount: 5000, phone: '07XXXXXXX', reference: 'ORE-...' })
  *
- * // Utilisation dynamique selon le provider
- * const client = getPaymentClient('AIRTEL_MONEY')
- * const result = await client.initiatePayment({ amount: 5000, phone: '07XXXXXXX', reference: 'ORE-...' })
+ * // Abonnements - Monetbil
+ * import { initMonetbilPayment } from '@/lib/payments'
+ * const result = await initMonetbilPayment({ amount: 7500, returnUrl: '...', notifyUrl: '...', paymentRef: '...' })
+ *
+ * // Abonnements - Stripe
+ * import { createStripeCheckoutSession } from '@/lib/payments'
+ * const result = await createStripeCheckoutSession({ planSlug: 'pro', billingCycle: 'mensuel', ... })
  * ```
  */
 
-import { airtelMoneyClient , AirtelMoneyClient } from "./airtel-money";
-import { moovMoneyClient , MoovMoneyClient } from "./moov-money";
+import { airtelMoneyClient, AirtelMoneyClient } from "./airtel-money";
+import { moovMoneyClient, MoovMoneyClient } from "./moov-money";
 
+// Mobile Money POS clients
 export { AirtelMoneyClient, airtelMoneyClient } from "./airtel-money";
 export { MoovMoneyClient, moovMoneyClient } from "./moov-money";
 
 export type { InitiatePaymentParams as AirtelInitiateParams } from "./airtel-money";
 export type { InitiatePaymentParams as MoovInitiateParams } from "./moov-money";
+
+// Subscription payment types
+export type {
+  SubscriptionPaymentProvider,
+  BillingCycle,
+  PaymentIntent,
+  PaymentResult,
+  ProviderPaymentStatus,
+  WebhookEvent,
+  WebhookEventType,
+  SubscriptionPayment,
+  SubscriptionPaymentStatus,
+  Invoice,
+  InvoiceStatus,
+  MonetbilPaymentParams,
+  MonetbilWebhookPayload,
+  StripeCheckoutParams,
+  StripeCustomerPortalParams,
+} from "./types";
+
+// Monetbil (subscription payments)
+export {
+  initMonetbilPayment,
+  checkMonetbilPayment,
+  validateMonetbilWebhook,
+  generateMonetbilReference,
+} from "./monetbil";
+
+// Stripe (subscription payments)
+export {
+  getOrCreateStripeCustomer,
+  createStripeCheckoutSession,
+  createStripeCustomerPortalSession,
+  constructStripeWebhookEvent,
+  cancelStripeSubscription,
+  reactivateStripeSubscription,
+  getStripeSubscription,
+  getStripeInvoices,
+} from "./stripe";
 
 export type MobileMoneyProvider = "AIRTEL_MONEY" | "MOOV_MONEY";
 
@@ -94,9 +139,7 @@ export function formatGabonPhone(telephone: string): string {
  * Airtel: 074, 077
  * Moov (ex-Libertis/Gabon Telecom): 062, 066, 060, 065
  */
-export function detectProviderFromPhone(
-  telephone: string
-): MobileMoneyProvider | null {
+export function detectProviderFromPhone(telephone: string): MobileMoneyProvider | null {
   const cleaned = telephone.replace(/\D/g, "");
   // Extraire les 2 premiers chiffres du numero local
   let localPrefix: string;

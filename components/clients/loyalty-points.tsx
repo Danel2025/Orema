@@ -4,14 +4,7 @@
  * LoyaltyPoints - Composant pour afficher les points de fidelite
  */
 
-import {
-  Card,
-  Flex,
-  Text,
-  Badge,
-  Separator,
-  Progress,
-} from "@radix-ui/themes";
+import { Card, Flex, Text, Badge, Separator, Progress } from "@radix-ui/themes";
 import { ScrollArea } from "@/components/ui";
 import { Star, Trophy, Gift, Receipt } from "lucide-react";
 import { formatCurrency, formatDate } from "@/lib/utils";
@@ -76,10 +69,7 @@ export function LoyaltyPoints({
   if (nextLevel) {
     const pointsInCurrentLevel = pointsFidelite - currentLevel.minPoints;
     const pointsNeededForNextLevel = nextLevel.minPoints - currentLevel.minPoints;
-    progressPercent = Math.min(
-      100,
-      (pointsInCurrentLevel / pointsNeededForNextLevel) * 100
-    );
+    progressPercent = Math.min(100, (pointsInCurrentLevel / pointsNeededForNextLevel) * 100);
     pointsToNextLevel = nextLevel.minPoints - pointsFidelite;
   }
 
@@ -122,7 +112,8 @@ export function LoyaltyPoints({
         </Card>
 
         {/* Progression vers le niveau suivant */}
-        {nextLevel ? <Flex direction="column" gap="2">
+        {nextLevel ? (
+          <Flex direction="column" gap="2">
             <Flex justify="between" align="center">
               <Text size="2" color="gray">
                 Prochain niveau: {nextLevel.name}
@@ -132,7 +123,8 @@ export function LoyaltyPoints({
               </Text>
             </Flex>
             <Progress value={progressPercent} color={currentLevel.color} />
-          </Flex> : null}
+          </Flex>
+        ) : null}
 
         {/* Statistiques */}
         <Flex gap="4">
@@ -159,15 +151,12 @@ export function LoyaltyPoints({
         </Flex>
 
         {/* Regle de fidelite */}
-        <Card
-          variant="surface"
-          style={{ backgroundColor: "var(--accent-a2)" }}
-        >
+        <Card variant="surface" style={{ backgroundColor: "var(--accent-a2)" }}>
           <Flex align="center" gap="2">
             <Gift size={16} style={{ color: "var(--accent-9)" }} />
             <Text size="2">
-              Gagnez <strong>1 point</strong> par{" "}
-              <strong>{formatCurrency(POINTS_PAR_FCFA)}</strong> depenses
+              Gagnez <strong>1 point</strong> par <strong>{formatCurrency(POINTS_PAR_FCFA)}</strong>{" "}
+              depenses
             </Text>
           </Flex>
         </Card>
@@ -195,9 +184,7 @@ export function LoyaltyPoints({
                       <Flex align="center" gap="2">
                         <Receipt size={16} className="text-gray-500" />
                         <Flex direction="column">
-                          <Text size="2">
-                            Ticket #{tx.numeroTicket}
-                          </Text>
+                          <Text size="2">Ticket #{tx.numeroTicket}</Text>
                           <Text size="1" color="gray">
                             {formatCurrency(tx.montantVente)}
                           </Text>
@@ -220,13 +207,7 @@ export function LoyaltyPoints({
         )}
 
         {transactions.length === 0 && (
-          <Flex
-            direction="column"
-            align="center"
-            gap="2"
-            py="4"
-            style={{ color: "var(--gray-9)" }}
-          >
+          <Flex direction="column" align="center" gap="2" py="4" style={{ color: "var(--gray-9)" }}>
             <Star size={24} />
             <Text size="2" color="gray">
               Aucun point gagne pour le moment

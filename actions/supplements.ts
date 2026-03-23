@@ -12,7 +12,10 @@ import { z } from "zod";
 
 const supplementSchema = z.object({
   nom: z.string().min(1, "Le nom est requis").max(50, "50 caractères maximum"),
-  prix: z.coerce.number().min(0, "Le prix doit être positif ou nul").int("Le prix doit être un entier"),
+  prix: z.coerce
+    .number()
+    .min(0, "Le prix doit être positif ou nul")
+    .int("Le prix doit être un entier"),
 });
 
 export type SupplementFormData = z.infer<typeof supplementSchema>;
@@ -52,7 +55,8 @@ export async function createSupplement(produitId: string, data: SupplementFormDa
   try {
     const etablissementId = await getEtablissementId();
     const validation = supplementSchema.safeParse(data);
-    if (!validation.success) return { success: false, error: validation.error.issues[0]?.message || "Données invalides" };
+    if (!validation.success)
+      return { success: false, error: validation.error.issues[0]?.message || "Données invalides" };
 
     const supabase = createServiceClient();
 
@@ -97,7 +101,8 @@ export async function updateSupplement(id: string, data: SupplementFormData) {
   try {
     const etablissementId = await getEtablissementId();
     const validation = supplementSchema.safeParse(data);
-    if (!validation.success) return { success: false, error: validation.error.issues[0]?.message || "Données invalides" };
+    if (!validation.success)
+      return { success: false, error: validation.error.issues[0]?.message || "Données invalides" };
 
     const supabase = createServiceClient();
 
@@ -107,7 +112,10 @@ export async function updateSupplement(id: string, data: SupplementFormData) {
       .eq("id", id)
       .single();
 
-    if (!existing || (existing.produits as { etablissement_id: string }).etablissement_id !== etablissementId) {
+    if (
+      !existing ||
+      (existing.produits as { etablissement_id: string }).etablissement_id !== etablissementId
+    ) {
       return { success: false, error: "Supplément non trouvé" };
     }
 
@@ -152,7 +160,10 @@ export async function deleteSupplement(id: string) {
       .eq("id", id)
       .single();
 
-    if (!existing || (existing.produits as { etablissement_id: string }).etablissement_id !== etablissementId) {
+    if (
+      !existing ||
+      (existing.produits as { etablissement_id: string }).etablissement_id !== etablissementId
+    ) {
       return { success: false, error: "Supplément non trouvé" };
     }
 

@@ -1,6 +1,6 @@
 /**
  * Module d'export CSV
- * Orema N+ - Systeme POS
+ * Orema N+ - Système POS
  */
 
 import Papa from "papaparse";
@@ -12,7 +12,7 @@ const DEFAULT_OPTIONS: CSVExportOptions = {
 };
 
 /**
- * Genere un fichier CSV a partir de donnees
+ * Génère un fichier CSV à partir de données
  */
 export function generateCSV<T extends Record<string, unknown>>(
   data: T[],
@@ -35,7 +35,7 @@ export function generateCSV<T extends Record<string, unknown>>(
     })
   );
 
-  // Generer le CSV avec PapaParse
+  // Générer le CSV avec PapaParse
   const csv = Papa.unparse(
     {
       fields: headers,
@@ -47,7 +47,7 @@ export function generateCSV<T extends Record<string, unknown>>(
     }
   );
 
-  // Ajouter le BOM UTF-8 si demande
+  // Ajouter le BOM UTF-8 si demandé
   if (opts.includeBOM) {
     return "\uFEFF" + csv;
   }
@@ -125,12 +125,12 @@ export function exportProductsToCSV(
     { key: "prixVente", header: "Prix Vente (FCFA)" },
     { key: "prixAchat", header: "Prix Achat (FCFA)" },
     { key: "tauxTva", header: "Taux TVA" },
-    { key: "categorie", header: "Categorie" },
-    { key: "gererStock", header: "Gerer Stock" },
+    { key: "categorie", header: "Catégorie" },
+    { key: "gererStock", header: "Gérer Stock" },
     { key: "stockActuel", header: "Stock Actuel" },
     { key: "stockMin", header: "Stock Minimum" },
     { key: "stockMax", header: "Stock Maximum" },
-    { key: "unite", header: "Unite" },
+    { key: "unite", header: "Unité" },
     { key: "disponibleDirect", header: "Dispo Direct" },
     { key: "disponibleTable", header: "Dispo Table" },
     { key: "disponibleLivraison", header: "Dispo Livraison" },
@@ -138,7 +138,7 @@ export function exportProductsToCSV(
     { key: "actif", header: "Actif" },
   ];
 
-  // Transformer les donnees
+  // Transformer les données
   const data = products.map((p) => ({
     nom: p.nom,
     description: p.description || "",
@@ -159,7 +159,11 @@ export function exportProductsToCSV(
     actif: p.actif,
   }));
 
-  return generateCSV(data as Record<string, unknown>[], columns as { key: string; header: string }[], options);
+  return generateCSV(
+    data as Record<string, unknown>[],
+    columns as { key: string; header: string }[],
+    options
+  );
 }
 
 // ============================================================================
@@ -184,12 +188,9 @@ interface VenteForExport {
 /**
  * Exporte les ventes en CSV
  */
-export function exportVentesToCSV(
-  ventes: VenteForExport[],
-  options?: CSVExportOptions
-): string {
+export function exportVentesToCSV(ventes: VenteForExport[], options?: CSVExportOptions): string {
   const columns = [
-    { key: "numeroTicket", header: "Numero Ticket" },
+    { key: "numeroTicket", header: "Numéro Ticket" },
     { key: "date", header: "Date" },
     { key: "heure", header: "Heure" },
     { key: "type", header: "Type" },
@@ -214,9 +215,7 @@ export function exportVentesToCSV(
     type: v.type,
     statut: v.statut,
     caissier: `${v.utilisateur.nom} ${v.utilisateur.prenom || ""}`.trim(),
-    client: v.client
-      ? `${v.client.nom} ${v.client.prenom || ""}`.trim()
-      : "",
+    client: v.client ? `${v.client.nom} ${v.client.prenom || ""}`.trim() : "",
     table: v.table?.numero || "",
     sousTotal: formatAmount(v.sousTotal),
     totalTva: formatAmount(v.totalTva),
@@ -225,7 +224,11 @@ export function exportVentesToCSV(
     modePaiement: v.paiements.map((p) => p.modePaiement).join(", "),
   }));
 
-  return generateCSV(data as Record<string, unknown>[], columns as { key: string; header: string }[], options);
+  return generateCSV(
+    data as Record<string, unknown>[],
+    columns as { key: string; header: string }[],
+    options
+  );
 }
 
 // ============================================================================
@@ -250,23 +253,20 @@ interface ClientForExport {
 /**
  * Exporte les clients en CSV
  */
-export function exportClientsToCSV(
-  clients: ClientForExport[],
-  options?: CSVExportOptions
-): string {
+export function exportClientsToCSV(clients: ClientForExport[], options?: CSVExportOptions): string {
   const columns = [
     { key: "nom", header: "Nom" },
-    { key: "prenom", header: "Prenom" },
-    { key: "telephone", header: "Telephone" },
+    { key: "prenom", header: "Prénom" },
+    { key: "telephone", header: "Téléphone" },
     { key: "email", header: "Email" },
     { key: "adresse", header: "Adresse" },
-    { key: "pointsFidelite", header: "Points Fidelite" },
-    { key: "soldePrepaye", header: "Solde Prepaye (FCFA)" },
-    { key: "creditAutorise", header: "Credit Autorise" },
-    { key: "limitCredit", header: "Limite Credit (FCFA)" },
-    { key: "soldeCredit", header: "Solde Credit (FCFA)" },
+    { key: "pointsFidelite", header: "Points Fidélité" },
+    { key: "soldePrepaye", header: "Solde Prépayé (FCFA)" },
+    { key: "creditAutorise", header: "Crédit Autorisé" },
+    { key: "limitCredit", header: "Limite Crédit (FCFA)" },
+    { key: "soldeCredit", header: "Solde Crédit (FCFA)" },
     { key: "actif", header: "Actif" },
-    { key: "dateCreation", header: "Date Creation" },
+    { key: "dateCreation", header: "Date Création" },
   ];
 
   const data = clients.map((c) => ({
@@ -284,15 +284,19 @@ export function exportClientsToCSV(
     dateCreation: formatDate(c.createdAt),
   }));
 
-  return generateCSV(data as Record<string, unknown>[], columns as { key: string; header: string }[], options);
+  return generateCSV(
+    data as Record<string, unknown>[],
+    columns as { key: string; header: string }[],
+    options
+  );
 }
 
 // ============================================================================
-// Telechargement
+// Téléchargement
 // ============================================================================
 
 /**
- * Declenche le telechargement d'un fichier CSV
+ * Déclenche le téléchargement d'un fichier CSV
  */
 export function downloadCSV(content: string, filename: string): void {
   const blob = new Blob([content], { type: "text/csv;charset=utf-8;" });
@@ -311,7 +315,7 @@ export function downloadCSV(content: string, filename: string): void {
 }
 
 /**
- * Genere un nom de fichier avec date
+ * Génère un nom de fichier avec date
  */
 export function generateFilename(prefix: string): string {
   const date = new Date().toISOString().split("T")[0];

@@ -124,22 +124,15 @@ function validateAndFormatPhone(telephone: string): {
 // CORS headers
 // ---------------------------------------------------------------------------
 
-const allowedOrigin =
-  Deno.env.get("APP_ORIGIN") ||
-  Deno.env.get("NEXT_PUBLIC_APP_URL") ||
-  "*";
+const allowedOrigin = Deno.env.get("APP_ORIGIN") || Deno.env.get("NEXT_PUBLIC_APP_URL") || "*";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": allowedOrigin,
   "Access-Control-Allow-Methods": "POST, OPTIONS",
-  "Access-Control-Allow-Headers":
-    "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-function jsonResponse(
-  body: Record<string, unknown>,
-  status = 200
-): Response {
+function jsonResponse(body: Record<string, unknown>, status = 200): Response {
   return new Response(JSON.stringify(body), {
     status,
     headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -150,10 +143,7 @@ function jsonResponse(
 // Providers SMS
 // ---------------------------------------------------------------------------
 
-async function sendViaAfricasTalking(
-  to: string,
-  message: string
-): Promise<SMSProviderResponse> {
+async function sendViaAfricasTalking(to: string, message: string): Promise<SMSProviderResponse> {
   const apiKey = Deno.env.get("AFRICASTALKING_API_KEY");
   const username = Deno.env.get("AFRICASTALKING_USERNAME");
   const senderId = Deno.env.get("AFRICASTALKING_SENDER_ID");
@@ -176,18 +166,15 @@ async function sendViaAfricasTalking(
   }
 
   try {
-    const response = await fetch(
-      "https://api.africastalking.com/version1/messaging",
-      {
-        method: "POST",
-        headers: {
-          Accept: "application/json",
-          "Content-Type": "application/x-www-form-urlencoded",
-          apiKey,
-        },
-        body: params.toString(),
-      }
-    );
+    const response = await fetch("https://api.africastalking.com/version1/messaging", {
+      method: "POST",
+      headers: {
+        Accept: "application/json",
+        "Content-Type": "application/x-www-form-urlencoded",
+        apiKey,
+      },
+      body: params.toString(),
+    });
 
     const data = await response.json();
 
@@ -227,10 +214,7 @@ async function sendViaAfricasTalking(
   }
 }
 
-async function sendViaTwilio(
-  to: string,
-  message: string
-): Promise<SMSProviderResponse> {
+async function sendViaTwilio(to: string, message: string): Promise<SMSProviderResponse> {
   const accountSid = Deno.env.get("TWILIO_ACCOUNT_SID");
   const authToken = Deno.env.get("TWILIO_AUTH_TOKEN");
   const fromNumber = Deno.env.get("TWILIO_FROM_NUMBER");
@@ -277,10 +261,7 @@ async function sendViaTwilio(
 /**
  * Envoie un SMS via le provider principal, avec fallback sur le secondaire.
  */
-async function sendSMS(
-  to: string,
-  message: string
-): Promise<SMSProviderResponse> {
+async function sendSMS(to: string, message: string): Promise<SMSProviderResponse> {
   const provider = (Deno.env.get("SMS_PROVIDER") || "africastalking").toLowerCase();
 
   // Essayer le provider principal
@@ -359,10 +340,7 @@ Deno.serve(async (req: Request) => {
 
   // Validation des champs obligatoires
   if (!body.to || !body.message) {
-    return jsonResponse(
-      { error: "Les champs 'to' et 'message' sont requis" },
-      400
-    );
+    return jsonResponse({ error: "Les champs 'to' et 'message' sont requis" }, 400);
   }
 
   if (!body.type) {
@@ -400,8 +378,7 @@ Deno.serve(async (req: Request) => {
     return jsonResponse({ error: "Utilisateur introuvable" }, 403);
   }
 
-  const etablissementId =
-    body.etablissementId || utilisateur.etablissement_id || "unknown";
+  const etablissementId = body.etablissementId || utilisateur.etablissement_id || "unknown";
 
   // Vérifier que l'utilisateur a accès à cet établissement
   if (
@@ -445,10 +422,7 @@ Deno.serve(async (req: Request) => {
   }
 
   if (!result.success) {
-    return jsonResponse(
-      { success: false, error: result.error },
-      502
-    );
+    return jsonResponse({ success: false, error: result.error }, 502);
   }
 
   return jsonResponse({

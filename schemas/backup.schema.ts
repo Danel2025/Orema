@@ -64,7 +64,11 @@ export type BackupCategoryKey = (typeof backupCategories)[number]["key"];
 
 export const backupTypeOptions = [
   { value: "full", label: "Sauvegarde complete", description: "Toutes les categories de donnees" },
-  { value: "partial", label: "Sauvegarde partielle", description: "Categories selectionnees uniquement" },
+  {
+    value: "partial",
+    label: "Sauvegarde partielle",
+    description: "Catégories sélectionnées uniquement",
+  },
 ] as const;
 
 export const backupFormatOptions = [
@@ -79,12 +83,10 @@ export const backupFormatOptions = [
 export const createBackupSchema = z.object({
   nom: z
     .string()
-    .min(2, "Le nom doit contenir au moins 2 caracteres")
-    .max(100, "Le nom ne peut pas depasser 100 caracteres"),
+    .min(2, "Le nom doit contenir au moins 2 caractères")
+    .max(100, "Le nom ne peut pas dépasser 100 caractères"),
   type: z.enum(["full", "partial"]),
-  categories: z
-    .array(z.string())
-    .min(1, "Selectionnez au moins une categorie de donnees"),
+  categories: z.array(z.string()).min(1, "Sélectionnez au moins une catégorie de données"),
   format: z.enum(["json", "csv"]).default("json"),
 });
 
@@ -110,63 +112,64 @@ export const jourSemaineOptions = [
   { value: 6, label: "Samedi" },
 ] as const;
 
-export const backupScheduleSchema = z.object({
-  nom: z
-    .string()
-    .min(2, "Le nom doit contenir au moins 2 caracteres")
-    .max(100, "Le nom ne peut pas depasser 100 caracteres"),
-  actif: z.boolean().default(true),
-  frequence: z.enum(["daily", "weekly", "monthly"]),
-  heureExecution: z
-    .string()
-    .regex(/^\d{2}:\d{2}$/, "Format attendu: HH:MM"),
-  jourSemaine: z
-    .number()
-    .int()
-    .min(0, "Jour invalide")
-    .max(6, "Jour invalide")
-    .optional()
-    .nullable(),
-  jourMois: z
-    .number()
-    .int()
-    .min(1, "Jour invalide")
-    .max(31, "Jour invalide")
-    .optional()
-    .nullable(),
-  type: z.enum(["full", "partial"]).default("full"),
-  categories: z.array(z.string()),
-  retentionJours: z
-    .number()
-    .int()
-    .min(1, "Minimum 1 jour")
-    .max(365, "Maximum 365 jours")
-    .default(30),
-}).refine(
-  (data) => {
-    // Si weekly, jour de la semaine requis
-    if (data.frequence === "weekly" && data.jourSemaine === undefined) {
-      return false;
+export const backupScheduleSchema = z
+  .object({
+    nom: z
+      .string()
+      .min(2, "Le nom doit contenir au moins 2 caracteres")
+      .max(100, "Le nom ne peut pas depasser 100 caracteres"),
+    actif: z.boolean().default(true),
+    frequence: z.enum(["daily", "weekly", "monthly"]),
+    heureExecution: z.string().regex(/^\d{2}:\d{2}$/, "Format attendu: HH:MM"),
+    jourSemaine: z
+      .number()
+      .int()
+      .min(0, "Jour invalide")
+      .max(6, "Jour invalide")
+      .optional()
+      .nullable(),
+    jourMois: z
+      .number()
+      .int()
+      .min(1, "Jour invalide")
+      .max(31, "Jour invalide")
+      .optional()
+      .nullable(),
+    type: z.enum(["full", "partial"]).default("full"),
+    categories: z.array(z.string()),
+    retentionJours: z
+      .number()
+      .int()
+      .min(1, "Minimum 1 jour")
+      .max(365, "Maximum 365 jours")
+      .default(30),
+  })
+  .refine(
+    (data) => {
+      // Si weekly, jour de la semaine requis
+      if (data.frequence === "weekly" && data.jourSemaine === undefined) {
+        return false;
+      }
+      return true;
+    },
+    {
+      message: "Le jour de la semaine est requis pour une frequence hebdomadaire",
+      path: ["jourSemaine"],
     }
-    return true;
-  },
-  {
-    message: "Le jour de la semaine est requis pour une frequence hebdomadaire",
-    path: ["jourSemaine"],
-  }
-).refine(
-  (data) => {
-    // Si monthly, jour du mois requis
-    if (data.frequence === "monthly" && data.jourMois === undefined) {
-      return false;
+  )
+  .refine(
+    (data) => {
+      // Si monthly, jour du mois requis
+      if (data.frequence === "monthly" && data.jourMois === undefined) {
+        return false;
+      }
+      return true;
+    },
+    {
+      message: "Le jour du mois est requis pour une frequence mensuelle",
+      path: ["jourMois"],
     }
-    return true;
-  },
-  {
-    message: "Le jour du mois est requis pour une frequence mensuelle",
-    path: ["jourMois"],
-  }
-);
+  );
 
 export type BackupScheduleInput = z.infer<typeof backupScheduleSchema>;
 

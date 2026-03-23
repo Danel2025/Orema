@@ -6,7 +6,7 @@
  */
 
 import { useState } from "react";
-import { MapPin, X, GripVertical, Pencil } from "lucide-react";
+import { MapPin, X, DotsSixVertical, PencilSimple } from "@phosphor-icons/react";
 import { cn } from "@/lib/utils";
 
 export interface ZoneData {
@@ -169,9 +169,7 @@ export function ZoneElement({
         border: `2px dashed ${hexToRgba(zone.couleur, isSelected ? 1 : 0.5)}`,
         borderRadius: 8,
         zIndex: 0, // Zones are behind tables and decor
-        boxShadow: isSelected
-          ? `0 0 0 2px ${hexToRgba(zone.couleur, 0.3)}`
-          : undefined,
+        boxShadow: isSelected ? `0 0 0 2px ${hexToRgba(zone.couleur, 0.3)}` : undefined,
         transition: "box-shadow 0.15s, border-color 0.15s",
         // @ts-expect-error CSS variable
         "--ring-color": zone.couleur,
@@ -200,7 +198,8 @@ export function ZoneElement({
       </div>
 
       {/* Actions (edit mode) */}
-      {isSelected && isEditMode ? <div
+      {isSelected && isEditMode ? (
+        <div
           style={{
             position: "absolute",
             top: 8,
@@ -209,7 +208,8 @@ export function ZoneElement({
             gap: 4,
           }}
         >
-          {onEdit ? <button
+          {onEdit ? (
+            <button
               data-action-btn
               onClick={(e) => {
                 e.stopPropagation();
@@ -230,9 +230,11 @@ export function ZoneElement({
               }}
               title="Modifier"
             >
-              <Pencil size={12} />
-            </button> : null}
-          {onDelete ? <button
+              <PencilSimple size={12} />
+            </button>
+          ) : null}
+          {onDelete ? (
+            <button
               data-action-btn
               onClick={(e) => {
                 e.stopPropagation();
@@ -254,11 +256,14 @@ export function ZoneElement({
               title="Supprimer"
             >
               <X size={12} />
-            </button> : null}
-        </div> : null}
+            </button>
+          ) : null}
+        </div>
+      ) : null}
 
       {/* Resize handles (edit mode, selected) */}
-      {isSelected && isEditMode && onResizeStart ? <>
+      {isSelected && isEditMode && onResizeStart ? (
+        <>
           {RESIZE_HANDLES.map((handle) => (
             <div
               key={handle.position}
@@ -270,7 +275,8 @@ export function ZoneElement({
               }}
             />
           ))}
-        </> : null}
+        </>
+      ) : null}
     </div>
   );
 }

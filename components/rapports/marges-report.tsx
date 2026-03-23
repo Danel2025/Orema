@@ -16,18 +16,8 @@ import {
   ResponsiveContainer,
   Cell,
 } from "recharts";
-import {
-  Box,
-  Card,
-  Flex,
-  Text,
-  Table,
-  Badge,
-  Select,
-  Skeleton,
-  Tabs,
-} from "@radix-ui/themes";
-import { TrendingUp, Percent } from "lucide-react";
+import { Box, Card, Flex, Text, Table, Badge, Select, Skeleton, Tabs } from "@radix-ui/themes";
+import { TrendUp, Percent } from "@phosphor-icons/react";
 import { formatCurrency } from "@/lib/utils";
 import { createClient } from "@/lib/supabase/client";
 import type { PeriodeType } from "@/actions/rapports";
@@ -149,11 +139,13 @@ export function MargesReport() {
         // Recuperer les lignes de vente avec produits (prix_achat, categorie)
         const { data: lignes, error } = await supabase
           .from("lignes_vente")
-          .select(`
+          .select(
+            `
             quantite, total, prix_unitaire,
             produits!inner(id, nom, prix_achat, prix_vente, categories(nom)),
             ventes!inner(statut, created_at, etablissement_id)
-          `)
+          `
+          )
           .eq("ventes.statut", "PAYEE")
           .gte("ventes.created_at", from)
           .lte("ventes.created_at", to);
@@ -258,9 +250,7 @@ export function MargesReport() {
 
   // Top 10 pour le graphique
   const topMarges = useMemo(() => {
-    return produits
-      .filter((p) => p.prixAchat !== null && p.margeBrute > 0)
-      .slice(0, 10);
+    return produits.filter((p) => p.prixAchat !== null && p.margeBrute > 0).slice(0, 10);
   }, [produits]);
 
   // Couleurs pour les barres
@@ -283,7 +273,9 @@ export function MargesReport() {
         <Flex justify="between" align="center" mb="4">
           <Flex align="center" gap="2">
             <Percent size={20} style={{ color: "var(--accent-9)" }} />
-            <Text size="4" weight="bold">Marges beneficiaires</Text>
+            <Text size="4" weight="bold">
+              Marges beneficiaires
+            </Text>
           </Flex>
           <Skeleton width="120px" height="32px" />
         </Flex>
@@ -304,11 +296,13 @@ export function MargesReport() {
       <Flex justify="between" align="center" mb="4" wrap="wrap" gap="3">
         <Flex align="center" gap="2">
           <Percent size={20} style={{ color: "var(--accent-9)" }} />
-          <Text size="4" weight="bold">Marges beneficiaires</Text>
+          <Text size="4" weight="bold">
+            Marges beneficiaires
+          </Text>
         </Flex>
         <Select.Root value={periode} onValueChange={(v) => setPeriode(v as PeriodeType)}>
           <Select.Trigger placeholder="Periode" />
-          <Select.Content>
+          <Select.Content position="popper">
             <Select.Item value="jour">Aujourd&apos;hui</Select.Item>
             <Select.Item value="semaine">Cette semaine</Select.Item>
             <Select.Item value="mois">Ce mois</Select.Item>
@@ -319,7 +313,9 @@ export function MargesReport() {
 
       {produits.length === 0 ? (
         <Flex align="center" justify="center" style={{ height: 200 }}>
-          <Text size="3" color="gray">Aucune vente pour cette periode</Text>
+          <Text size="3" color="gray">
+            Aucune vente pour cette periode
+          </Text>
         </Flex>
       ) : (
         <Tabs.Root value={tab} onValueChange={setTab}>
@@ -354,23 +350,42 @@ export function MargesReport() {
                   {produitsAvecCout.map((p) => (
                     <Table.Row key={p.id}>
                       <Table.RowHeaderCell>
-                        <Text size="2" weight="medium">{p.nom}</Text>
+                        <Text size="2" weight="medium">
+                          {p.nom}
+                        </Text>
                       </Table.RowHeaderCell>
                       <Table.Cell>
-                        <Badge variant="soft" color="gray">{p.categorieNom}</Badge>
+                        <Badge variant="soft" color="gray">
+                          {p.categorieNom}
+                        </Badge>
                       </Table.Cell>
                       <Table.Cell align="right">
-                        <Text size="2" style={{ fontFamily: "var(--font-google-sans-code), ui-monospace, monospace" }}>
+                        <Text
+                          size="2"
+                          style={{
+                            fontFamily: "var(--font-google-sans-code), ui-monospace, monospace",
+                          }}
+                        >
                           {formatCurrency(p.prixVente)}
                         </Text>
                       </Table.Cell>
                       <Table.Cell align="right">
-                        <Text size="2" style={{ fontFamily: "var(--font-google-sans-code), ui-monospace, monospace" }}>
+                        <Text
+                          size="2"
+                          style={{
+                            fontFamily: "var(--font-google-sans-code), ui-monospace, monospace",
+                          }}
+                        >
                           {p.prixAchat !== null ? formatCurrency(p.prixAchat) : "N/A"}
                         </Text>
                       </Table.Cell>
                       <Table.Cell align="right">
-                        <Text size="2" style={{ fontFamily: "var(--font-google-sans-code), ui-monospace, monospace" }}>
+                        <Text
+                          size="2"
+                          style={{
+                            fontFamily: "var(--font-google-sans-code), ui-monospace, monospace",
+                          }}
+                        >
                           {p.quantiteVendue}
                         </Text>
                       </Table.Cell>
@@ -389,7 +404,13 @@ export function MargesReport() {
                       <Table.Cell align="right">
                         <Badge
                           variant="soft"
-                          color={p.margePourcentage >= 30 ? "green" : p.margePourcentage >= 15 ? "amber" : "red"}
+                          color={
+                            p.margePourcentage >= 30
+                              ? "green"
+                              : p.margePourcentage >= 15
+                                ? "amber"
+                                : "red"
+                          }
                         >
                           {p.margePourcentage}%
                         </Badge>
@@ -426,20 +447,37 @@ export function MargesReport() {
                 {categories.map((c) => (
                   <Table.Row key={c.nom}>
                     <Table.RowHeaderCell>
-                      <Text size="2" weight="medium">{c.nom}</Text>
+                      <Text size="2" weight="medium">
+                        {c.nom}
+                      </Text>
                     </Table.RowHeaderCell>
                     <Table.Cell align="right">
-                      <Text size="2" style={{ fontFamily: "var(--font-google-sans-code), ui-monospace, monospace" }}>
+                      <Text
+                        size="2"
+                        style={{
+                          fontFamily: "var(--font-google-sans-code), ui-monospace, monospace",
+                        }}
+                      >
                         {c.nombreProduits}
                       </Text>
                     </Table.Cell>
                     <Table.Cell align="right">
-                      <Text size="2" style={{ fontFamily: "var(--font-google-sans-code), ui-monospace, monospace" }}>
+                      <Text
+                        size="2"
+                        style={{
+                          fontFamily: "var(--font-google-sans-code), ui-monospace, monospace",
+                        }}
+                      >
                         {formatCurrency(c.totalVentes)}
                       </Text>
                     </Table.Cell>
                     <Table.Cell align="right">
-                      <Text size="2" style={{ fontFamily: "var(--font-google-sans-code), ui-monospace, monospace" }}>
+                      <Text
+                        size="2"
+                        style={{
+                          fontFamily: "var(--font-google-sans-code), ui-monospace, monospace",
+                        }}
+                      >
                         {formatCurrency(c.totalCout)}
                       </Text>
                     </Table.Cell>
@@ -458,7 +496,13 @@ export function MargesReport() {
                     <Table.Cell align="right">
                       <Badge
                         variant="soft"
-                        color={c.margePourcentage >= 30 ? "green" : c.margePourcentage >= 15 ? "amber" : "red"}
+                        color={
+                          c.margePourcentage >= 30
+                            ? "green"
+                            : c.margePourcentage >= 15
+                              ? "amber"
+                              : "red"
+                        }
                       >
                         {c.margePourcentage}%
                       </Badge>

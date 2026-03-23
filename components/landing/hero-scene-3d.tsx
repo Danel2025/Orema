@@ -22,8 +22,7 @@ function Pyramid({
   useFrame((state) => {
     if (meshRef.current) {
       meshRef.current.rotation.y += 0.005 * speed;
-      meshRef.current.position.y =
-        position[1] + Math.sin(state.clock.elapsedTime * speed) * 0.1;
+      meshRef.current.position.y = position[1] + Math.sin(state.clock.elapsedTime * speed) * 0.1;
     }
   });
 
@@ -124,8 +123,7 @@ function Ring({
 
   useFrame((state) => {
     if (meshRef.current) {
-      meshRef.current.rotation.x =
-        Math.sin(state.clock.elapsedTime * speed * 0.5) * 0.3;
+      meshRef.current.rotation.x = Math.sin(state.clock.elapsedTime * speed * 0.5) * 0.3;
       meshRef.current.rotation.y += 0.01 * speed;
     }
   });
@@ -313,7 +311,8 @@ function CSSFallback() {
       />
       <style jsx>{`
         @keyframes float {
-          0%, 100% {
+          0%,
+          100% {
             transform: translateY(0) scale(1);
           }
           50% {
@@ -334,10 +333,7 @@ export function HeroScene3D() {
   }
 
   return (
-    <div
-      className="absolute inset-0 pointer-events-none"
-      style={{ zIndex: 0 }}
-    >
+    <div className="pointer-events-none absolute inset-0" style={{ zIndex: 0 }}>
       <Suspense fallback={<CSSFallback />}>
         <Canvas
           camera={{ position: [0, 0, 8], fov: 45 }}

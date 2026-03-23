@@ -31,11 +31,7 @@ export function snapToGrid(value: number, gridSize: number): number {
  * @param gridSize - The grid size in pixels
  * @returns The snapped position
  */
-export function snapPosition(
-  x: number,
-  y: number,
-  gridSize: number
-): { x: number; y: number } {
+export function snapPosition(x: number, y: number, gridSize: number): { x: number; y: number } {
   return {
     x: snapToGrid(x, gridSize),
     y: snapToGrid(y, gridSize),

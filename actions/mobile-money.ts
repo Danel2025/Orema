@@ -125,18 +125,16 @@ export async function initMobileMoneyPayment(
     expireAt.setMinutes(expireAt.getMinutes() + 15);
 
     // Enregistrer le paiement en BD avant l'appel API
-    const { error: insertError } = await supabase
-      .from("paiements_mobile" as never)
-      .insert({
-        reference_interne: referenceInterne,
-        montant,
-        telephone: "+" + phoneFormatted,
-        provider,
-        statut: "EN_ATTENTE",
-        expire_at: expireAt.toISOString(),
-        vente_id: venteId,
-        etablissement_id: etablissementId,
-      } as never);
+    const { error: insertError } = await supabase.from("paiements_mobile" as never).insert({
+      reference_interne: referenceInterne,
+      montant,
+      telephone: "+" + phoneFormatted,
+      provider,
+      statut: "EN_ATTENTE",
+      expire_at: expireAt.toISOString(),
+      vente_id: venteId,
+      etablissement_id: etablissementId,
+    } as never);
 
     if (insertError) {
       console.error("[MobileMoney] Erreur insertion BD:", insertError);
@@ -161,10 +159,7 @@ export async function initMobileMoneyPayment(
         } as never)
         .eq("reference_interne", referenceInterne);
 
-      console.error(
-        `[MobileMoney] Echec initiation ${provider}:`,
-        apiResult.error
-      );
+      console.error(`[MobileMoney] Echec initiation ${provider}:`, apiResult.error);
       return {
         success: false,
         error: apiResult.error || "Échec de l'initiation du paiement",
@@ -227,14 +222,10 @@ export async function checkMobileMoneyStatus(
 
     const paiement = data as unknown as PaiementMobile | null;
 
-    if (!paiement)
-      return { success: false, error: "Paiement non trouvé" };
+    if (!paiement) return { success: false, error: "Paiement non trouvé" };
 
     // Verifier l'expiration
-    if (
-      paiement.statut === "EN_ATTENTE" &&
-      new Date() > new Date(paiement.expire_at)
-    ) {
+    if (paiement.statut === "EN_ATTENTE" && new Date() > new Date(paiement.expire_at)) {
       await supabase
         .from("paiements_mobile" as never)
         .update({ statut: "EXPIRE" } as never)
@@ -263,10 +254,7 @@ export async function checkMobileMoneyStatus(
               .from("paiements_mobile" as never)
               .update({
                 statut: mappedStatus,
-                confirme_at:
-                  mappedStatus === "CONFIRME"
-                    ? new Date().toISOString()
-                    : null,
+                confirme_at: mappedStatus === "CONFIRME" ? new Date().toISOString() : null,
               } as never)
               .eq("reference_interne", referenceInterne);
 
@@ -279,10 +267,7 @@ export async function checkMobileMoneyStatus(
         }
       } catch (pollError) {
         // Ne pas echouer la verification si le poll API echoue
-        console.warn(
-          "[MobileMoney] Erreur poll API provider:",
-          pollError
-        );
+        console.warn("[MobileMoney] Erreur poll API provider:", pollError);
       }
     }
 
@@ -329,8 +314,7 @@ export async function cancelMobileMoneyPayment(
 
     const paiement = data as unknown as Pick<PaiementMobile, "etablissement_id" | "statut"> | null;
 
-    if (!paiement)
-      return { success: false, error: "Paiement non trouvé" };
+    if (!paiement) return { success: false, error: "Paiement non trouvé" };
     if (paiement.statut !== "EN_ATTENTE")
       return { success: false, error: "Seuls les paiements en attente peuvent être annulés" };
 

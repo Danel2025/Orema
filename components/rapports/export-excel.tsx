@@ -7,7 +7,7 @@
 
 import { useState } from "react";
 import { Button } from "@radix-ui/themes";
-import { FileSpreadsheet, Loader2 } from "lucide-react";
+import { FileXls, CircleNotch } from "@phosphor-icons/react";
 import { toast } from "sonner";
 import { formatCurrency } from "@/lib/utils";
 
@@ -195,7 +195,7 @@ export function ExportExcel({
 
       // ---- Feuille 4: Top produits ----
       if (topProduits && topProduits.length > 0) {
-        const prodHeaders = ["Produit", "Categorie", "Quantite vendue", "CA (FCFA)"];
+        const prodHeaders = ["Produit", "Catégorie", "Quantité vendue", "CA (FCFA)"];
         const prodRows = topProduits.map((p) => [p.nom, p.categorie, p.quantite, p.ca]);
 
         const wsProd = XLSX.utils.aoa_to_sheet([prodHeaders, ...prodRows]);
@@ -230,17 +230,8 @@ export function ExportExcel({
   };
 
   return (
-    <Button
-      variant={variant}
-      color="green"
-      onClick={handleExport}
-      disabled={isExporting}
-    >
-      {isExporting ? (
-        <Loader2 size={16} className="animate-spin" />
-      ) : (
-        <FileSpreadsheet size={16} />
-      )}
+    <Button variant={variant} color="green" onClick={handleExport} disabled={isExporting}>
+      {isExporting ? <CircleNotch size={16} className="animate-spin" /> : <FileXls size={16} />}
       {isExporting ? "Export en cours..." : "Exporter Excel"}
     </Button>
   );

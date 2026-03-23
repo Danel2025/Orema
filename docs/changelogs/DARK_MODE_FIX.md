@@ -8,15 +8,18 @@
 ## 🐛 Problèmes Identifiés
 
 ### 1. **Mode sombre bleu au lieu de noir** ❌
+
 - Couleur: `#0f172a` (slate-900 - bleu foncé)
 - Attendu: Noir véritable ou gris très foncé neutre
 
 ### 2. **Toggle de thème non fonctionnel** ❌
+
 - ThemeToggle utilisait `data-theme` attribute
 - Radix UI Themes utilise `class="dark"`
 - **Pas de synchronisation** entre les deux !
 
 ### 3. **Mauvais contraste** ❌
+
 - Texte gris peu visible sur fond bleu foncé
 - Problème de lisibilité
 
@@ -29,6 +32,7 @@
 **Fichier**: `components/layout/theme-toggle.tsx`
 
 **Avant** ❌
+
 ```typescript
 const applyTheme = (newTheme: "light" | "dark") => {
   const root = document.documentElement;
@@ -38,6 +42,7 @@ const applyTheme = (newTheme: "light" | "dark") => {
 ```
 
 **Après** ✅
+
 ```typescript
 const applyTheme = (newTheme: "light" | "dark") => {
   const root = document.documentElement;
@@ -52,9 +57,7 @@ const applyTheme = (newTheme: "light" | "dark") => {
   localStorage.setItem("theme", newTheme);
 
   // Émettre un événement custom pour le Provider
-  window.dispatchEvent(
-    new CustomEvent("theme-change", { detail: newTheme })
-  );
+  window.dispatchEvent(new CustomEvent("theme-change", { detail: newTheme }));
 };
 ```
 
@@ -65,6 +68,7 @@ const applyTheme = (newTheme: "light" | "dark") => {
 **Fichier**: `app/providers.tsx`
 
 **Avant** ❌
+
 ```typescript
 <Theme accentColor="orange" grayColor="slate" radius="medium" scaling="100%">
   {/* appearance non défini - utilise "light" par défaut */}
@@ -72,6 +76,7 @@ const applyTheme = (newTheme: "light" | "dark") => {
 ```
 
 **Après** ✅
+
 ```typescript
 const [appearance, setAppearance] = useState<"light" | "dark">("light");
 
@@ -114,6 +119,7 @@ return (
 **Fichier**: `app/globals.css`
 
 **Avant** ❌
+
 ```css
 /* Mode sombre - BLEU FONCÉ */
 [data-theme="dark"] {
@@ -124,6 +130,7 @@ return (
 ```
 
 **Après** ✅
+
 ```css
 /* Mode sombre - Vrai noir, pas bleu ! */
 .dark {
@@ -155,6 +162,7 @@ return (
 ```
 
 **Changements clés:**
+
 - `#0f172a` (slate-900 bleuté) → `#0a0a0a` (noir neutre)
 - Échelle de gris **neutre** au lieu de slate (bleuté)
 - Meilleur contraste pour la lisibilité
@@ -194,6 +202,7 @@ Ajout d'un script inline pour éviter le flash de contenu :
 ```
 
 **Avantages:**
+
 - Applique le mode sombre AVANT le premier rendu
 - Évite le flash blanc désagréable
 - Respecte les préférences système
@@ -216,6 +225,7 @@ themeColor: [
 ## 🎨 Comparaison Visuelle
 
 ### Mode Clair
+
 ```
 Background: #ffffff (blanc)
 Foreground: #0a0a0a (noir)
@@ -223,6 +233,7 @@ Accent: #f97316 (orange)
 ```
 
 ### Mode Sombre
+
 ```
 Background: #0a0a0a (noir véritable) ✅
 Foreground: #fafafa (blanc cassé) ✅
@@ -231,6 +242,7 @@ Border: #262626 (gris neutre foncé)
 ```
 
 **Ancien mode sombre (bleu):**
+
 ```
 Background: #0f172a (slate-900 BLEUTÉ) ❌
 ```
@@ -294,6 +306,7 @@ Background: #0f172a (slate-900 BLEUTÉ) ❌
 ## 🧪 Tester le Dark Mode
 
 ### 1. Basculer Manuellement
+
 ```
 Cliquer sur l'icône Lune/Soleil en haut à droite
 → Le thème change instantanément
@@ -301,6 +314,7 @@ Cliquer sur l'icône Lune/Soleil en haut à droite
 ```
 
 ### 2. Vérifier la Persistance
+
 ```
 1. Basculer en mode sombre
 2. Rafraîchir la page (F5)
@@ -308,6 +322,7 @@ Cliquer sur l'icône Lune/Soleil en haut à droite
 ```
 
 ### 3. Vérifier Préférences Système
+
 ```
 1. Supprimer localStorage (DevTools > Application > Local Storage)
 2. Changer les préférences système (Windows: Paramètres > Personnalisation > Couleurs)
@@ -316,12 +331,13 @@ Cliquer sur l'icône Lune/Soleil en haut à droite
 ```
 
 ### 4. Vérifier dans la Console
+
 ```javascript
 // Devrait afficher "dark" si mode sombre actif
-document.documentElement.classList.contains('dark')
+document.documentElement.classList.contains("dark");
 
 // Devrait afficher "dark" ou "light"
-localStorage.getItem('theme')
+localStorage.getItem("theme");
 ```
 
 ---
@@ -337,12 +353,14 @@ localStorage.getItem('theme')
 ## 🎯 Résultat Final
 
 ### Avant ❌
+
 - Mode sombre bleu foncé (#0f172a)
 - Toggle ne fonctionne pas
 - Radix UI ignore le changement
 - Contraste faible
 
 ### Après ✅
+
 - Mode sombre noir véritable (#0a0a0a)
 - Toggle instantané et fluide
 - Radix UI synchronisé parfaitement

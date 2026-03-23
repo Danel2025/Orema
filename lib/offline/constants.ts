@@ -3,24 +3,24 @@
  */
 
 /** Nom de la base de donnees IndexedDB */
-export const DB_NAME = 'orema-pos-offline' as const
+export const DB_NAME = "orema-pos-offline" as const;
 
 /** Version du schema de la base de donnees */
-export const DB_VERSION = 1 as const
+export const DB_VERSION = 1 as const;
 
 /** Noms des object stores IndexedDB */
 export const STORE_NAMES = {
-  produits: 'produits',
-  categories: 'categories',
-  ventes: 'ventes',
-  lignesVente: 'lignesVente',
-  clients: 'clients',
-  tables: 'tables',
-  sessionsCaisse: 'sessionsCaisse',
-  paiements: 'paiements',
-  mutationQueue: 'mutationQueue',
-  syncMetadata: 'syncMetadata',
-} as const
+  produits: "produits",
+  categories: "categories",
+  ventes: "ventes",
+  lignesVente: "lignesVente",
+  clients: "clients",
+  tables: "tables",
+  sessionsCaisse: "sessionsCaisse",
+  paiements: "paiements",
+  mutationQueue: "mutationQueue",
+  syncMetadata: "syncMetadata",
+} as const;
 
 /** Durees de cache par entite (en millisecondes) */
 export const CACHE_TTL = {
@@ -38,10 +38,10 @@ export const CACHE_TTL = {
   sessionsCaisse: 5 * 60 * 1000,
   /** Paiements: 2 minutes */
   paiements: 2 * 60 * 1000,
-} as const
+} as const;
 
 /** Nombre maximal de retries pour une mutation en echec */
-export const MAX_MUTATION_RETRIES = 5 as const
+export const MAX_MUTATION_RETRIES = 5 as const;
 
 /** Delai entre les retries (en ms) — backoff exponentiel applique */
-export const BASE_RETRY_DELAY = 1000 as const
+export const BASE_RETRY_DELAY = 1000 as const;

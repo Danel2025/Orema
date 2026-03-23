@@ -2,7 +2,7 @@
  * Requêtes Supabase pour les employés (utilisateurs)
  */
 
-import type { DbClient } from '../client'
+import type { DbClient } from "../client";
 import type {
   Utilisateur,
   UtilisateurInsert,
@@ -10,13 +10,12 @@ import type {
   Role,
   PaginationOptions,
   PaginatedResult,
-} from '../types'
-import {
-  getPaginationParams,
-  createPaginatedResult,
-  getErrorMessage,
-} from '../utils'
-import { sanitizeSearchTerm } from '@/lib/utils/sanitize'
+} from "../types";
+import { getPaginationParams, createPaginatedResult, getErrorMessage } from "../utils";
+import { sanitizeSearchTerm } from "@/lib/utils/sanitize";
+
+/** Utilisateur avec le champ calculé has_pin (true si un PIN est défini) */
+export type UtilisateurSafe = Utilisateur & { has_pin: boolean };
 
 /**
  * Récupère tous les employés d'un établissement
@@ -25,46 +24,48 @@ export async function getEmployes(
   client: DbClient,
   etablissementId: string,
   options?: {
-    actif?: boolean
-    role?: Role
-    search?: string
+    actif?: boolean;
+    role?: Role;
+    search?: string;
   }
-): Promise<Utilisateur[]> {
+): Promise<UtilisateurSafe[]> {
   let query = client
-    .from('utilisateurs')
-    .select('*')
-    .eq('etablissement_id', etablissementId)
-    .order('nom', { ascending: true })
+    .from("utilisateurs")
+    .select("*")
+    .eq("etablissement_id", etablissementId)
+    .order("nom", { ascending: true });
 
   if (options?.actif !== undefined) {
-    query = query.eq('actif', options.actif)
+    query = query.eq("actif", options.actif);
   }
 
   if (options?.role) {
-    query = query.eq('role', options.role)
+    query = query.eq("role", options.role);
   }
 
   if (options?.search) {
-    const cleanSearch = sanitizeSearchTerm(options.search)
+    const cleanSearch = sanitizeSearchTerm(options.search);
     if (cleanSearch) {
       query = query.or(
         `nom.ilike.%${cleanSearch}%,prenom.ilike.%${cleanSearch}%,email.ilike.%${cleanSearch}%`
-      )
+      );
     }
   }
 
-  const { data, error } = await query
+  const { data, error } = await query;
 
   if (error) {
-    throw new Error(getErrorMessage(error))
+    throw new Error(getErrorMessage(error));
   }
 
   // Ne pas exposer les mots de passe et PIN
+  // Retourner has_pin AVANT de masquer pin_code pour que l'action puisse vérifier
   return (data ?? []).map(({ password, pin_code, ...rest }) => ({
     ...rest,
     password: null,
     pin_code: null,
-  }))
+    has_pin: !!pin_code,
+  }));
 }
 
 /**
@@ -74,73 +75,67 @@ export async function getEmployesPaginated(
   client: DbClient,
   etablissementId: string,
   options?: PaginationOptions & {
-    actif?: boolean
-    role?: Role
-    search?: string
+    actif?: boolean;
+    role?: Role;
+    search?: string;
   }
-): Promise<PaginatedResult<Utilisateur>> {
-  const { offset, limit, page, pageSize } = getPaginationParams(options)
+): Promise<PaginatedResult<UtilisateurSafe>> {
+  const { offset, limit, page, pageSize } = getPaginationParams(options);
 
   let query = client
-    .from('utilisateurs')
-    .select('*', { count: 'exact' })
-    .eq('etablissement_id', etablissementId)
-    .order('nom', { ascending: true })
-    .range(offset, offset + limit - 1)
+    .from("utilisateurs")
+    .select("*", { count: "exact" })
+    .eq("etablissement_id", etablissementId)
+    .order("nom", { ascending: true })
+    .range(offset, offset + limit - 1);
 
   if (options?.actif !== undefined) {
-    query = query.eq('actif', options.actif)
+    query = query.eq("actif", options.actif);
   }
 
   if (options?.role) {
-    query = query.eq('role', options.role)
+    query = query.eq("role", options.role);
   }
 
   if (options?.search) {
-    const cleanSearch = sanitizeSearchTerm(options.search)
+    const cleanSearch = sanitizeSearchTerm(options.search);
     if (cleanSearch) {
       query = query.or(
         `nom.ilike.%${cleanSearch}%,prenom.ilike.%${cleanSearch}%,email.ilike.%${cleanSearch}%`
-      )
+      );
     }
   }
 
-  const { data, error, count } = await query
+  const { data, error, count } = await query;
 
   if (error) {
-    throw new Error(getErrorMessage(error))
+    throw new Error(getErrorMessage(error));
   }
 
   const sanitized = (data ?? []).map(({ password, pin_code, ...rest }) => ({
     ...rest,
     password: null,
     pin_code: null,
-  }))
+    has_pin: !!pin_code,
+  }));
 
-  return createPaginatedResult(sanitized, count ?? 0, { page, pageSize })
+  return createPaginatedResult(sanitized, count ?? 0, { page, pageSize });
 }
 
 /**
  * Récupère un employé par son ID
  */
-export async function getEmployeById(
-  client: DbClient,
-  id: string
-): Promise<Utilisateur | null> {
-  const { data, error } = await client
-    .from('utilisateurs')
-    .select('*')
-    .eq('id', id)
-    .single()
+export async function getEmployeById(client: DbClient, id: string): Promise<UtilisateurSafe | null> {
+  const { data, error } = await client.from("utilisateurs").select("*").eq("id", id).single();
 
   if (error) {
-    if (error.code === 'PGRST116') return null
-    throw new Error(getErrorMessage(error))
+    if (error.code === "PGRST116") return null;
+    throw new Error(getErrorMessage(error));
   }
 
   // Ne pas exposer le mot de passe et PIN
-  const { password, pin_code, ...rest } = data
-  return { ...rest, password: null, pin_code: null }
+  const { password, pin_code, ...rest } = data;
+  return { ...rest, password: null, pin_code: null, has_pin: !!pin_code };
 }
 
 /**
@@ -150,18 +145,14 @@ export async function getEmployeByEmail(
   client: DbClient,
   email: string
 ): Promise<Utilisateur | null> {
-  const { data, error } = await client
-    .from('utilisateurs')
-    .select('*')
-    .eq('email', email)
-    .single()
+  const { data, error } = await client.from("utilisateurs").select("*").eq("email", email).single();
 
   if (error) {
-    if (error.code === 'PGRST116') return null
-    throw new Error(getErrorMessage(error))
+    if (error.code === "PGRST116") return null;
+    throw new Error(getErrorMessage(error));
   }
 
-  return data
+  return data;
 }
 
 /**
@@ -172,18 +163,18 @@ export async function getEmployeByEmailForAuth(
   email: string
 ): Promise<Utilisateur | null> {
   const { data, error } = await client
-    .from('utilisateurs')
-    .select('*')
-    .eq('email', email)
-    .eq('actif', true)
-    .single()
+    .from("utilisateurs")
+    .select("*")
+    .eq("email", email)
+    .eq("actif", true)
+    .single();
 
   if (error) {
-    if (error.code === 'PGRST116') return null
-    throw new Error(getErrorMessage(error))
+    if (error.code === "PGRST116") return null;
+    throw new Error(getErrorMessage(error));
   }
 
-  return data
+  return data;
 }
 
 /**
@@ -195,19 +186,19 @@ export async function getEmployeByPin(
   pinCode: string
 ): Promise<Utilisateur | null> {
   const { data, error } = await client
-    .from('utilisateurs')
-    .select('*')
-    .eq('etablissement_id', etablissementId)
-    .eq('pin_code', pinCode)
-    .eq('actif', true)
-    .single()
+    .from("utilisateurs")
+    .select("*")
+    .eq("etablissement_id", etablissementId)
+    .eq("pin_code", pinCode)
+    .eq("actif", true)
+    .single();
 
   if (error) {
-    if (error.code === 'PGRST116') return null
-    throw new Error(getErrorMessage(error))
+    if (error.code === "PGRST116") return null;
+    throw new Error(getErrorMessage(error));
   }
 
-  return data
+  return data;
 }
 
 /**
@@ -216,19 +207,15 @@ export async function getEmployeByPin(
 export async function createEmploye(
   client: DbClient,
   data: UtilisateurInsert
-): Promise<Utilisateur> {
-  const { data: employe, error } = await client
-    .from('utilisateurs')
-    .insert(data)
-    .select()
-    .single()
+): Promise<UtilisateurSafe> {
+  const { data: employe, error } = await client.from("utilisateurs").insert(data).select().single();
 
   if (error) {
-    throw new Error(getErrorMessage(error))
+    throw new Error(getErrorMessage(error));
   }
 
-  const { password, pin_code, ...rest } = employe
-  return { ...rest, password: null, pin_code: null }
+  const { password, pin_code, ...rest } = employe;
+  return { ...rest, password: null, pin_code: null, has_pin: !!pin_code };
 }
 
 /**
@@ -238,20 +225,20 @@ export async function updateEmploye(
   client: DbClient,
   id: string,
   data: UtilisateurUpdate
-): Promise<Utilisateur> {
+): Promise<UtilisateurSafe> {
   const { data: employe, error } = await client
-    .from('utilisateurs')
+    .from("utilisateurs")
     .update({ ...data, updated_at: new Date().toISOString() })
-    .eq('id', id)
+    .eq("id", id)
     .select()
-    .single()
+    .single();
 
   if (error) {
-    throw new Error(getErrorMessage(error))
+    throw new Error(getErrorMessage(error));
   }
 
-  const { password, pin_code, ...rest } = employe
-  return { ...rest, password: null, pin_code: null }
+  const { password, pin_code, ...rest } = employe;
+  return { ...rest, password: null, pin_code: null, has_pin: !!pin_code };
 }
 
 /**
@@ -263,12 +250,12 @@ export async function updateEmployePassword(
   hashedPassword: string
 ): Promise<void> {
   const { error } = await client
-    .from('utilisateurs')
+    .from("utilisateurs")
     .update({ password: hashedPassword, updated_at: new Date().toISOString() })
-    .eq('id', id)
+    .eq("id", id);
 
   if (error) {
-    throw new Error(getErrorMessage(error))
+    throw new Error(getErrorMessage(error));
   }
 }
 
@@ -281,29 +268,26 @@ export async function updateEmployePin(
   hashedPin: string
 ): Promise<void> {
   const { error } = await client
-    .from('utilisateurs')
+    .from("utilisateurs")
     .update({ pin_code: hashedPin, updated_at: new Date().toISOString() })
-    .eq('id', id)
+    .eq("id", id);
 
   if (error) {
-    throw new Error(getErrorMessage(error))
+    throw new Error(getErrorMessage(error));
   }
 }
 
 /**
  * Supprime un employé (soft delete)
  */
-export async function deleteEmploye(
-  client: DbClient,
-  id: string
-): Promise<void> {
+export async function deleteEmploye(client: DbClient, id: string): Promise<void> {
   const { error } = await client
-    .from('utilisateurs')
+    .from("utilisateurs")
     .update({ actif: false, updated_at: new Date().toISOString() })
-    .eq('id', id)
+    .eq("id", id);
 
   if (error) {
-    throw new Error(getErrorMessage(error))
+    throw new Error(getErrorMessage(error));
   }
 }
 
@@ -316,17 +300,17 @@ export async function emailExists(
   excludeId?: string
 ): Promise<boolean> {
   let query = client
-    .from('utilisateurs')
-    .select('id', { count: 'exact', head: true })
-    .eq('email', email)
+    .from("utilisateurs")
+    .select("id", { count: "exact", head: true })
+    .eq("email", email);
 
   if (excludeId) {
-    query = query.neq('id', excludeId)
+    query = query.neq("id", excludeId);
   }
 
-  const { count } = await query
+  const { count } = await query;
 
-  return (count ?? 0) > 0
+  return (count ?? 0) > 0;
 }
 
 /**
@@ -339,18 +323,18 @@ export async function pinExists(
   excludeId?: string
 ): Promise<boolean> {
   let query = client
-    .from('utilisateurs')
-    .select('id', { count: 'exact', head: true })
-    .eq('etablissement_id', etablissementId)
-    .eq('pin_code', pinCode)
+    .from("utilisateurs")
+    .select("id", { count: "exact", head: true })
+    .eq("etablissement_id", etablissementId)
+    .eq("pin_code", pinCode);
 
   if (excludeId) {
-    query = query.neq('id', excludeId)
+    query = query.neq("id", excludeId);
   }
 
-  const { count } = await query
+  const { count } = await query;
 
-  return (count ?? 0) > 0
+  return (count ?? 0) > 0;
 }
 
 /**
@@ -362,23 +346,23 @@ export async function countEmployes(
   options?: { actif?: boolean; role?: Role }
 ): Promise<number> {
   let query = client
-    .from('utilisateurs')
-    .select('*', { count: 'exact', head: true })
-    .eq('etablissement_id', etablissementId)
+    .from("utilisateurs")
+    .select("*", { count: "exact", head: true })
+    .eq("etablissement_id", etablissementId);
 
   if (options?.actif !== undefined) {
-    query = query.eq('actif', options.actif)
+    query = query.eq("actif", options.actif);
   }
 
   if (options?.role) {
-    query = query.eq('role', options.role)
+    query = query.eq("role", options.role);
   }
 
-  const { count, error } = await query
+  const { count, error } = await query;
 
   if (error) {
-    throw new Error(getErrorMessage(error))
+    throw new Error(getErrorMessage(error));
   }
 
-  return count ?? 0
+  return count ?? 0;
 }

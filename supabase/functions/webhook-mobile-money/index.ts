@@ -59,11 +59,11 @@ async function timingSafeCompare(a: string, b: string): Promise<boolean> {
   if (
     typeof crypto !== "undefined" &&
     crypto.subtle &&
-    typeof (crypto.subtle as Record<string, unknown>).timingSafeEqual ===
-      "function"
+    typeof (crypto.subtle as Record<string, unknown>).timingSafeEqual === "function"
   ) {
-    return (crypto.subtle as unknown as { timingSafeEqual(a: ArrayBuffer, b: ArrayBuffer): boolean })
-      .timingSafeEqual(aBuf.buffer, bBuf.buffer);
+    return (
+      crypto.subtle as unknown as { timingSafeEqual(a: ArrayBuffer, b: ArrayBuffer): boolean }
+    ).timingSafeEqual(aBuf.buffer, bBuf.buffer);
   }
 
   // Manual constant-time comparison fallback
@@ -83,10 +83,7 @@ function constantTimeEqual(a: Uint8Array, b: Uint8Array): boolean {
 // HMAC SHA-256 via Web Crypto (no third-party import needed)
 // ---------------------------------------------------------------------------
 
-async function computeHmacSha256Hex(
-  secret: string,
-  message: string
-): Promise<string> {
+async function computeHmacSha256Hex(secret: string, message: string): Promise<string> {
   const encoder = new TextEncoder();
   const key = await crypto.subtle.importKey(
     "raw",
@@ -95,11 +92,7 @@ async function computeHmacSha256Hex(
     false,
     ["sign"]
   );
-  const signature = await crypto.subtle.sign(
-    "HMAC",
-    key,
-    encoder.encode(message)
-  );
+  const signature = await crypto.subtle.sign("HMAC", key, encoder.encode(message));
   return Array.from(new Uint8Array(signature))
     .map((b) => b.toString(16).padStart(2, "0"))
     .join("");
@@ -212,9 +205,7 @@ async function verifyWebhookSignature(
   }
 
   const signature =
-    provider === "airtel"
-      ? headers.get("X-Airtel-Signature")
-      : headers.get("X-Moov-Signature");
+    provider === "airtel" ? headers.get("X-Airtel-Signature") : headers.get("X-Moov-Signature");
 
   if (!signature) return false;
 
@@ -238,11 +229,7 @@ async function handleAirtelCallback(payload: AirtelMoneyPayload): Promise<{
 
   // Mapper le statut
   const nouveauStatut =
-    status === "SUCCESS"
-      ? "CONFIRME"
-      : status === "FAILED"
-        ? "ECHOUE"
-        : "EN_ATTENTE";
+    status === "SUCCESS" ? "CONFIRME" : status === "FAILED" ? "ECHOUE" : "EN_ATTENTE";
 
   // Mettre a jour le paiement en base
   const { data, error } = await supabase
@@ -286,11 +273,7 @@ async function handleMoovCallback(payload: MoovMoneyPayload): Promise<{
 
   // Mapper le statut
   const nouveauStatut =
-    status === "SUCCESSFUL"
-      ? "CONFIRME"
-      : status === "FAILED"
-        ? "ECHOUE"
-        : "EN_ATTENTE";
+    status === "SUCCESSFUL" ? "CONFIRME" : status === "FAILED" ? "ECHOUE" : "EN_ATTENTE";
 
   // Mettre a jour le paiement en base
   const { data, error } = await supabase
@@ -324,10 +307,7 @@ async function handleMoovCallback(payload: MoovMoneyPayload): Promise<{
 /**
  * Broadcast l'evenement de confirmation de paiement
  */
-async function broadcastPaiementConfirme(
-  paiementId: string,
-  reference?: string
-): Promise<void> {
+async function broadcastPaiementConfirme(paiementId: string, reference?: string): Promise<void> {
   try {
     // Recuperer les infos du paiement pour le broadcast
     const { data: paiement } = await supabase

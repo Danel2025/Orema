@@ -1,7 +1,7 @@
 "use client";
 
 /**
- * PrepaidAccount - Composant pour afficher et gerer le compte prepaye
+ * PrepaidAccount - Composant pour afficher et gérer le compte prépayé
  */
 
 import { useState } from "react";
@@ -17,14 +17,7 @@ import {
   Separator,
 } from "@radix-ui/themes";
 import { ScrollArea } from "@/components/ui";
-import {
-  Wallet,
-  Plus,
-  ArrowDownLeft,
-  ArrowUpRight,
-  Receipt,
-  Loader2,
-} from "lucide-react";
+import { Wallet, Plus, ArrowDownLeft, ArrowUpRight, Receipt, Loader2 } from "lucide-react";
 import { formatCurrency, formatDate } from "@/lib/utils";
 import { rechargerComptePrepaye } from "@/actions/clients";
 import { toast } from "sonner";
@@ -80,7 +73,7 @@ export function PrepaidAccount({
 
       if (result.success) {
         toast.success(
-          `Compte recharge de ${formatCurrency(montantNum)}. Nouveau solde: ${formatCurrency(result.data?.nouveauSolde || 0)}`
+          `Compte rechargé de ${formatCurrency(montantNum)}. Nouveau solde: ${formatCurrency(result.data?.nouveauSolde || 0)}`
         );
         setMontant("");
         setReference("");
@@ -105,14 +98,10 @@ export function PrepaidAccount({
           <Flex align="center" gap="2">
             <Wallet size={20} style={{ color: "var(--accent-9)" }} />
             <Text size="3" weight="medium">
-              Compte prepaye
+              Compte prépayé
             </Text>
           </Flex>
-          <Badge
-            size="2"
-            color={soldePrepaye > 0 ? "green" : "gray"}
-            variant="soft"
-          >
+          <Badge size="2" color={soldePrepaye > 0 ? "green" : "gray"} variant="soft">
             {formatCurrency(soldePrepaye)}
           </Badge>
         </Flex>
@@ -129,7 +118,7 @@ export function PrepaidAccount({
             <Separator size="4" />
             <Flex direction="column" gap="2">
               <Text size="2" weight="medium" color="gray">
-                Dernieres transactions
+                Dernières transactions
               </Text>
               <ScrollArea style={{ maxHeight: 200 }}>
                 <Flex direction="column" gap="2">
@@ -150,12 +139,12 @@ export function PrepaidAccount({
                           <ArrowUpRight size={16} className="text-red-500" />
                         )}
                         <Flex direction="column">
-                          <Text size="2">
-                            {tx.type === "RECHARGE" ? "Rechargement" : "Debit"}
-                          </Text>
-                          {tx.numeroTicket ? <Text size="1" color="gray">
+                          <Text size="2">{tx.type === "RECHARGE" ? "Rechargement" : "Débit"}</Text>
+                          {tx.numeroTicket ? (
+                            <Text size="1" color="gray">
                               Ticket #{tx.numeroTicket}
-                            </Text> : null}
+                            </Text>
+                          ) : null}
                         </Flex>
                       </Flex>
                       <Flex direction="column" align="end">
@@ -180,13 +169,7 @@ export function PrepaidAccount({
         )}
 
         {transactions.length === 0 && (
-          <Flex
-            direction="column"
-            align="center"
-            gap="2"
-            py="4"
-            style={{ color: "var(--gray-9)" }}
-          >
+          <Flex direction="column" align="center" gap="2" py="4" style={{ color: "var(--gray-9)" }}>
             <Receipt size={24} />
             <Text size="2" color="gray">
               Aucune transaction
@@ -200,7 +183,7 @@ export function PrepaidAccount({
         <Dialog.Content maxWidth="400px">
           <Dialog.Title>Recharger le compte</Dialog.Title>
           <Dialog.Description size="2" color="gray" mb="4">
-            Recharger le compte prepaye de {clientNom}
+            Recharger le compte prépayé de {clientNom}
           </Dialog.Description>
 
           <Flex direction="column" gap="4">
@@ -235,7 +218,7 @@ export function PrepaidAccount({
               </Flex>
             </Flex>
 
-            {/* Montant personnalise */}
+            {/* Montant personnalisé */}
             <Flex direction="column" gap="1">
               <Text as="label" size="2" weight="medium">
                 Montant (FCFA) *
@@ -250,15 +233,15 @@ export function PrepaidAccount({
               />
             </Flex>
 
-            {/* Reference */}
+            {/* Référence */}
             <Flex direction="column" gap="1">
               <Text as="label" size="2" weight="medium">
-                Reference (optionnel)
+                Référence (optionnel)
               </Text>
               <TextField.Root
                 value={reference}
                 onChange={(e) => setReference(e.target.value)}
-                placeholder="Ex: Numero de recu, transaction..."
+                placeholder="Ex: Numéro de reçu, transaction..."
               />
             </Flex>
 
@@ -270,20 +253,22 @@ export function PrepaidAccount({
               <TextArea
                 value={notes}
                 onChange={(e) => setNotes(e.target.value)}
-                placeholder="Notes supplementaires..."
+                placeholder="Notes supplémentaires..."
                 rows={2}
               />
             </Flex>
 
-            {/* Apercu */}
-            {montant && parseInt(montant) > 0 ? <Card variant="surface" style={{ backgroundColor: "var(--green-a2)" }}>
+            {/* Aperçu */}
+            {montant && parseInt(montant) > 0 ? (
+              <Card variant="surface" style={{ backgroundColor: "var(--green-a2)" }}>
                 <Flex justify="between" align="center">
-                  <Text size="2">Nouveau solde apres rechargement</Text>
+                  <Text size="2">Nouveau solde après rechargement</Text>
                   <Text size="3" weight="bold" color="green">
                     {formatCurrency(soldePrepaye + parseInt(montant))}
                   </Text>
                 </Flex>
-              </Card> : null}
+              </Card>
+            ) : null}
           </Flex>
 
           {/* Actions */}

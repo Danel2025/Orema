@@ -7,20 +7,8 @@
  */
 
 import { useState, useEffect, useCallback } from "react";
-import {
-  Box,
-  Flex,
-  Text,
-  Button,
-  Card,
-  Callout,
-} from "@radix-ui/themes";
-import {
-  DoorClosed,
-  DoorOpen,
-  AlertTriangle,
-  RefreshCw,
-} from "lucide-react";
+import { Box, Flex, Text, Button, Card, Callout } from "@radix-ui/themes";
+import { Door, Warning, ArrowsClockwise } from "@phosphor-icons/react";
 import { getActiveSession } from "@/actions/sessions";
 import { OpenSessionDialog } from "./open-session-dialog";
 import type { SessionActive } from "@/actions/sessions";
@@ -78,17 +66,30 @@ export function SessionRequired({ children, onSessionChange }: SessionRequiredPr
             animation: "pulse 1.5s infinite",
           }}
         >
-          <RefreshCw size={24} color="var(--gray-9)" style={{ animation: "spin 1s linear infinite" }} />
+          <ArrowsClockwise
+            size={24}
+            color="var(--gray-9)"
+            style={{ animation: "spin 1s linear infinite" }}
+          />
         </Box>
         <Text color="gray">Verification de la session...</Text>
         <style jsx global>{`
           @keyframes spin {
-            from { transform: rotate(0deg); }
-            to { transform: rotate(360deg); }
+            from {
+              transform: rotate(0deg);
+            }
+            to {
+              transform: rotate(360deg);
+            }
           }
           @keyframes pulse {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.5; }
+            0%,
+            100% {
+              opacity: 1;
+            }
+            50% {
+              opacity: 0.5;
+            }
           }
         `}</style>
       </Flex>
@@ -117,7 +118,7 @@ export function SessionRequired({ children, onSessionChange }: SessionRequiredPr
               justifyContent: "center",
             }}
           >
-            <DoorClosed size={40} color="var(--red-11)" />
+            <Door size={40} color="var(--red-11)" weight="fill" />
           </Box>
 
           <Flex direction="column" align="center" gap="2">
@@ -125,7 +126,8 @@ export function SessionRequired({ children, onSessionChange }: SessionRequiredPr
               Caisse fermee
             </Text>
             <Text size="3" color="gray" align="center" style={{ maxWidth: 400 }}>
-              Aucune session de caisse n'est ouverte. Vous devez ouvrir la caisse pour effectuer des ventes.
+              Aucune session de caisse n'est ouverte. Vous devez ouvrir la caisse pour effectuer des
+              ventes.
             </Text>
           </Flex>
 
@@ -138,7 +140,7 @@ export function SessionRequired({ children, onSessionChange }: SessionRequiredPr
           >
             <Callout.Root color="amber" size="1">
               <Callout.Icon>
-                <AlertTriangle size={16} />
+                <Warning size={16} />
               </Callout.Icon>
               <Callout.Text>
                 Toutes les ventes seront enregistrees dans cette session jusqu'a sa cloture.
@@ -148,11 +150,11 @@ export function SessionRequired({ children, onSessionChange }: SessionRequiredPr
 
           <Flex gap="3" mt="2">
             <Button variant="soft" color="gray" onClick={loadSession}>
-              <RefreshCw size={16} />
+              <ArrowsClockwise size={16} />
               Actualiser
             </Button>
             <Button color="green" size="3" onClick={() => setShowOpenDialog(true)}>
-              <DoorOpen size={18} />
+              <Door size={18} />
               Ouvrir la caisse
             </Button>
           </Flex>

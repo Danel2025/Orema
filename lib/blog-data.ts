@@ -1,5 +1,4 @@
-import type {
-  LucideIcon} from "lucide-react";
+import type { LucideIcon } from "lucide-react";
 import {
   Lightbulb,
   Zap,
@@ -10,7 +9,7 @@ import {
   Smartphone,
   CreditCard,
   Users,
-  Globe
+  Globe,
 } from "lucide-react";
 
 export interface BlogPost {
@@ -753,8 +752,7 @@ export function getRelatedPosts(currentSlug: string, limit: number = 3): BlogPos
     .filter(
       (post) =>
         post.slug !== currentSlug &&
-        (post.category === current.category ||
-          post.tags.some((tag) => current.tags.includes(tag)))
+        (post.category === current.category || post.tags.some((tag) => current.tags.includes(tag)))
     )
     .slice(0, limit);
 }

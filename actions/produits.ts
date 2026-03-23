@@ -6,10 +6,34 @@
  */
 
 import { revalidatePath } from "next/cache";
-import { createAuthenticatedClient, db } from "@/lib/db";
+import { createAuthenticatedClient, createServiceClient, db } from "@/lib/db";
 import type { TauxTva } from "@/lib/db";
 import { getCurrentUser } from "@/lib/auth";
-import { produitSchema, produitCsvSchema, type ProduitFormData, type ProduitCsvData } from "@/schemas/produit.schema";
+import {
+  produitSchema,
+  produitCsvSchema,
+  type ProduitFormData,
+  type ProduitCsvData,
+} from "@/schemas/produit.schema";
+import {
+  getEnforcementContext,
+  validerModificationPrix,
+  validerMarge,
+} from "@/lib/tarification/enforcement";
+import { createAuditLog } from "@/actions/audit";
+
+// Rôles autorisés à modifier les produits (CRUD)
+const ROLES_GESTION_PRODUITS = ["SUPER_ADMIN", "ADMIN", "MANAGER"] as const;
+
+// Taille maximale du contenu CSV (2 Mo)
+const MAX_CSV_SIZE = 2 * 1024 * 1024;
+
+/**
+ * Vérifie que l'utilisateur a le rôle nécessaire pour gérer les produits
+ */
+function canManageProduits(role: string): boolean {
+  return (ROLES_GESTION_PRODUITS as readonly string[]).includes(role);
+}
 
 // Mapping des taux TVA vers l'enum
 function getTauxTvaEnum(taux: number): TauxTva {
@@ -49,13 +73,19 @@ export interface PaginatedResult<T> {
 /**
  * Récupère les produits avec pagination
  */
-export async function getProduitsPaginated(
-  options: PaginationOptions = {}
-) {
+export async function getProduitsPaginated(options: PaginationOptions = {}) {
   const user = await getCurrentUser();
-  if (!user || !user.etablissementId) return { data: [], pagination: { page: 1, limit: 20, total: 0, totalPages: 0, hasNext: false, hasPrev: false } };
+  if (!user || !user.etablissementId)
+    return {
+      data: [],
+      pagination: { page: 1, limit: 20, total: 0, totalPages: 0, hasNext: false, hasPrev: false },
+    };
   const etablissementId = user.etablissementId;
-  const supabase = await createAuthenticatedClient({ userId: user.userId, etablissementId, role: user.role });
+  const supabase = await createAuthenticatedClient({
+    userId: user.userId,
+    etablissementId,
+    role: user.role,
+  });
 
   const {
     page = 1,
@@ -68,10 +98,14 @@ export async function getProduitsPaginated(
   } = options;
 
   // Mapper sortBy vers le nom de colonne Supabase
-  const sortColumn = sortBy === "prixVente" ? "prix_vente"
-    : sortBy === "stockActuel" ? "stock_actuel"
-    : sortBy === "createdAt" ? "created_at"
-    : "nom";
+  const sortColumn =
+    sortBy === "prixVente"
+      ? "prix_vente"
+      : sortBy === "stockActuel"
+        ? "stock_actuel"
+        : sortBy === "createdAt"
+          ? "created_at"
+          : "nom";
 
   const result = await db.getProduitsPaginated(supabase, etablissementId, {
     page,
@@ -79,7 +113,7 @@ export async function getProduitsPaginated(
     actif: includeInactive ? undefined : true,
     categorieId,
     search,
-    sortBy: sortColumn as 'nom' | 'prix_vente' | 'created_at' | 'stock_actuel',
+    sortBy: sortColumn as "nom" | "prix_vente" | "created_at" | "stock_actuel",
     sortOrder,
   });
 
@@ -134,7 +168,11 @@ export async function getProduits(options?: {
   const user = await getCurrentUser();
   if (!user || !user.etablissementId) return [];
   const etablissementId = user.etablissementId;
-  const supabase = await createAuthenticatedClient({ userId: user.userId, etablissementId, role: user.role });
+  const supabase = await createAuthenticatedClient({
+    userId: user.userId,
+    etablissementId,
+    role: user.role,
+  });
 
   const produits = await db.getProduits(supabase, etablissementId, {
     actif: options?.includeInactive ? undefined : true,
@@ -174,7 +212,11 @@ export async function getProduits(options?: {
 export async function getProduitById(id: string) {
   const user = await getCurrentUser();
   if (!user || !user.etablissementId) return null;
-  const supabase = await createAuthenticatedClient({ userId: user.userId, etablissementId: user.etablissementId, role: user.role });
+  const supabase = await createAuthenticatedClient({
+    userId: user.userId,
+    etablissementId: user.etablissementId,
+    role: user.role,
+  });
 
   const produit = await db.getProduitById(supabase, id);
 
@@ -213,9 +255,16 @@ export async function getProduitById(id: string) {
 export async function createProduit(data: ProduitFormData) {
   try {
     const user = await getCurrentUser();
-    if (!user || !user.etablissementId) return { success: false, error: "Vous devez être connecté" };
+    if (!user || !user.etablissementId)
+      return { success: false, error: "Vous devez être connecté" };
+    if (!canManageProduits(user.role))
+      return { success: false, error: "Permissions insuffisantes" };
     const etablissementId = user.etablissementId;
-    const supabase = await createAuthenticatedClient({ userId: user.userId, etablissementId, role: user.role });
+    const supabase = await createAuthenticatedClient({
+      userId: user.userId,
+      etablissementId,
+      role: user.role,
+    });
 
     // Validation
     const validationResult = produitSchema.safeParse(data);
@@ -228,12 +277,12 @@ export async function createProduit(data: ProduitFormData) {
     }
     const validatedData = validationResult.data;
 
-    // Vérifier l'unicité du nom dans la catégorie
-    const existingProduits = await db.getProduits(supabase, etablissementId, {
-      categorieId: validatedData.categorieId,
-    });
-    const existing = existingProduits.find(
-      (p) => p.nom.toLowerCase() === validatedData.nom.toLowerCase()
+    // Vérifier l'unicité du nom dans la catégorie (requête directe, pas de chargement complet)
+    const existing = await db.findProduitByNom(
+      supabase,
+      etablissementId,
+      validatedData.nom,
+      validatedData.categorieId
     );
 
     if (existing) {
@@ -301,9 +350,16 @@ export async function createProduit(data: ProduitFormData) {
 export async function updateProduit(id: string, data: ProduitFormData) {
   try {
     const user = await getCurrentUser();
-    if (!user || !user.etablissementId) return { success: false, error: "Vous devez être connecté" };
+    if (!user || !user.etablissementId)
+      return { success: false, error: "Vous devez être connecté" };
+    if (!canManageProduits(user.role))
+      return { success: false, error: "Permissions insuffisantes" };
     const etablissementId = user.etablissementId;
-    const supabase = await createAuthenticatedClient({ userId: user.userId, etablissementId, role: user.role });
+    const supabase = await createAuthenticatedClient({
+      userId: user.userId,
+      etablissementId,
+      role: user.role,
+    });
 
     // Validation
     const validationResult = produitSchema.safeParse(data);
@@ -326,12 +382,13 @@ export async function updateProduit(id: string, data: ProduitFormData) {
       };
     }
 
-    // Vérifier l'unicité du nom (sauf pour le produit actuel)
-    const existingProduits = await db.getProduits(supabase, etablissementId, {
-      categorieId: validatedData.categorieId,
-    });
-    const duplicate = existingProduits.find(
-      (p) => p.id !== id && p.nom.toLowerCase() === validatedData.nom.toLowerCase()
+    // Vérifier l'unicité du nom (sauf pour le produit actuel, requête directe)
+    const duplicate = await db.findProduitByNom(
+      supabase,
+      etablissementId,
+      validatedData.nom,
+      validatedData.categorieId,
+      id
     );
 
     if (duplicate) {
@@ -340,6 +397,37 @@ export async function updateProduit(id: string, data: ProduitFormData) {
         error: "Un produit avec ce nom existe déjà dans cette catégorie",
       };
     }
+
+    // --- Enforcement tarification : vérifier la modification de prix ---
+    const prixChange = existing.prix_vente !== validatedData.prixVente;
+
+    if (prixChange) {
+      const enforcementCtx = await getEnforcementContext(
+        supabase,
+        etablissementId,
+        user.userId,
+        user.role
+      );
+
+      // Vérifier le droit de modifier les prix
+      const resultPrix = validerModificationPrix(enforcementCtx);
+      if (!resultPrix.valide) {
+        return { success: false, error: resultPrix.raison };
+      }
+
+      // Vérifier la marge minimum si protection active
+      if (enforcementCtx.protectionMargeActive && validatedData.prixAchat) {
+        const resultMarge = validerMarge(
+          validatedData.prixVente,
+          validatedData.prixAchat,
+          enforcementCtx.margeMinimumGlobale
+        );
+        if (!resultMarge.valide) {
+          return { success: false, error: resultMarge.raison };
+        }
+      }
+    }
+    // --- Fin enforcement tarification ---
 
     // Mettre à jour
     const produit = await db.updateProduit(supabase, id, {
@@ -363,6 +451,31 @@ export async function updateProduit(id: string, data: ProduitFormData) {
       actif: validatedData.actif,
     });
 
+    // --- Historique des prix : enregistrer le changement ---
+    if (prixChange) {
+      const serviceClient = createServiceClient();
+      await serviceClient.from("historique_prix").insert({
+        produit_id: id,
+        ancien_prix: existing.prix_vente,
+        nouveau_prix: validatedData.prixVente,
+        raison: null,
+        modifie_par: user.userId,
+        etablissement_id: etablissementId,
+      });
+
+      await createAuditLog({
+        action: "UPDATE",
+        entite: "produits",
+        entiteId: id,
+        description: `Prix modifié: ${existing.prix_vente} → ${validatedData.prixVente} FCFA`,
+        ancienneValeur: { prixVente: existing.prix_vente },
+        nouvelleValeur: { prixVente: validatedData.prixVente },
+        utilisateurId: user.userId,
+        etablissementId,
+      });
+    }
+    // --- Fin historique des prix ---
+
     revalidatePath("/produits");
 
     return {
@@ -383,13 +496,20 @@ export async function updateProduit(id: string, data: ProduitFormData) {
 }
 
 /**
- * Supprime un produit
+ * Désactive un produit (soft delete - le produit est désactivé, pas supprimé définitivement)
  */
 export async function deleteProduit(id: string) {
   try {
     const user = await getCurrentUser();
-    if (!user || !user.etablissementId) return { success: false, error: "Vous devez être connecté" };
-    const supabase = await createAuthenticatedClient({ userId: user.userId, etablissementId: user.etablissementId, role: user.role });
+    if (!user || !user.etablissementId)
+      return { success: false, error: "Vous devez être connecté" };
+    if (!canManageProduits(user.role))
+      return { success: false, error: "Permissions insuffisantes" };
+    const supabase = await createAuthenticatedClient({
+      userId: user.userId,
+      etablissementId: user.etablissementId,
+      role: user.role,
+    });
 
     // Vérifier que le produit existe (RLS filtre par établissement)
     const produit = await db.getProduitById(supabase, id);
@@ -401,7 +521,7 @@ export async function deleteProduit(id: string) {
       };
     }
 
-    // Soft delete
+    // Soft delete (désactive le produit)
     await db.deleteProduit(supabase, id);
 
     revalidatePath("/produits");
@@ -410,10 +530,10 @@ export async function deleteProduit(id: string) {
       success: true,
     };
   } catch (error) {
-    console.error("Erreur lors de la suppression du produit:", error);
+    console.error("Erreur lors de la désactivation du produit:", error);
     return {
       success: false,
-      error: "Erreur lors de la suppression du produit",
+      error: "Erreur lors de la désactivation du produit",
     };
   }
 }
@@ -424,8 +544,15 @@ export async function deleteProduit(id: string) {
 export async function toggleProduitActif(id: string) {
   try {
     const user = await getCurrentUser();
-    if (!user || !user.etablissementId) return { success: false, error: "Vous devez être connecté" };
-    const supabase = await createAuthenticatedClient({ userId: user.userId, etablissementId: user.etablissementId, role: user.role });
+    if (!user || !user.etablissementId)
+      return { success: false, error: "Vous devez être connecté" };
+    if (!canManageProduits(user.role))
+      return { success: false, error: "Permissions insuffisantes" };
+    const supabase = await createAuthenticatedClient({
+      userId: user.userId,
+      etablissementId: user.etablissementId,
+      role: user.role,
+    });
 
     const produit = await db.getProduitById(supabase, id);
 
@@ -469,8 +596,15 @@ export async function updateStock(
 ) {
   try {
     const user = await getCurrentUser();
-    if (!user || !user.etablissementId) return { success: false, error: "Vous devez être connecté" };
-    const supabase = await createAuthenticatedClient({ userId: user.userId, etablissementId: user.etablissementId, role: user.role });
+    if (!user || !user.etablissementId)
+      return { success: false, error: "Vous devez être connecté" };
+    if (!canManageProduits(user.role))
+      return { success: false, error: "Permissions insuffisantes" };
+    const supabase = await createAuthenticatedClient({
+      userId: user.userId,
+      etablissementId: user.etablissementId,
+      role: user.role,
+    });
 
     const produit = await db.getProduitById(supabase, id);
 
@@ -505,7 +639,7 @@ export async function updateStock(
     }
 
     // Mettre à jour le produit
-    await db.updateProduitStock(supabase, id, stockApres, 'set');
+    await db.updateProduitStock(supabase, id, stockApres, "set");
 
     // Créer le mouvement de stock
     await db.createMouvementStock(supabase, {
@@ -540,7 +674,11 @@ export async function exportProduitsCSV() {
   const user = await getCurrentUser();
   if (!user || !user.etablissementId) return { success: false, error: "Vous devez être connecté" };
   const etablissementId = user.etablissementId;
-  const supabase = await createAuthenticatedClient({ userId: user.userId, etablissementId, role: user.role });
+  const supabase = await createAuthenticatedClient({
+    userId: user.userId,
+    etablissementId,
+    role: user.role,
+  });
 
   const produits = await db.getProduits(supabase, etablissementId);
   const categories = await db.getCategories(supabase, etablissementId);
@@ -592,10 +730,7 @@ export async function exportProduitsCSV() {
   });
 
   // Construire le CSV
-  const csvContent = [
-    headers.join(";"),
-    ...rows.map((row) => row.join(";")),
-  ].join("\n");
+  const csvContent = [headers.join(";"), ...rows.map((row) => row.join(";"))].join("\n");
 
   return {
     success: true,
@@ -621,7 +756,11 @@ export async function getCSVTemplate() {
   const user = await getCurrentUser();
   if (!user || !user.etablissementId) return { success: false, error: "Vous devez être connecté" };
   const etablissementId = user.etablissementId;
-  const supabase = await createAuthenticatedClient({ userId: user.userId, etablissementId, role: user.role });
+  const supabase = await createAuthenticatedClient({
+    userId: user.userId,
+    etablissementId,
+    role: user.role,
+  });
 
   // Récupérer les catégories pour référence
   const categories = await db.getCategories(supabase, etablissementId, { actif: true });
@@ -665,10 +804,7 @@ export async function getCSVTemplate() {
     "Oui",
   ];
 
-  const csvContent = [
-    headers.join(";"),
-    exampleRow.join(";"),
-  ].join("\n");
+  const csvContent = [headers.join(";"), exampleRow.join(";")].join("\n");
 
   // Ajouter un commentaire avec les catégories disponibles
   const categoriesComment = `# Categories disponibles: ${categories.map((c) => c.nom).join(", ")}`;
@@ -689,8 +825,23 @@ export async function getCSVTemplate() {
 export async function parseCSVImport(csvContent: string) {
   const user = await getCurrentUser();
   if (!user || !user.etablissementId) return { success: false, error: "Vous devez être connecté" };
+  if (!canManageProduits(user.role))
+    return { success: false, error: "Permissions insuffisantes" };
+
+  // Validation de la taille du contenu CSV
+  if (csvContent.length > MAX_CSV_SIZE) {
+    return {
+      success: false,
+      error: `Le fichier CSV est trop volumineux (max ${MAX_CSV_SIZE / 1024 / 1024} Mo)`,
+    };
+  }
+
   const etablissementId = user.etablissementId;
-  const supabase = await createAuthenticatedClient({ userId: user.userId, etablissementId, role: user.role });
+  const supabase = await createAuthenticatedClient({
+    userId: user.userId,
+    etablissementId,
+    role: user.role,
+  });
 
   // Récupérer les catégories existantes
   const categories = await db.getCategories(supabase, etablissementId);
@@ -711,8 +862,9 @@ export async function parseCSVImport(csvContent: string) {
 
   const headers = parseCSVLine(lines[0]);
   const requiredHeaders = ["nom", "prixVente", "categorie"];
+  const headerValues = headers.map((col) => col.toLowerCase());
   const missingHeaders = requiredHeaders.filter(
-    (h) => !headers.map((h) => h.toLowerCase()).includes(h.toLowerCase())
+    (required) => !headerValues.includes(required.toLowerCase())
   );
 
   if (missingHeaders.length > 0) {
@@ -811,13 +963,21 @@ function parseCSVLine(line: string): string[] {
 
 /**
  * Importe les produits validés depuis un CSV
+ * Optimisé : vérification d'existence en batch + insertion batch pour les nouveaux produits
  */
 export async function importProduitsCSV(produitsData: ProduitCsvData[]) {
   try {
     const user = await getCurrentUser();
-    if (!user || !user.etablissementId) return { success: false, error: "Vous devez être connecté" };
+    if (!user || !user.etablissementId)
+      return { success: false, error: "Vous devez être connecté" };
+    if (!canManageProduits(user.role))
+      return { success: false, error: "Permissions insuffisantes" };
     const etablissementId = user.etablissementId;
-    const supabase = await createAuthenticatedClient({ userId: user.userId, etablissementId, role: user.role });
+    const supabase = await createAuthenticatedClient({
+      userId: user.userId,
+      etablissementId,
+      role: user.role,
+    });
 
     // Récupérer les catégories
     const categories = await db.getCategories(supabase, etablissementId);
@@ -829,9 +989,10 @@ export async function importProduitsCSV(produitsData: ProduitCsvData[]) {
       errors: [] as { nom: string; error: string }[],
     };
 
+    // Vérifier les catégories et préparer les données valides
+    const validItems: { produitData: ProduitCsvData; categoryId: string }[] = [];
     for (const produitData of produitsData) {
       const categoryId = categoryMap.get(produitData.categorie.toLowerCase());
-
       if (!categoryId) {
         results.errors.push({
           nom: produitData.nom,
@@ -839,50 +1000,81 @@ export async function importProduitsCSV(produitsData: ProduitCsvData[]) {
         });
         continue;
       }
+      validItems.push({ produitData, categoryId });
+    }
 
+    if (validItems.length === 0) {
+      return { success: true, data: results };
+    }
+
+    // Vérifier l'existence en batch : une seule requête pour tous les noms
+    const allNoms = validItems.map((item) => item.produitData.nom);
+    const existingMap = await db.findProduitsByNoms(supabase, etablissementId, allNoms);
+
+    // Séparer les créations et les mises à jour
+    const toCreate: Parameters<typeof db.createProduitsBatch>[1] = [];
+    const toUpdate: { id: string; data: Parameters<typeof db.updateProduit>[2] }[] = [];
+
+    for (const { produitData, categoryId } of validItems) {
+      const data = {
+        nom: produitData.nom,
+        description: produitData.description || null,
+        code_barre: produitData.codeBarre || null,
+        prix_vente: produitData.prixVente,
+        prix_achat: produitData.prixAchat || null,
+        taux_tva: getTauxTvaEnum(produitData.tauxTva),
+        categorie_id: categoryId,
+        gerer_stock: produitData.gererStock,
+        stock_actuel: produitData.stockActuel || null,
+        stock_min: produitData.stockMin || null,
+        stock_max: produitData.stockMax || null,
+        unite: produitData.unite || null,
+        disponible_direct: produitData.disponibleDirect ?? true,
+        disponible_table: produitData.disponibleTable ?? true,
+        disponible_livraison: produitData.disponibleLivraison ?? true,
+        disponible_emporter: produitData.disponibleEmporter ?? true,
+        actif: true,
+      };
+
+      const existing = existingMap.get(produitData.nom.toLowerCase());
+      if (existing) {
+        toUpdate.push({ id: existing.id, data });
+      } else {
+        toCreate.push({ ...data, etablissement_id: etablissementId });
+      }
+    }
+
+    // Insertion batch pour les nouveaux produits
+    if (toCreate.length > 0) {
       try {
-        // Vérifier si le produit existe déjà (par nom dans la catégorie)
-        const existingProduits = await db.getProduits(supabase, etablissementId, {
-          categorieId: categoryId,
-        });
-        const existing = existingProduits.find(
-          (p) => p.nom.toLowerCase() === produitData.nom.toLowerCase()
-        );
-
-        const data = {
-          nom: produitData.nom,
-          description: produitData.description || null,
-          code_barre: produitData.codeBarre || null,
-          prix_vente: produitData.prixVente,
-          prix_achat: produitData.prixAchat || null,
-          taux_tva: getTauxTvaEnum(produitData.tauxTva),
-          categorie_id: categoryId,
-          gerer_stock: produitData.gererStock,
-          stock_actuel: produitData.stockActuel || null,
-          stock_min: produitData.stockMin || null,
-          stock_max: produitData.stockMax || null,
-          unite: produitData.unite || null,
-          disponible_direct: produitData.disponibleDirect ?? true,
-          disponible_table: produitData.disponibleTable ?? true,
-          disponible_livraison: produitData.disponibleLivraison ?? true,
-          disponible_emporter: produitData.disponibleEmporter ?? true,
-          actif: true,
-          etablissement_id: etablissementId,
-        };
-
-        if (existing) {
-          // Mettre à jour
-          await db.updateProduit(supabase, existing.id, data);
-          results.updated++;
-        } else {
-          // Créer
-          await db.createProduit(supabase, data);
-          results.created++;
-        }
+        await db.createProduitsBatch(supabase, toCreate);
+        results.created = toCreate.length;
       } catch (error) {
-        console.error(`Erreur pour le produit ${produitData.nom}:`, error);
+        console.error("Erreur lors de l'insertion batch:", error);
+        // Fallback : insertion un par un pour identifier les erreurs individuelles
+        for (const produitData of toCreate) {
+          try {
+            await db.createProduit(supabase, produitData);
+            results.created++;
+          } catch (err) {
+            results.errors.push({
+              nom: produitData.nom,
+              error: err instanceof Error ? err.message : "Erreur inconnue",
+            });
+          }
+        }
+      }
+    }
+
+    // Les mises à jour doivent rester séquentielles (chaque produit a un ID différent)
+    for (const { id, data } of toUpdate) {
+      try {
+        await db.updateProduit(supabase, id, data);
+        results.updated++;
+      } catch (error) {
+        console.error(`Erreur mise à jour produit ${id}:`, error);
         results.errors.push({
-          nom: produitData.nom,
+          nom: data.nom ?? id,
           error: error instanceof Error ? error.message : "Erreur inconnue",
         });
       }

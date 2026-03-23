@@ -6,12 +6,12 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/db";
 import { getEtablissementId } from "@/lib/etablissement";
-import { getSession } from "@/lib/auth/session";
+import { getCurrentUser } from "@/lib/auth";
 
 export async function GET() {
   try {
-    const session = await getSession();
-    if (!session) {
+    const user = await getCurrentUser();
+    if (!user) {
       return NextResponse.json({ error: "Non authentifie" }, { status: 401 });
     }
 

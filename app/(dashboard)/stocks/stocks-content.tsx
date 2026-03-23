@@ -9,13 +9,13 @@ import { useState, useEffect, useCallback } from "react";
 import { Box, Flex, Tabs, Button, Grid } from "@radix-ui/themes";
 import {
   Package,
-  AlertTriangle,
-  ClipboardList,
-  TrendingUp,
+  Warning,
+  ClipboardText,
+  TrendUp,
   Plus,
-  History,
-  RefreshCw,
-} from "lucide-react";
+  ClockCounterClockwise,
+  ArrowsClockwise,
+} from "@phosphor-icons/react";
 import {
   StockList,
   StockMovementModal,
@@ -150,7 +150,7 @@ export function StocksContent() {
             </Tabs.Trigger>
             <Tabs.Trigger value="alertes">
               <Flex align="center" gap="2">
-                <AlertTriangle size={16} />
+                <Warning size={16} />
                 Alertes
                 {alertes.length > 0 && (
                   <Box
@@ -174,7 +174,7 @@ export function StocksContent() {
             </Tabs.Trigger>
             <Tabs.Trigger value="valorisation">
               <Flex align="center" gap="2">
-                <TrendingUp size={16} />
+                <TrendUp size={16} />
                 Valorisation
               </Flex>
             </Tabs.Trigger>
@@ -182,15 +182,15 @@ export function StocksContent() {
 
           <Flex gap="2">
             <Button variant="soft" color="gray" onClick={loadData} disabled={isLoading}>
-              <RefreshCw size={16} className={isLoading ? "animate-spin" : ""} />
+              <ArrowsClockwise size={16} className={isLoading ? "animate-spin" : ""} />
               Actualiser
             </Button>
             <Button variant="soft" onClick={() => setHistoryModalOpen(true)}>
-              <History size={16} />
+              <ClockCounterClockwise size={16} />
               Historique
             </Button>
             <Button variant="soft" color="purple" onClick={() => setInventoryModalOpen(true)}>
-              <ClipboardList size={16} />
+              <ClipboardText size={16} />
               Inventaire
             </Button>
             <Button
@@ -223,10 +223,12 @@ export function StocksContent() {
 
         {/* Onglet Valorisation */}
         <Tabs.Content value="valorisation">
-          {valorisation ? <Grid columns={{ initial: "1", md: "2" }} gap="4">
+          {valorisation ? (
+            <Grid columns={{ initial: "1", md: "2" }} gap="4">
               <StockValuation valorisation={valorisation} />
               <StockAlerts alertes={alertes} onCreateMovement={handleCreateMovement} />
-            </Grid> : null}
+            </Grid>
+          ) : null}
         </Tabs.Content>
       </Tabs.Root>
 

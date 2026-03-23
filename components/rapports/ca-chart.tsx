@@ -19,7 +19,7 @@ import {
   Legend,
 } from "recharts";
 import { Box, Card, Flex, Text, SegmentedControl, Select, Skeleton } from "@radix-ui/themes";
-import { BarChart3, LineChart as LineChartIcon } from "lucide-react";
+import { ChartBar, ChartLine } from "@phosphor-icons/react";
 import { getCAByPeriod, type CAByPeriodItem } from "@/actions/rapports";
 import { formatCurrency } from "@/lib/utils";
 
@@ -141,20 +141,14 @@ export function CAChart({ initialData }: CAChartProps) {
 
   return (
     <Card size="3">
-      <Flex
-        justify="between"
-        align="center"
-        mb="4"
-        wrap="wrap"
-        gap="3"
-      >
+      <Flex justify="between" align="center" mb="4" wrap="wrap" gap="3">
         <Text size="4" weight="bold">
           Chiffre d'affaires
         </Text>
         <Flex gap="3" align="center">
           <Select.Root value={groupBy} onValueChange={(v) => setGroupBy(v as GroupBy)}>
             <Select.Trigger placeholder="Grouper par" />
-            <Select.Content>
+            <Select.Content position="popper">
               <Select.Item value="jour">Par jour</Select.Item>
               <Select.Item value="semaine">Par semaine</Select.Item>
               <Select.Item value="mois">Par mois</Select.Item>
@@ -166,10 +160,10 @@ export function CAChart({ initialData }: CAChartProps) {
             onValueChange={(v) => setChartType(v as ChartType)}
           >
             <SegmentedControl.Item value="bar">
-              <BarChart3 size={16} />
+              <ChartBar size={16} />
             </SegmentedControl.Item>
             <SegmentedControl.Item value="line">
-              <LineChartIcon size={16} />
+              <ChartLine size={16} />
             </SegmentedControl.Item>
           </SegmentedControl.Root>
         </Flex>
@@ -177,11 +171,7 @@ export function CAChart({ initialData }: CAChartProps) {
 
       <Box style={{ height: 350 }}>
         {data.length === 0 ? (
-          <Flex
-            align="center"
-            justify="center"
-            style={{ height: "100%" }}
-          >
+          <Flex align="center" justify="center" style={{ height: "100%" }}>
             <Text size="3" color="gray">
               Aucune donnee pour cette periode
             </Text>
@@ -189,15 +179,8 @@ export function CAChart({ initialData }: CAChartProps) {
         ) : (
           <ResponsiveContainer width="100%" height="100%">
             {chartType === "bar" ? (
-              <BarChart
-                data={data}
-                margin={{ top: 10, right: 10, left: 10, bottom: 10 }}
-              >
-                <CartesianGrid
-                  strokeDasharray="3 3"
-                  stroke="var(--gray-a5)"
-                  vertical={false}
-                />
+              <BarChart data={data} margin={{ top: 10, right: 10, left: 10, bottom: 10 }}>
+                <CartesianGrid strokeDasharray="3 3" stroke="var(--gray-a5)" vertical={false} />
                 <XAxis
                   dataKey="label"
                   tick={{ fill: "var(--gray-11)", fontSize: 12 }}
@@ -211,23 +194,11 @@ export function CAChart({ initialData }: CAChartProps) {
                   tickFormatter={formatYAxis}
                 />
                 <Tooltip content={<CustomTooltip />} />
-                <Bar
-                  dataKey="ca"
-                  fill="var(--accent-9)"
-                  radius={[4, 4, 0, 0]}
-                  maxBarSize={50}
-                />
+                <Bar dataKey="ca" fill="var(--accent-9)" radius={[4, 4, 0, 0]} maxBarSize={50} />
               </BarChart>
             ) : (
-              <LineChart
-                data={data}
-                margin={{ top: 10, right: 10, left: 10, bottom: 10 }}
-              >
-                <CartesianGrid
-                  strokeDasharray="3 3"
-                  stroke="var(--gray-a5)"
-                  vertical={false}
-                />
+              <LineChart data={data} margin={{ top: 10, right: 10, left: 10, bottom: 10 }}>
+                <CartesianGrid strokeDasharray="3 3" stroke="var(--gray-a5)" vertical={false} />
                 <XAxis
                   dataKey="label"
                   tick={{ fill: "var(--gray-11)", fontSize: 12 }}

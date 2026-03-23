@@ -121,8 +121,7 @@ export function useWebPrinter() {
 
         return port;
       } catch (error) {
-        const msg =
-          error instanceof Error ? error.message : "Erreur de detection USB";
+        const msg = error instanceof Error ? error.message : "Erreur de detection USB";
         setState((prev) => ({ ...prev, error: msg }));
         return null;
       }
@@ -140,10 +139,7 @@ export function useWebPrinter() {
       setState((prev) => ({ ...prev, error: null }));
       return await manager.requestBluetoothPrinter();
     } catch (error) {
-      const msg =
-        error instanceof Error
-          ? error.message
-          : "Erreur de detection Bluetooth";
+      const msg = error instanceof Error ? error.message : "Erreur de detection Bluetooth";
       setState((prev) => ({ ...prev, error: msg }));
       return null;
     }
@@ -159,11 +155,7 @@ export function useWebPrinter() {
       options?: WebSerialConnectOptions
     ): Promise<ManagedPrinter> => {
       const manager = managerRef.current;
-      const managed = await manager.pairSerialPrinter(
-        printerId,
-        portInfo,
-        options
-      );
+      const managed = await manager.pairSerialPrinter(printerId, portInfo, options);
       await refreshPrinters();
       return managed;
     },
@@ -174,15 +166,9 @@ export function useWebPrinter() {
    * Associe un peripherique Bluetooth a une imprimante de la base
    */
   const pairBTPrinter = useCallback(
-    async (
-      printerId: string,
-      deviceInfo: WebBluetoothDeviceInfo
-    ): Promise<ManagedPrinter> => {
+    async (printerId: string, deviceInfo: WebBluetoothDeviceInfo): Promise<ManagedPrinter> => {
       const manager = managerRef.current;
-      const managed = await manager.pairBluetoothPrinter(
-        printerId,
-        deviceInfo
-      );
+      const managed = await manager.pairBluetoothPrinter(printerId, deviceInfo);
       await refreshPrinters();
       return managed;
     },
@@ -264,10 +250,7 @@ export function useWebPrinter() {
    * Envoie des donnees ESC/POS a une imprimante
    */
   const send = useCallback(
-    async (
-      printerId: string,
-      data: string | Uint8Array
-    ): Promise<PrintResult> => {
+    async (printerId: string, data: string | Uint8Array): Promise<PrintResult> => {
       const manager = managerRef.current;
       return manager.sendToPrinter(printerId, data);
     },
@@ -277,13 +260,10 @@ export function useWebPrinter() {
   /**
    * Teste la connexion a une imprimante
    */
-  const test = useCallback(
-    async (printerId: string): Promise<PrintResult> => {
-      const manager = managerRef.current;
-      return manager.testConnection(printerId);
-    },
-    []
-  );
+  const test = useCallback(async (printerId: string): Promise<PrintResult> => {
+    const manager = managerRef.current;
+    return manager.testConnection(printerId);
+  }, []);
 
   return {
     // Etat

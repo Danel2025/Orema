@@ -103,42 +103,80 @@ const SALE_TYPE_LABELS: Record<string, string> = {
 };
 
 // ============================================================================
-// HELPERS
+// HELPERS - Timezone Africa/Libreville (UTC+1, no DST)
 // ============================================================================
+
+const LIBREVILLE_OFFSET_HOURS = 1;
+const LIBREVILLE_OFFSET_MS = LIBREVILLE_OFFSET_HOURS * 60 * 60 * 1000;
+
+/**
+ * Get the start of day in Africa/Libreville timezone, returned as a UTC Date.
+ * Midnight in Libreville (UTC+1) = 23:00 previous day in UTC.
+ */
+function getStartOfDayLibreville(date: Date): Date {
+  const lbv = new Date(date.getTime() + LIBREVILLE_OFFSET_MS);
+  lbv.setUTCHours(0, 0, 0, 0);
+  return new Date(lbv.getTime() - LIBREVILLE_OFFSET_MS);
+}
+
+/**
+ * Get the end of day in Africa/Libreville timezone, returned as a UTC Date.
+ */
+function getEndOfDayLibreville(date: Date): Date {
+  const lbv = new Date(date.getTime() + LIBREVILLE_OFFSET_MS);
+  lbv.setUTCHours(23, 59, 59, 999);
+  return new Date(lbv.getTime() - LIBREVILLE_OFFSET_MS);
+}
+
+/**
+ * Get the hour (0-23) in Africa/Libreville for a given UTC date.
+ */
+function getLibrevilleHour(date: Date): number {
+  return (date.getUTCHours() + LIBREVILLE_OFFSET_HOURS) % 24;
+}
+
+/**
+ * Get the day of week in Africa/Libreville (0=Sun, 6=Sat).
+ */
+function getLibrevilleDayOfWeek(date: Date): number {
+  return new Date(date.getTime() + LIBREVILLE_OFFSET_MS).getUTCDay();
+}
+
+/**
+ * Get the date string (YYYY-MM-DD) in Africa/Libreville timezone.
+ */
+function getLibrevilleDateString(date: Date): string {
+  const lbv = new Date(date.getTime() + LIBREVILLE_OFFSET_MS);
+  return lbv.toISOString().split("T")[0];
+}
 
 function getDateRangeForPeriode(periode: PeriodeType, baseDate?: Date): DateRange {
   const now = baseDate || new Date();
-  const from = new Date(now);
-  const to = new Date(now);
 
   switch (periode) {
     case "jour":
-      from.setHours(0, 0, 0, 0);
-      to.setHours(23, 59, 59, 999);
-      break;
-    case "semaine":
-      const dayOfWeek = from.getDay();
+      return { from: getStartOfDayLibreville(now), to: getEndOfDayLibreville(now) };
+    case "semaine": {
+      const dayOfWeek = getLibrevilleDayOfWeek(now);
       const diffToMonday = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
-      from.setDate(from.getDate() - diffToMonday);
-      from.setHours(0, 0, 0, 0);
-      to.setHours(23, 59, 59, 999);
-      break;
-    case "mois":
-      from.setDate(1);
-      from.setHours(0, 0, 0, 0);
-      to.setHours(23, 59, 59, 999);
-      break;
-    case "annee":
-      from.setMonth(0, 1);
-      from.setHours(0, 0, 0, 0);
-      to.setHours(23, 59, 59, 999);
-      break;
+      const monday = new Date(now.getTime() - diffToMonday * 24 * 60 * 60 * 1000);
+      return { from: getStartOfDayLibreville(monday), to: getEndOfDayLibreville(now) };
+    }
+    case "mois": {
+      const lbv = new Date(now.getTime() + LIBREVILLE_OFFSET_MS);
+      const firstOfMonth = new Date(Date.UTC(lbv.getUTCFullYear(), lbv.getUTCMonth(), 1));
+      const firstUtc = new Date(firstOfMonth.getTime() - LIBREVILLE_OFFSET_MS);
+      return { from: getStartOfDayLibreville(firstUtc), to: getEndOfDayLibreville(now) };
+    }
+    case "annee": {
+      const lbv = new Date(now.getTime() + LIBREVILLE_OFFSET_MS);
+      const firstOfYear = new Date(Date.UTC(lbv.getUTCFullYear(), 0, 1));
+      const firstUtc = new Date(firstOfYear.getTime() - LIBREVILLE_OFFSET_MS);
+      return { from: getStartOfDayLibreville(firstUtc), to: getEndOfDayLibreville(now) };
+    }
     default:
-      from.setHours(0, 0, 0, 0);
-      to.setHours(23, 59, 59, 999);
+      return { from: getStartOfDayLibreville(now), to: getEndOfDayLibreville(now) };
   }
-
-  return { from, to };
 }
 
 function getPreviousPeriodRange(periode: PeriodeType, baseDate?: Date): DateRange {
@@ -229,7 +267,14 @@ export async function getKPIs(): Promise<KPIs> {
       .eq("statut", "PAYEE")
       .gte("created_at", range.from.toISOString())
       .lte("created_at", range.to.toISOString());
-    return (data || []) as Array<{ total_final: number; lignes_vente: Array<{ quantite: number; prix_unitaire: number; produits: { prix_achat: number | null } }> }>;
+    return (data || []) as unknown as Array<{
+      total_final: number;
+      lignes_vente: Array<{
+        quantite: number;
+        prix_unitaire: number;
+        produits: { prix_achat: number | null };
+      }>;
+    }>;
   };
 
   // Exécuter toutes les requêtes en parallèle
@@ -254,25 +299,33 @@ export async function getKPIs(): Promise<KPIs> {
   const nombreVentes = ventesJour.length;
   const panierMoyen = nombreVentes > 0 ? Math.round(caJour / nombreVentes) : 0;
 
-  // Calcul de la marge brute
+  // Calcul de la marge brute (uniquement sur les lignes ayant un prix_achat)
   let margeBrute: number | null = null;
   let totalPrixAchat = 0;
   let totalPrixVente = 0;
-  let hasPrixAchat = false;
 
   for (const vente of ventesJour) {
-    const lignes = (vente as { lignes_vente?: Array<{ quantite: number; prix_unitaire: string | number; produits: { prix_achat: string | number | null } }> }).lignes_vente || [];
+    const lignes =
+      (
+        vente as {
+          lignes_vente?: Array<{
+            quantite: number;
+            prix_unitaire: string | number;
+            produits: { prix_achat: string | number | null };
+          }>;
+        }
+      ).lignes_vente || [];
     for (const ligne of lignes) {
-      const prixVente = Number(ligne.prix_unitaire) * ligne.quantite;
-      totalPrixVente += prixVente;
-      if (ligne.produits?.prix_achat) {
-        hasPrixAchat = true;
+      // Ne calculer la marge que sur les lignes ayant un prix_achat
+      if (ligne.produits?.prix_achat != null && Number(ligne.produits.prix_achat) > 0) {
+        const prixVente = Number(ligne.prix_unitaire) * ligne.quantite;
+        totalPrixVente += prixVente;
         totalPrixAchat += Number(ligne.produits.prix_achat) * ligne.quantite;
       }
     }
   }
 
-  if (hasPrixAchat && totalPrixVente > 0) {
+  if (totalPrixVente > 0) {
     margeBrute = Math.round(((totalPrixVente - totalPrixAchat) / totalPrixVente) * 100);
   }
 
@@ -314,24 +367,25 @@ export async function getCAByPeriod(
 
   for (const vente of ventes) {
     const date = new Date(vente.created_at);
+    const lbvDate = new Date(date.getTime() + LIBREVILLE_OFFSET_MS);
     let key: string;
 
     switch (groupBy) {
       case "jour":
-        key = date.toISOString().split("T")[0];
+        key = getLibrevilleDateString(date);
         break;
-      case "semaine":
-        const firstDay = new Date(date);
-        const day = firstDay.getDay();
-        const diff = firstDay.getDate() - day + (day === 0 ? -6 : 1);
-        firstDay.setDate(diff);
-        key = firstDay.toISOString().split("T")[0];
+      case "semaine": {
+        const dayOfWeek = lbvDate.getUTCDay();
+        const diffToMonday = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
+        const monday = new Date(lbvDate.getTime() - diffToMonday * 24 * 60 * 60 * 1000);
+        key = monday.toISOString().split("T")[0];
         break;
+      }
       case "mois":
-        key = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`;
+        key = `${lbvDate.getUTCFullYear()}-${String(lbvDate.getUTCMonth() + 1).padStart(2, "0")}`;
         break;
       default:
-        key = date.toISOString().split("T")[0];
+        key = getLibrevilleDateString(date);
     }
 
     if (!grouped[key]) grouped[key] = { ca: 0, count: 0, date };
@@ -358,17 +412,22 @@ export async function getCAByPeriod(
 /**
  * Récupère les top produits
  */
-export async function getTopProducts(periode: PeriodeType, limit: number = 10): Promise<TopProduct[]> {
+export async function getTopProducts(
+  periode: PeriodeType,
+  limit: number = 10
+): Promise<TopProduct[]> {
   const { supabase } = await getAuthClient();
   const dateRange = getDateRangeForPeriode(periode);
 
   const { data: lignes } = await supabase
     .from("lignes_vente")
-    .select(`
+    .select(
+      `
       quantite, total,
       produits!inner(id, nom, categories(nom)),
       ventes!inner(statut, created_at)
-    `)
+    `
+    )
     .eq("ventes.statut", "PAYEE")
     .gte("ventes.created_at", dateRange.from.toISOString())
     .lte("ventes.created_at", dateRange.to.toISOString());
@@ -379,7 +438,7 @@ export async function getTopProducts(periode: PeriodeType, limit: number = 10): 
   const produits: Record<string, TopProduct> = {};
 
   for (const ligne of lignes) {
-    const produit = ligne.produits as { id: string; nom: string; categories: { nom: string } };
+    const produit = ligne.produits as unknown as { id: string; nom: string; categories: { nom: string } };
     const id = produit.id;
 
     if (!produits[id]) {
@@ -422,9 +481,9 @@ export async function getPeakHours(date?: Date): Promise<PeakHourData[]> {
     ca: 0,
   }));
 
-  // Agréger par heure
+  // Agréger par heure (Africa/Libreville = UTC+1)
   for (const vente of ventes || []) {
-    const heure = new Date(vente.created_at).getHours();
+    const heure = getLibrevilleHour(new Date(vente.created_at));
     heures[heure].nombreVentes++;
     heures[heure].ca += Number(vente.total_final);
   }
@@ -441,10 +500,12 @@ export async function getSalesByPaymentMode(periode: PeriodeType): Promise<Payme
 
   const { data: paiements } = await supabase
     .from("paiements")
-    .select(`
+    .select(
+      `
       mode_paiement, montant,
       ventes!inner(statut, created_at)
-    `)
+    `
+    )
     .eq("ventes.statut", "PAYEE")
     .gte("ventes.created_at", dateRange.from.toISOString())
     .lte("ventes.created_at", dateRange.to.toISOString());
@@ -529,10 +590,13 @@ export async function getSalesByEmployee(periode: PeriodeType): Promise<SalesByE
   if (!ventes?.length) return [];
 
   // Agréger par employé
-  const employes: Record<string, { id: string; nom: string; prenom: string | null; count: number; ca: number }> = {};
+  const employes: Record<
+    string,
+    { id: string; nom: string; prenom: string | null; count: number; ca: number }
+  > = {};
 
   for (const v of ventes) {
-    const user = v.utilisateurs as { id: string; nom: string; prenom: string | null };
+    const user = v.utilisateurs as unknown as { id: string; nom: string; prenom: string | null };
     if (!user) continue;
 
     if (!employes[user.id]) {
@@ -562,12 +626,14 @@ export async function getClosedSessions(limit: number = 10) {
 
   const { data: sessions } = await supabase
     .from("sessions_caisse")
-    .select(`
+    .select(
+      `
       id, date_ouverture, date_cloture, fond_caisse,
       total_ventes, total_especes, total_cartes, total_mobile_money,
       nombre_ventes, nombre_annulations, especes_comptees, ecart, notes_cloture,
       utilisateurs(nom, prenom)
-    `)
+    `
+    )
     .not("date_cloture", "is", null)
     .order("date_cloture", { ascending: false })
     .limit(limit);
@@ -586,7 +652,7 @@ export async function getClosedSessions(limit: number = 10) {
     especesComptees: s.especes_comptees ? Number(s.especes_comptees) : null,
     ecart: s.ecart ? Number(s.ecart) : null,
     notesCloture: s.notes_cloture,
-    utilisateur: s.utilisateurs as { nom: string; prenom: string | null },
+    utilisateur: s.utilisateurs as unknown as { nom: string; prenom: string | null },
   }));
 }
 
@@ -733,9 +799,9 @@ export async function getHistoriqueFactures(
     typeRemise: v.type_remise,
     valeurRemise: v.valeur_remise ? Number(v.valeur_remise) : null,
     createdAt: v.created_at,
-    client: v.clients as { id: string; nom: string; prenom: string | null } | null,
-    utilisateur: v.utilisateurs as { nom: string; prenom: string | null } | null,
-    table: v.tables as { numero: number; zones: { nom: string } | null } | null,
+    client: v.clients as unknown as { id: string; nom: string; prenom: string | null } | null,
+    utilisateur: v.utilisateurs as unknown as { nom: string; prenom: string | null } | null,
+    table: v.tables as unknown as { numero: number; zones: { nom: string } | null } | null,
   }));
 
   const total = count ?? 0;
@@ -842,14 +908,16 @@ export async function genererRapportZAction(
     // 3. Recuperer toutes les ventes de cette session avec detail
     const { data: ventes } = await supabase
       .from("ventes")
-      .select(`
+      .select(
+        `
         statut, type, total_final, sous_total, total_tva,
         paiements(mode_paiement, montant),
         lignes_vente(quantite, total, produit_id, produits(nom))
-      `)
+      `
+      )
       .eq("session_caisse_id", sessionId);
 
-    const allVentes = (ventes || []) as Array<{
+    const allVentes = (ventes || []) as unknown as Array<{
       statut: string;
       type: string;
       total_final: string | number;
@@ -889,10 +957,7 @@ export async function genererRapportZAction(
       EMPORTER: { count: 0, total: 0 },
     };
 
-    const produitsVendus: Record<
-      string,
-      { nom: string; quantite: number; total: number }
-    > = {};
+    const produitsVendus: Record<string, { nom: string; quantite: number; total: number }> = {};
 
     for (const v of ventesPayees) {
       const total = Number(v.total_final);
@@ -952,13 +1017,9 @@ export async function genererRapportZAction(
 
     // 5. Calculs caisse
     const fondCaisse = Number(session.fond_caisse);
-    const especesComptees = session.especes_comptees
-      ? Number(session.especes_comptees)
-      : 0;
+    const especesComptees = session.especes_comptees ? Number(session.especes_comptees) : 0;
     const especesAttendues = fondCaisse + especes;
-    const ecart = session.ecart
-      ? Number(session.ecart)
-      : especesComptees - especesAttendues;
+    const ecart = session.ecart ? Number(session.ecart) : especesComptees - especesAttendues;
 
     // 6. Caissier
     const utilisateur = session.utilisateurs as {
@@ -974,7 +1035,7 @@ export async function genererRapportZAction(
 
     const rapportZ: RapportZComplet = {
       etablissement: {
-        nom: etab?.nom || "Etablissement",
+        nom: etab?.nom || "Établissement",
         adresse: etab?.adresse || null,
         telephone: etab?.telephone || null,
         email: etab?.email || null,
@@ -992,10 +1053,7 @@ export async function genererRapportZAction(
         nombreVentes: ventesPayees.length,
         nombreAnnulations: ventesAnnulees.length,
         articlesVendus,
-        panierMoyen:
-          ventesPayees.length > 0
-            ? Math.round(totalVentes / ventesPayees.length)
-            : 0,
+        panierMoyen: ventesPayees.length > 0 ? Math.round(totalVentes / ventesPayees.length) : 0,
       },
       paiements: {
         especes,
@@ -1087,9 +1145,9 @@ export async function getFactureDetail(venteId: string): Promise<FactureDetail |
     createdAt: data.created_at,
     adresseLivraison: data.adresse_livraison,
     notes: data.notes,
-    client: data.clients as { id: string; nom: string; prenom: string | null } | null,
-    utilisateur: data.utilisateurs as { nom: string; prenom: string | null } | null,
-    table: data.tables as { numero: number; zones: { nom: string } | null } | null,
+    client: data.clients as unknown as { id: string; nom: string; prenom: string | null } | null,
+    utilisateur: data.utilisateurs as unknown as { nom: string; prenom: string | null } | null,
+    table: data.tables as unknown as { numero: number; zones: { nom: string } | null } | null,
     lignes: (data.lignes_vente || []).map((l: Record<string, unknown>) => ({
       id: l.id as string,
       quantite: l.quantite as number,
@@ -1100,10 +1158,12 @@ export async function getFactureDetail(venteId: string): Promise<FactureDetail |
       total: Number(l.total),
       notes: l.notes as string | null,
       produit: l.produits as { nom: string } | null,
-      supplements: ((l.lignes_vente_supplements as Array<{ nom: string; prix: number }>) || []).map((s) => ({
-        nom: s.nom,
-        prix: Number(s.prix),
-      })),
+      supplements: ((l.lignes_vente_supplements as Array<{ nom: string; prix: number }>) || []).map(
+        (s) => ({
+          nom: s.nom,
+          prix: Number(s.prix),
+        })
+      ),
     })),
     paiements: (data.paiements || []).map((p: Record<string, unknown>) => ({
       id: p.id as string,

@@ -104,9 +104,7 @@ function cleanString(value: unknown): string | null {
  * @param file - Fichier ou contenu CSV
  * @returns Promesse avec le resultat du parsing
  */
-export function parseProductsCSV(
-  file: File | string
-): Promise<CSVImportResult> {
+export function parseProductsCSV(file: File | string): Promise<CSVImportResult> {
   return new Promise((resolve) => {
     const errors: CSVValidationError[] = [];
     const warnings: CSVValidationWarning[] = [];
@@ -148,7 +146,10 @@ export function parseProductsCSV(
             continue;
           }
 
-          const validationResult = validateProductRow(row as CSVProductRow & { [key: string]: unknown }, ligneIndex);
+          const validationResult = validateProductRow(
+            row as CSVProductRow & { [key: string]: unknown },
+            ligneIndex
+          );
 
           if (validationResult.errors.length > 0) {
             errors.push(...validationResult.errors);
@@ -359,7 +360,9 @@ export function validateProductRow(
     unite: cleanString(row.unite),
     disponibleDirect: parseBooleanValue(row.disponibledirect ?? row.disponibleDirect ?? true),
     disponibleTable: parseBooleanValue(row.disponibletable ?? row.disponibleTable ?? true),
-    disponibleLivraison: parseBooleanValue(row.disponiblelivraison ?? row.disponibleLivraison ?? true),
+    disponibleLivraison: parseBooleanValue(
+      row.disponiblelivraison ?? row.disponibleLivraison ?? true
+    ),
     disponibleEmporter: parseBooleanValue(row.disponibleemporter ?? row.disponibleEmporter ?? true),
   };
 

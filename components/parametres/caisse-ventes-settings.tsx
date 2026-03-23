@@ -9,7 +9,6 @@ import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
   Box,
-  Card,
   Flex,
   Text,
   TextField,
@@ -24,12 +23,12 @@ import {
   CreditCard,
   Percent,
   Receipt,
-  Save,
-  Loader2,
-  CheckCircle2,
-  AlertCircle,
+  FloppyDisk,
+  CircleNotch,
+  CheckCircle,
+  WarningCircle,
   Info,
-} from "lucide-react";
+} from "@phosphor-icons/react";
 import { toast } from "sonner";
 
 import { updateCaisseVentesSettings } from "@/actions/parametres";
@@ -72,7 +71,7 @@ export function CaisseVentesSettings({ initialData }: CaisseVentesSettingsProps)
 
       if (result.success) {
         setSaveStatus("success");
-        toast.success("Parametres de caisse enregistres");
+        toast.success("Paramètres de caisse enregistrés");
         setTimeout(() => setSaveStatus("idle"), 3000);
       } else {
         setSaveStatus("error");
@@ -92,7 +91,7 @@ export function CaisseVentesSettings({ initialData }: CaisseVentesSettingsProps)
         {/* Information */}
         <Callout.Root color="blue" size="2">
           <Callout.Icon>
-            <Info size={18} />
+            <Info size={18} weight="duotone" />
           </Callout.Icon>
           <Callout.Text>
             <Text weight="bold">Configuration de la caisse</Text>
@@ -102,10 +101,10 @@ export function CaisseVentesSettings({ initialData }: CaisseVentesSettingsProps)
         </Callout.Root>
 
         {/* Mode de vente par defaut */}
-        <Card size="3">
+        <Box style={{ border: "1px solid var(--gray-a6)", borderRadius: 8 }} p="4">
           <Flex direction="column" gap="4">
             <Flex align="center" gap="2">
-              <ShoppingCart size={20} style={{ color: "var(--accent-9)" }} />
+              <ShoppingCart size={20} weight="duotone" style={{ color: "var(--accent-9)" }} />
               <Text size="4" weight="bold">
                 Mode de vente par defaut
               </Text>
@@ -128,17 +127,19 @@ export function CaisseVentesSettings({ initialData }: CaisseVentesSettingsProps)
                 </RadioCards.Root>
               )}
             />
-            {errors.modeVenteDefaut ? <Text size="1" color="red">
+            {errors.modeVenteDefaut ? (
+              <Text size="1" color="red">
                 {errors.modeVenteDefaut.message}
-              </Text> : null}
+              </Text>
+            ) : null}
           </Flex>
-        </Card>
+        </Box>
 
         {/* Options de vente */}
-        <Card size="3">
+        <Box style={{ border: "1px solid var(--gray-a6)", borderRadius: 8 }} p="4">
           <Flex direction="column" gap="4">
             <Flex align="center" gap="2">
-              <Receipt size={20} style={{ color: "var(--accent-9)" }} />
+              <Receipt size={20} weight="duotone" style={{ color: "var(--accent-9)" }} />
               <Text size="4" weight="bold">
                 Options de vente
               </Text>
@@ -156,9 +157,11 @@ export function CaisseVentesSettings({ initialData }: CaisseVentesSettingsProps)
                   size="3"
                   placeholder="0"
                 />
-                {errors.montantMinimumVente ? <Text size="1" color="red" mt="1">
+                {errors.montantMinimumVente ? (
+                  <Text size="1" color="red" mt="1">
                     {errors.montantMinimumVente.message}
-                  </Text> : null}
+                  </Text>
+                ) : null}
                 <Text size="1" color="gray" mt="1">
                   0 = pas de minimum
                 </Text>
@@ -177,12 +180,14 @@ export function CaisseVentesSettings({ initialData }: CaisseVentesSettingsProps)
                   size="3"
                 >
                   <TextField.Slot side="right">
-                    <Percent size={16} />
+                    <Percent size={16} weight="bold" />
                   </TextField.Slot>
                 </TextField.Root>
-                {errors.remiseMaxAutorisee ? <Text size="1" color="red" mt="1">
+                {errors.remiseMaxAutorisee ? (
+                  <Text size="1" color="red" mt="1">
                     {errors.remiseMaxAutorisee.message}
-                  </Text> : null}
+                  </Text>
+                ) : null}
                 <Text size="1" color="gray" mt="1">
                   Limite les remises que peuvent appliquer les caissiers
                 </Text>
@@ -209,11 +214,7 @@ export function CaisseVentesSettings({ initialData }: CaisseVentesSettingsProps)
                           Demander confirmation avant de finaliser chaque vente
                         </Text>
                       </Flex>
-                      <Switch
-                        size="3"
-                        checked={field.value}
-                        onCheckedChange={field.onChange}
-                      />
+                      <Switch size="3" checked={field.value} onCheckedChange={field.onChange} />
                     </Flex>
                   )}
                 />
@@ -231,11 +232,7 @@ export function CaisseVentesSettings({ initialData }: CaisseVentesSettingsProps)
                           Imprimer automatiquement le ticket apres chaque vente
                         </Text>
                       </Flex>
-                      <Switch
-                        size="3"
-                        checked={field.value}
-                        onCheckedChange={field.onChange}
-                      />
+                      <Switch size="3" checked={field.value} onCheckedChange={field.onChange} />
                     </Flex>
                   )}
                 />
@@ -267,13 +264,13 @@ export function CaisseVentesSettings({ initialData }: CaisseVentesSettingsProps)
               </Flex>
             </Box>
           </Flex>
-        </Card>
+        </Box>
 
         {/* Modes de paiement actifs */}
-        <Card size="3">
+        <Box style={{ border: "1px solid var(--gray-a6)", borderRadius: 8 }} p="4">
           <Flex direction="column" gap="4">
             <Flex align="center" gap="2">
-              <CreditCard size={20} style={{ color: "var(--accent-9)" }} />
+              <CreditCard size={20} weight="duotone" style={{ color: "var(--accent-9)" }} />
               <Text size="4" weight="bold">
                 Modes de paiement actifs
               </Text>
@@ -296,9 +293,7 @@ export function CaisseVentesSettings({ initialData }: CaisseVentesSettingsProps)
                           if (checked) {
                             field.onChange([...field.value, option.value]);
                           } else {
-                            field.onChange(
-                              field.value.filter((v) => v !== option.value)
-                            );
+                            field.onChange(field.value.filter((v) => v !== option.value));
                           }
                         }}
                       />
@@ -308,17 +303,19 @@ export function CaisseVentesSettings({ initialData }: CaisseVentesSettingsProps)
                 </Flex>
               )}
             />
-            {errors.modesPaiementActifs ? <Text size="1" color="red">
+            {errors.modesPaiementActifs ? (
+              <Text size="1" color="red">
                 {errors.modesPaiementActifs.message}
-              </Text> : null}
+              </Text>
+            ) : null}
           </Flex>
-        </Card>
+        </Box>
 
         {/* Bouton de sauvegarde */}
         <Flex justify="end" gap="3" align="center">
           {saveStatus === "success" && (
             <Flex align="center" gap="2">
-              <CheckCircle2 size={16} className="text-green-500" />
+              <CheckCircle size={16} weight="fill" className="text-green-500" />
               <Text size="2" color="green">
                 Enregistre
               </Text>
@@ -326,18 +323,14 @@ export function CaisseVentesSettings({ initialData }: CaisseVentesSettingsProps)
           )}
           {saveStatus === "error" && (
             <Flex align="center" gap="2">
-              <AlertCircle size={16} className="text-red-500" />
+              <WarningCircle size={16} weight="fill" className="text-red-500" />
               <Text size="2" color="red">
                 Erreur d'enregistrement
               </Text>
             </Flex>
           )}
           <Button type="submit" size="3" disabled={isLoading}>
-            {isLoading ? (
-              <Loader2 size={16} className="animate-spin" />
-            ) : (
-              <Save size={16} />
-            )}
+            {isLoading ? <CircleNotch size={16} className="animate-spin" /> : <FloppyDisk size={16} />}
             Enregistrer les parametres de caisse
           </Button>
         </Flex>

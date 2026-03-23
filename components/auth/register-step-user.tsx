@@ -1,30 +1,20 @@
-'use client'
+"use client";
 
 /**
  * Étape 1 du wizard d'inscription: Informations utilisateur
  */
 
-import { useForm } from 'react-hook-form'
-import { zodResolver } from '@hookform/resolvers/zod'
-import { Box, Button, Flex, Text, TextField } from '@radix-ui/themes'
-import {
-  MailIcon,
-  LockIcon,
-  UserIcon,
-  AlertCircleIcon,
-  EyeIcon,
-  EyeOffIcon,
-} from 'lucide-react'
-import { useState } from 'react'
-import {
-  registerUserSchema,
-  type RegisterUserInput,
-} from '@/schemas/register.schema'
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { Box, Button, Flex, Text, TextField } from "@radix-ui/themes";
+import { MailIcon, LockIcon, UserIcon, AlertCircleIcon, EyeIcon, EyeOffIcon } from "lucide-react";
+import { useState } from "react";
+import { registerUserSchema, type RegisterUserInput } from "@/schemas/register.schema";
 
 interface RegisterStepUserProps {
-  onSubmit: (data: RegisterUserInput) => void
-  defaultValues?: Partial<RegisterUserInput>
-  isLoading?: boolean
+  onSubmit: (data: RegisterUserInput) => void;
+  defaultValues?: Partial<RegisterUserInput>;
+  isLoading?: boolean;
 }
 
 export function RegisterStepUser({
@@ -32,8 +22,8 @@ export function RegisterStepUser({
   defaultValues,
   isLoading = false,
 }: RegisterStepUserProps) {
-  const [showPassword, setShowPassword] = useState(false)
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false)
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   const {
     register,
@@ -42,13 +32,13 @@ export function RegisterStepUser({
   } = useForm<RegisterUserInput>({
     resolver: zodResolver(registerUserSchema),
     defaultValues: {
-      email: defaultValues?.email || '',
-      password: defaultValues?.password || '',
-      confirmPassword: defaultValues?.confirmPassword || '',
-      nom: defaultValues?.nom || '',
-      prenom: defaultValues?.prenom || '',
+      email: defaultValues?.email || "",
+      password: defaultValues?.password || "",
+      confirmPassword: defaultValues?.confirmPassword || "",
+      nom: defaultValues?.nom || "",
+      prenom: defaultValues?.prenom || "",
     },
-  })
+  });
 
   return (
     <form onSubmit={handleSubmit(onSubmit)}>
@@ -65,19 +55,21 @@ export function RegisterStepUser({
             type="text"
             placeholder="Jean"
             autoComplete="given-name"
-            {...register('prenom')}
+            {...register("prenom")}
             disabled={isLoading}
           >
             <TextField.Slot side="left">
               <UserIcon size={16} />
             </TextField.Slot>
           </TextField.Root>
-          {errors.prenom ? <Flex gap="1" align="center" mt="1">
+          {errors.prenom ? (
+            <Flex gap="1" align="center" mt="1">
               <AlertCircleIcon size={14} color="var(--red-9)" />
               <Text size="1" color="red">
                 {errors.prenom.message}
               </Text>
-            </Flex> : null}
+            </Flex>
+          ) : null}
         </Box>
 
         {/* Nom */}
@@ -92,19 +84,21 @@ export function RegisterStepUser({
             type="text"
             placeholder="Dupont"
             autoComplete="family-name"
-            {...register('nom')}
+            {...register("nom")}
             disabled={isLoading}
           >
             <TextField.Slot side="left">
               <UserIcon size={16} />
             </TextField.Slot>
           </TextField.Root>
-          {errors.nom ? <Flex gap="1" align="center" mt="1">
+          {errors.nom ? (
+            <Flex gap="1" align="center" mt="1">
               <AlertCircleIcon size={14} color="var(--red-9)" />
               <Text size="1" color="red">
                 {errors.nom.message}
               </Text>
-            </Flex> : null}
+            </Flex>
+          ) : null}
         </Box>
 
         {/* Email */}
@@ -119,19 +113,21 @@ export function RegisterStepUser({
             type="email"
             placeholder="votre@email.com"
             autoComplete="email"
-            {...register('email')}
+            {...register("email")}
             disabled={isLoading}
           >
             <TextField.Slot side="left">
               <MailIcon size={16} />
             </TextField.Slot>
           </TextField.Root>
-          {errors.email ? <Flex gap="1" align="center" mt="1">
+          {errors.email ? (
+            <Flex gap="1" align="center" mt="1">
               <AlertCircleIcon size={14} color="var(--red-9)" />
               <Text size="1" color="red">
                 {errors.email.message}
               </Text>
-            </Flex> : null}
+            </Flex>
+          ) : null}
         </Box>
 
         {/* Mot de passe */}
@@ -143,10 +139,10 @@ export function RegisterStepUser({
           </label>
           <TextField.Root
             id="password"
-            type={showPassword ? 'text' : 'password'}
+            type={showPassword ? "text" : "password"}
             placeholder="Min. 8 caractères"
             autoComplete="new-password"
-            {...register('password')}
+            {...register("password")}
             disabled={isLoading}
           >
             <TextField.Slot side="left">
@@ -157,11 +153,11 @@ export function RegisterStepUser({
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
                 style={{
-                  background: 'none',
-                  border: 'none',
-                  cursor: 'pointer',
+                  background: "none",
+                  border: "none",
+                  cursor: "pointer",
                   padding: 0,
-                  display: 'flex',
+                  display: "flex",
                 }}
               >
                 {showPassword ? (
@@ -172,12 +168,14 @@ export function RegisterStepUser({
               </button>
             </TextField.Slot>
           </TextField.Root>
-          {errors.password ? <Flex gap="1" align="center" mt="1">
+          {errors.password ? (
+            <Flex gap="1" align="center" mt="1">
               <AlertCircleIcon size={14} color="var(--red-9)" />
               <Text size="1" color="red">
                 {errors.password.message}
               </Text>
-            </Flex> : null}
+            </Flex>
+          ) : null}
           <Text size="1" color="gray" mt="1">
             Majuscule, minuscule et chiffre requis
           </Text>
@@ -192,10 +190,10 @@ export function RegisterStepUser({
           </label>
           <TextField.Root
             id="confirmPassword"
-            type={showConfirmPassword ? 'text' : 'password'}
+            type={showConfirmPassword ? "text" : "password"}
             placeholder="Confirmez votre mot de passe"
             autoComplete="new-password"
-            {...register('confirmPassword')}
+            {...register("confirmPassword")}
             disabled={isLoading}
           >
             <TextField.Slot side="left">
@@ -206,11 +204,11 @@ export function RegisterStepUser({
                 type="button"
                 onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                 style={{
-                  background: 'none',
-                  border: 'none',
-                  cursor: 'pointer',
+                  background: "none",
+                  border: "none",
+                  cursor: "pointer",
                   padding: 0,
-                  display: 'flex',
+                  display: "flex",
                 }}
               >
                 {showConfirmPassword ? (
@@ -221,12 +219,14 @@ export function RegisterStepUser({
               </button>
             </TextField.Slot>
           </TextField.Root>
-          {errors.confirmPassword ? <Flex gap="1" align="center" mt="1">
+          {errors.confirmPassword ? (
+            <Flex gap="1" align="center" mt="1">
               <AlertCircleIcon size={14} color="var(--red-9)" />
               <Text size="1" color="red">
                 {errors.confirmPassword.message}
               </Text>
-            </Flex> : null}
+            </Flex>
+          ) : null}
         </Box>
 
         {/* Bouton suivant */}
@@ -234,11 +234,11 @@ export function RegisterStepUser({
           type="submit"
           size="3"
           disabled={isLoading}
-          style={{ cursor: isLoading ? 'not-allowed' : 'pointer', marginTop: '0.5rem' }}
+          style={{ cursor: isLoading ? "not-allowed" : "pointer", marginTop: "0.5rem" }}
         >
           Continuer
         </Button>
       </Flex>
     </form>
-  )
+  );
 }

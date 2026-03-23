@@ -1,7 +1,7 @@
-'use server'
+"use server";
 
-import { deleteSessionCookie } from '@/lib/auth/session'
-import { redirect } from 'next/navigation'
+import { deleteSessionCookie } from "@/lib/auth/session";
+import { redirect } from "next/navigation";
 
 /**
  * Server Action pour nettoyer la session utilisateur
@@ -9,14 +9,14 @@ import { redirect } from 'next/navigation'
  */
 export async function clearSessionAction() {
   try {
-    await deleteSessionCookie()
-    console.log('[clearSessionAction] Session cleared successfully')
+    await deleteSessionCookie();
+    console.log("[clearSessionAction] Session cleared successfully");
   } catch (error) {
-    console.error('[clearSessionAction] Error clearing session:', error)
+    console.error("[clearSessionAction] Error clearing session:", error);
   }
 
   // Rediriger vers login après nettoyage
-  redirect('/login')
+  redirect("/login");
 }
 
 /**
@@ -25,14 +25,14 @@ export async function clearSessionAction() {
  */
 export async function clearSessionSilent(): Promise<{ success: boolean; error?: string }> {
   try {
-    await deleteSessionCookie()
-    console.log('[clearSessionSilent] Session cleared successfully')
-    return { success: true }
+    await deleteSessionCookie();
+    console.log("[clearSessionSilent] Session cleared successfully");
+    return { success: true };
   } catch (error) {
-    console.error('[clearSessionSilent] Error clearing session:', error)
+    console.error("[clearSessionSilent] Error clearing session:", error);
     return {
       success: false,
-      error: error instanceof Error ? error.message : 'Unknown error',
-    }
+      error: error instanceof Error ? error.message : "Unknown error",
+    };
   }
 }

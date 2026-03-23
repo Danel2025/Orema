@@ -1,14 +1,16 @@
+"use client";
+
 /**
  * StatCard - Card de statistique pour le dashboard
  * Affiche une métrique avec icône, titre et valeur
  */
 
-import type { LucideIcon } from "lucide-react";
+import type { Icon as PhosphorIcon } from "@phosphor-icons/react";
 
 export interface StatCardProps {
   title: string;
   value: string;
-  icon: LucideIcon;
+  icon: PhosphorIcon;
   trend?: {
     value: string;
     isPositive: boolean;
@@ -97,7 +99,8 @@ export function StatCard({ title, value, icon: Icon, trend, color = "violet" }: 
       </div>
 
       {/* Trend (optionnel) */}
-      {trend ? <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+      {trend ? (
+        <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
           <span
             style={{
               fontSize: 13,
@@ -107,10 +110,9 @@ export function StatCard({ title, value, icon: Icon, trend, color = "violet" }: 
           >
             {trend.isPositive ? "↑" : "↓"} {trend.value}
           </span>
-          <span style={{ fontSize: 13, color: "var(--gray-10)" }}>
-            vs. hier
-          </span>
-        </div> : null}
+          <span style={{ fontSize: 13, color: "var(--gray-10)" }}>vs. hier</span>
+        </div>
+      ) : null}
     </div>
   );
 }

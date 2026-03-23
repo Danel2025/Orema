@@ -9,7 +9,6 @@ import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
   Box,
-  Card,
   Flex,
   Text,
   TextField,
@@ -24,19 +23,19 @@ import {
   Tooltip,
 } from "@radix-ui/themes";
 import {
-  HardDrive,
-  Download,
-  Trash2,
+  HardDrives,
+  DownloadSimple,
+  Trash,
   Plus,
-  Loader2,
-  CheckCircle2,
-  AlertCircle,
+  CircleNotch,
+  CheckCircle,
+  WarningCircle,
   Clock,
-  FileJson,
+  FileJs,
   Archive,
-  RefreshCw,
+  ArrowsClockwise,
   Info,
-} from "lucide-react";
+} from "@phosphor-icons/react";
 import { toast } from "sonner";
 
 import {
@@ -90,10 +89,10 @@ export function BackupSettings({ initialBackups = [], initialStats = {} }: Backu
   const selectedType = watch("type");
   const selectedCategories = watch("categories");
 
-  // Charger les backups et stats au montage
+  // Charger les backups et stats au montage uniquement si pas de données initiales
   useEffect(() => {
-    loadBackups();
-    loadStats();
+    if (!initialBackups || initialBackups.length === 0) loadBackups();
+    if (!initialStats || Object.keys(initialStats).length === 0) loadStats();
   }, []);
 
   const loadBackups = async () => {
@@ -156,11 +155,11 @@ export function BackupSettings({ initialBackups = [], initialStats = {} }: Backu
       setProgress(100);
 
       if (result.success && result.data) {
-        toast.success("Sauvegarde creee avec succes", {
-          description: `${result.data.recordCount} enregistrements sauvegardes`,
+        toast.success("Sauvegarde créée avec succès", {
+          description: `${result.data.recordCount} enregistrements sauvegardés`,
         });
 
-        // Telecharger automatiquement si URL disponible
+        // Télécharger automatiquement si URL disponible
         if (result.data.downloadUrl) {
           window.open(result.data.downloadUrl, "_blank");
         }
@@ -168,31 +167,31 @@ export function BackupSettings({ initialBackups = [], initialStats = {} }: Backu
         reset();
         await loadBackups();
       } else {
-        toast.error(result.error || "Erreur lors de la creation");
+        toast.error(result.error || "Erreur lors de la création");
       }
     } catch (error) {
-      console.error("Erreur creation backup:", error);
-      toast.error("Erreur lors de la creation de la sauvegarde");
+      console.error("Erreur création backup:", error);
+      toast.error("Erreur lors de la création de la sauvegarde");
     } finally {
       setIsCreating(false);
       setProgress(0);
     }
   };
 
-  // Telecharger une sauvegarde
+  // Télécharger une sauvegarde
   const handleDownload = async (backupId: string) => {
     setDownloadingId(backupId);
     try {
       const result = await downloadBackup(backupId);
       if (result.success && result.data?.downloadUrl) {
         window.open(result.data.downloadUrl, "_blank");
-        toast.success("Telechargement demarre");
+        toast.success("Téléchargement démarré");
       } else {
-        toast.error(result.error || "Erreur lors du telechargement");
+        toast.error(result.error || "Erreur lors du téléchargement");
       }
     } catch (error) {
-      console.error("Erreur telechargement:", error);
-      toast.error("Erreur lors du telechargement");
+      console.error("Erreur téléchargement:", error);
+      toast.error("Erreur lors du téléchargement");
     } finally {
       setDownloadingId(null);
     }
@@ -200,7 +199,7 @@ export function BackupSettings({ initialBackups = [], initialStats = {} }: Backu
 
   // Supprimer une sauvegarde
   const handleDelete = async (backupId: string) => {
-    if (!confirm("Etes-vous sur de vouloir supprimer cette sauvegarde ?")) {
+    if (!confirm("Êtes-vous sûr de vouloir supprimer cette sauvegarde ?")) {
       return;
     }
 
@@ -208,7 +207,7 @@ export function BackupSettings({ initialBackups = [], initialStats = {} }: Backu
     try {
       const result = await deleteBackup(backupId);
       if (result.success) {
-        toast.success("Sauvegarde supprimee");
+        toast.success("Sauvegarde supprimée");
         await loadBackups();
       } else {
         toast.error(result.error || "Erreur lors de la suppression");
@@ -249,21 +248,25 @@ export function BackupSettings({ initialBackups = [], initialStats = {} }: Backu
       failed: { color: "red" as const, label: "Echoue" },
     };
     const { color, label } = config[status] || config.pending;
-    return <Badge color={color} variant="soft">{label}</Badge>;
+    return (
+      <Badge color={color} variant="soft">
+        {label}
+      </Badge>
+    );
   };
 
   return (
     <Flex direction="column" gap="5">
-      {/* Section: Creer une sauvegarde */}
-      <Card size="3">
+      {/* Section: Créer une sauvegarde */}
+      <Box style={{ border: "1px solid var(--gray-a6)", borderRadius: 8 }} p="4">
         {/* @ts-expect-error - Type mismatch with zod default values */}
         <form onSubmit={handleSubmit(onSubmit)}>
           <Flex direction="column" gap="4">
             <Flex align="center" justify="between">
               <Flex align="center" gap="2">
-                <Plus size={20} style={{ color: "var(--accent-9)" }} />
+                <Plus size={20} weight="duotone" style={{ color: "var(--accent-9)" }} />
                 <Text size="4" weight="bold">
-                  Creer une sauvegarde
+                  Créer une sauvegarde
                 </Text>
               </Flex>
               <Button
@@ -274,9 +277,9 @@ export function BackupSettings({ initialBackups = [], initialStats = {} }: Backu
                 disabled={isLoadingStats}
               >
                 {isLoadingStats ? (
-                  <Loader2 size={14} className="animate-spin" />
+                  <CircleNotch size={14} className="animate-spin" />
                 ) : (
-                  <RefreshCw size={14} />
+                  <ArrowsClockwise size={14} />
                 )}
                 Actualiser
               </Button>
@@ -284,11 +287,11 @@ export function BackupSettings({ initialBackups = [], initialStats = {} }: Backu
 
             <Callout.Root color="blue" size="2">
               <Callout.Icon>
-                <Info size={16} />
+                <Info size={16} weight="duotone" />
               </Callout.Icon>
               <Callout.Text>
-                Creez une sauvegarde de vos donnees pour les conserver en securite.
-                Les fichiers sont stockes dans un format JSON compatible avec la restauration.
+                Creez une sauvegarde de vos donnees pour les conserver en securite. Les fichiers
+                sont stockes dans un format JSON compatible avec la restauration.
               </Callout.Text>
             </Callout.Root>
 
@@ -304,9 +307,11 @@ export function BackupSettings({ initialBackups = [], initialStats = {} }: Backu
                   size="3"
                 />
               </Box>
-              {errors.nom ? <Text size="1" color="red" mt="1">
+              {errors.nom ? (
+                <Text size="1" color="red" mt="1">
                   {errors.nom.message}
-                </Text> : null}
+                </Text>
+              ) : null}
             </Box>
 
             {/* Type de sauvegarde */}
@@ -321,7 +326,7 @@ export function BackupSettings({ initialBackups = [], initialStats = {} }: Backu
                   <Box mt="2">
                     <Select.Root value={field.value} onValueChange={field.onChange}>
                       <Select.Trigger style={{ width: "100%" }} />
-                      <Select.Content>
+                      <Select.Content position="popper">
                         {backupTypeOptions.map((option) => (
                           <Select.Item key={option.value} value={option.value}>
                             {option.label}
@@ -332,8 +337,8 @@ export function BackupSettings({ initialBackups = [], initialStats = {} }: Backu
                   </Box>
                   <Text size="1" color="gray" mt="1">
                     {field.value === "full"
-                      ? "Toutes les categories de donnees seront sauvegardees"
-                      : "Selectionnez les categories a sauvegarder ci-dessous"}
+                      ? "Toutes les catégories de données seront sauvegardées"
+                      : "Sélectionnez les catégories à sauvegarder ci-dessous"}
                   </Text>
                 </Box>
               )}
@@ -362,7 +367,9 @@ export function BackupSettings({ initialBackups = [], initialStats = {} }: Backu
                             style={{
                               backgroundColor: isChecked ? "var(--accent-a3)" : "var(--gray-a2)",
                               borderRadius: "var(--radius-2)",
-                              border: isChecked ? "1px solid var(--accent-6)" : "1px solid transparent",
+                              border: isChecked
+                                ? "1px solid var(--accent-6)"
+                                : "1px solid transparent",
                             }}
                           >
                             <Flex align="center" gap="3">
@@ -377,8 +384,12 @@ export function BackupSettings({ initialBackups = [], initialStats = {} }: Backu
                                 }}
                               />
                               <Box>
-                                <Text size="2" weight="medium">{category.label}</Text>
-                                <Text size="1" color="gray">{category.description}</Text>
+                                <Text size="2" weight="medium">
+                                  {category.label}
+                                </Text>
+                                <Text size="1" color="gray">
+                                  {category.description}
+                                </Text>
                               </Box>
                             </Flex>
                             <Badge color={count > 0 ? "blue" : "gray"} variant="soft" size="1">
@@ -390,9 +401,11 @@ export function BackupSettings({ initialBackups = [], initialStats = {} }: Backu
                     </Flex>
                   )}
                 />
-                {errors.categories ? <Text size="1" color="red" mt="2">
+                {errors.categories ? (
+                  <Text size="1" color="red" mt="2">
                     {errors.categories.message}
-                  </Text> : null}
+                  </Text>
+                ) : null}
               </Box>
             )}
 
@@ -408,7 +421,7 @@ export function BackupSettings({ initialBackups = [], initialStats = {} }: Backu
             >
               <Flex align="center" justify="between">
                 <Flex align="center" gap="2">
-                  <Archive size={18} style={{ color: "var(--accent-9)" }} />
+                  <Archive size={18} weight="duotone" style={{ color: "var(--accent-9)" }} />
                   <Text size="2" weight="medium">
                     Total a sauvegarder:
                   </Text>
@@ -420,38 +433,42 @@ export function BackupSettings({ initialBackups = [], initialStats = {} }: Backu
             </Box>
 
             {/* Barre de progression */}
-            {isCreating ? <Box>
+            {isCreating ? (
+              <Box>
                 <Progress value={progress} size="2" />
                 <Text size="1" color="gray" mt="1">
                   Creation de la sauvegarde en cours...
                 </Text>
-              </Box> : null}
+              </Box>
+            ) : null}
 
             {/* Bouton de creation */}
             <Flex justify="end">
               <Button
                 type="submit"
                 size="3"
-                disabled={isCreating || (selectedType === "partial" && selectedCategories.length === 0)}
+                disabled={
+                  isCreating || (selectedType === "partial" && selectedCategories.length === 0)
+                }
               >
                 {isCreating ? (
-                  <Loader2 size={16} className="animate-spin" />
+                  <CircleNotch size={16} className="animate-spin" />
                 ) : (
                   <Archive size={16} />
                 )}
-                Creer la sauvegarde
+                Créer la sauvegarde
               </Button>
             </Flex>
           </Flex>
         </form>
-      </Card>
+      </Box>
 
       {/* Section: Liste des sauvegardes */}
-      <Card size="3">
+      <Box style={{ border: "1px solid var(--gray-a6)", borderRadius: 8 }} p="4">
         <Flex direction="column" gap="4">
           <Flex align="center" justify="between">
             <Flex align="center" gap="2">
-              <HardDrive size={20} style={{ color: "var(--accent-9)" }} />
+              <HardDrives size={20} weight="duotone" style={{ color: "var(--accent-9)" }} />
               <Text size="4" weight="bold">
                 Sauvegardes existantes
               </Text>
@@ -460,11 +477,7 @@ export function BackupSettings({ initialBackups = [], initialStats = {} }: Backu
               </Badge>
             </Flex>
             <Button variant="ghost" size="1" onClick={loadBackups} disabled={isLoading}>
-              {isLoading ? (
-                <Loader2 size={14} className="animate-spin" />
-              ) : (
-                <RefreshCw size={14} />
-              )}
+              {isLoading ? <CircleNotch size={14} className="animate-spin" /> : <ArrowsClockwise size={14} />}
               Actualiser
             </Button>
           </Flex>
@@ -477,7 +490,7 @@ export function BackupSettings({ initialBackups = [], initialStats = {} }: Backu
               py="6"
               style={{ backgroundColor: "var(--gray-a2)", borderRadius: "var(--radius-2)" }}
             >
-              <Archive size={40} style={{ color: "var(--gray-8)", marginBottom: 12 }} />
+              <Archive size={40} weight="duotone" style={{ color: "var(--gray-8)", marginBottom: 12 }} />
               <Text size="3" color="gray">
                 Aucune sauvegarde
               </Text>
@@ -502,9 +515,11 @@ export function BackupSettings({ initialBackups = [], initialStats = {} }: Backu
                   <Table.Row key={backup.id}>
                     <Table.Cell>
                       <Flex align="center" gap="2">
-                        <FileJson size={16} style={{ color: "var(--gray-9)" }} />
+                        <FileJs size={16} style={{ color: "var(--gray-9)" }} />
                         <Box>
-                          <Text size="2" weight="medium">{backup.nom}</Text>
+                          <Text size="2" weight="medium">
+                            {backup.nom}
+                          </Text>
                           {backup.record_count !== null && (
                             <Text size="1" color="gray">
                               {backup.record_count.toLocaleString()} enregistrements
@@ -540,9 +555,9 @@ export function BackupSettings({ initialBackups = [], initialStats = {} }: Backu
                             disabled={backup.status !== "completed" || downloadingId === backup.id}
                           >
                             {downloadingId === backup.id ? (
-                              <Loader2 size={14} className="animate-spin" />
+                              <CircleNotch size={14} className="animate-spin" />
                             ) : (
-                              <Download size={14} />
+                              <DownloadSimple size={14} />
                             )}
                           </IconButton>
                         </Tooltip>
@@ -555,9 +570,9 @@ export function BackupSettings({ initialBackups = [], initialStats = {} }: Backu
                             disabled={deletingId === backup.id}
                           >
                             {deletingId === backup.id ? (
-                              <Loader2 size={14} className="animate-spin" />
+                              <CircleNotch size={14} className="animate-spin" />
                             ) : (
-                              <Trash2 size={14} />
+                              <Trash size={14} />
                             )}
                           </IconButton>
                         </Tooltip>
@@ -569,7 +584,7 @@ export function BackupSettings({ initialBackups = [], initialStats = {} }: Backu
             </Table.Root>
           )}
         </Flex>
-      </Card>
+      </Box>
     </Flex>
   );
 }

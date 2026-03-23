@@ -170,9 +170,7 @@ export const docArticleSchema = z.object({
     .optional()
     .nullable()
     .transform((val) => val || null),
-  content: z
-    .string()
-    .min(10, "Le contenu doit contenir au moins 10 caractères"),
+  content: z.string().min(10, "Le contenu doit contenir au moins 10 caractères"),
   readTime: z
     .string()
     .max(20, "Le temps de lecture ne peut pas dépasser 20 caractères")
@@ -272,9 +270,7 @@ export const blogPostSchema = z.object({
     .optional()
     .nullable()
     .transform((val) => val || null),
-  content: z
-    .string()
-    .min(10, "Le contenu doit contenir au moins 10 caractères"),
+  content: z.string().min(10, "Le contenu doit contenir au moins 10 caractères"),
   categoryId: z.string().uuid("L'identifiant de catégorie doit être un UUID valide"),
   authorId: z.string().uuid("L'identifiant d'auteur doit être un UUID valide"),
   featuredImage: z

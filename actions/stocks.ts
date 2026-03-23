@@ -9,8 +9,10 @@ import { revalidatePath } from "next/cache";
 import { createAuthenticatedClient, db } from "@/lib/db";
 import type { TypeMouvement } from "@/lib/db";
 import { getCurrentUser } from "@/lib/auth";
+import { z } from "zod";
 import {
   createMovementSchema,
+  inventoryLineSchema,
   type CreateMovementInput,
   type ProduitAvecStatutStock,
   type StockStatus,
@@ -39,10 +41,7 @@ async function getAuthClient() {
 /**
  * Calcule le statut de stock d'un produit
  */
-function calculateStockStatus(
-  stockActuel: number | null,
-  stockMin: number | null
-): StockStatus {
+function calculateStockStatus(stockActuel: number | null, stockMin: number | null): StockStatus {
   if (stockActuel === null || stockActuel === 0) {
     return "RUPTURE";
   }
@@ -77,9 +76,7 @@ export async function getStockStatus(options?: {
     if (options?.search) {
       const cleanSearch = sanitizeSearchTerm(options.search);
       if (cleanSearch) {
-        query = query.or(
-          `nom.ilike.%${cleanSearch}%,code_barre.ilike.%${cleanSearch}%`
-        );
+        query = query.or(`nom.ilike.%${cleanSearch}%,code_barre.ilike.%${cleanSearch}%`);
       }
     }
 
@@ -104,7 +101,7 @@ export async function getStockStatus(options?: {
           prixVente: Number(p.prix_vente),
           gererStock: p.gerer_stock,
           statut,
-          categorie: p.categories ?? { id: "", nom: "Sans catégorie", couleur: "#gray" },
+          categorie: p.categories ?? { id: "", nom: "Sans catégorie", couleur: "#6B7280" },
         };
       })
       .filter((p) => !options?.statutFilter || p.statut === options.statutFilter);
@@ -121,7 +118,10 @@ export async function getStockStatus(options?: {
  */
 export async function createMovement(
   input: CreateMovementInput
-): Promise<{ success: true; data: { stockAvant: number; stockApres: number } } | { success: false; error: string }> {
+): Promise<
+  | { success: true; data: { stockAvant: number; stockApres: number } }
+  | { success: false; error: string }
+> {
   try {
     const { supabase } = await getAuthClient();
 
@@ -212,7 +212,9 @@ export async function getMovementHistory(options?: {
   dateFrom?: Date;
   dateTo?: Date;
   limit?: number;
-}): Promise<{ success: true; data: MouvementStockAvecProduit[] } | { success: false; error: string }> {
+}): Promise<
+  { success: true; data: MouvementStockAvecProduit[] } | { success: false; error: string }
+> {
   try {
     const { supabase } = await getAuthClient();
 
@@ -272,7 +274,9 @@ export async function getMovementHistory(options?: {
 /**
  * Récupère les alertes de stock (produits en alerte ou rupture)
  */
-export async function getStockAlerts(): Promise<{ success: true; data: AlerteStock[] } | { success: false; error: string }> {
+export async function getStockAlerts(): Promise<
+  { success: true; data: AlerteStock[] } | { success: false; error: string }
+> {
   try {
     const { supabase } = await getAuthClient();
 
@@ -302,8 +306,10 @@ export async function getStockAlerts(): Promise<{ success: true; data: AlerteSto
         stockActuel: p.stock_actuel || 0,
         stockMin: p.stock_min || 0,
         unite: p.unite,
-        statut: (p.stock_actuel === null || p.stock_actuel === 0 ? "RUPTURE" : "ALERTE") as "ALERTE" | "RUPTURE",
-        categorie: p.categories ?? { id: "", nom: "Sans catégorie", couleur: "#gray" },
+        statut: (p.stock_actuel === null || p.stock_actuel === 0 ? "RUPTURE" : "ALERTE") as
+          | "ALERTE"
+          | "RUPTURE",
+        categorie: p.categories ?? { id: "", nom: "Sans catégorie", couleur: "#6B7280" },
       }));
 
     return { success: true, data: alertes };
@@ -316,7 +322,9 @@ export async function getStockAlerts(): Promise<{ success: true; data: AlerteSto
 /**
  * Calcule la valorisation du stock
  */
-export async function getStockValuation(): Promise<{ success: true; data: ValorisationStock } | { success: false; error: string }> {
+export async function getStockValuation(): Promise<
+  { success: true; data: ValorisationStock } | { success: false; error: string }
+> {
   try {
     const { supabase } = await getAuthClient();
 
@@ -376,9 +384,7 @@ export async function getStockValuation(): Promise<{ success: true; data: Valori
     const valorisation: ValorisationStock = {
       totalProduits: produits?.length ?? 0,
       valeurTotale,
-      valeurParCategorie: Array.from(valorisationMap.values()).sort(
-        (a, b) => b.valeur - a.valeur
-      ),
+      valeurParCategorie: Array.from(valorisationMap.values()).sort((a, b) => b.valeur - a.valeur),
     };
 
     return { success: true, data: valorisation };
@@ -427,12 +433,12 @@ export async function getInventoryProducts(categorieId?: string): Promise<
 
     return {
       success: true,
-      data: (produits ?? []).map((p) => ({
-        id: p.id,
-        nom: p.nom,
-        stockActuel: p.stock_actuel || 0,
-        unite: p.unite,
-        categorie: p.categories ?? { id: "", nom: "Sans catégorie", couleur: "#gray" },
+      data: (produits ?? []).map((p: Record<string, unknown>) => ({
+        id: p.id as string,
+        nom: p.nom as string,
+        stockActuel: (p.stock_actuel as number) || 0,
+        unite: p.unite as string | null,
+        categorie: (p.categories as unknown as { id: string; nom: string; couleur: string }) ?? { id: "", nom: "Sans catégorie", couleur: "#6B7280" },
       })),
     };
   } catch (error) {
@@ -458,15 +464,48 @@ export async function submitInventory(
   | { success: false; error: string }
 > {
   try {
+    // M6: Validation Zod des lignes d'inventaire
+    const validationSchema = z.array(
+      z.object({
+        produitId: z.string().uuid("ID produit invalide"),
+        quantiteReelle: z.number().int().nonnegative("La quantité ne peut pas être négative"),
+      })
+    );
+    const validationResult = validationSchema.safeParse(lignes);
+    if (!validationResult.success) {
+      const firstError = validationResult.error.issues[0];
+      return {
+        success: false,
+        error: firstError?.message || "Données d'inventaire invalides",
+      };
+    }
+    const validatedLignes = validationResult.data;
+
     const { supabase } = await getAuthClient();
 
-    const details: { produitNom: string; stockAvant: number; stockApres: number; ecart: number }[] = [];
+    // I3: Charger tous les produits en une seule requête au lieu de N requêtes
+    const produitIds = validatedLignes.map((l) => l.produitId);
+    const { data: produitsData, error: produitsError } = await supabase
+      .from("produits")
+      .select("id, nom, stock_actuel, gerer_stock")
+      .in("id", produitIds)
+      .eq("gerer_stock", true);
+
+    if (produitsError) {
+      throw new Error(produitsError.message);
+    }
+
+    const produitsMap = new Map(
+      (produitsData ?? []).map((p) => [p.id, p])
+    );
+
+    const details: { produitNom: string; stockAvant: number; stockApres: number; ecart: number }[] =
+      [];
     let ecartTotal = 0;
 
     // Traiter chaque ligne d'inventaire
-    for (const ligne of lignes) {
-      // RLS filtre par etablissement_id
-      const produit = await db.getProduitById(supabase, ligne.produitId);
+    for (const ligne of validatedLignes) {
+      const produit = produitsMap.get(ligne.produitId);
 
       if (!produit || !produit.gerer_stock) {
         continue;
@@ -480,9 +519,9 @@ export async function submitInventory(
         // Mettre à jour le stock du produit
         await db.updateProduitStock(supabase, ligne.produitId, stockApres);
 
-        // Créer un mouvement d'inventaire (utilise AJUSTEMENT)
+        // Créer un mouvement d'inventaire (utilise INVENTAIRE)
         await db.createMouvementStock(supabase, {
-          type: "AJUSTEMENT" as TypeMouvement,
+          type: "INVENTAIRE" as TypeMouvement,
           quantite: Math.abs(ecart),
           quantite_avant: stockAvant,
           quantite_apres: stockApres,
@@ -527,38 +566,29 @@ export async function getStockCategories(): Promise<
   try {
     const { supabase } = await getAuthClient();
 
-    // Récupérer les catégories qui ont des produits avec gestion de stock
+    // I4: Requête unique avec jointure au lieu de 2 requêtes séparées
     // RLS filtre automatiquement par etablissement_id
-    const { data: produits, error } = await supabase
-      .from("produits")
-      .select("categorie_id")
-      .eq("gerer_stock", true)
-      .eq("actif", true);
+    const { data: categories, error } = await supabase
+      .from("categories")
+      .select("id, nom, couleur, produits!inner(gerer_stock, actif)")
+      .eq("produits.gerer_stock", true)
+      .eq("produits.actif", true)
+      .eq("actif", true)
+      .order("nom");
 
     if (error) {
       throw new Error(error.message);
     }
 
-    // Extraire les IDs de catégories uniques
-    const categorieIds = [...new Set((produits ?? []).map((p) => p.categorie_id))];
-
-    if (categorieIds.length === 0) {
-      return { success: true, data: [] };
-    }
-
-    // Récupérer les catégories
-    const { data: categories, error: catError } = await supabase
-      .from("categories")
-      .select("id, nom, couleur")
-      .in("id", categorieIds)
-      .eq("actif", true)
-      .order("nom");
-
-    if (catError) {
-      throw new Error(catError.message);
-    }
-
-    return { success: true, data: categories ?? [] };
+    // Retourner uniquement id, nom, couleur (sans les produits joints)
+    return {
+      success: true,
+      data: (categories ?? []).map((c) => ({
+        id: c.id,
+        nom: c.nom,
+        couleur: c.couleur,
+      })),
+    };
   } catch (error) {
     console.error("Erreur lors de la récupération des catégories:", error);
     return { success: false, error: "Erreur lors de la récupération des catégories" };
@@ -569,8 +599,7 @@ export async function getStockCategories(): Promise<
  * Exporte l'état du stock au format CSV
  */
 export async function exportStockCSV(): Promise<
-  | { success: true; data: string; filename: string }
-  | { success: false; error: string }
+  { success: true; data: string; filename: string } | { success: false; error: string }
 > {
   try {
     const result = await getStockStatus();
@@ -611,9 +640,7 @@ export async function exportStockCSV(): Promise<
       ];
     });
 
-    const csvContent = [headers.join(";"), ...rows.map((row) => row.join(";"))].join(
-      "\n"
-    );
+    const csvContent = [headers.join(";"), ...rows.map((row) => row.join(";"))].join("\n");
 
     return {
       success: true,

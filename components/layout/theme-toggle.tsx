@@ -1,20 +1,18 @@
 "use client";
 
-import { Moon, Sun, Monitor } from "lucide-react";
+import { Moon, Sun, Monitor } from "@phosphor-icons/react";
 import { useTheme } from "next-themes";
-import { useEffect, useState } from "react";
-import { Button } from "@/components/ui/button";
+
+import { useMounted } from "@/hooks/use-mounted";
 
 export function ThemeToggle() {
-  const [mounted, setMounted] = useState(false);
+  const mounted = useMounted();
   const { theme, setTheme, resolvedTheme } = useTheme();
 
-  // Éviter l'hydration mismatch
-  useEffect(() => {
-    setMounted(true);
-  }, []);
+  const toggleTheme = () => {
+    setTheme(resolvedTheme === "light" ? "dark" : "light");
+  };
 
-  // Basculer entre les thèmes : light -> dark -> system -> light
   const cycleTheme = () => {
     if (theme === "light") {
       setTheme("dark");
@@ -25,28 +23,36 @@ export function ThemeToggle() {
     }
   };
 
-  // Basculer simplement entre light et dark
-  const toggleTheme = () => {
-    setTheme(resolvedTheme === "light" ? "dark" : "light");
-  };
-
-  // Afficher un placeholder pendant le montage pour éviter le flash
   if (!mounted) {
     return (
-      <Button variant="ghost" size="2" aria-label="Chargement du thème">
-        <Sun className="h-5 w-5" />
-      </Button>
+      <button
+        aria-label="Chargement du thème"
+        style={{
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          width: 36,
+          height: 36,
+          borderRadius: 8,
+          border: "none",
+          background: "transparent",
+          cursor: "pointer",
+          color: "var(--gray-11)",
+        }}
+      >
+        <Sun size={18} />
+      </button>
     );
   }
 
   const getIcon = () => {
     if (theme === "system") {
-      return <Monitor className="h-5 w-5" />;
+      return <Monitor size={18} weight="duotone" />;
     }
     return resolvedTheme === "light" ? (
-      <Moon className="h-5 w-5" />
+      <Moon size={18} weight="duotone" />
     ) : (
-      <Sun className="h-5 w-5" />
+      <Sun size={18} weight="duotone" />
     );
   };
 
@@ -58,15 +64,34 @@ export function ThemeToggle() {
   };
 
   return (
-    <Button
-      variant="ghost"
-      size="2"
+    <button
       onClick={toggleTheme}
       onDoubleClick={cycleTheme}
       aria-label={getLabel()}
       title={`${getLabel()} (double-clic pour le mode automatique)`}
+      style={{
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        width: 36,
+        height: 36,
+        borderRadius: 8,
+        border: "none",
+        background: "transparent",
+        cursor: "pointer",
+        color: "var(--gray-11)",
+        transition: "color 0.2s ease, background-color 0.2s ease",
+      }}
+      onMouseEnter={(e) => {
+        e.currentTarget.style.backgroundColor = "var(--gray-a3)";
+        e.currentTarget.style.color = "var(--gray-12)";
+      }}
+      onMouseLeave={(e) => {
+        e.currentTarget.style.backgroundColor = "transparent";
+        e.currentTarget.style.color = "var(--gray-11)";
+      }}
     >
       {getIcon()}
-    </Button>
+    </button>
   );
 }

@@ -7,7 +7,7 @@
 
 import { useState, useEffect } from "react";
 import { Box, Card, Flex, Text, Table, Select, Skeleton, Separator } from "@radix-ui/themes";
-import { Receipt } from "lucide-react";
+import { Receipt } from "@phosphor-icons/react";
 import { formatCurrency, calculerHT, calculerTVA, TVA_RATES } from "@/lib/utils";
 import { createClient } from "@/lib/supabase/client";
 import type { PeriodeType } from "@/actions/rapports";
@@ -99,10 +99,12 @@ export function TVASummary() {
         // Recuperer les lignes de vente avec le taux_tva
         const { data: lignes, error } = await supabase
           .from("lignes_vente")
-          .select(`
+          .select(
+            `
             total, taux_tva, montant_tva, sous_total,
             ventes!inner(statut, created_at)
-          `)
+          `
+          )
           .eq("ventes.statut", "PAYEE")
           .gte("ventes.created_at", from)
           .lte("ventes.created_at", to);
@@ -121,9 +123,10 @@ export function TVASummary() {
 
         for (const ligne of lignes || []) {
           const totalTTC = Number(ligne.total);
-          const taux = typeof ligne.taux_tva === "number"
-            ? ligne.taux_tva
-            : getTauxValue(String(ligne.taux_tva));
+          const taux =
+            typeof ligne.taux_tva === "number"
+              ? ligne.taux_tva
+              : getTauxValue(String(ligne.taux_tva));
 
           // Utiliser les valeurs de la ligne si disponibles, sinon calculer
           let baseHT: number;
@@ -184,7 +187,9 @@ export function TVASummary() {
         <Flex justify="between" align="center" mb="4">
           <Flex align="center" gap="2">
             <Receipt size={20} style={{ color: "var(--blue-9)" }} />
-            <Text size="4" weight="bold">Resume TVA</Text>
+            <Text size="4" weight="bold">
+              Resume TVA
+            </Text>
           </Flex>
           <Skeleton width="120px" height="32px" />
         </Flex>
@@ -202,11 +207,13 @@ export function TVASummary() {
       <Flex justify="between" align="center" mb="4" wrap="wrap" gap="3">
         <Flex align="center" gap="2">
           <Receipt size={20} style={{ color: "var(--blue-9)" }} />
-          <Text size="4" weight="bold">Resume TVA</Text>
+          <Text size="4" weight="bold">
+            Resume TVA
+          </Text>
         </Flex>
         <Select.Root value={periode} onValueChange={(v) => setPeriode(v as PeriodeType)}>
           <Select.Trigger placeholder="Periode" />
-          <Select.Content>
+          <Select.Content position="popper">
             <Select.Item value="jour">Aujourd&apos;hui</Select.Item>
             <Select.Item value="semaine">Cette semaine</Select.Item>
             <Select.Item value="mois">Ce mois</Select.Item>
@@ -217,7 +224,9 @@ export function TVASummary() {
 
       {totaux.totalTTC === 0 ? (
         <Flex align="center" justify="center" style={{ height: 200 }}>
-          <Text size="3" color="gray">Aucune vente pour cette periode</Text>
+          <Text size="3" color="gray">
+            Aucune vente pour cette periode
+          </Text>
         </Flex>
       ) : (
         <>
@@ -234,12 +243,16 @@ export function TVASummary() {
               {tvaLines.map((line) => (
                 <Table.Row key={line.taux}>
                   <Table.RowHeaderCell>
-                    <Text size="2" weight="medium">{line.label}</Text>
+                    <Text size="2" weight="medium">
+                      {line.label}
+                    </Text>
                   </Table.RowHeaderCell>
                   <Table.Cell align="right">
                     <Text
                       size="2"
-                      style={{ fontFamily: "var(--font-google-sans-code), ui-monospace, monospace" }}
+                      style={{
+                        fontFamily: "var(--font-google-sans-code), ui-monospace, monospace",
+                      }}
                     >
                       {formatCurrency(line.baseHT)}
                     </Text>
@@ -259,7 +272,9 @@ export function TVASummary() {
                   <Table.Cell align="right">
                     <Text
                       size="2"
-                      style={{ fontFamily: "var(--font-google-sans-code), ui-monospace, monospace" }}
+                      style={{
+                        fontFamily: "var(--font-google-sans-code), ui-monospace, monospace",
+                      }}
                     >
                       {formatCurrency(line.totalTTC)}
                     </Text>
@@ -273,10 +288,14 @@ export function TVASummary() {
 
           {/* Ligne de totaux */}
           <Flex justify="between" px="3" py="2">
-            <Text size="3" weight="bold">Total general</Text>
+            <Text size="3" weight="bold">
+              Total general
+            </Text>
             <Flex gap="6">
               <Box style={{ textAlign: "right", minWidth: 120 }}>
-                <Text size="1" color="gray" style={{ display: "block" }}>Base HT</Text>
+                <Text size="1" color="gray" style={{ display: "block" }}>
+                  Base HT
+                </Text>
                 <Text
                   size="3"
                   weight="bold"
@@ -286,7 +305,9 @@ export function TVASummary() {
                 </Text>
               </Box>
               <Box style={{ textAlign: "right", minWidth: 120 }}>
-                <Text size="1" color="gray" style={{ display: "block" }}>TVA collectee</Text>
+                <Text size="1" color="gray" style={{ display: "block" }}>
+                  TVA collectee
+                </Text>
                 <Text
                   size="3"
                   weight="bold"
@@ -299,7 +320,9 @@ export function TVASummary() {
                 </Text>
               </Box>
               <Box style={{ textAlign: "right", minWidth: 120 }}>
-                <Text size="1" color="gray" style={{ display: "block" }}>Total TTC</Text>
+                <Text size="1" color="gray" style={{ display: "block" }}>
+                  Total TTC
+                </Text>
                 <Text
                   size="3"
                   weight="bold"

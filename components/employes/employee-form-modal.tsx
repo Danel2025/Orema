@@ -1,24 +1,16 @@
-'use client'
+"use client";
 
 /**
- * Modal de creation/edition d'un employe
+ * Modal de création/édition d'un employé
  * Utilise React Hook Form + Zod pour la validation
  */
 
-import { useState, useEffect } from 'react'
-import { useForm, Controller } from 'react-hook-form'
-import { zodResolver } from '@hookform/resolvers/zod'
-import {
-  Dialog,
-  Button,
-  Flex,
-  Text,
-  TextField,
-  Select,
-  Switch,
-} from '@radix-ui/themes'
-import { Loader2, UserPlus, Save, Eye, EyeOff } from 'lucide-react'
-import { toast } from 'sonner'
+import { useState, useEffect } from "react";
+import { useForm, Controller } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { Dialog, Button, Flex, Text, TextField, Select, Switch } from "@radix-ui/themes";
+import { CircleNotch, UserPlus, FloppyDisk, Eye, EyeSlash } from "@phosphor-icons/react";
+import { toast } from "sonner";
 
 import {
   createEmployeSchema,
@@ -28,24 +20,24 @@ import {
   type CreateEmployeInput,
   type UpdateEmployeInput,
   type RoleType,
-} from '@/schemas/employe'
-import { createEmploye, updateEmploye, generateRandomPin } from '@/actions/employes'
+} from "@/schemas/employe";
+import { createEmploye, updateEmploye, generateRandomPin } from "@/actions/employes";
 
 interface EmployeeFormModalProps {
-  open: boolean
-  onOpenChange: (open: boolean) => void
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
   employee?: {
-    id: string
-    nom: string
-    prenom: string
-    email: string
-    role: string
-    actif: boolean
-  }
-  onSuccess?: () => void
+    id: string;
+    nom: string;
+    prenom: string;
+    email: string;
+    role: string;
+    actif: boolean;
+  };
+  onSuccess?: () => void;
 }
 
-type FormData = CreateEmployeInput | UpdateEmployeInput
+type FormData = CreateEmployeInput | UpdateEmployeInput;
 
 export function EmployeeFormModal({
   open,
@@ -53,10 +45,10 @@ export function EmployeeFormModal({
   employee,
   onSuccess,
 }: EmployeeFormModalProps) {
-  const isEditing = !!employee
-  const [isSubmitting, setIsSubmitting] = useState(false)
-  const [showPassword, setShowPassword] = useState(false)
-  const [showPin, setShowPin] = useState(false)
+  const isEditing = !!employee;
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showPin, setShowPin] = useState(false);
 
   const {
     register,
@@ -65,7 +57,6 @@ export function EmployeeFormModal({
     reset,
     setValue,
     formState: { errors },
-   
   } = useForm<FormData>({
     resolver: zodResolver(isEditing ? updateEmployeSchema : createEmployeSchema) as any,
     defaultValues: isEditing
@@ -78,15 +69,15 @@ export function EmployeeFormModal({
           actif: employee.actif,
         }
       : {
-          nom: '',
-          prenom: '',
-          email: '',
-          role: 'CAISSIER' as RoleType,
-          password: '',
-          pinCode: '',
+          nom: "",
+          prenom: "",
+          email: "",
+          role: "CAISSIER" as RoleType,
+          password: "",
+          pinCode: "",
           actif: true,
         },
-  })
+  });
 
   // Reset form when employee changes
   useEffect(() => {
@@ -98,96 +89,92 @@ export function EmployeeFormModal({
         email: employee.email,
         role: employee.role as RoleType,
         actif: employee.actif,
-      })
+      });
     } else {
       reset({
-        nom: '',
-        prenom: '',
-        email: '',
-        role: 'CAISSIER' as RoleType,
-        password: '',
-        pinCode: '',
+        nom: "",
+        prenom: "",
+        email: "",
+        role: "CAISSIER" as RoleType,
+        password: "",
+        pinCode: "",
         actif: true,
-      })
+      });
     }
-  }, [employee, reset])
+  }, [employee, reset]);
 
   const handleGeneratePin = async () => {
-    const pin = await generateRandomPin()
-    setValue('pinCode' as keyof FormData, pin)
-    setShowPin(true)
-  }
+    const pin = await generateRandomPin();
+    setValue("pinCode" as keyof FormData, pin);
+    setShowPin(true);
+  };
 
   const onSubmit = async (data: FormData) => {
-    setIsSubmitting(true)
+    setIsSubmitting(true);
 
     try {
       if (isEditing) {
-        const result = await updateEmploye(data as UpdateEmployeInput)
+        const result = await updateEmploye(data as UpdateEmployeInput);
         if (result.success) {
-          toast.success('Employe mis a jour avec succes')
-          onOpenChange(false)
-          onSuccess?.()
+          toast.success("Employé mis à jour avec succès");
+          onOpenChange(false);
+          onSuccess?.();
         } else {
-          toast.error(result.error || 'Erreur lors de la mise a jour')
+          toast.error(result.error || "Erreur lors de la mise à jour");
         }
       } else {
-        const result = await createEmploye(data as CreateEmployeInput)
+        const result = await createEmploye(data as CreateEmployeInput);
         if (result.success) {
-          toast.success('Employe cree avec succes')
-          onOpenChange(false)
-          onSuccess?.()
+          toast.success("Employé créé avec succès");
+          onOpenChange(false);
+          onSuccess?.();
         } else {
-          toast.error(result.error || 'Erreur lors de la creation')
+          toast.error(result.error || "Erreur lors de la création");
         }
       }
     } catch (error) {
-      toast.error('Une erreur est survenue')
+      toast.error("Une erreur est survenue");
     } finally {
-      setIsSubmitting(false)
+      setIsSubmitting(false);
     }
-  }
+  };
 
   return (
     <Dialog.Root open={open} onOpenChange={onOpenChange}>
       <Dialog.Content maxWidth="500px">
-        <Dialog.Title>
-          {isEditing ? 'Modifier l\'employe' : 'Nouvel employe'}
-        </Dialog.Title>
+        <Dialog.Title>{isEditing ? "Modifier l'employé" : "Nouvel employé"}</Dialog.Title>
         <Dialog.Description size="2" mb="4">
           {isEditing
-            ? 'Modifiez les informations de l\'employe'
-            : 'Remplissez les informations du nouvel employe'}
+            ? "Modifiez les informations de l'employé"
+            : "Remplissez les informations du nouvel employé"}
         </Dialog.Description>
 
         <form onSubmit={handleSubmit(onSubmit)}>
           <Flex direction="column" gap="4">
-            {/* Nom et Prenom */}
+            {/* Nom et Prénom */}
             <Flex gap="3">
               <Flex direction="column" gap="1" style={{ flex: 1 }}>
                 <Text as="label" size="2" weight="medium">
                   Nom *
                 </Text>
-                <TextField.Root
-                  {...register('nom')}
-                  placeholder="Nom de famille"
-                />
-                {errors.nom ? <Text size="1" color="red">
+                <TextField.Root {...register("nom")} placeholder="Nom de famille" />
+                {errors.nom ? (
+                  <Text size="1" color="red">
                     {errors.nom.message}
-                  </Text> : null}
+                  </Text>
+                ) : null}
               </Flex>
 
               <Flex direction="column" gap="1" style={{ flex: 1 }}>
                 <Text as="label" size="2" weight="medium">
-                  Prenom *
+                  Prénom *
                 </Text>
-                <TextField.Root
-                  {...register('prenom')}
-                  placeholder="Prenom"
-                />
-                {errors.prenom ? <Text size="1" color="red">
+                <TextField.Root {...register("prenom")} placeholder="Prénom" />
+                {errors.prenom ? (
+                  <Text size="1" color="red">
                     {errors.prenom.message}
-                  </Text> : null}
+                  </Text>
+                ) : null}
               </Flex>
             </Flex>
 
@@ -196,31 +183,26 @@ export function EmployeeFormModal({
               <Text as="label" size="2" weight="medium">
                 Email *
               </Text>
-              <TextField.Root
-                {...register('email')}
-                type="email"
-                placeholder="email@exemple.com"
-              />
-              {errors.email ? <Text size="1" color="red">
+              <TextField.Root {...register("email")} type="email" placeholder="email@exemple.com" />
+              {errors.email ? (
+                <Text size="1" color="red">
                   {errors.email.message}
-                </Text> : null}
+                </Text>
+              ) : null}
             </Flex>
 
-            {/* Role */}
+            {/* Rôle */}
             <Flex direction="column" gap="1">
               <Text as="label" size="2" weight="medium">
-                Role *
+                Rôle *
               </Text>
               <Controller
                 name="role"
                 control={control}
                 render={({ field }) => (
-                  <Select.Root
-                    value={field.value}
-                    onValueChange={field.onChange}
-                  >
-                    <Select.Trigger placeholder="Selectionnez un role" />
-                    <Select.Content>
+                  <Select.Root value={field.value} onValueChange={field.onChange}>
+                    <Select.Trigger placeholder="Sélectionnez un rôle" />
+                    <Select.Content position="popper">
                       {ROLES.map((role) => (
                         <Select.Item key={role} value={role}>
                           {ROLE_LABELS[role]}
@@ -230,9 +212,11 @@ export function EmployeeFormModal({
                   </Select.Root>
                 )}
               />
-              {errors.role ? <Text size="1" color="red">
+              {errors.role ? (
+                <Text size="1" color="red">
                   {errors.role.message}
-                </Text> : null}
+                </Text>
+              ) : null}
             </Flex>
 
             {/* Mot de passe (creation uniquement) */}
@@ -242,32 +226,34 @@ export function EmployeeFormModal({
                   Mot de passe *
                 </Text>
                 <TextField.Root
-                  {...register('password' as keyof FormData)}
-                  type={showPassword ? 'text' : 'password'}
-                  placeholder="Minimum 8 caracteres"
+                  {...register("password" as keyof FormData)}
+                  type={showPassword ? "text" : "password"}
+                  placeholder="Minimum 8 caractères"
                 >
                   <TextField.Slot side="right">
                     <button
                       type="button"
                       onClick={() => setShowPassword(!showPassword)}
                       style={{
-                        background: 'none',
-                        border: 'none',
-                        cursor: 'pointer',
+                        background: "none",
+                        border: "none",
+                        cursor: "pointer",
                         padding: 4,
                       }}
                     >
                       {showPassword ? (
-                        <EyeOff size={16} style={{ color: 'var(--gray-9)' }} />
+                        <EyeSlash size={16} style={{ color: "var(--gray-9)" }} />
                       ) : (
-                        <Eye size={16} style={{ color: 'var(--gray-9)' }} />
+                        <Eye size={16} style={{ color: "var(--gray-9)" }} />
                       )}
                     </button>
                   </TextField.Slot>
                 </TextField.Root>
-                {(errors as Record<string, { message?: string }>).password ? <Text size="1" color="red">
+                {(errors as Record<string, { message?: string }>).password ? (
+                  <Text size="1" color="red">
                     {(errors as Record<string, { message?: string }>).password?.message}
-                  </Text> : null}
+                  </Text>
+                ) : null}
                 <Text size="1" color="gray">
                   Majuscule, minuscule et chiffre requis
                 </Text>
@@ -281,19 +267,14 @@ export function EmployeeFormModal({
                   <Text as="label" size="2" weight="medium">
                     Code PIN (optionnel)
                   </Text>
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="1"
-                    onClick={handleGeneratePin}
-                  >
-                    Generer
+                  <Button type="button" variant="ghost" size="1" onClick={handleGeneratePin}>
+                    Générer
                   </Button>
                 </Flex>
                 <TextField.Root
-                  {...register('pinCode' as keyof FormData)}
-                  type={showPin ? 'text' : 'password'}
-                  placeholder="4 a 6 chiffres"
+                  {...register("pinCode" as keyof FormData)}
+                  type={showPin ? "text" : "password"}
+                  placeholder="4 à 6 chiffres"
                   maxLength={6}
                 >
                   <TextField.Slot side="right">
@@ -301,23 +282,25 @@ export function EmployeeFormModal({
                       type="button"
                       onClick={() => setShowPin(!showPin)}
                       style={{
-                        background: 'none',
-                        border: 'none',
-                        cursor: 'pointer',
+                        background: "none",
+                        border: "none",
+                        cursor: "pointer",
                         padding: 4,
                       }}
                     >
                       {showPin ? (
-                        <EyeOff size={16} style={{ color: 'var(--gray-9)' }} />
+                        <EyeSlash size={16} style={{ color: "var(--gray-9)" }} />
                       ) : (
-                        <Eye size={16} style={{ color: 'var(--gray-9)' }} />
+                        <Eye size={16} style={{ color: "var(--gray-9)" }} />
                       )}
                     </button>
                   </TextField.Slot>
                 </TextField.Root>
-                {(errors as Record<string, { message?: string }>).pinCode ? <Text size="1" color="red">
+                {(errors as Record<string, { message?: string }>).pinCode ? (
+                  <Text size="1" color="red">
                     {(errors as Record<string, { message?: string }>).pinCode?.message}
-                  </Text> : null}
+                  </Text>
+                ) : null}
                 <Text size="1" color="gray">
                   Pour connexion rapide a la caisse
                 </Text>
@@ -332,18 +315,14 @@ export function EmployeeFormModal({
                 render={({ field }) => (
                   <Text as="label" size="2">
                     <Flex gap="2" align="center">
-                      <Switch
-                        checked={field.value}
-                        onCheckedChange={field.onChange}
-                       
-                      />
+                      <Switch checked={field.value} onCheckedChange={field.onChange} />
                       <Text weight="medium">Compte actif</Text>
                     </Flex>
                   </Text>
                 )}
               />
               <Text size="1" color="gray">
-                Un compte desactive ne peut pas se connecter
+                Un compte désactivé ne peut pas se connecter
               </Text>
             </Flex>
           </Flex>
@@ -357,17 +336,17 @@ export function EmployeeFormModal({
             </Dialog.Close>
             <Button type="submit" disabled={isSubmitting}>
               {isSubmitting ? (
-                <Loader2 className="animate-spin" size={16} />
+                <CircleNotch className="animate-spin" size={16} />
               ) : isEditing ? (
-                <Save size={16} />
+                <FloppyDisk size={16} />
               ) : (
                 <UserPlus size={16} />
               )}
-              {isEditing ? 'Enregistrer' : 'Creer'}
+              {isEditing ? "Enregistrer" : "Créer"}
             </Button>
           </Flex>
         </form>
       </Dialog.Content>
     </Dialog.Root>
-  )
+  );
 }

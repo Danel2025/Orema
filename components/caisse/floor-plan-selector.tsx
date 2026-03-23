@@ -6,7 +6,17 @@
  */
 
 import { useState, useRef, useCallback, useEffect, useTransition } from "react";
-import { ZoomIn, ZoomOut, Users, X, Check, RotateCcw, Move, UtensilsCrossed, MapPin } from "lucide-react";
+import {
+  MagnifyingGlassPlus,
+  MagnifyingGlassMinus,
+  Users,
+  X,
+  Check,
+  ArrowCounterClockwise,
+  ArrowsOutCardinal,
+  ForkKnife,
+  MapPin,
+} from "@phosphor-icons/react";
 import type { DecorElementData } from "@/components/salle/DecorElement";
 import { type ZoneData, loadZones } from "@/components/salle/ZoneElement";
 import { updateTableStatut } from "@/actions/tables";
@@ -97,14 +107,9 @@ export function FloorPlanSelector({
   const panStartRef = useRef({ x: 0, y: 0, panX: 0, panY: 0 });
   const containerRef = useRef<HTMLDivElement>(null);
 
-  // Charger les éléments de décor et zones
-  const [decorElements, setDecorElements] = useState<DecorElementData[]>([]);
-  const [zoneElements, setZoneElements] = useState<ZoneData[]>([]);
-
-  useEffect(() => {
-    setDecorElements(loadDecorElements());
-    setZoneElements(loadZones());
-  }, []);
+  // Charger les éléments de décor et zones (lazy init)
+  const [decorElements] = useState<DecorElementData[]>(() => loadDecorElements());
+  const [zoneElements] = useState<ZoneData[]>(() => loadZones());
 
   // Filtrer par zone - collecter les zones uniques
   const zonesMap = new Map<string, ZoneInfo>();
@@ -149,35 +154,41 @@ export function FloorPlanSelector({
   };
 
   // Pan handlers - clic gauche sur le canvas pour déplacer
-  const handleMouseDown = useCallback((e: React.MouseEvent) => {
-    // Vérifier qu'on ne clique pas sur une table
-    const target = e.target as HTMLElement;
-    if (target.closest("[data-table-item]") || target.closest("[data-decor-item]")) {
-      return;
-    }
+  const handleMouseDown = useCallback(
+    (e: React.MouseEvent) => {
+      // Vérifier qu'on ne clique pas sur une table
+      const target = e.target as HTMLElement;
+      if (target.closest("[data-table-item]") || target.closest("[data-decor-item]")) {
+        return;
+      }
 
-    // Clic gauche ou molette pour pan
-    if (e.button === 0 || e.button === 1) {
-      e.preventDefault();
-      setIsPanning(true);
-      panStartRef.current = {
-        x: e.clientX,
-        y: e.clientY,
-        panX: pan.x,
-        panY: pan.y,
-      };
-    }
-  }, [pan]);
+      // Clic gauche ou molette pour pan
+      if (e.button === 0 || e.button === 1) {
+        e.preventDefault();
+        setIsPanning(true);
+        panStartRef.current = {
+          x: e.clientX,
+          y: e.clientY,
+          panX: pan.x,
+          panY: pan.y,
+        };
+      }
+    },
+    [pan]
+  );
 
-  const handleMouseMove = useCallback((e: React.MouseEvent) => {
-    if (!isPanning) return;
-    const deltaX = e.clientX - panStartRef.current.x;
-    const deltaY = e.clientY - panStartRef.current.y;
-    setPan({
-      x: panStartRef.current.panX + deltaX,
-      y: panStartRef.current.panY + deltaY,
-    });
-  }, [isPanning]);
+  const handleMouseMove = useCallback(
+    (e: React.MouseEvent) => {
+      if (!isPanning) return;
+      const deltaX = e.clientX - panStartRef.current.x;
+      const deltaY = e.clientY - panStartRef.current.y;
+      setPan({
+        x: panStartRef.current.panX + deltaX,
+        y: panStartRef.current.panY + deltaY,
+      });
+    },
+    [isPanning]
+  );
 
   const handleMouseUp = useCallback(() => {
     setIsPanning(false);
@@ -234,24 +245,29 @@ export function FloorPlanSelector({
   }, []);
 
   // Changer le statut d'une table
-  const handleChangeStatus = useCallback((newStatus: string) => {
-    if (!contextMenu.table) return;
+  const handleChangeStatus = useCallback(
+    (newStatus: string) => {
+      if (!contextMenu.table) return;
 
-    startTransition(async () => {
-      const result = await updateTableStatut({
-        id: contextMenu.table!.id,
-        statut: newStatus as "LIBRE" | "OCCUPEE" | "EN_PREPARATION" | "ADDITION" | "A_NETTOYER",
+      startTransition(async () => {
+        const result = await updateTableStatut({
+          id: contextMenu.table!.id,
+          statut: newStatus as "LIBRE" | "OCCUPEE" | "EN_PREPARATION" | "ADDITION" | "A_NETTOYER",
+        });
+
+        if (result.success) {
+          toast.success(
+            `Table ${contextMenu.table!.numero} → ${STATUS_STYLES[newStatus]?.label || newStatus}`
+          );
+          // Mettre à jour localement (le parent devrait recharger)
+          closeContextMenu();
+        } else {
+          toast.error(result.error || "Erreur lors du changement de statut");
+        }
       });
-
-      if (result.success) {
-        toast.success(`Table ${contextMenu.table!.numero} → ${STATUS_STYLES[newStatus]?.label || newStatus}`);
-        // Mettre à jour localement (le parent devrait recharger)
-        closeContextMenu();
-      } else {
-        toast.error(result.error || "Erreur lors du changement de statut");
-      }
-    });
-  }, [contextMenu.table, closeContextMenu]);
+    },
+    [contextMenu.table, closeContextMenu]
+  );
 
   // Fermer le menu contextuel quand on clique ailleurs
   useEffect(() => {
@@ -312,7 +328,7 @@ export function FloorPlanSelector({
               Sélectionner une table
             </h2>
             <p style={{ fontSize: 13, color: "var(--gray-10)", margin: "4px 0 0" }}>
-              <Move size={12} style={{ display: "inline", marginRight: 4 }} />
+              <ArrowsOutCardinal size={12} style={{ display: "inline", marginRight: 4 }} />
               Glissez pour naviguer • Cliquez sur une table libre
             </p>
           </div>
@@ -356,7 +372,10 @@ export function FloorPlanSelector({
                 fontSize: 12,
                 fontWeight: 500,
                 borderRadius: 6,
-                border: selectedZoneId === null ? "2px solid var(--accent-9)" : "1px solid var(--gray-a6)",
+                border:
+                  selectedZoneId === null
+                    ? "2px solid var(--accent-9)"
+                    : "1px solid var(--gray-a6)",
                 backgroundColor: selectedZoneId === null ? "var(--accent-a3)" : "transparent",
                 color: selectedZoneId === null ? "var(--accent-11)" : "var(--gray-12)",
                 cursor: "pointer",
@@ -373,7 +392,10 @@ export function FloorPlanSelector({
                   fontSize: 12,
                   fontWeight: 500,
                   borderRadius: 6,
-                  border: selectedZoneId === zone.id ? "2px solid var(--accent-9)" : "1px solid var(--gray-a6)",
+                  border:
+                    selectedZoneId === zone.id
+                      ? "2px solid var(--accent-9)"
+                      : "1px solid var(--gray-a6)",
                   backgroundColor: selectedZoneId === zone.id ? "var(--accent-a3)" : "transparent",
                   color: selectedZoneId === zone.id ? "var(--accent-11)" : "var(--gray-12)",
                   cursor: "pointer",
@@ -424,7 +446,7 @@ export function FloorPlanSelector({
                   color: zoom <= 0.4 ? "var(--gray-8)" : "var(--gray-11)",
                 }}
               >
-                <ZoomOut size={14} />
+                <MagnifyingGlassMinus size={14} />
               </button>
               <span
                 style={{
@@ -453,7 +475,7 @@ export function FloorPlanSelector({
                   color: zoom >= 1.5 ? "var(--gray-8)" : "var(--gray-11)",
                 }}
               >
-                <ZoomIn size={14} />
+                <MagnifyingGlassPlus size={14} />
               </button>
               <button
                 onClick={handleResetZoom}
@@ -472,7 +494,7 @@ export function FloorPlanSelector({
                 }}
                 title="Réinitialiser la vue"
               >
-                <RotateCcw size={14} />
+                <ArrowCounterClockwise size={14} />
               </button>
             </div>
           </div>
@@ -595,29 +617,82 @@ export function FloorPlanSelector({
                 >
                   {/* Rendu spécial pour les formes de murs */}
                   {element.type === "wall-l" && (
-                    <svg width="100%" height="100%" viewBox="0 0 100 100" style={{ position: "absolute", inset: 0 }}>
-                      <path d="M10 10 L10 90 L90 90" stroke={style.border} strokeWidth="12" fill="none" strokeLinecap="round" strokeLinejoin="round" />
+                    <svg
+                      width="100%"
+                      height="100%"
+                      viewBox="0 0 100 100"
+                      style={{ position: "absolute", inset: 0 }}
+                    >
+                      <path
+                        d="M10 10 L10 90 L90 90"
+                        stroke={style.border}
+                        strokeWidth="12"
+                        fill="none"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      />
                     </svg>
                   )}
                   {element.type === "wall-t" && (
-                    <svg width="100%" height="100%" viewBox="0 0 100 100" style={{ position: "absolute", inset: 0 }}>
-                      <path d="M10 10 L90 10" stroke={style.border} strokeWidth="12" fill="none" strokeLinecap="round" />
-                      <path d="M50 10 L50 90" stroke={style.border} strokeWidth="12" fill="none" strokeLinecap="round" />
+                    <svg
+                      width="100%"
+                      height="100%"
+                      viewBox="0 0 100 100"
+                      style={{ position: "absolute", inset: 0 }}
+                    >
+                      <path
+                        d="M10 10 L90 10"
+                        stroke={style.border}
+                        strokeWidth="12"
+                        fill="none"
+                        strokeLinecap="round"
+                      />
+                      <path
+                        d="M50 10 L50 90"
+                        stroke={style.border}
+                        strokeWidth="12"
+                        fill="none"
+                        strokeLinecap="round"
+                      />
                     </svg>
                   )}
                   {element.type === "wall-cross" && (
-                    <svg width="100%" height="100%" viewBox="0 0 100 100" style={{ position: "absolute", inset: 0 }}>
-                      <path d="M10 50 L90 50" stroke={style.border} strokeWidth="12" fill="none" strokeLinecap="round" />
-                      <path d="M50 10 L50 90" stroke={style.border} strokeWidth="12" fill="none" strokeLinecap="round" />
+                    <svg
+                      width="100%"
+                      height="100%"
+                      viewBox="0 0 100 100"
+                      style={{ position: "absolute", inset: 0 }}
+                    >
+                      <path
+                        d="M10 50 L90 50"
+                        stroke={style.border}
+                        strokeWidth="12"
+                        fill="none"
+                        strokeLinecap="round"
+                      />
+                      <path
+                        d="M50 10 L50 90"
+                        stroke={style.border}
+                        strokeWidth="12"
+                        fill="none"
+                        strokeLinecap="round"
+                      />
                     </svg>
                   )}
                   {element.type === "shelf" && (
-                    <svg width="100%" height="100%" viewBox="0 0 100 20" preserveAspectRatio="none" style={{ position: "absolute", inset: 0 }}>
+                    <svg
+                      width="100%"
+                      height="100%"
+                      viewBox="0 0 100 20"
+                      preserveAspectRatio="none"
+                      style={{ position: "absolute", inset: 0 }}
+                    >
                       <rect x="0" y="2" width="100" height="6" fill={style.border} rx="1" />
                       <rect x="0" y="12" width="100" height="6" fill={style.border} rx="1" />
                     </svg>
                   )}
-                  {element.label && !isWallType && !isShelf && element.width > 60 ? <span
+                  {element.label && !isWallType && !isShelf && element.width > 60 ? (
+                    <span
                       style={{
                         fontSize: 10,
                         fontWeight: 600,
@@ -626,7 +701,8 @@ export function FloorPlanSelector({
                       }}
                     >
                       {element.label}
-                    </span> : null}
+                    </span>
+                  ) : null}
                 </div>
               );
             })}
@@ -684,8 +760,8 @@ export function FloorPlanSelector({
                     boxShadow: isSelected
                       ? "0 0 0 3px var(--accent-a5), 0 4px 12px rgba(0,0,0,0.2)"
                       : isHovered && selectable
-                      ? "0 4px 12px rgba(0,0,0,0.15)"
-                      : "0 1px 3px rgba(0,0,0,0.1)",
+                        ? "0 4px 12px rgba(0,0,0,0.15)"
+                        : "0 1px 3px rgba(0,0,0,0.1)",
                     cursor: selectable ? "pointer" : "not-allowed",
                     opacity: selectable ? 1 : 0.5,
                     transform: isHovered && selectable ? "scale(1.05)" : undefined,
@@ -693,7 +769,8 @@ export function FloorPlanSelector({
                   }}
                 >
                   {/* Selected checkmark */}
-                  {isSelected ? <div
+                  {isSelected ? (
+                    <div
                       style={{
                         position: "absolute",
                         top: -8,
@@ -710,7 +787,8 @@ export function FloorPlanSelector({
                       }}
                     >
                       <Check size={14} />
-                    </div> : null}
+                    </div>
+                  ) : null}
 
                   {/* Table number */}
                   <span
@@ -807,7 +885,8 @@ export function FloorPlanSelector({
         </div>
 
         {/* Menu contextuel pour changer le statut */}
-        {contextMenu.visible && contextMenu.table ? <div
+        {contextMenu.visible && contextMenu.table ? (
+          <div
             style={{
               position: "fixed",
               left: contextMenu.x,
@@ -849,7 +928,8 @@ export function FloorPlanSelector({
                   fontWeight: 500,
                   border: "none",
                   borderRadius: 4,
-                  backgroundColor: contextMenu.table?.statut === key ? "var(--gray-a3)" : "transparent",
+                  backgroundColor:
+                    contextMenu.table?.statut === key ? "var(--gray-a3)" : "transparent",
                   color: contextMenu.table?.statut === key ? "var(--gray-9)" : "var(--gray-12)",
                   cursor: contextMenu.table?.statut === key ? "default" : "pointer",
                   textAlign: "left",
@@ -870,10 +950,12 @@ export function FloorPlanSelector({
                 )}
               </button>
             ))}
-          </div> : null}
+          </div>
+        ) : null}
 
         {/* Panel de confirmation avec nombre de couverts */}
-        {pendingTable ? <div
+        {pendingTable ? (
+          <div
             style={{
               padding: "16px 20px",
               borderTop: "1px solid var(--gray-a6)",
@@ -884,19 +966,19 @@ export function FloorPlanSelector({
             }}
           >
             <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-              <UtensilsCrossed size={18} style={{ color: "var(--accent-11)" }} />
+              <ForkKnife size={18} style={{ color: "var(--accent-11)" }} />
               <span style={{ fontSize: 14, fontWeight: 600, color: "var(--gray-12)" }}>
                 Table {pendingTable.numero}
               </span>
-              {pendingTable.zone ? <span style={{ fontSize: 12, color: "var(--gray-10)" }}>
+              {pendingTable.zone ? (
+                <span style={{ fontSize: 12, color: "var(--gray-10)" }}>
                   ({pendingTable.zone.nom})
-                </span> : null}
+                </span>
+              ) : null}
             </div>
 
             <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-              <label style={{ fontSize: 13, color: "var(--gray-11)" }}>
-                Nombre de couverts:
-              </label>
+              <label style={{ fontSize: 13, color: "var(--gray-11)" }}>Nombre de couverts:</label>
               <input
                 type="number"
                 value={couverts}
@@ -957,7 +1039,8 @@ export function FloorPlanSelector({
                 Confirmer
               </button>
             </div>
-          </div> : null}
+          </div>
+        ) : null}
       </div>
     </div>
   );

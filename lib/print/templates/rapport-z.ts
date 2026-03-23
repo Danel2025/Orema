@@ -41,7 +41,6 @@ function formatDateTime(date: Date | string): string {
   return `${formatDate(date)} ${formatTime(date)}`;
 }
 
- 
 export function generateRapportZCommands(
   printer: any,
   etablissement: EtablissementInfo,
@@ -212,9 +211,7 @@ export function generateRapportZCommands(
   // REPARTITION PAR TYPE DE VENTE
   // ============================================
 
-  const typesAvecVentes = Object.entries(data.ventesParType).filter(
-    ([, stats]) => stats.count > 0
-  );
+  const typesAvecVentes = Object.entries(data.ventesParType).filter(([, stats]) => stats.count > 0);
 
   if (typesAvecVentes.length > 0) {
     printer.alignCenter();
@@ -227,10 +224,7 @@ export function generateRapportZCommands(
 
     for (const [type, stats] of typesAvecVentes) {
       const label = TYPE_VENTE_LABELS[type] || type;
-      printer.leftRight(
-        `${label} (${stats.count}):`,
-        `${formatAmount(stats.total)} F`
-      );
+      printer.leftRight(`${label} (${stats.count}):`, `${formatAmount(stats.total)} F`);
     }
 
     printer.drawLine();
@@ -325,10 +319,7 @@ export function generateRapportZCommands(
     printer.invert(true);
   }
   printer.bold(true);
-  printer.leftRight(
-    "ECART:",
-    `${data.ecart >= 0 ? "+" : ""}${formatAmount(data.ecart)} F`
-  );
+  printer.leftRight("ECART:", `${data.ecart >= 0 ? "+" : ""}${formatAmount(data.ecart)} F`);
   printer.bold(false);
   if (hasEcart) {
     printer.invert(false);

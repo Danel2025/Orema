@@ -42,15 +42,32 @@ import type { ZodSchema } from "zod";
 
 type ActionResult<T = unknown> = { success: boolean; error?: string; data?: T };
 
-function validate<T>(schema: ZodSchema<T>, data: unknown): { valid: true; data: T } | { valid: false; error: string } {
+function validate<T>(
+  schema: ZodSchema<T>,
+  data: unknown
+): { valid: true; data: T } | { valid: false; error: string } {
   const result = schema.safeParse(data);
-  if (!result.success) return { valid: false, error: result.error.issues[0]?.message || "Données invalides" };
+  if (!result.success)
+    return { valid: false, error: result.error.issues[0]?.message || "Données invalides" };
   return { valid: true, data: result.data };
 }
 
 function handleError<T = unknown>(message: string, error: unknown): ActionResult<T> {
   console.error(message, error);
   return { success: false, error: message };
+}
+
+const MUTATION_ALLOWED_ROLES = ["SUPER_ADMIN", "ADMIN", "MANAGER"];
+
+async function requireMutationRole<T = void>(): Promise<
+  | { authorized: true }
+  | { authorized: false; result: ActionResult<T> }
+> {
+  const currentUser = await getCurrentUser();
+  if (!currentUser || !MUTATION_ALLOWED_ROLES.includes(currentUser.role)) {
+    return { authorized: false, result: { success: false, error: "Permissions insuffisantes" } as ActionResult<T> };
+  }
+  return { authorized: true };
 }
 
 // ============================================================================
@@ -63,6 +80,8 @@ export async function getEtablissementInfo() {
 
 export async function updateEtablissement(data: EtablissementFormData): Promise<ActionResult> {
   try {
+    const auth = await requireMutationRole();
+    if (!auth.authorized) return auth.result;
     const etablissementId = await getEtablissementId();
     const validation = validate(etablissementSchema, data);
     if (!validation.valid) return { success: false, error: validation.error };
@@ -116,6 +135,8 @@ export async function getTvaRates() {
 
 export async function updateFiscalSettings(data: FiscalFormData): Promise<ActionResult> {
   try {
+    const auth = await requireMutationRole();
+    if (!auth.authorized) return auth.result;
     const etablissementId = await getEtablissementId();
     const validation = validate(fiscalSchema, data);
     if (!validation.valid) return { success: false, error: validation.error };
@@ -205,6 +226,8 @@ export async function getImprimanteById(id: string) {
 
 export async function createImprimante(data: ImprimanteFormData): Promise<ActionResult> {
   try {
+    const auth = await requireMutationRole();
+    if (!auth.authorized) return auth.result;
     const etablissementId = await getEtablissementId();
     const validation = validate(imprimanteSchema, data);
     if (!validation.valid) return { success: false, error: validation.error };
@@ -234,8 +257,13 @@ export async function createImprimante(data: ImprimanteFormData): Promise<Action
   }
 }
 
-export async function updateImprimante(id: string, data: ImprimanteFormData): Promise<ActionResult> {
+export async function updateImprimante(
+  id: string,
+  data: ImprimanteFormData
+): Promise<ActionResult> {
   try {
+    const auth = await requireMutationRole();
+    if (!auth.authorized) return auth.result;
     const etablissementId = await getEtablissementId();
     const validation = validate(imprimanteSchema, data);
     if (!validation.valid) return { success: false, error: validation.error };
@@ -278,6 +306,8 @@ export async function updateImprimante(id: string, data: ImprimanteFormData): Pr
 
 export async function deleteImprimante(id: string): Promise<ActionResult> {
   try {
+    const auth = await requireMutationRole();
+    if (!auth.authorized) return auth.result;
     const etablissementId = await getEtablissementId();
     const supabase = createServiceClient();
 
@@ -302,6 +332,8 @@ export async function deleteImprimante(id: string): Promise<ActionResult> {
 
 export async function toggleImprimanteActif(id: string): Promise<ActionResult<{ actif: boolean }>> {
   try {
+    const auth = await requireMutationRole<{ actif: boolean }>();
+    if (!auth.authorized) return auth.result;
     const etablissementId = await getEtablissementId();
     const supabase = createServiceClient();
 
@@ -362,6 +394,8 @@ export async function getZoneLivraisonById(id: string) {
 
 export async function createZoneLivraison(data: ZoneLivraisonFormData): Promise<ActionResult> {
   try {
+    const auth = await requireMutationRole();
+    if (!auth.authorized) return auth.result;
     const etablissementId = await getEtablissementId();
     const validation = validate(zoneLivraisonSchema, data);
     if (!validation.valid) return { success: false, error: validation.error };
@@ -409,8 +443,13 @@ export async function createZoneLivraison(data: ZoneLivraisonFormData): Promise<
   }
 }
 
-export async function updateZoneLivraison(id: string, data: ZoneLivraisonFormData): Promise<ActionResult> {
+export async function updateZoneLivraison(
+  id: string,
+  data: ZoneLivraisonFormData
+): Promise<ActionResult> {
   try {
+    const auth = await requireMutationRole();
+    if (!auth.authorized) return auth.result;
     const etablissementId = await getEtablissementId();
     const validation = validate(zoneLivraisonSchema, data);
     if (!validation.valid) return { success: false, error: validation.error };
@@ -460,6 +499,8 @@ export async function updateZoneLivraison(id: string, data: ZoneLivraisonFormDat
 
 export async function deleteZoneLivraison(id: string): Promise<ActionResult> {
   try {
+    const auth = await requireMutationRole();
+    if (!auth.authorized) return auth.result;
     const etablissementId = await getEtablissementId();
     const supabase = createServiceClient();
 
@@ -479,7 +520,10 @@ export async function deleteZoneLivraison(id: string): Promise<ActionResult> {
       .eq("zone_id", id);
 
     if (count && count > 0) {
-      return { success: false, error: `Impossible de supprimer cette zone car elle contient ${count} table(s)` };
+      return {
+        success: false,
+        error: `Impossible de supprimer cette zone car elle contient ${count} table(s)`,
+      };
     }
 
     const { error } = await supabase.from("zones").delete().eq("id", id);
@@ -494,6 +538,8 @@ export async function deleteZoneLivraison(id: string): Promise<ActionResult> {
 
 export async function toggleZoneLivraisonActif(id: string): Promise<ActionResult> {
   try {
+    const auth = await requireMutationRole();
+    if (!auth.authorized) return auth.result;
     const etablissementId = await getEtablissementId();
     const supabase = createServiceClient();
 
@@ -529,7 +575,15 @@ export async function getCaisseVentesSettings() {
   const etablissement = await getEtablissement();
   const modesPaiementActifs = etablissement.modesPaiementActifs.filter(
     (mode) => mode !== "MIXTE"
-  ) as Array<"ESPECES" | "CARTE_BANCAIRE" | "AIRTEL_MONEY" | "MOOV_MONEY" | "CHEQUE" | "VIREMENT" | "COMPTE_CLIENT">;
+  ) as Array<
+    | "ESPECES"
+    | "CARTE_BANCAIRE"
+    | "AIRTEL_MONEY"
+    | "MOOV_MONEY"
+    | "CHEQUE"
+    | "VIREMENT"
+    | "COMPTE_CLIENT"
+  >;
 
   return {
     modeVenteDefaut: etablissement.modeVenteDefaut as "DIRECT" | "TABLE" | "LIVRAISON" | "EMPORTER",
@@ -541,8 +595,12 @@ export async function getCaisseVentesSettings() {
   };
 }
 
-export async function updateCaisseVentesSettings(data: CaisseVentesFormData): Promise<ActionResult> {
+export async function updateCaisseVentesSettings(
+  data: CaisseVentesFormData
+): Promise<ActionResult> {
   try {
+    const auth = await requireMutationRole();
+    if (!auth.authorized) return auth.result;
     const etablissementId = await getEtablissementId();
     const validation = validate(caisseVentesSchema, data);
     if (!validation.valid) return { success: false, error: validation.error };
@@ -597,6 +655,8 @@ export async function getStockSettings() {
 
 export async function updateStockSettings(data: StockSettingsFormData): Promise<ActionResult> {
   try {
+    const auth = await requireMutationRole();
+    if (!auth.authorized) return auth.result;
     const etablissementId = await getEtablissementId();
     const validation = validate(stockSettingsSchema, data);
     if (!validation.valid) return { success: false, error: validation.error };
@@ -648,8 +708,12 @@ export async function getFideliteSettings() {
   };
 }
 
-export async function updateFideliteSettings(data: FideliteSettingsFormData): Promise<ActionResult> {
+export async function updateFideliteSettings(
+  data: FideliteSettingsFormData
+): Promise<ActionResult> {
   try {
+    const auth = await requireMutationRole();
+    if (!auth.authorized) return auth.result;
     const etablissementId = await getEtablissementId();
     const validation = validate(fideliteSettingsSchema, data);
     if (!validation.valid) return { success: false, error: validation.error };
@@ -699,12 +763,26 @@ export async function getSecuriteSettings() {
     dureeBlocage: etablissement.dureeBlocage,
     sessionTimeout: etablissement.sessionTimeout,
     auditActif: etablissement.auditActif,
-    actionsALogger: etablissement.actionsALogger as Array<"CREATE" | "UPDATE" | "DELETE" | "LOGIN" | "LOGOUT" | "CAISSE_OUVERTURE" | "CAISSE_CLOTURE" | "ANNULATION_VENTE" | "REMISE_APPLIQUEE">,
+    actionsALogger: etablissement.actionsALogger as Array<
+      | "CREATE"
+      | "UPDATE"
+      | "DELETE"
+      | "LOGIN"
+      | "LOGOUT"
+      | "CAISSE_OUVERTURE"
+      | "CAISSE_CLOTURE"
+      | "ANNULATION_VENTE"
+      | "REMISE_APPLIQUEE"
+    >,
   };
 }
 
-export async function updateSecuriteSettings(data: SecuriteSettingsFormData): Promise<ActionResult> {
+export async function updateSecuriteSettings(
+  data: SecuriteSettingsFormData
+): Promise<ActionResult> {
   try {
+    const auth = await requireMutationRole();
+    if (!auth.authorized) return auth.result;
     const etablissementId = await getEtablissementId();
     const validation = validate(securiteSettingsSchema, data);
     if (!validation.valid) return { success: false, error: validation.error };
@@ -754,14 +832,23 @@ export async function getPlanSalleSettings() {
     couleurTablePrepa: etablissement.couleurTablePrepa,
     couleurTableAddition: etablissement.couleurTableAddition,
     couleurTableNettoyer: etablissement.couleurTableNettoyer,
-    affichageTable: etablissement.affichageTable as "NOM" | "NUMERO" | "CAPACITE" | "NOM_NUMERO" | "NUMERO_CAPACITE",
+    affichageTable: etablissement.affichageTable as
+      | "NOM"
+      | "NUMERO"
+      | "CAPACITE"
+      | "NOM_NUMERO"
+      | "NUMERO_CAPACITE",
     grilleActivee: etablissement.grilleActivee,
     tailleGrille: etablissement.tailleGrille,
   };
 }
 
-export async function updatePlanSalleSettings(data: PlanSalleSettingsFormData): Promise<ActionResult> {
+export async function updatePlanSalleSettings(
+  data: PlanSalleSettingsFormData
+): Promise<ActionResult> {
   try {
+    const auth = await requireMutationRole();
+    if (!auth.authorized) return auth.result;
     const etablissementId = await getEtablissementId();
     const validation = validate(planSalleSettingsSchema, data);
     if (!validation.valid) return { success: false, error: validation.error };
@@ -985,9 +1072,9 @@ export async function resetData(data: ResetDataOptions): Promise<ActionResult<Re
     // Note: RESET_DATA n'est pas dans l'enum ActionAudit, on utilise DELETE comme action d'audit
     await supabase.from("audit_logs").insert({
       action: "DELETE",
-      entite: "Systeme",
+      entite: "Système",
       entite_id: etablissementId,
-      description: `Remise a zero des donnees: ${Object.entries(deletedCounts)
+      description: `Remise à zéro des données: ${Object.entries(deletedCounts)
         .filter(([, count]) => count > 0)
         .map(([table, count]) => `${table}(${count})`)
         .join(", ")}`,
@@ -1169,32 +1256,40 @@ export async function getParametresFacture(): Promise<ParametresFactureFormData>
 function mapDbToFormData(data: Record<string, unknown>): ParametresFactureFormData {
   return {
     typeFactureDefaut: (data.type_facture_defaut as string) || "TICKET_SIMPLE",
-    afficherLogo: data.afficher_logo as boolean ?? true,
-    afficherInfosEtablissement: data.afficher_infos_etablissement as boolean ?? true,
-    afficherNifRccm: data.afficher_nif_rccm as boolean ?? false,
-    afficherDetailTva: data.afficher_detail_tva as boolean ?? true,
-    afficherQrCode: data.afficher_qr_code as boolean ?? false,
+    afficherLogo: (data.afficher_logo as boolean) ?? true,
+    afficherInfosEtablissement: (data.afficher_infos_etablissement as boolean) ?? true,
+    afficherNifRccm: (data.afficher_nif_rccm as boolean) ?? false,
+    afficherDetailTva: (data.afficher_detail_tva as boolean) ?? true,
+    afficherQrCode: (data.afficher_qr_code as boolean) ?? false,
     styleSeparateur: (data.style_separateur as string) || "TIRETS",
     enteteTicketSimple: data.entete_ticket_simple as string | null,
-    enteteFactureDetaillee: data.entete_facture_detaillee as string | null ?? "FACTURE",
-    enteteProForma: data.entete_pro_forma as string | null ?? "PRO-FORMA",
-    enteteNoteAddition: data.entete_note_addition as string | null ?? "ADDITION",
-    piedPageTicketSimple: data.pied_page_ticket_simple as string | null ?? "Merci de votre visite !",
-    piedPageFactureDetaillee: data.pied_page_facture_detaillee as string | null ?? "Conditions de paiement : comptant",
-    piedPageProForma: data.pied_page_pro_forma as string | null ?? "Ce document n'est pas une facture",
-    piedPageNoteAddition: data.pied_page_note_addition as string | null ?? "Merci de régler à la caisse",
-    copiesTicketSimple: data.copies_ticket_simple as number ?? 1,
-    copiesFactureDetaillee: data.copies_facture_detaillee as number ?? 2,
-    copiesProForma: data.copies_pro_forma as number ?? 1,
-    copiesNoteAddition: data.copies_note_addition as number ?? 1,
+    enteteFactureDetaillee: (data.entete_facture_detaillee as string | null) ?? "FACTURE",
+    enteteProForma: (data.entete_pro_forma as string | null) ?? "PRO-FORMA",
+    enteteNoteAddition: (data.entete_note_addition as string | null) ?? "ADDITION",
+    piedPageTicketSimple:
+      (data.pied_page_ticket_simple as string | null) ?? "Merci de votre visite !",
+    piedPageFactureDetaillee:
+      (data.pied_page_facture_detaillee as string | null) ?? "Conditions de paiement : comptant",
+    piedPageProForma:
+      (data.pied_page_pro_forma as string | null) ?? "Ce document n'est pas une facture",
+    piedPageNoteAddition:
+      (data.pied_page_note_addition as string | null) ?? "Merci de régler à la caisse",
+    copiesTicketSimple: (data.copies_ticket_simple as number) ?? 1,
+    copiesFactureDetaillee: (data.copies_facture_detaillee as number) ?? 2,
+    copiesProForma: (data.copies_pro_forma as number) ?? 1,
+    copiesNoteAddition: (data.copies_note_addition as number) ?? 1,
   } as ParametresFactureFormData;
 }
 
 /**
  * Met a jour les parametres de facture
  */
-export async function updateParametresFacture(data: ParametresFactureFormData): Promise<ActionResult> {
+export async function updateParametresFacture(
+  data: ParametresFactureFormData
+): Promise<ActionResult> {
   try {
+    const auth = await requireMutationRole();
+    if (!auth.authorized) return auth.result;
     const etablissementId = await getEtablissementId();
     const validation = validate(parametresFactureSchema, data);
     if (!validation.valid) return { success: false, error: validation.error };
@@ -1205,30 +1300,33 @@ export async function updateParametresFacture(data: ParametresFactureFormData): 
     // Note: Table parametres_facture peut ne pas exister dans les types generés
     const { data: result, error } = await (supabase as any)
       .from("parametres_facture")
-      .upsert({
-        etablissement_id: etablissementId,
-        type_facture_defaut: validation.data.typeFactureDefaut,
-        afficher_logo: validation.data.afficherLogo,
-        afficher_infos_etablissement: validation.data.afficherInfosEtablissement,
-        afficher_nif_rccm: validation.data.afficherNifRccm,
-        afficher_detail_tva: validation.data.afficherDetailTva,
-        afficher_qr_code: validation.data.afficherQrCode,
-        style_separateur: validation.data.styleSeparateur,
-        entete_ticket_simple: validation.data.enteteTicketSimple || null,
-        entete_facture_detaillee: validation.data.enteteFactureDetaillee || null,
-        entete_pro_forma: validation.data.enteteProForma || null,
-        entete_note_addition: validation.data.enteteNoteAddition || null,
-        pied_page_ticket_simple: validation.data.piedPageTicketSimple || null,
-        pied_page_facture_detaillee: validation.data.piedPageFactureDetaillee || null,
-        pied_page_pro_forma: validation.data.piedPageProForma || null,
-        pied_page_note_addition: validation.data.piedPageNoteAddition || null,
-        copies_ticket_simple: validation.data.copiesTicketSimple,
-        copies_facture_detaillee: validation.data.copiesFactureDetaillee,
-        copies_pro_forma: validation.data.copiesProForma,
-        copies_note_addition: validation.data.copiesNoteAddition,
-      }, {
-        onConflict: "etablissement_id",
-      })
+      .upsert(
+        {
+          etablissement_id: etablissementId,
+          type_facture_defaut: validation.data.typeFactureDefaut,
+          afficher_logo: validation.data.afficherLogo,
+          afficher_infos_etablissement: validation.data.afficherInfosEtablissement,
+          afficher_nif_rccm: validation.data.afficherNifRccm,
+          afficher_detail_tva: validation.data.afficherDetailTva,
+          afficher_qr_code: validation.data.afficherQrCode,
+          style_separateur: validation.data.styleSeparateur,
+          entete_ticket_simple: validation.data.enteteTicketSimple || null,
+          entete_facture_detaillee: validation.data.enteteFactureDetaillee || null,
+          entete_pro_forma: validation.data.enteteProForma || null,
+          entete_note_addition: validation.data.enteteNoteAddition || null,
+          pied_page_ticket_simple: validation.data.piedPageTicketSimple || null,
+          pied_page_facture_detaillee: validation.data.piedPageFactureDetaillee || null,
+          pied_page_pro_forma: validation.data.piedPageProForma || null,
+          pied_page_note_addition: validation.data.piedPageNoteAddition || null,
+          copies_ticket_simple: validation.data.copiesTicketSimple,
+          copies_facture_detaillee: validation.data.copiesFactureDetaillee,
+          copies_pro_forma: validation.data.copiesProForma,
+          copies_note_addition: validation.data.copiesNoteAddition,
+        },
+        {
+          onConflict: "etablissement_id",
+        }
+      )
       .select()
       .single();
 

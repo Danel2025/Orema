@@ -1,4 +1,4 @@
-import { redirect } from 'next/navigation'
+import { redirect } from "next/navigation";
 
 /**
  * Page racine du dashboard - redirige vers /dashboard
@@ -6,5 +6,5 @@ import { redirect } from 'next/navigation'
  * sans spécifier de route spécifique
  */
 export default function DashboardRootPage() {
-  redirect('/dashboard')
+  redirect("/dashboard");
 }

@@ -75,27 +75,15 @@ async function generateNumeroTicket(
   supabase: ReturnType<typeof createServiceClient>,
   etablissementId: string
 ): Promise<string> {
-  const today = new Date();
-  const dateStr = today.toISOString().slice(0, 10).replace(/-/g, "");
+  const { data, error } = await supabase.rpc("generate_numero_ticket" as never, {
+    p_etablissement_id: etablissementId,
+  } as never);
 
-  const { data: etab } = await supabase
-    .from("etablissements")
-    .select("dernier_numero_ticket, date_numero_ticket")
-    .eq("id", etablissementId)
-    .single();
+  if (error || !data) {
+    throw new Error(`Erreur génération numéro ticket: ${error?.message || "pas de résultat"}`);
+  }
 
-  const lastDate = etab?.date_numero_ticket
-    ? new Date(etab.date_numero_ticket).toISOString().slice(0, 10).replace(/-/g, "")
-    : "";
-
-  const numero = lastDate !== dateStr ? 1 : (etab?.dernier_numero_ticket || 0) + 1;
-
-  await supabase
-    .from("etablissements")
-    .update({ dernier_numero_ticket: numero, date_numero_ticket: today.toISOString() })
-    .eq("id", etablissementId);
-
-  return `${dateStr}${numero.toString().padStart(5, "0")}`;
+  return data;
 }
 
 // ============================================================================
@@ -201,11 +189,7 @@ export async function splitBillByItems(
 
   const supabase = createServiceClient();
 
-  const { data: vente } = await supabase
-    .from("ventes")
-    .select("statut")
-    .eq("id", venteId)
-    .single();
+  const { data: vente } = await supabase.from("ventes").select("statut").eq("id", venteId).single();
 
   if (!vente) return { success: false, error: "Vente introuvable" };
   if (vente.statut === "PAYEE") return { success: false, error: "Cette vente est déjà payée" };
@@ -217,7 +201,10 @@ export async function splitBillByItems(
     .eq("vente_id", venteId);
 
   const lignesMap = new Map(
-    (lignes || []).map((l) => [l.produit_id, { ...l, nom: (l.produits as { nom: string })?.nom || "Inconnu" }])
+    (lignes || []).map((l) => [
+      l.produit_id,
+      { ...l, nom: (l.produits as unknown as { nom: string })?.nom || "Inconnu" },
+    ])
   );
 
   const parts: CalculatedPart[] = itemsParPersonne.map((groupe) => {
@@ -239,18 +226,96 @@ export async function splitBillByItems(
 }
 
 /**
- * Enregistre le paiement d'une part (placeholder)
+ * Enregistre le paiement d'une part d'addition divisée
  */
-export async function payPart(input: PayPartData): Promise<ActionResult<{ paid: boolean }>> {
+export async function payPart(
+  input: PayPartData
+): Promise<ActionResult<{ paid: boolean; venteComplete: boolean }>> {
   const user = await getCurrentUser();
   if (!user) return { success: false, error: "Vous devez être connecté" };
+
+  // Les serveurs ne peuvent pas encaisser
+  if (user.role === "SERVEUR") {
+    return { success: false, error: "Les serveurs ne sont pas autorisés à encaisser" };
+  }
 
   const validation = payPartSchema.safeParse(input);
   if (!validation.success) {
     return { success: false, error: validation.error.issues[0].message };
   }
 
-  return { success: true, data: { paid: true } };
+  const {
+    venteId,
+    partId,
+    montant,
+    modePaiement,
+    reference,
+    montantRecu,
+    monnaieRendue,
+    sessionCaisseId,
+  } = validation.data;
+
+  const supabase = createServiceClient();
+
+  try {
+    // Vérifier que la vente existe et n'est pas déjà payée
+    const { data: vente } = await supabase
+      .from("ventes")
+      .select("id, total_final, statut, table_id")
+      .eq("id", venteId)
+      .single();
+
+    if (!vente) return { success: false, error: "Vente introuvable" };
+    if (vente.statut === "PAYEE")
+      return { success: false, error: "Cette vente est déjà entièrement payée" };
+    if (vente.statut === "ANNULEE") return { success: false, error: "Cette vente est annulée" };
+
+    // Créer le paiement pour cette part
+    const { error: paiementError } = await supabase.from("paiements").insert({
+      vente_id: venteId,
+      mode_paiement: modePaiement as ModePaiement,
+      montant,
+      reference: reference ? `Part ${partId} - ${reference}` : `Part ${partId}`,
+      montant_recu: modePaiement === "ESPECES" ? (montantRecu ?? montant) : null,
+      monnaie_rendue: modePaiement === "ESPECES" ? (monnaieRendue ?? 0) : null,
+    });
+
+    if (paiementError) throw paiementError;
+
+    // Vérifier si la vente est entièrement payée
+    const { data: paiements } = await supabase
+      .from("paiements")
+      .select("montant")
+      .eq("vente_id", venteId);
+
+    const totalPaye = (paiements || []).reduce((sum, p) => sum + Number(p.montant), 0);
+    const totalVente = Number(vente.total_final);
+    const venteComplete = totalPaye >= totalVente;
+
+    // Si entièrement payée, mettre à jour le statut de la vente
+    if (venteComplete) {
+      await supabase
+        .from("ventes")
+        .update({
+          statut: "PAYEE",
+          ...(sessionCaisseId ? { session_caisse_id: sessionCaisseId } : {}),
+        })
+        .eq("id", venteId);
+
+      // Libérer la table si associée
+      if (vente.table_id) {
+        await supabase.from("tables").update({ statut: "A_NETTOYER" }).eq("id", vente.table_id);
+      }
+    }
+
+    revalidatePath("/caisse");
+    revalidatePath("/salle");
+
+    return { success: true, data: { paid: true, venteComplete } };
+  } catch (error) {
+    console.error("Erreur payPart:", error);
+    return { success: false, error: "Erreur lors du paiement de la part" };
+  }
 }
 
 // ============================================================================
@@ -334,9 +399,9 @@ export async function createSplitVente(
     if (venteError) throw venteError;
 
     // Créer les lignes de vente
-    await supabase.from("lignes_vente").insert(
-      lignesData.map((l) => ({ ...l, vente_id: vente.id }))
-    );
+    await supabase
+      .from("lignes_vente")
+      .insert(lignesData.map((l) => ({ ...l, vente_id: vente.id })));
 
     // Créer les paiements
     const paiementsData = input.parts.map((part) => ({
@@ -366,7 +431,10 @@ export async function createSplitVente(
       const stockAvant = produit.stock_actuel;
       const stockApres = stockAvant - ligne.quantite;
 
-      await supabase.from("produits").update({ stock_actuel: stockApres }).eq("id", ligne.produitId);
+      await supabase
+        .from("produits")
+        .update({ stock_actuel: stockApres })
+        .eq("id", ligne.produitId);
       await supabase.from("mouvements_stock").insert({
         type: "SORTIE" as TypeMouvement,
         quantite: ligne.quantite,

@@ -2,23 +2,23 @@
  * Requêtes Supabase pour les mouvements de stock
  */
 
-import type { DbClient } from '../client'
+import type { DbClient } from "../client";
 import type {
   MouvementStock,
   MouvementStockInsert,
   TypeMouvement,
   PaginationOptions,
   PaginatedResult,
-} from '../types'
+} from "../types";
 import {
   getPaginationParams,
   createPaginatedResult,
   getErrorMessage,
   serializePrices,
   PRICE_FIELDS,
-} from '../utils'
+} from "../utils";
 
-const STOCK_PRICE_FIELDS = PRICE_FIELDS.mouvements_stock
+const STOCK_PRICE_FIELDS = PRICE_FIELDS.mouvements_stock;
 
 /**
  * Récupère les mouvements de stock d'un produit
@@ -27,36 +27,36 @@ export async function getMouvementsStock(
   client: DbClient,
   produitId: string,
   options?: {
-    type?: TypeMouvement
-    dateDebut?: string
-    dateFin?: string
+    type?: TypeMouvement;
+    dateDebut?: string;
+    dateFin?: string;
   }
 ): Promise<MouvementStock[]> {
   let query = client
-    .from('mouvements_stock')
-    .select('*')
-    .eq('produit_id', produitId)
-    .order('created_at', { ascending: false })
+    .from("mouvements_stock")
+    .select("*")
+    .eq("produit_id", produitId)
+    .order("created_at", { ascending: false });
 
   if (options?.type) {
-    query = query.eq('type', options.type)
+    query = query.eq("type", options.type);
   }
 
   if (options?.dateDebut) {
-    query = query.gte('created_at', options.dateDebut)
+    query = query.gte("created_at", options.dateDebut);
   }
 
   if (options?.dateFin) {
-    query = query.lte('created_at', options.dateFin)
+    query = query.lte("created_at", options.dateFin);
   }
 
-  const { data, error } = await query
+  const { data, error } = await query;
 
   if (error) {
-    throw new Error(getErrorMessage(error))
+    throw new Error(getErrorMessage(error));
   }
 
-  return (data ?? []).map(row => serializePrices(row, [...STOCK_PRICE_FIELDS]))
+  return (data ?? []).map((row) => serializePrices(row, [...STOCK_PRICE_FIELDS]));
 }
 
 /**
@@ -66,40 +66,40 @@ export async function getMouvementsStockPaginated(
   client: DbClient,
   produitId: string,
   options?: PaginationOptions & {
-    type?: TypeMouvement
-    dateDebut?: string
-    dateFin?: string
+    type?: TypeMouvement;
+    dateDebut?: string;
+    dateFin?: string;
   }
 ): Promise<PaginatedResult<MouvementStock>> {
-  const { offset, limit, page, pageSize } = getPaginationParams(options)
+  const { offset, limit, page, pageSize } = getPaginationParams(options);
 
   let query = client
-    .from('mouvements_stock')
-    .select('*', { count: 'exact' })
-    .eq('produit_id', produitId)
-    .order('created_at', { ascending: false })
-    .range(offset, offset + limit - 1)
+    .from("mouvements_stock")
+    .select("*", { count: "exact" })
+    .eq("produit_id", produitId)
+    .order("created_at", { ascending: false })
+    .range(offset, offset + limit - 1);
 
   if (options?.type) {
-    query = query.eq('type', options.type)
+    query = query.eq("type", options.type);
   }
 
   if (options?.dateDebut) {
-    query = query.gte('created_at', options.dateDebut)
+    query = query.gte("created_at", options.dateDebut);
   }
 
   if (options?.dateFin) {
-    query = query.lte('created_at', options.dateFin)
+    query = query.lte("created_at", options.dateFin);
   }
 
-  const { data, error, count } = await query
+  const { data, error, count } = await query;
 
   if (error) {
-    throw new Error(getErrorMessage(error))
+    throw new Error(getErrorMessage(error));
   }
 
-  const serialized = (data ?? []).map(row => serializePrices(row, [...STOCK_PRICE_FIELDS]))
-  return createPaginatedResult(serialized, count ?? 0, { page, pageSize })
+  const serialized = (data ?? []).map((row) => serializePrices(row, [...STOCK_PRICE_FIELDS]));
+  return createPaginatedResult(serialized, count ?? 0, { page, pageSize });
 }
 
 /**
@@ -110,16 +110,16 @@ export async function createMouvementStock(
   data: MouvementStockInsert
 ): Promise<MouvementStock> {
   const { data: mouvement, error } = await client
-    .from('mouvements_stock')
+    .from("mouvements_stock")
     .insert(data)
     .select()
-    .single()
+    .single();
 
   if (error) {
-    throw new Error(getErrorMessage(error))
+    throw new Error(getErrorMessage(error));
   }
 
-  return serializePrices(mouvement, [...STOCK_PRICE_FIELDS])
+  return serializePrices(mouvement, [...STOCK_PRICE_FIELDS]);
 }
 
 /**
@@ -130,25 +130,25 @@ export async function enregistrerEntreeStock(
   produitId: string,
   quantite: number,
   options?: {
-    motif?: string
-    reference?: string
-    prixUnitaire?: number
-    quantiteAvant: number
+    motif?: string;
+    reference?: string;
+    prixUnitaire?: number;
+    quantiteAvant: number;
   }
 ): Promise<MouvementStock> {
-  const quantiteAvant = options?.quantiteAvant ?? 0
-  const quantiteApres = quantiteAvant + quantite
+  const quantiteAvant = options?.quantiteAvant ?? 0;
+  const quantiteApres = quantiteAvant + quantite;
 
   return createMouvementStock(client, {
     produit_id: produitId,
-    type: 'ENTREE',
+    type: "ENTREE",
     quantite,
     quantite_avant: quantiteAvant,
     quantite_apres: quantiteApres,
     motif: options?.motif,
     reference: options?.reference,
     prix_unitaire: options?.prixUnitaire,
-  })
+  });
 }
 
 /**
@@ -159,23 +159,23 @@ export async function enregistrerSortieStock(
   produitId: string,
   quantite: number,
   options?: {
-    motif?: string
-    reference?: string
-    quantiteAvant: number
+    motif?: string;
+    reference?: string;
+    quantiteAvant: number;
   }
 ): Promise<MouvementStock> {
-  const quantiteAvant = options?.quantiteAvant ?? 0
-  const quantiteApres = quantiteAvant - quantite
+  const quantiteAvant = options?.quantiteAvant ?? 0;
+  const quantiteApres = quantiteAvant - quantite;
 
   return createMouvementStock(client, {
     produit_id: produitId,
-    type: 'SORTIE',
+    type: "SORTIE",
     quantite,
     quantite_avant: quantiteAvant,
     quantite_apres: quantiteApres,
     motif: options?.motif,
     reference: options?.reference,
-  })
+  });
 }
 
 /**
@@ -186,21 +186,21 @@ export async function enregistrerAjustementStock(
   produitId: string,
   nouvelleQuantite: number,
   options?: {
-    motif?: string
-    quantiteAvant: number
+    motif?: string;
+    quantiteAvant: number;
   }
 ): Promise<MouvementStock> {
-  const quantiteAvant = options?.quantiteAvant ?? 0
-  const quantite = Math.abs(nouvelleQuantite - quantiteAvant)
+  const quantiteAvant = options?.quantiteAvant ?? 0;
+  const quantite = Math.abs(nouvelleQuantite - quantiteAvant);
 
   return createMouvementStock(client, {
     produit_id: produitId,
-    type: 'AJUSTEMENT',
+    type: "AJUSTEMENT",
     quantite,
     quantite_avant: quantiteAvant,
     quantite_apres: nouvelleQuantite,
-    motif: options?.motif ?? 'Ajustement manuel',
-  })
+    motif: options?.motif ?? "Ajustement manuel",
+  });
 }
 
 /**
@@ -211,21 +211,21 @@ export async function enregistrerPerteStock(
   produitId: string,
   quantite: number,
   options?: {
-    motif?: string
-    quantiteAvant: number
+    motif?: string;
+    quantiteAvant: number;
   }
 ): Promise<MouvementStock> {
-  const quantiteAvant = options?.quantiteAvant ?? 0
-  const quantiteApres = quantiteAvant - quantite
+  const quantiteAvant = options?.quantiteAvant ?? 0;
+  const quantiteApres = quantiteAvant - quantite;
 
   return createMouvementStock(client, {
     produit_id: produitId,
-    type: 'PERTE',
+    type: "PERTE",
     quantite,
     quantite_avant: quantiteAvant,
     quantite_apres: quantiteApres,
-    motif: options?.motif ?? 'Perte',
-  })
+    motif: options?.motif ?? "Perte",
+  });
 }
 
 /**
@@ -236,21 +236,21 @@ export async function enregistrerInventaire(
   produitId: string,
   quantiteComptee: number,
   options?: {
-    motif?: string
-    quantiteAvant: number
+    motif?: string;
+    quantiteAvant: number;
   }
 ): Promise<MouvementStock> {
-  const quantiteAvant = options?.quantiteAvant ?? 0
-  const quantite = Math.abs(quantiteComptee - quantiteAvant)
+  const quantiteAvant = options?.quantiteAvant ?? 0;
+  const quantite = Math.abs(quantiteComptee - quantiteAvant);
 
   return createMouvementStock(client, {
     produit_id: produitId,
-    type: 'INVENTAIRE',
+    type: "INVENTAIRE",
     quantite,
     quantite_avant: quantiteAvant,
     quantite_apres: quantiteComptee,
-    motif: options?.motif ?? 'Inventaire',
-  })
+    motif: options?.motif ?? "Inventaire",
+  });
 }
 
 /**
@@ -263,26 +263,26 @@ export async function getTotalEntrees(
   dateFin?: string
 ): Promise<number> {
   let query = client
-    .from('mouvements_stock')
-    .select('quantite')
-    .eq('produit_id', produitId)
-    .eq('type', 'ENTREE')
+    .from("mouvements_stock")
+    .select("quantite")
+    .eq("produit_id", produitId)
+    .eq("type", "ENTREE");
 
   if (dateDebut) {
-    query = query.gte('created_at', dateDebut)
+    query = query.gte("created_at", dateDebut);
   }
 
   if (dateFin) {
-    query = query.lte('created_at', dateFin)
+    query = query.lte("created_at", dateFin);
   }
 
-  const { data, error } = await query
+  const { data, error } = await query;
 
   if (error) {
-    throw new Error(getErrorMessage(error))
+    throw new Error(getErrorMessage(error));
   }
 
-  return (data ?? []).reduce((sum, row) => sum + (row.quantite ?? 0), 0)
+  return (data ?? []).reduce((sum, row) => sum + (row.quantite ?? 0), 0);
 }
 
 /**
@@ -295,24 +295,24 @@ export async function getTotalSorties(
   dateFin?: string
 ): Promise<number> {
   let query = client
-    .from('mouvements_stock')
-    .select('quantite')
-    .eq('produit_id', produitId)
-    .in('type', ['SORTIE', 'PERTE'])
+    .from("mouvements_stock")
+    .select("quantite")
+    .eq("produit_id", produitId)
+    .in("type", ["SORTIE", "PERTE"]);
 
   if (dateDebut) {
-    query = query.gte('created_at', dateDebut)
+    query = query.gte("created_at", dateDebut);
   }
 
   if (dateFin) {
-    query = query.lte('created_at', dateFin)
+    query = query.lte("created_at", dateFin);
   }
 
-  const { data, error } = await query
+  const { data, error } = await query;
 
   if (error) {
-    throw new Error(getErrorMessage(error))
+    throw new Error(getErrorMessage(error));
   }
 
-  return (data ?? []).reduce((sum, row) => sum + (row.quantite ?? 0), 0)
+  return (data ?? []).reduce((sum, row) => sum + (row.quantite ?? 0), 0);
 }

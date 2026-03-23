@@ -4,6 +4,7 @@
 > Dernière mise à jour : 2026-01-27
 
 ## Légende
+
 - [ ] En attente (pending)
 - [x] Terminé (completed)
 - [~] En cours (in progress)
@@ -41,10 +42,12 @@
 ## Notes
 
 ### Comment utiliser ce fichier
+
 1. Ouvrez ce fichier au début de chaque session Claude Code
 2. Partagez-le avec Claude pour qu'il connaisse l'état actuel
 3. Mettez à jour les cases à cocher quand une tâche est terminée
 
 ### Historique des modifications
+
 - **2026-01-27** : Création initiale du fichier avec 10 tâches
 - **2026-01-27** : Module Produits complété (6 fonctionnalités ajoutées)

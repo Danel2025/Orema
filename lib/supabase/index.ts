@@ -8,6 +8,6 @@
  */
 
 // Re-export pour faciliter les imports
-export { createClient as createBrowserClient } from './client'
-export { createClient as createServerClient, createServiceClient } from './server'
-export { updateSession } from './session-utils'
+export { createClient as createBrowserClient } from "./client";
+export { createClient as createServerClient, createServiceClient } from "./server";
+export { updateSession } from "./session-utils";

@@ -6,14 +6,8 @@ import { z } from "zod";
 
 /**
  * Types de mouvements de stock
- * Note: INVENTAIRE sera ajouté après la migration Prisma
  */
-export const TypeMouvementSchema = z.enum([
-  "ENTREE",
-  "SORTIE",
-  "AJUSTEMENT",
-  "PERTE",
-]);
+export const TypeMouvementSchema = z.enum(["ENTREE", "SORTIE", "AJUSTEMENT", "PERTE", "INVENTAIRE"]);
 
 export type TypeMouvementType = z.infer<typeof TypeMouvementSchema>;
 

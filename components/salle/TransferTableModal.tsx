@@ -7,39 +7,24 @@
  */
 
 import { useState, useTransition, useEffect, useCallback } from "react";
-import {
-  Dialog,
-  Text,
-  Flex,
-  Button,
-  Badge,
-  Separator,
-  Checkbox,
-} from "@radix-ui/themes";
+import { Dialog, Text, Flex, Button, Badge, Separator, Checkbox } from "@radix-ui/themes";
 import { ScrollArea } from "@/components/ui";
 import {
-  ArrowRightLeft,
-  CheckCircle2,
+  ArrowsLeftRight,
+  CheckCircle,
   Clock,
-  ChefHat,
+  CookingPot,
   Receipt,
-  Sparkles,
+  Sparkle,
   Users,
-  AlertTriangle,
-  Merge,
+  Warning,
+  GitMerge,
   X,
-  Loader2,
-} from "lucide-react";
+  SpinnerGap,
+} from "@phosphor-icons/react";
 import { toast } from "sonner";
-import {
-  transferTable,
-  mergeTableOrders,
-  getTablesForTransfer,
-} from "@/actions/tables";
-import {
-  STATUT_TABLE_LABELS,
-  type StatutTableType,
-} from "@/schemas/table.schema";
+import { transferTable, mergeTableOrders, getTablesForTransfer } from "@/actions/tables";
+import { STATUT_TABLE_LABELS, type StatutTableType } from "@/schemas/table.schema";
 import { formatCurrency } from "@/lib/utils";
 
 // Types
@@ -91,10 +76,7 @@ interface TransferTableModalProps {
 }
 
 // Couleurs de statut
-const STATUS_COLORS: Record<
-  StatutTableType,
-  { bg: string; border: string; text: string }
-> = {
+const STATUS_COLORS: Record<StatutTableType, { bg: string; border: string; text: string }> = {
   LIBRE: { bg: "#dcfce7", border: "#22c55e", text: "#166534" },
   OCCUPEE: { bg: "#fef9c3", border: "#eab308", text: "#854d0e" },
   EN_PREPARATION: { bg: "#dbeafe", border: "#3b82f6", text: "#1e40af" },
@@ -104,11 +86,11 @@ const STATUS_COLORS: Record<
 
 // Icones de statut
 const STATUS_ICONS: Record<StatutTableType, React.ReactNode> = {
-  LIBRE: <CheckCircle2 size={14} />,
+  LIBRE: <CheckCircle size={14} />,
   OCCUPEE: <Clock size={14} />,
-  EN_PREPARATION: <ChefHat size={14} />,
+  EN_PREPARATION: <CookingPot size={14} />,
   ADDITION: <Receipt size={14} />,
-  A_NETTOYER: <Sparkles size={14} />,
+  A_NETTOYER: <Sparkle size={14} />,
 };
 
 export function TransferTableModal({
@@ -133,7 +115,7 @@ export function TransferTableModal({
     setIsLoading(true);
     try {
       const data = await getTablesForTransfer(sourceTable.id);
-      setTables(data as TableData[]);
+      setTables(data as unknown as TableData[]);
     } catch (error) {
       toast.error("Erreur lors du chargement des tables");
     } finally {
@@ -162,14 +144,17 @@ export function TransferTableModal({
   };
 
   // Grouper les tables par zone
-  const tablesByZone = tables.reduce((acc, table) => {
-    const zoneName = table.zone?.nom || "Sans zone";
-    if (!acc[zoneName]) {
-      acc[zoneName] = [];
-    }
-    acc[zoneName].push(table);
-    return acc;
-  }, {} as Record<string, TableData[]>);
+  const tablesByZone = tables.reduce(
+    (acc, table) => {
+      const zoneName = table.zone?.nom || "Sans zone";
+      if (!acc[zoneName]) {
+        acc[zoneName] = [];
+      }
+      acc[zoneName].push(table);
+      return acc;
+    },
+    {} as Record<string, TableData[]>
+  );
 
   // Gerer le transfert
   const handleTransfer = () => {
@@ -188,9 +173,7 @@ export function TransferTableModal({
           setTimeout(() => {
             onOpenChange(false);
             onSuccess?.();
-            toast.success(
-              `Commande transferee vers la table ${result.data?.toTableNumero}`
-            );
+            toast.success(`Commande transferee vers la table ${result.data?.toTableNumero}`);
           }, 1500);
         } else if (result.error === "MERGE_REQUIRED") {
           // Proposer la fusion
@@ -255,7 +238,7 @@ export function TransferTableModal({
         >
           <Dialog.Title size="5" style={{ marginBottom: 8 }}>
             <Flex align="center" gap="2">
-              <ArrowRightLeft size={20} style={{ color: "var(--accent-9)" }} />
+              <ArrowsLeftRight size={20} style={{ color: "var(--accent-9)" }} />
               Transferer la commande
             </Flex>
           </Dialog.Title>
@@ -266,7 +249,8 @@ export function TransferTableModal({
         </div>
 
         {/* Animation de succes */}
-        {showSuccess ? <div
+        {showSuccess ? (
+          <div
             style={{
               position: "absolute",
               inset: 0,
@@ -291,15 +275,17 @@ export function TransferTableModal({
                 animation: "scaleIn 0.3s ease-out",
               }}
             >
-              <CheckCircle2 size={40} color="white" />
+              <CheckCircle size={40} color="white" />
             </div>
             <Text size="5" weight="bold" style={{ color: "var(--green-11)" }}>
               {showMergeConfirm ? "Commandes fusionnees!" : "Transfert reussi!"}
             </Text>
-          </div> : null}
+          </div>
+        ) : null}
 
         {/* Confirmation de fusion */}
-        {showMergeConfirm && !showSuccess ? <div style={{ padding: 24 }}>
+        {showMergeConfirm && !showSuccess ? (
+          <div style={{ padding: 24 }}>
             <Flex
               direction="column"
               align="center"
@@ -322,7 +308,7 @@ export function TransferTableModal({
                   justifyContent: "center",
                 }}
               >
-                <Merge size={28} color="white" />
+                <GitMerge size={28} color="white" />
               </div>
 
               <Text size="4" weight="bold" align="center">
@@ -330,8 +316,8 @@ export function TransferTableModal({
               </Text>
 
               <Text size="2" color="gray" align="center" style={{ maxWidth: 400 }}>
-                La table <strong>{selectedTable?.numero}</strong> a deja une
-                commande en cours. Voulez-vous fusionner les deux commandes?
+                La table <strong>{selectedTable?.numero}</strong> a deja une commande en cours.
+                Voulez-vous fusionner les deux commandes?
               </Text>
 
               <Flex gap="4" mt="2" align="center">
@@ -354,16 +340,12 @@ export function TransferTableModal({
                   <Badge size="1" mt="1">
                     {sourceTable.venteEnCours._count.lignes} article(s)
                   </Badge>
-                  <Text
-                    size="2"
-                    weight="bold"
-                    style={{ display: "block", marginTop: 8 }}
-                  >
+                  <Text size="2" weight="bold" style={{ display: "block", marginTop: 8 }}>
                     {formatTotal(sourceTable.venteEnCours.totalFinal)}
                   </Text>
                 </div>
 
-                <ArrowRightLeft size={24} style={{ color: "var(--gray-9)" }} />
+                <ArrowsLeftRight size={24} style={{ color: "var(--gray-9)" }} />
 
                 {/* Table destination */}
                 <div
@@ -381,18 +363,16 @@ export function TransferTableModal({
                   <Text size="5" weight="bold" style={{ display: "block" }}>
                     {selectedTable?.numero}
                   </Text>
-                  {selectedTable?.ventes[0] ? <>
+                  {selectedTable?.ventes[0] ? (
+                    <>
                       <Badge color="blue" size="1" mt="1">
                         {selectedTable.ventes[0]._count.lignes} article(s)
                       </Badge>
-                      <Text
-                        size="2"
-                        weight="bold"
-                        style={{ display: "block", marginTop: 8 }}
-                      >
+                      <Text size="2" weight="bold" style={{ display: "block", marginTop: 8 }}>
                         {formatTotal(selectedTable.ventes[0].totalFinal)}
                       </Text>
-                    </> : null}
+                    </>
+                  ) : null}
                 </div>
               </Flex>
 
@@ -406,7 +386,7 @@ export function TransferTableModal({
                   borderRadius: 6,
                 }}
               >
-                <AlertTriangle size={16} style={{ color: "var(--green-11)" }} />
+                <Warning size={16} style={{ color: "var(--green-11)" }} />
                 <Text size="2" style={{ color: "var(--green-11)" }}>
                   Total apres fusion:{" "}
                   <strong>
@@ -417,7 +397,9 @@ export function TransferTableModal({
                         (selectedTable?.ventes[0]
                           ? typeof selectedTable.ventes[0].totalFinal === "number"
                             ? selectedTable.ventes[0].totalFinal
-                            : (selectedTable.ventes[0].totalFinal as { toNumber?: () => number }).toNumber?.() || 0
+                            : (
+                                selectedTable.ventes[0].totalFinal as { toNumber?: () => number }
+                              ).toNumber?.() || 0
                           : 0)
                     )}
                   </strong>
@@ -440,18 +422,19 @@ export function TransferTableModal({
               <Button onClick={handleMerge} disabled={isPending}>
                 {isPending ? (
                   <>
-                    <Loader2 size={16} className="animate-spin" />
+                    <SpinnerGap size={16} className="animate-spin" />
                     Fusion en cours...
                   </>
                 ) : (
                   <>
-                    <Merge size={16} />
+                    <GitMerge size={16} />
                     Fusionner les commandes
                   </>
                 )}
               </Button>
             </Flex>
-          </div> : null}
+          </div>
+        ) : null}
 
         {/* Contenu principal */}
         {!showMergeConfirm && !showSuccess && (
@@ -470,11 +453,8 @@ export function TransferTableModal({
                     width: 64,
                     height: 64,
                     borderRadius: 12,
-                    backgroundColor:
-                      STATUS_COLORS[sourceTable.statut]?.bg || "#f5f5f5",
-                    border: `2px solid ${
-                      STATUS_COLORS[sourceTable.statut]?.border || "#ccc"
-                    }`,
+                    backgroundColor: STATUS_COLORS[sourceTable.statut]?.bg || "#f5f5f5",
+                    border: `2px solid ${STATUS_COLORS[sourceTable.statut]?.border || "#ccc"}`,
                     display: "flex",
                     flexDirection: "column",
                     alignItems: "center",
@@ -508,52 +488,31 @@ export function TransferTableModal({
                     Commande en cours
                   </Text>
                   <Flex align="center" gap="3" mt="1">
-                    <Badge size="2">
-                      {sourceTable.venteEnCours._count.lignes} article(s)
-                    </Badge>
+                    <Badge size="2">{sourceTable.venteEnCours._count.lignes} article(s)</Badge>
                     <Text size="3" weight="bold">
                       {formatTotal(sourceTable.venteEnCours.totalFinal)}
                     </Text>
                   </Flex>
                 </div>
 
-                <ArrowRightLeft
-                  size={24}
-                  style={{ color: "var(--accent-9)" }}
-                />
+                <ArrowsLeftRight size={24} style={{ color: "var(--accent-9)" }} />
               </Flex>
             </div>
 
             {/* Grille des tables */}
-            <ScrollArea
-              type="auto"
-              scrollbars="vertical"
-              style={{ height: 360 }}
-            >
+            <ScrollArea type="auto" scrollbars="vertical" style={{ height: 360 }}>
               <div style={{ padding: "16px 24px" }}>
                 {isLoading ? (
-                  <Flex
-                    align="center"
-                    justify="center"
-                    style={{ height: 200 }}
-                  >
-                    <Loader2
+                  <Flex align="center" justify="center" style={{ height: 200 }}>
+                    <SpinnerGap
                       size={32}
                       className="animate-spin"
                       style={{ color: "var(--gray-9)" }}
                     />
                   </Flex>
                 ) : tables.length === 0 ? (
-                  <Flex
-                    direction="column"
-                    align="center"
-                    justify="center"
-                    style={{ height: 200 }}
-                  >
-                    <AlertTriangle
-                      size={32}
-                      style={{ color: "var(--gray-8)", marginBottom: 12 }}
-                    />
+                  <Flex direction="column" align="center" justify="center" style={{ height: 200 }}>
+                    <Warning size={32} style={{ color: "var(--gray-8)", marginBottom: 12 }} />
                     <Text size="2" color="gray">
                       Aucune autre table disponible
                     </Text>
@@ -573,8 +532,7 @@ export function TransferTableModal({
                       <div
                         style={{
                           display: "grid",
-                          gridTemplateColumns:
-                            "repeat(auto-fill, minmax(100px, 1fr))",
+                          gridTemplateColumns: "repeat(auto-fill, minmax(100px, 1fr))",
                           gap: 12,
                         }}
                       >
@@ -594,8 +552,7 @@ export function TransferTableModal({
                                 border: isSelected
                                   ? "3px solid var(--accent-9)"
                                   : `2px solid ${statusStyle?.border || "var(--gray-a5)"}`,
-                                backgroundColor:
-                                  statusStyle?.bg || "var(--gray-a2)",
+                                backgroundColor: statusStyle?.bg || "var(--gray-a2)",
                                 cursor: "pointer",
                                 transition: "all 0.15s",
                                 transform: isSelected ? "scale(1.02)" : "none",
@@ -651,7 +608,8 @@ export function TransferTableModal({
                               </Flex>
 
                               {/* Info vente si occupee */}
-                              {hasVente ? <div
+                              {hasVente ? (
+                                <div
                                   style={{
                                     marginTop: 8,
                                     padding: "6px 8px",
@@ -659,15 +617,8 @@ export function TransferTableModal({
                                     backgroundColor: "var(--purple-a3)",
                                   }}
                                 >
-                                  <Flex
-                                    align="center"
-                                    justify="center"
-                                    gap="1"
-                                  >
-                                    <Receipt
-                                      size={12}
-                                      style={{ color: "var(--purple-11)" }}
-                                    />
+                                  <Flex align="center" justify="center" gap="1">
+                                    <Receipt size={12} style={{ color: "var(--purple-11)" }} />
                                     <Text
                                       size="1"
                                       weight="bold"
@@ -686,10 +637,12 @@ export function TransferTableModal({
                                   >
                                     Fusion possible
                                   </Text>
-                                </div> : null}
+                                </div>
+                              ) : null}
 
                               {/* Indicateur de selection */}
-                              {isSelected ? <div
+                              {isSelected ? (
+                                <div
                                   style={{
                                     marginTop: 8,
                                     padding: "4px 8px",
@@ -702,7 +655,8 @@ export function TransferTableModal({
                                   <Text size="1" weight="bold">
                                     Selectionne
                                   </Text>
-                                </div> : null}
+                                </div>
+                              ) : null}
                             </button>
                           );
                         })}
@@ -721,9 +675,7 @@ export function TransferTableModal({
               <Flex align="center" gap="2" mb="4">
                 <Checkbox
                   checked={markSourceAsClean}
-                  onCheckedChange={(checked) =>
-                    setMarkSourceAsClean(checked === true)
-                  }
+                  onCheckedChange={(checked) => setMarkSourceAsClean(checked === true)}
                   id="mark-clean"
                 />
                 <label
@@ -734,8 +686,7 @@ export function TransferTableModal({
                     cursor: "pointer",
                   }}
                 >
-                  Marquer la table {sourceTable.numero} comme "A nettoyer" apres
-                  le transfert
+                  Marquer la table {sourceTable.numero} comme "A nettoyer" apres le transfert
                 </label>
               </Flex>
 
@@ -794,18 +745,15 @@ export function TransferTableModal({
                   </Button>
                 </Dialog.Close>
 
-                <Button
-                  onClick={handleTransfer}
-                  disabled={!selectedTableId || isPending}
-                >
+                <Button onClick={handleTransfer} disabled={!selectedTableId || isPending}>
                   {isPending ? (
                     <>
-                      <Loader2 size={16} className="animate-spin" />
+                      <SpinnerGap size={16} className="animate-spin" />
                       Transfert en cours...
                     </>
                   ) : (
                     <>
-                      <ArrowRightLeft size={16} />
+                      <ArrowsLeftRight size={16} />
                       Transferer vers {selectedTable?.numero || "..."}
                     </>
                   )}

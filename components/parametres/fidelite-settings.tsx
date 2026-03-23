@@ -7,35 +7,22 @@
 import { useState } from "react";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import {
-  Box,
-  Card,
-  Flex,
-  Text,
-  TextField,
-  Switch,
-  Button,
-  Callout,
-  Badge,
-} from "@radix-ui/themes";
+import { Box, Flex, Text, TextField, Switch, Button, Callout, Badge } from "@radix-ui/themes";
 import {
   Gift,
   Star,
   CreditCard,
-  Calendar,
-  Save,
-  Loader2,
-  CheckCircle2,
-  AlertCircle,
+  CalendarBlank,
+  FloppyDisk,
+  CircleNotch,
+  CheckCircle,
+  WarningCircle,
   Info,
-} from "lucide-react";
+} from "@phosphor-icons/react";
 import { toast } from "sonner";
 
 import { updateFideliteSettings } from "@/actions/parametres";
-import {
-  fideliteSettingsSchema,
-  type FideliteSettingsFormData,
-} from "@/schemas/parametres.schema";
+import { fideliteSettingsSchema, type FideliteSettingsFormData } from "@/schemas/parametres.schema";
 
 interface FideliteSettingsProps {
   initialData: FideliteSettingsFormData;
@@ -71,7 +58,7 @@ export function FideliteSettings({ initialData }: FideliteSettingsProps) {
 
       if (result.success) {
         setSaveStatus("success");
-        toast.success("Parametres de fidelite enregistres");
+        toast.success("Paramètres de fidélité enregistrés");
         setTimeout(() => setSaveStatus("idle"), 3000);
       } else {
         setSaveStatus("error");
@@ -96,21 +83,21 @@ export function FideliteSettings({ initialData }: FideliteSettingsProps) {
         {/* Information */}
         <Callout.Root color="blue" size="2">
           <Callout.Icon>
-            <Info size={18} />
+            <Info size={18} weight="duotone" />
           </Callout.Icon>
           <Callout.Text>
             <Text weight="bold">Programme de fidelite</Text>
             <br />
-            Configurez votre programme de fidelite pour recompenser vos clients reguliers
-            et augmenter leur engagement.
+            Configurez votre programme de fidelite pour recompenser vos clients reguliers et
+            augmenter leur engagement.
           </Callout.Text>
         </Callout.Root>
 
         {/* Activation du programme */}
-        <Card size="3">
+        <Box style={{ border: "1px solid var(--gray-a6)", borderRadius: 8 }} p="4">
           <Flex direction="column" gap="4">
             <Flex align="center" gap="2">
-              <Gift size={20} style={{ color: "var(--accent-9)" }} />
+              <Gift size={20} weight="duotone" style={{ color: "var(--accent-9)" }} />
               <Text size="4" weight="bold">
                 Programme de fidelite
               </Text>
@@ -134,22 +121,19 @@ export function FideliteSettings({ initialData }: FideliteSettingsProps) {
                       Les clients accumuleront des points a chaque achat
                     </Text>
                   </Flex>
-                  <Switch
-                    size="3"
-                    checked={field.value}
-                    onCheckedChange={field.onChange}
-                  />
+                  <Switch size="3" checked={field.value} onCheckedChange={field.onChange} />
                 </Flex>
               )}
             />
           </Flex>
-        </Card>
+        </Box>
 
         {/* Configuration des points */}
-        {fideliteActif ? <Card size="3">
+        {fideliteActif ? (
+          <Box style={{ border: "1px solid var(--gray-a6)", borderRadius: 8 }} p="4">
             <Flex direction="column" gap="4">
               <Flex align="center" gap="2">
-                <Star size={20} style={{ color: "var(--accent-9)" }} />
+                <Star size={20} weight="duotone" style={{ color: "var(--accent-9)" }} />
                 <Text size="4" weight="bold">
                   Configuration des points
                 </Text>
@@ -168,9 +152,11 @@ export function FideliteSettings({ initialData }: FideliteSettingsProps) {
                     size="3"
                     placeholder="1"
                   />
-                  {errors.tauxPointsFidelite ? <Text size="1" color="red" mt="1">
+                  {errors.tauxPointsFidelite ? (
+                    <Text size="1" color="red" mt="1">
                       {errors.tauxPointsFidelite.message}
-                    </Text> : null}
+                    </Text>
+                  ) : null}
                   <Text size="1" color="gray" mt="1">
                     Points gagnes par tranche
                   </Text>
@@ -187,9 +173,11 @@ export function FideliteSettings({ initialData }: FideliteSettingsProps) {
                     size="3"
                     placeholder="100"
                   />
-                  {errors.valeurPointFidelite ? <Text size="1" color="red" mt="1">
+                  {errors.valeurPointFidelite ? (
+                    <Text size="1" color="red" mt="1">
                       {errors.valeurPointFidelite.message}
-                    </Text> : null}
+                    </Text>
+                  ) : null}
                   <Text size="1" color="gray" mt="1">
                     1 point = X FCFA de remise
                   </Text>
@@ -209,12 +197,14 @@ export function FideliteSettings({ initialData }: FideliteSettingsProps) {
                   placeholder="365"
                 >
                   <TextField.Slot side="right">
-                    <Calendar size={16} />
+                    <CalendarBlank size={16} />
                   </TextField.Slot>
                 </TextField.Root>
-                {errors.dureeValiditeSolde ? <Text size="1" color="red" mt="1">
+                {errors.dureeValiditeSolde ? (
+                  <Text size="1" color="red" mt="1">
                     {errors.dureeValiditeSolde.message}
-                  </Text> : null}
+                  </Text>
+                ) : null}
                 <Text size="1" color="gray" mt="1">
                   Les points expirent apres cette duree d'inactivite
                 </Text>
@@ -239,18 +229,20 @@ export function FideliteSettings({ initialData }: FideliteSettingsProps) {
                     Points gagnes : <strong>{pointsGagnes} points</strong>
                   </Text>
                   <Text size="2">
-                    Valeur potentielle : <strong>{valeurPoints.toLocaleString()} FCFA</strong> de remise
+                    Valeur potentielle : <strong>{valeurPoints.toLocaleString()} FCFA</strong> de
+                    remise
                   </Text>
                 </Flex>
               </Box>
             </Flex>
-          </Card> : null}
+          </Box>
+        ) : null}
 
         {/* Credit client */}
-        <Card size="3">
+        <Box style={{ border: "1px solid var(--gray-a6)", borderRadius: 8 }} p="4">
           <Flex direction="column" gap="4">
             <Flex align="center" gap="2">
-              <CreditCard size={20} style={{ color: "var(--accent-9)" }} />
+              <CreditCard size={20} weight="duotone" style={{ color: "var(--accent-9)" }} />
               <Text size="4" weight="bold">
                 Credit client
               </Text>
@@ -274,16 +266,13 @@ export function FideliteSettings({ initialData }: FideliteSettingsProps) {
                       Permettre aux clients de payer a credit (selon leur limite)
                     </Text>
                   </Flex>
-                  <Switch
-                    size="3"
-                    checked={field.value}
-                    onCheckedChange={field.onChange}
-                  />
+                  <Switch size="3" checked={field.value} onCheckedChange={field.onChange} />
                 </Flex>
               )}
             />
 
-            {creditActif ? <Box>
+            {creditActif ? (
+              <Box>
                 <Text as="label" size="2" weight="medium" mb="2">
                   Limite de credit par defaut (FCFA)
                 </Text>
@@ -294,30 +283,36 @@ export function FideliteSettings({ initialData }: FideliteSettingsProps) {
                   size="3"
                   placeholder="0"
                 />
-                {errors.limiteCreditDefaut ? <Text size="1" color="red" mt="1">
+                {errors.limiteCreditDefaut ? (
+                  <Text size="1" color="red" mt="1">
                     {errors.limiteCreditDefaut.message}
-                  </Text> : null}
+                  </Text>
+                ) : null}
                 <Text size="1" color="gray" mt="1">
                   0 = pas de credit par defaut (a definir par client)
                 </Text>
-              </Box> : null}
+              </Box>
+            ) : null}
 
-            {creditActif ? <Callout.Root color="amber" size="1">
+            {creditActif ? (
+              <Callout.Root color="amber" size="1">
                 <Callout.Icon>
-                  <AlertCircle size={14} />
+                  <WarningCircle size={14} />
                 </Callout.Icon>
                 <Callout.Text size="1">
-                  Le credit client peut etre ajuste individuellement depuis la fiche de chaque client.
+                  Le credit client peut etre ajuste individuellement depuis la fiche de chaque
+                  client.
                 </Callout.Text>
-              </Callout.Root> : null}
+              </Callout.Root>
+            ) : null}
           </Flex>
-        </Card>
+        </Box>
 
         {/* Bouton de sauvegarde */}
         <Flex justify="end" gap="3" align="center">
           {saveStatus === "success" && (
             <Flex align="center" gap="2">
-              <CheckCircle2 size={16} className="text-green-500" />
+              <CheckCircle size={16} weight="fill" className="text-green-500" />
               <Text size="2" color="green">
                 Enregistre
               </Text>
@@ -325,18 +320,14 @@ export function FideliteSettings({ initialData }: FideliteSettingsProps) {
           )}
           {saveStatus === "error" && (
             <Flex align="center" gap="2">
-              <AlertCircle size={16} className="text-red-500" />
+              <WarningCircle size={16} weight="fill" className="text-red-500" />
               <Text size="2" color="red">
                 Erreur d'enregistrement
               </Text>
             </Flex>
           )}
           <Button type="submit" size="3" disabled={isLoading}>
-            {isLoading ? (
-              <Loader2 size={16} className="animate-spin" />
-            ) : (
-              <Save size={16} />
-            )}
+            {isLoading ? <CircleNotch size={16} className="animate-spin" /> : <FloppyDisk size={16} />}
             Enregistrer les parametres de fidelite
           </Button>
         </Flex>

@@ -25,10 +25,7 @@ import { type RapportZData, TYPE_VENTE_LABELS } from "./types";
 /**
  * Genere les commandes ESC/POS pour un rapport Z
  */
-export function generateRapportZ(
-  data: RapportZData,
-  paperWidth: 58 | 80 = 80
-): string {
+export function generateRapportZ(data: RapportZData, paperWidth: 58 | 80 = 80): string {
   const builder = createESCPOSBuilder(paperWidth);
 
   builder.init();
@@ -121,12 +118,7 @@ export function generateRapportZ(
   // RESUME DES VENTES
   // ============================================
 
-  builder
-    .align("center")
-    .bold(true)
-    .println("RESUME DES VENTES")
-    .bold(false)
-    .align("left");
+  builder.align("center").bold(true).println("RESUME DES VENTES").bold(false).align("left");
 
   builder.line("-");
 
@@ -160,12 +152,7 @@ export function generateRapportZ(
   // REPARTITION PAR MODE DE PAIEMENT
   // ============================================
 
-  builder
-    .align("center")
-    .bold(true)
-    .println("ENCAISSEMENTS")
-    .bold(false)
-    .align("left");
+  builder.align("center").bold(true).println("ENCAISSEMENTS").bold(false).align("left");
 
   builder.line("-");
 
@@ -209,21 +196,13 @@ export function generateRapportZ(
   );
 
   if (typesAvecVentes.length > 0) {
-    builder
-      .align("center")
-      .bold(true)
-      .println("VENTES PAR TYPE")
-      .bold(false)
-      .align("left");
+    builder.align("center").bold(true).println("VENTES PAR TYPE").bold(false).align("left");
 
     builder.line("-");
 
     for (const [type, stats] of typesAvecVentes) {
       const label = TYPE_VENTE_LABELS[type as keyof typeof TYPE_VENTE_LABELS] || type;
-      builder.leftRight(
-        `${label} (${stats.count}):`,
-        `${formatPrintAmount(stats.total)} F`
-      );
+      builder.leftRight(`${label} (${stats.count}):`, `${formatPrintAmount(stats.total)} F`);
     }
 
     builder.line("=");
@@ -234,12 +213,7 @@ export function generateRapportZ(
   // ============================================
 
   if (data.topProduits.length > 0) {
-    builder
-      .align("center")
-      .bold(true)
-      .println("TOP PRODUITS")
-      .bold(false)
-      .align("left");
+    builder.align("center").bold(true).println("TOP PRODUITS").bold(false).align("left");
 
     builder.line("-");
 
@@ -262,12 +236,7 @@ export function generateRapportZ(
   // TVA
   // ============================================
 
-  builder
-    .align("center")
-    .bold(true)
-    .println("TVA COLLECTEE")
-    .bold(false)
-    .align("left");
+  builder.align("center").bold(true).println("TVA COLLECTEE").bold(false).align("left");
 
   builder.line("-");
 
@@ -289,12 +258,7 @@ export function generateRapportZ(
   // SITUATION DE CAISSE
   // ============================================
 
-  builder
-    .align("center")
-    .bold(true)
-    .println("SITUATION DE CAISSE")
-    .bold(false)
-    .align("left");
+  builder.align("center").bold(true).println("SITUATION DE CAISSE").bold(false).align("left");
 
   builder.line("-");
 
@@ -324,10 +288,7 @@ export function generateRapportZ(
   }
   builder
     .bold(true)
-    .leftRight(
-      "ECART:",
-      `${data.ecart >= 0 ? "+" : ""}${formatPrintAmount(data.ecart)} F`
-    )
+    .leftRight("ECART:", `${data.ecart >= 0 ? "+" : ""}${formatPrintAmount(data.ecart)} F`)
     .bold(false);
   if (hasEcart) {
     builder.invert(false);
@@ -336,11 +297,7 @@ export function generateRapportZ(
   // Notes de cloture
   if (data.notesCloture) {
     builder.line("-");
-    builder
-      .bold(true)
-      .println("Notes:")
-      .bold(false)
-      .println(data.notesCloture);
+    builder.bold(true).println("Notes:").bold(false).println(data.notesCloture);
   }
 
   builder.line("=");
@@ -352,12 +309,7 @@ export function generateRapportZ(
   builder.align("center");
 
   // Signature
-  builder
-    .feed(2)
-    .println("Signature du caissier:")
-    .feed(2)
-    .line(".")
-    .feed(1);
+  builder.feed(2).println("Signature du caissier:").feed(2).line(".").feed(1);
 
   // Heure d'impression
   builder

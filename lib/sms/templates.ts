@@ -29,9 +29,7 @@ function truncate(text: string): string {
  *   "OREMA: Commande #20260317001 confirmée. Total: 15 000 FCFA. Merci!"
  */
 export function confirmationCommande(numero: string, total: string): string {
-  return truncate(
-    `${PREFIX}Commande #${numero} confirmée. Total: ${total} FCFA. Merci!`
-  );
+  return truncate(`${PREFIX}Commande #${numero} confirmée. Total: ${total} FCFA. Merci!`);
 }
 
 /**
@@ -41,9 +39,7 @@ export function confirmationCommande(numero: string, total: string): string {
  *   "OREMA: Votre commande est en cours de livraison vers Quartier Louis, Libreville."
  */
 export function notificationLivraison(adresse: string): string {
-  return truncate(
-    `${PREFIX}Votre commande est en cours de livraison vers ${adresse}.`
-  );
+  return truncate(`${PREFIX}Votre commande est en cours de livraison vers ${adresse}.`);
 }
 
 /**
@@ -53,9 +49,7 @@ export function notificationLivraison(adresse: string): string {
  *   "OREMA: Bonjour Jean, vous avez 250 points fidélité!"
  */
 export function rappelFidelite(nom: string, points: number): string {
-  return truncate(
-    `${PREFIX}Bonjour ${nom}, vous avez ${points} points fidélité!`
-  );
+  return truncate(`${PREFIX}Bonjour ${nom}, vous avez ${points} points fidélité!`);
 }
 
 /**
@@ -65,9 +59,7 @@ export function rappelFidelite(nom: string, points: number): string {
  *   "OREMA: Alerte: Coca-Cola 33cl — stock bas (5 restants)"
  */
 export function alerteStockBas(produit: string, stock: number): string {
-  return truncate(
-    `${PREFIX}Alerte: ${produit} — stock bas (${stock} restants)`
-  );
+  return truncate(`${PREFIX}Alerte: ${produit} — stock bas (${stock} restants)`);
 }
 
 /**
@@ -84,9 +76,7 @@ export function messagePersonnalise(texte: string): string {
  *   "OREMA: Votre commande #20260317001 est prête! Venez la récupérer."
  */
 export function commandePrete(numero: string): string {
-  return truncate(
-    `${PREFIX}Votre commande #${numero} est prête! Venez la récupérer.`
-  );
+  return truncate(`${PREFIX}Votre commande #${numero} est prête! Venez la récupérer.`);
 }
 
 /**

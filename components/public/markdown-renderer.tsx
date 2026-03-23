@@ -9,10 +9,7 @@ interface MarkdownRendererProps {
   accentColor?: string;
 }
 
-export function MarkdownRenderer({
-  content,
-  accentColor = "violet",
-}: MarkdownRendererProps) {
+export function MarkdownRenderer({ content, accentColor = "violet" }: MarkdownRendererProps) {
   return <>{renderContent(content, accentColor)}</>;
 }
 
@@ -162,10 +159,7 @@ function renderContent(content: string, accentColor: string) {
   return elements;
 }
 
-function renderInlineFormatting(
-  text: string,
-  accentColor: string
-): React.ReactNode[] {
+function renderInlineFormatting(text: string, accentColor: string): React.ReactNode[] {
   const parts = text.split(/(\*\*[^*]+\*\*)/g);
   return parts.map((part, i) => {
     if (part.startsWith("**") && part.endsWith("**")) {
@@ -200,18 +194,28 @@ function renderInlineFormatting(
         for (let k = 0; k < linkParts.length; k += 3) {
           if (linkParts[k]) result.push(linkParts[k]);
           if (linkParts[k + 1] && linkParts[k + 2]) {
-            result.push(
-              <Link
-                key={`${i}-${j}-${k}`}
-                href={linkParts[k + 2]}
-                style={{
-                  color: `var(--${accentColor}-9)`,
-                  textDecoration: "none",
-                }}
-              >
-                {linkParts[k + 1]}
-              </Link>
-            );
+            const href = linkParts[k + 2];
+            const isSafeUrl = href && /^(https?:\/\/|\/|#|mailto:)/i.test(href);
+            if (isSafeUrl) {
+              result.push(
+                <Link
+                  key={`${i}-${j}-${k}`}
+                  href={href}
+                  style={{
+                    color: `var(--${accentColor}-9)`,
+                    textDecoration: "none",
+                  }}
+                >
+                  {linkParts[k + 1]}
+                </Link>
+              );
+            } else {
+              result.push(
+                <Text key={`${i}-${j}-${k}`} as="span">
+                  {linkParts[k + 1]}
+                </Text>
+              );
+            }
           }
         }
         return result;

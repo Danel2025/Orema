@@ -8,30 +8,17 @@
  */
 
 import { useState, useCallback, useEffect } from "react";
-import {
-  Flex,
-  Text,
-  Select,
-  Button,
-  Box,
-  Heading,
-  Callout,
-  Badge,
-} from "@radix-ui/themes";
+import { Flex, Text, Select, Button, Box, Heading, Callout, Badge } from "@radix-ui/themes";
 import { ScrollArea } from "@/components/ui";
 import {
-  ClipboardList,
+  ClipboardText,
   ArrowRight,
   ArrowLeft,
-  AlertCircle,
+  WarningCircle,
   ListChecks,
-  RotateCcw,
-} from "lucide-react";
-import {
-  getInventoryProducts,
-  getStockCategories,
-  submitInventory,
-} from "@/actions/stocks";
+  ArrowCounterClockwise,
+} from "@phosphor-icons/react";
+import { getInventoryProducts, getStockCategories, submitInventory } from "@/actions/stocks";
 import { toast } from "sonner";
 import { InventaireTable, type InventaireLigne } from "./inventaire-table";
 import { InventaireRecap } from "./inventaire-recap";
@@ -46,9 +33,7 @@ const STEPS: { key: Step; label: string; numero: number }[] = [
 
 export function InventaireForm() {
   const [step, setStep] = useState<Step>("selection");
-  const [categories, setCategories] = useState<
-    { id: string; nom: string; couleur: string }[]
-  >([]);
+  const [categories, setCategories] = useState<{ id: string; nom: string; couleur: string }[]>([]);
   const [selectedCategorie, setSelectedCategorie] = useState("all");
   const [lignes, setLignes] = useState<InventaireLigne[]>([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -91,8 +76,7 @@ export function InventaireForm() {
         // Charger aussi les infos de prix
         const statusResult = await import("@/actions/stocks").then((m) =>
           m.getStockStatus({
-            categorieId:
-              selectedCategorie !== "all" ? selectedCategorie : undefined,
+            categorieId: selectedCategorie !== "all" ? selectedCategorie : undefined,
           })
         );
         if (statusResult.success) {
@@ -122,16 +106,11 @@ export function InventaireForm() {
   }, [selectedCategorie]);
 
   // Mise a jour d'une quantite
-  const handleQuantiteChange = useCallback(
-    (produitId: string, value: string) => {
-      setLignes((prev) =>
-        prev.map((l) =>
-          l.produitId === produitId ? { ...l, quantiteComptee: value } : l
-        )
-      );
-    },
-    []
-  );
+  const handleQuantiteChange = useCallback((produitId: string, value: string) => {
+    setLignes((prev) =>
+      prev.map((l) => (l.produitId === produitId ? { ...l, quantiteComptee: value } : l))
+    );
+  }, []);
 
   // Pre-remplir avec le stock theorique
   const prefillTheorique = useCallback(() => {
@@ -179,9 +158,7 @@ export function InventaireForm() {
       const result = await submitInventory(lignesToSubmit);
 
       if (result.success) {
-        toast.success(
-          `Inventaire valide : ${result.data.details.length} produit(s) ajuste(s)`
-        );
+        toast.success(`Inventaire valide : ${result.data.details.length} produit(s) ajuste(s)`);
         // Reset
         setStep("selection");
         setLignes([]);
@@ -220,8 +197,7 @@ export function InventaireForm() {
         {STEPS.map((s, i) => {
           const isCurrent = s.key === step;
           const isPast =
-            STEPS.findIndex((x) => x.key === step) >
-            STEPS.findIndex((x) => x.key === s.key);
+            STEPS.findIndex((x) => x.key === step) > STEPS.findIndex((x) => x.key === s.key);
 
           return (
             <Flex key={s.key} align="center" gap="2">
@@ -230,9 +206,7 @@ export function InventaireForm() {
                   style={{
                     width: 32,
                     height: 2,
-                    backgroundColor: isPast
-                      ? "var(--accent-9)"
-                      : "var(--gray-a6)",
+                    backgroundColor: isPast ? "var(--accent-9)" : "var(--gray-a6)",
                     borderRadius: 1,
                   }}
                 />
@@ -250,8 +224,8 @@ export function InventaireForm() {
                     backgroundColor: isCurrent
                       ? "var(--accent-9)"
                       : isPast
-                      ? "var(--accent-9)"
-                      : "var(--gray-a4)",
+                        ? "var(--accent-9)"
+                        : "var(--gray-a4)",
                     color: isCurrent || isPast ? "white" : "var(--gray-11)",
                   }}
                 >
@@ -294,8 +268,8 @@ export function InventaireForm() {
               Demarrer un inventaire
             </Heading>
             <Text size="2" color="gray">
-              Selectionnez la categorie de produits a inventorier, ou choisissez
-              "Toutes les categories" pour un inventaire complet.
+              Selectionnez la categorie de produits a inventorier, ou choisissez "Toutes les
+              categories" pour un inventaire complet.
             </Text>
           </Box>
 
@@ -313,18 +287,10 @@ export function InventaireForm() {
                 <Text as="label" size="2" weight="medium" mb="1">
                   Categorie
                 </Text>
-                <Select.Root
-                  value={selectedCategorie}
-                  onValueChange={setSelectedCategorie}
-                >
-                  <Select.Trigger
-                    placeholder="Toutes les categories"
-                    style={{ width: "100%" }}
-                  />
-                  <Select.Content>
-                    <Select.Item value="all">
-                      Toutes les categories
-                    </Select.Item>
+                <Select.Root value={selectedCategorie} onValueChange={setSelectedCategorie}>
+                  <Select.Trigger placeholder="Toutes les categories" style={{ width: "100%" }} />
+                  <Select.Content position="popper">
+                    <Select.Item value="all">Toutes les categories</Select.Item>
                     <Select.Separator />
                     {categories.map((cat) => (
                       <Select.Item key={cat.id} value={cat.id}>
@@ -345,22 +311,18 @@ export function InventaireForm() {
                 </Select.Root>
               </Box>
 
-              {error ? <Callout.Root color="red" size="1">
+              {error ? (
+                <Callout.Root color="red" size="1">
                   <Callout.Icon>
-                    <AlertCircle size={16} />
+                    <WarningCircle size={16} />
                   </Callout.Icon>
                   <Callout.Text>{error}</Callout.Text>
-                </Callout.Root> : null}
+                </Callout.Root>
+              ) : null}
 
-              <Button
-                onClick={startComptage}
-                disabled={isLoading}
-                style={{ minHeight: 44 }}
-              >
-                <ClipboardList size={16} />
-                {isLoading
-                  ? "Chargement des produits..."
-                  : "Commencer l'inventaire"}
+              <Button onClick={startComptage} disabled={isLoading} style={{ minHeight: 44 }}>
+                <ClipboardText size={16} />
+                {isLoading ? "Chargement des produits..." : "Commencer l'inventaire"}
               </Button>
             </Flex>
           </Box>
@@ -387,7 +349,7 @@ export function InventaireForm() {
                 onClick={prefillTheorique}
                 style={{ minHeight: 44 }}
               >
-                <RotateCcw size={14} />
+                <ArrowCounterClockwise size={14} />
                 Pre-remplir (stock theorique)
               </Button>
             </Flex>
@@ -412,10 +374,7 @@ export function InventaireForm() {
               <ArrowLeft size={16} />
               Retour
             </Button>
-            <Button
-              onClick={goToValidation}
-              style={{ minHeight: 44 }}
-            >
+            <Button onClick={goToValidation} style={{ minHeight: 44 }}>
               <ListChecks size={16} />
               Verifier les ecarts
               <ArrowRight size={16} />
@@ -432,8 +391,7 @@ export function InventaireForm() {
               Resume de l'inventaire
             </Heading>
             <Text size="2" color="gray">
-              Verifiez les ecarts avant de valider. Les stocks seront ajustes
-              automatiquement.
+              Verifiez les ecarts avant de valider. Les stocks seront ajustes automatiquement.
             </Text>
           </Box>
 

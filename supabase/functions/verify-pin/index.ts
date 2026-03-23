@@ -27,20 +27,15 @@ const KEYLEN = 64;
 // CORS
 // ---------------------------------------------------------------------------
 
-const allowedOrigin =
-  Deno.env.get("APP_ORIGIN") || Deno.env.get("NEXT_PUBLIC_APP_URL") || "*";
+const allowedOrigin = Deno.env.get("APP_ORIGIN") || Deno.env.get("NEXT_PUBLIC_APP_URL") || "*";
 
 const corsHeaders: Record<string, string> = {
   "Access-Control-Allow-Origin": allowedOrigin,
   "Access-Control-Allow-Methods": "POST, OPTIONS",
-  "Access-Control-Allow-Headers":
-    "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-function jsonResponse(
-  body: Record<string, unknown>,
-  status = 200
-): Response {
+function jsonResponse(body: Record<string, unknown>, status = 200): Response {
   return new Response(JSON.stringify(body), {
     status,
     headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -51,10 +46,7 @@ function jsonResponse(
 // Rate limiting en memoire (par IP, max 5 tentatives / 5 minutes)
 // ---------------------------------------------------------------------------
 
-const rateLimitMap = new Map<
-  string,
-  { count: number; resetAt: number }
->();
+const rateLimitMap = new Map<string, { count: number; resetAt: number }>();
 const MAX_ATTEMPTS = 5;
 const WINDOW_MS = 5 * 60 * 1000; // 5 minutes
 
@@ -89,10 +81,7 @@ setInterval(() => {
 // PIN verification
 // ---------------------------------------------------------------------------
 
-async function verifyPinHash(
-  pin: string,
-  hashedPin: string
-): Promise<boolean> {
+async function verifyPinHash(pin: string, hashedPin: string): Promise<boolean> {
   try {
     const [salt, hash] = hashedPin.split(":");
     if (!salt || !hash) return false;
@@ -128,8 +117,7 @@ Deno.serve(async (req) => {
   if (!checkRateLimit(clientIp)) {
     return jsonResponse(
       {
-        error:
-          "Trop de tentatives. Veuillez reessayer dans quelques minutes.",
+        error: "Trop de tentatives. Veuillez réessayer dans quelques minutes.",
       },
       429
     );
@@ -140,17 +128,11 @@ Deno.serve(async (req) => {
 
     // --- Validation des entrees ---
     if (!pin || typeof pin !== "string" || !/^\d{4,6}$/.test(pin)) {
-      return jsonResponse(
-        { error: "PIN invalide (4-6 chiffres requis)" },
-        400
-      );
+      return jsonResponse({ error: "PIN invalide (4-6 chiffres requis)" }, 400);
     }
 
     if (!etablissementId || typeof etablissementId !== "string") {
-      return jsonResponse(
-        { error: "etablissement_id requis" },
-        400
-      );
+      return jsonResponse({ error: "etablissement_id requis" }, 400);
     }
 
     // Creer un client Supabase avec la service_role key (bypass RLS)

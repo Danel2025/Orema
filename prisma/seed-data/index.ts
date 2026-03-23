@@ -5,36 +5,30 @@
 
 // Catégories
 // Tous les produits regroupés
-import { bieres, sodas, jus, eaux, alcoolmix } from './produits-boissons';
-import { vins, champagnes, spiritueux, liqueurs } from './produits-alcools';
-import { cocktails, boissonsChaudes } from './produits-bar';
-import { entrees, platsViandes, platsPoissons, accompagnements, pizzas, burgers, desserts, petitDejeuner } from './produits-cuisine';
+import { bieres, sodas, jus, eaux, alcoolmix } from "./produits-boissons";
+import { vins, champagnes, spiritueux, liqueurs } from "./produits-alcools";
+import { cocktails, boissonsChaudes } from "./produits-bar";
+import {
+  entrees,
+  platsViandes,
+  platsPoissons,
+  accompagnements,
+  pizzas,
+  burgers,
+  desserts,
+  petitDejeuner,
+} from "./produits-cuisine";
 
-export { categories, type CategorieData } from './categories';
+export { categories, type CategorieData } from "./categories";
 
 // Produits - Boissons
-export {
-  bieres,
-  sodas,
-  jus,
-  eaux,
-  alcoolmix,
-  type ProduitData
-} from './produits-boissons';
+export { bieres, sodas, jus, eaux, alcoolmix, type ProduitData } from "./produits-boissons";
 
 // Produits - Alcools
-export {
-  vins,
-  champagnes,
-  spiritueux,
-  liqueurs
-} from './produits-alcools';
+export { vins, champagnes, spiritueux, liqueurs } from "./produits-alcools";
 
 // Produits - Bar
-export {
-  cocktails,
-  boissonsChaudes
-} from './produits-bar';
+export { cocktails, boissonsChaudes } from "./produits-bar";
 
 // Produits - Cuisine
 export {
@@ -45,8 +39,8 @@ export {
   pizzas,
   burgers,
   desserts,
-  petitDejeuner
-} from './produits-cuisine';
+  petitDejeuner,
+} from "./produits-cuisine";
 
 export const allProduits = [
   ...bieres,

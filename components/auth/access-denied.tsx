@@ -1,4 +1,4 @@
-'use client'
+"use client";
 
 /**
  * Composant d'acces refuse
@@ -7,17 +7,17 @@
  * n'a pas les permissions necessaires.
  */
 
-import Link from 'next/link'
-import { Flex, Text, Button, Card, Callout } from '@radix-ui/themes'
-import { ShieldX, Home, ArrowLeft, AlertTriangle } from 'lucide-react'
-import { useRouter } from 'next/navigation'
-import { useAuth } from '@/lib/auth/context'
+import Link from "next/link";
+import { Flex, Text, Button, Card, Callout } from "@radix-ui/themes";
+import { ShieldX, Home, ArrowLeft, AlertTriangle } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { useAuth } from "@/lib/auth/context";
 
 interface AccessDeniedProps {
   /** Raison du refus d'acces */
-  reason?: string
+  reason?: string;
   /** Chemin de la route refusee */
-  pathname?: string
+  pathname?: string;
 }
 
 /**
@@ -27,18 +27,12 @@ interface AccessDeniedProps {
  * des actions pour naviguer vers des pages accessibles.
  */
 export function AccessDenied({ reason, pathname }: AccessDeniedProps) {
-  const router = useRouter()
-  const { user, roleInfo } = useAuth()
+  const router = useRouter();
+  const { user, roleInfo } = useAuth();
 
   return (
-    <Flex
-      direction="column"
-      align="center"
-      justify="center"
-      style={{ minHeight: '60vh' }}
-      gap="6"
-    >
-      <Card size="4" style={{ maxWidth: 500, width: '100%' }}>
+    <Flex direction="column" align="center" justify="center" style={{ minHeight: "60vh" }} gap="6">
+      <Card size="4" style={{ maxWidth: 500, width: "100%" }}>
         <Flex direction="column" align="center" gap="4" p="4">
           {/* Icone */}
           <Flex
@@ -47,42 +41,50 @@ export function AccessDenied({ reason, pathname }: AccessDeniedProps) {
             style={{
               width: 80,
               height: 80,
-              borderRadius: '50%',
-              backgroundColor: 'var(--red-a3)',
+              borderRadius: "50%",
+              backgroundColor: "var(--red-a3)",
             }}
           >
-            <ShieldX size={40} style={{ color: 'var(--red-9)' }} />
+            <ShieldX size={40} style={{ color: "var(--red-9)" }} />
           </Flex>
 
           {/* Titre */}
           <Flex direction="column" align="center" gap="1">
             <Text size="6" weight="bold" color="red">
-              Acces refuse
+              Accès refusé
             </Text>
             <Text size="2" color="gray" align="center">
-              Vous n'avez pas les permissions necessaires pour acceder a cette page.
+              Vous n'avez pas les permissions nécessaires pour accéder à cette page.
             </Text>
           </Flex>
 
           {/* Details */}
-          {(reason || pathname || roleInfo) ? <Callout.Root color="amber" size="1" style={{ width: '100%' }}>
+          {reason || pathname || roleInfo ? (
+            <Callout.Root color="amber" size="1" style={{ width: "100%" }}>
               <Callout.Icon>
                 <AlertTriangle size={16} />
               </Callout.Icon>
               <Callout.Text>
                 <Flex direction="column" gap="1">
-                  {roleInfo ? <Text size="1">
+                  {roleInfo ? (
+                    <Text size="1">
                       <strong>Votre role :</strong> {roleInfo.displayName}
-                    </Text> : null}
-                  {pathname ? <Text size="1">
+                    </Text>
+                  ) : null}
+                  {pathname ? (
+                    <Text size="1">
                       <strong>Page demandee :</strong> {pathname}
-                    </Text> : null}
-                  {reason ? <Text size="1">
+                    </Text>
+                  ) : null}
+                  {reason ? (
+                    <Text size="1">
                       <strong>Raison :</strong> {reason}
-                    </Text> : null}
+                    </Text>
+                  ) : null}
                 </Flex>
               </Callout.Text>
-            </Callout.Root> : null}
+            </Callout.Root>
+          ) : null}
 
           {/* Actions */}
           <Flex gap="3" mt="2">
@@ -105,5 +107,5 @@ export function AccessDenied({ reason, pathname }: AccessDeniedProps) {
         </Flex>
       </Card>
     </Flex>
-  )
+  );
 }

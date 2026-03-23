@@ -20,6 +20,7 @@ import {
   PanelLeftOpen,
   ShieldCheck,
 } from "lucide-react";
+import { CookingPot, BeerBottle } from "@phosphor-icons/react";
 import { useUIStore } from "@/stores/ui-store";
 import { useAuth } from "@/lib/auth/context";
 
@@ -33,6 +34,8 @@ const allNavItems: NavItem[] = [
   { label: "Tableau de bord", href: "/dashboard" as Route, icon: LayoutDashboard },
   { label: "Caisse", href: "/caisse" as Route, icon: ShoppingCart },
   { label: "Plan de salle", href: "/salle" as Route, icon: UtensilsCrossed },
+  { label: "Cuisine", href: "/cuisine" as Route, icon: CookingPot },
+  { label: "Bar", href: "/bar" as Route, icon: BeerBottle },
   { label: "Produits", href: "/produits" as Route, icon: Package },
   { label: "Stocks", href: "/stocks" as Route, icon: Warehouse },
   { label: "Clients", href: "/clients" as Route, icon: Users },
@@ -91,7 +94,10 @@ export function Sidebar() {
           justifyContent: isCollapsed ? "center" : "flex-start",
         }}
       >
-        <Link href="/dashboard" style={{ textDecoration: "none", display: "flex", alignItems: "center", gap: 12 }}>
+        <Link
+          href="/dashboard"
+          style={{ textDecoration: "none", display: "flex", alignItems: "center", gap: 12 }}
+        >
           <Image
             src="/images/logos/ic-lg.webp"
             alt="Oréma N+"
@@ -101,19 +107,15 @@ export function Sidebar() {
           />
           {!isCollapsed && (
             <div style={{ whiteSpace: "nowrap", overflow: "hidden" }}>
-              <div style={{ fontWeight: 700, fontSize: 16, color: "var(--gray-12)" }}>
-                Oréma N+
-              </div>
-              <div style={{ fontSize: 12, color: "var(--gray-11)" }}>
-                Système POS
-              </div>
+              <div style={{ fontWeight: 700, fontSize: 16, color: "var(--gray-12)" }}>Oréma N+</div>
+              <div style={{ fontSize: 12, color: "var(--gray-11)" }}>Système POS</div>
             </div>
           )}
         </Link>
       </div>
 
       {/* Navigation */}
-      <nav style={{ flex: 1, padding: "12px 8px" }}>
+      <nav role="navigation" aria-label="Menu principal" style={{ flex: 1, padding: "12px 8px" }}>
         {navItems.map((item) => {
           const isActive = pathname === item.href;
           const Icon = item.icon;
@@ -151,9 +153,13 @@ export function Sidebar() {
                 }
               }}
             >
-              <span style={{ flexShrink: 0, display: "flex" }}><Icon size={20} /></span>
+              <span style={{ flexShrink: 0, display: "flex" }}>
+                <Icon size={20} />
+              </span>
               {!isCollapsed && (
-                <span style={{ whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+                <span
+                  style={{ whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}
+                >
                   {item.label}
                 </span>
               )}

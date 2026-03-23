@@ -1,6 +1,5 @@
 import { Suspense } from "react";
-import { Box, Flex, Heading, Text, Tabs } from "@radix-ui/themes";
-import { Package, AlertTriangle, ClipboardList, TrendingUp } from "lucide-react";
+import { Box, Flex, Heading, Text } from "@radix-ui/themes";
 import { StocksContent } from "./stocks-content";
 import { Loading } from "@/components/shared/loading";
 

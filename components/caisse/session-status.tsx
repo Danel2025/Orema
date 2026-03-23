@@ -6,29 +6,19 @@
  */
 
 import { useState, useEffect } from "react";
+import { Box, Flex, Text, Button, Badge, Popover, Separator, DataList } from "@radix-ui/themes";
 import {
-  Box,
-  Flex,
-  Text,
-  Button,
-  Badge,
-  Popover,
-  Separator,
-  DataList,
-} from "@radix-ui/themes";
-import {
-  DoorOpen,
-  DoorClosed,
+  Door,
   User,
-  Banknote,
-  TrendingUp,
+  Money,
+  TrendUp,
   Receipt,
   CreditCard,
-  Smartphone,
-  ChevronDown,
+  DeviceMobile,
+  CaretDown,
   XCircle,
-  LogOut,
-} from "lucide-react";
+  SignOut,
+} from "@phosphor-icons/react";
 import { formatCurrency, formatTime } from "@/lib/utils";
 import type { SessionActive } from "@/actions/sessions";
 
@@ -38,11 +28,7 @@ interface SessionStatusProps {
   onCloseSession: () => void;
 }
 
-export function SessionStatus({
-  session,
-  onOpenSession,
-  onCloseSession,
-}: SessionStatusProps) {
+export function SessionStatus({ session, onOpenSession, onCloseSession }: SessionStatusProps) {
   const [duration, setDuration] = useState({ hours: 0, minutes: 0 });
 
   useEffect(() => {
@@ -64,7 +50,7 @@ export function SessionStatus({
   if (!session) {
     return (
       <Button color="green" variant="soft" onClick={onOpenSession}>
-        <DoorOpen size={16} />
+        <Door size={16} />
         Ouvrir la caisse
       </Button>
     );
@@ -138,7 +124,7 @@ export function SessionStatus({
               {duration.hours}h{duration.minutes.toString().padStart(2, "0")}
             </span>
 
-            <ChevronDown size={14} color="var(--gray-9)" />
+            <CaretDown size={14} color="var(--gray-9)" />
           </button>
         </Popover.Trigger>
 
@@ -158,10 +144,12 @@ export function SessionStatus({
                     justifyContent: "center",
                   }}
                 >
-                  <Receipt size={16} color="var(--green-11)" />
+                  <Receipt size={16} color="var(--green-11)" weight="bold" />
                 </Box>
                 <Box>
-                  <Text size="2" weight="bold">Session active</Text>
+                  <Text size="2" weight="bold">
+                    Session active
+                  </Text>
                   <Text size="1" color="gray">
                     Depuis {formatTime(new Date(session.dateOuverture))}
                   </Text>
@@ -176,7 +164,7 @@ export function SessionStatus({
               <DataList.Item>
                 <DataList.Label>
                   <Flex align="center" gap="1">
-                    <User size={12} />
+                    <User size={12} weight="bold" />
                     Caissier
                   </Flex>
                 </DataList.Label>
@@ -188,7 +176,7 @@ export function SessionStatus({
               <DataList.Item>
                 <DataList.Label>
                   <Flex align="center" gap="1">
-                    <Banknote size={12} />
+                    <Money size={12} />
                     Fond de caisse
                   </Flex>
                 </DataList.Label>
@@ -220,14 +208,20 @@ export function SessionStatus({
 
             {/* Paiements */}
             <Box>
-              <Text size="1" color="gray" mb="2">Paiements</Text>
+              <Text size="1" color="gray" mb="2">
+                Paiements
+              </Text>
               <Flex direction="column" gap="1">
                 <Flex justify="between" align="center">
                   <Flex align="center" gap="2">
-                    <Banknote size={12} color="var(--green-10)" />
+                    <Money size={12} color="var(--green-10)" />
                     <Text size="1">Especes</Text>
                   </Flex>
-                  <Text size="1" weight="medium" style={{ fontFamily: "var(--font-google-sans-code), monospace" }}>
+                  <Text
+                    size="1"
+                    weight="medium"
+                    style={{ fontFamily: "var(--font-google-sans-code), monospace" }}
+                  >
                     {formatCurrency(session.totalEspeces)}
                   </Text>
                 </Flex>
@@ -236,16 +230,24 @@ export function SessionStatus({
                     <CreditCard size={12} color="var(--blue-10)" />
                     <Text size="1">Cartes</Text>
                   </Flex>
-                  <Text size="1" weight="medium" style={{ fontFamily: "var(--font-google-sans-code), monospace" }}>
+                  <Text
+                    size="1"
+                    weight="medium"
+                    style={{ fontFamily: "var(--font-google-sans-code), monospace" }}
+                  >
                     {formatCurrency(session.totalCartes)}
                   </Text>
                 </Flex>
                 <Flex justify="between" align="center">
                   <Flex align="center" gap="2">
-                    <Smartphone size={12} color="var(--accent-10)" />
+                    <DeviceMobile size={12} color="var(--accent-10)" />
                     <Text size="1">Mobile Money</Text>
                   </Flex>
-                  <Text size="1" weight="medium" style={{ fontFamily: "var(--font-google-sans-code), monospace" }}>
+                  <Text
+                    size="1"
+                    weight="medium"
+                    style={{ fontFamily: "var(--font-google-sans-code), monospace" }}
+                  >
                     {formatCurrency(session.totalMobileMoney)}
                   </Text>
                 </Flex>
@@ -256,7 +258,7 @@ export function SessionStatus({
 
             {/* Bouton cloturer */}
             <Button variant="soft" onClick={onCloseSession} style={{ width: "100%" }}>
-              <LogOut size={14} />
+              <SignOut size={14} />
               Cloturer la caisse
             </Button>
           </Flex>
@@ -266,8 +268,13 @@ export function SessionStatus({
       {/* Animation pulse */}
       <style jsx global>{`
         @keyframes pulse {
-          0%, 100% { opacity: 1; }
-          50% { opacity: 0.5; }
+          0%,
+          100% {
+            opacity: 1;
+          }
+          50% {
+            opacity: 0.5;
+          }
         }
       `}</style>
     </Flex>

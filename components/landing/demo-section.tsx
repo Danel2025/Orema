@@ -2,8 +2,11 @@
 
 import { useState, useEffect } from "react";
 import { Box, Container, Flex, Heading, Text, Button } from "@radix-ui/themes";
-import { Play, Monitor, DeviceMobile, DeviceTablet, CaretLeft, CaretRight } from "@phosphor-icons/react";
-import { motion, AnimatePresence } from "motion/react";
+import {
+  CaretLeft,
+  CaretRight,
+} from "@phosphor-icons/react";
+import { AnimatePresence, motion } from "motion/react";
 import Image from "next/image";
 import { FadeIn } from "./motion-wrapper";
 
@@ -55,29 +58,20 @@ export function DemoSection() {
     setTimeout(() => setIsAutoPlaying(true), 10000);
   };
 
-  const nextSlide = () => goToSlide((currentSlide + 1) % demoSlides.length);
-  const prevSlide = () => goToSlide((currentSlide - 1 + demoSlides.length) % demoSlides.length);
+  const nextSlide = () =>
+    goToSlide((currentSlide + 1) % demoSlides.length);
+  const prevSlide = () =>
+    goToSlide((currentSlide - 1 + demoSlides.length) % demoSlides.length);
 
   return (
     <Box
       id="demo"
       py="9"
-      className="relative overflow-hidden"
       style={{
-        background:
-          "linear-gradient(180deg, var(--gray-a2) 0%, var(--color-background) 100%)",
+        background: "var(--gray-a2)",
       }}
     >
-      {/* Background decoration */}
-      <Box
-        className="pointer-events-none absolute inset-0 opacity-30"
-        style={{
-          backgroundImage: `radial-gradient(circle at 20% 50%, var(--accent-a3), transparent 50%),
-                            radial-gradient(circle at 80% 50%, var(--accent-a3), transparent 50%)`,
-        }}
-      />
-
-      <Container size="4" className="relative z-10">
+      <Container size="4">
         <Flex
           direction={{ initial: "column", lg: "row" }}
           gap="8"
@@ -86,78 +80,44 @@ export function DemoSection() {
           {/* Left content */}
           <Box style={{ flex: 1 }}>
             <FadeIn direction="right">
-              <Flex direction="column" gap="5">
-                <Box
-                  className="w-fit rounded-full"
+              <Flex direction="column" gap="4">
+                <Text
+                  size="2"
+                  weight="medium"
                   style={{
-                    background: "var(--accent-a3)",
-                    border: "1px solid var(--accent-a5)",
-                    padding: "8px 18px",
+                    color: "var(--accent-11)",
+                    textTransform: "uppercase",
+                    letterSpacing: "0.08em",
                   }}
                 >
-                  <Flex align="center" gap="2">
-                    <Play size={14} weight="fill" style={{ color: "var(--accent-9)", flexShrink: 0 }} />
-                    <Text
-                      size="2"
-                      weight="medium"
-                      style={{ color: "var(--accent-11)" }}
-                    >
-                      Démo interactive
-                    </Text>
-                  </Flex>
-                </Box>
-
-                <Heading size="8">
-                  Voyez Oréma N+ en action
-                </Heading>
-
-                <Text size="3" color="gray" style={{ lineHeight: 1.7 }}>
-                  Découvrez comment notre système de caisse peut transformer
-                  votre quotidien. Une interface pensée pour la rapidité et
-                  la simplicité, même aux heures de pointe.
+                  Demo
                 </Text>
 
-                {/* Device compatibility */}
-                <Flex gap="4" mt="2">
-                  {[
-                    { icon: Monitor, label: "Desktop" },
-                    { icon: DeviceTablet, label: "Tablette" },
-                    { icon: DeviceMobile, label: "Mobile" },
-                  ].map((device, i) => (
-                    <motion.div
-                      key={i}
-                      whileHover={{ y: -2 }}
-                      className="flex items-center gap-2 rounded-lg"
-                      style={{
-                        background: "var(--gray-a3)",
-                        border: "1px solid var(--gray-a4)",
-                        padding: "8px 12px",
-                      }}
-                    >
-                      <device.icon size={16} style={{ color: "var(--gray-10)", flexShrink: 0 }} />
-                      <Text size="1" color="gray">
-                        {device.label}
-                      </Text>
-                    </motion.div>
-                  ))}
-                </Flex>
+                <Heading
+                  size="8"
+                  weight="bold"
+                  style={{ letterSpacing: "-0.02em" }}
+                >
+                  Voyez l'interface en action
+                </Heading>
+
+                <Text
+                  size="3"
+                  color="gray"
+                  style={{ lineHeight: 1.7, maxWidth: 400 }}
+                >
+                  De la prise de commande au rapport de fin de journee. Une
+                  interface pensee pour la rapidite, meme aux heures de pointe.
+                </Text>
 
                 {/* CTA */}
                 <Flex gap="3" mt="2">
-                  <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
-                    <Button size="3" asChild>
-                      <a href="#pricing">
-                        Essayer gratuitement
-                      </a>
-                    </Button>
-                  </motion.div>
-                  <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
-                    <Button size="3" variant="outline" asChild>
-                      <a href="#contact">
-                        Demander une démo
-                      </a>
-                    </Button>
-                  </motion.div>
+                  <Button size="3" asChild>
+                    <a href="#pricing">Essayer gratuitement</a>
+                  </Button>
+                  <Button size="3" variant="outline" asChild>
+                    <a href="#contact">Demander une demo</a>
+                  </Button>
                 </Flex>
               </Flex>
             </FadeIn>
@@ -166,145 +126,154 @@ export function DemoSection() {
           {/* Right - Demo slideshow */}
           <Box style={{ flex: 1.2 }}>
             <FadeIn direction="left" delay={0.2}>
-              <motion.div
-                whileHover={{ scale: 1.01 }}
-                transition={{ duration: 0.3 }}
-                className="relative"
+              <Box
+                className="relative overflow-hidden rounded-xl"
+                style={{
+                  background: "var(--color-background)",
+                  border: "1px solid var(--gray-a4)",
+                  boxShadow:
+                    "0 20px 40px -12px rgba(0, 0, 0, 0.1), 0 0 0 1px var(--gray-a3)",
+                }}
               >
-                {/* Video container */}
-                <Box
-                  className="relative overflow-hidden rounded-2xl"
+                {/* Browser mockup header */}
+                <Flex
+                  align="center"
+                  gap="2"
+                  px="4"
+                  py="3"
                   style={{
-                    background: "var(--color-background)",
-                    border: "1px solid var(--gray-a4)",
-                    boxShadow:
-                      "0 25px 50px -12px rgba(0, 0, 0, 0.15), 0 0 0 1px var(--gray-a3)",
+                    background: "var(--gray-a2)",
+                    borderBottom: "1px solid var(--gray-a4)",
                   }}
                 >
-                  {/* Browser mockup header */}
+                  <Box
+                    className="h-3 w-3 rounded-full"
+                    style={{ background: "#ff5f57" }}
+                  />
+                  <Box
+                    className="h-3 w-3 rounded-full"
+                    style={{ background: "#febc2e" }}
+                  />
+                  <Box
+                    className="h-3 w-3 rounded-full"
+                    style={{ background: "#28c840" }}
+                  />
                   <Flex
                     align="center"
                     gap="2"
-                    px="4"
-                    py="3"
-                    style={{
-                      background: "var(--gray-a2)",
-                      borderBottom: "1px solid var(--gray-a4)",
-                    }}
+                    className="ml-4 flex-1 rounded-md"
+                    px="3"
+                    py="1"
+                    style={{ background: "var(--gray-a3)" }}
                   >
-                    <Box className="h-3 w-3 rounded-full" style={{ background: "#ff5f57" }} />
-                    <Box className="h-3 w-3 rounded-full" style={{ background: "#febc2e" }} />
-                    <Box className="h-3 w-3 rounded-full" style={{ background: "#28c840" }} />
-                    <Flex
-                      align="center"
-                      gap="2"
-                      className="ml-4 flex-1 rounded-md"
-                      px="3"
-                      py="1"
-                      style={{ background: "var(--gray-a3)" }}
-                    >
-                      <Box
-                        className="h-2 w-2 rounded-full"
-                        style={{ background: "#28c840" }}
-                      />
-                      <Text size="1" color="gray">
-                        app.orema-nplus.ga
-                      </Text>
-                    </Flex>
+                    <Box
+                      className="h-2 w-2 rounded-full"
+                      style={{ background: "#28c840" }}
+                    />
+                    <Text size="1" color="gray">
+                      app.orema-nplus.ga
+                    </Text>
                   </Flex>
+                </Flex>
 
-                  {/* Slideshow */}
-                  <Box className="relative" style={{ aspectRatio: "16/9" }}>
-                    <AnimatePresence mode="wait">
-                      <motion.div
-                        key={currentSlide}
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        exit={{ opacity: 0 }}
-                        transition={{ duration: 0.5 }}
-                        className="absolute inset-0"
-                      >
-                        <Image
-                          src={demoSlides[currentSlide].src}
-                          alt={demoSlides[currentSlide].alt}
-                          fill
-                          className="object-cover object-top"
-                          priority={currentSlide === 0}
-                        />
-                      </motion.div>
-                    </AnimatePresence>
+                {/* Slideshow */}
+                <Box className="relative" style={{ aspectRatio: "16/9" }}>
+                  <AnimatePresence mode="wait">
+                    <motion.div
+                      key={currentSlide}
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      exit={{ opacity: 0 }}
+                      transition={{ duration: 0.4 }}
+                      className="absolute inset-0"
+                    >
+                      <Image
+                        src={demoSlides[currentSlide].src}
+                        alt={demoSlides[currentSlide].alt}
+                        fill
+                        className="object-cover object-top"
+                        priority={currentSlide === 0}
+                      />
+                    </motion.div>
+                  </AnimatePresence>
 
-                    {/* Navigation arrows */}
-                    <button
-                      onClick={prevSlide}
-                      className="absolute left-2 top-1/2 -translate-y-1/2 flex h-10 w-10 items-center justify-center rounded-full transition-all hover:scale-110"
+                  {/* Navigation arrows */}
+                  <button
+                    onClick={prevSlide}
+                    className="absolute top-1/2 left-3 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full transition-opacity hover:opacity-80"
+                    style={{
+                      background: "rgba(255,255,255,0.9)",
+                      boxShadow: "0 1px 4px rgba(0,0,0,0.1)",
+                    }}
+                    aria-label="Diapositive precedente"
+                  >
+                    <CaretLeft
+                      size={18}
+                      weight="bold"
+                      style={{ color: "var(--gray-12)" }}
+                    />
+                  </button>
+                  <button
+                    onClick={nextSlide}
+                    className="absolute top-1/2 right-3 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full transition-opacity hover:opacity-80"
+                    style={{
+                      background: "rgba(255,255,255,0.9)",
+                      boxShadow: "0 1px 4px rgba(0,0,0,0.1)",
+                    }}
+                    aria-label="Diapositive suivante"
+                  >
+                    <CaretRight
+                      size={18}
+                      weight="bold"
+                      style={{ color: "var(--gray-12)" }}
+                    />
+                  </button>
+
+                  {/* Current slide label */}
+                  <Box className="absolute bottom-4 left-4">
+                    <Box
+                      className="rounded-md"
                       style={{
-                        background: "rgba(255,255,255,0.9)",
-                        boxShadow: "0 2px 10px rgba(0,0,0,0.1)",
+                        background: "rgba(255,255,255,0.95)",
+                        backdropFilter: "blur(8px)",
+                        padding: "5px 12px",
                       }}
                     >
-                      <CaretLeft size={20} weight="bold" style={{ color: "var(--gray-12)" }} />
-                    </button>
-                    <button
-                      onClick={nextSlide}
-                      className="absolute right-2 top-1/2 -translate-y-1/2 flex h-10 w-10 items-center justify-center rounded-full transition-all hover:scale-110"
-                      style={{
-                        background: "rgba(255,255,255,0.9)",
-                        boxShadow: "0 2px 10px rgba(0,0,0,0.1)",
-                      }}
-                    >
-                      <CaretRight size={20} weight="bold" style={{ color: "var(--gray-12)" }} />
-                    </button>
-
-                    {/* Current slide label */}
-                    <Box className="absolute bottom-4 left-4">
-                      <Box
-                        className="rounded-full"
-                        style={{
-                          background: "rgba(255,255,255,0.95)",
-                          backdropFilter: "blur(10px)",
-                          padding: "6px 14px",
-                        }}
+                      <Text
+                        size="1"
+                        weight="medium"
+                        style={{ color: "var(--gray-12)" }}
                       >
-                        <Text size="1" weight="medium" style={{ color: "var(--gray-12)" }}>
-                          {demoSlides[currentSlide].label}
-                        </Text>
-                      </Box>
+                        {demoSlides[currentSlide].label}
+                      </Text>
                     </Box>
-
-                    {/* Slide indicators */}
-                    <Flex
-                      gap="2"
-                      align="center"
-                      justify="center"
-                      className="absolute bottom-4 left-1/2 -translate-x-1/2"
-                    >
-                      {demoSlides.map((_, index) => (
-                        <button
-                          key={index}
-                          onClick={() => goToSlide(index)}
-                          className="h-2 rounded-full transition-all"
-                          style={{
-                            width: index === currentSlide ? 24 : 8,
-                            background: index === currentSlide
-                              ? "var(--accent-9)"
-                              : "rgba(255,255,255,0.7)",
-                          }}
-                        />
-                      ))}
-                    </Flex>
                   </Box>
-                </Box>
 
-                {/* Glow effect */}
-                <Box
-                  className="pointer-events-none absolute -inset-4 -z-10 rounded-3xl opacity-30 blur-3xl"
-                  style={{
-                    background:
-                      "var(--accent-6)",
-                  }}
-                />
-              </motion.div>
+                  {/* Slide indicators */}
+                  <Flex
+                    gap="2"
+                    align="center"
+                    justify="center"
+                    className="absolute bottom-4 left-1/2 -translate-x-1/2"
+                  >
+                    {demoSlides.map((_, index) => (
+                      <button
+                        key={index}
+                        onClick={() => goToSlide(index)}
+                        className="h-1.5 rounded-full transition-all"
+                        style={{
+                          width: index === currentSlide ? 20 : 6,
+                          background:
+                            index === currentSlide
+                              ? "var(--accent-9)"
+                              : "rgba(255,255,255,0.6)",
+                        }}
+                        aria-label={`Aller a la diapositive ${index + 1}`}
+                      />
+                    ))}
+                  </Flex>
+                </Box>
+              </Box>
             </FadeIn>
           </Box>
         </Flex>

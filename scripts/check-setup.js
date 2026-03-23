@@ -69,9 +69,7 @@ function main() {
   check(
     "pnpm installé",
     pnpmVersion !== null,
-    pnpmVersion
-      ? `Version: ${pnpmVersion}`
-      : "Installez avec: npm install -g pnpm"
+    pnpmVersion ? `Version: ${pnpmVersion}` : "Installez avec: npm install -g pnpm"
   );
 
   const gitVersion = getVersion("git --version");
@@ -81,21 +79,9 @@ function main() {
   section("2. Fichiers de Configuration");
 
   check(".env existe", fileExists(".env"), "Fichier d'environnement");
-  check(
-    ".env.example existe",
-    fileExists(".env.example"),
-    "Template d'environnement"
-  );
-  check(
-    "next.config.ts existe",
-    fileExists("next.config.ts"),
-    "Configuration Next.js"
-  );
-  check(
-    "tailwind.config.ts existe",
-    fileExists("tailwind.config.ts"),
-    "Configuration Tailwind"
-  );
+  check(".env.example existe", fileExists(".env.example"), "Template d'environnement");
+  check("next.config.ts existe", fileExists("next.config.ts"), "Configuration Next.js");
+  check("tailwind.config.ts existe", fileExists("tailwind.config.ts"), "Configuration Tailwind");
   check(
     "prisma/schema.prisma existe",
     fileExists("prisma/schema.prisma"),
@@ -176,14 +162,9 @@ function main() {
     const envContent = fs.readFileSync(path.join(__dirname, "..", ".env"), "utf-8");
 
     const hasDbUrl = envContent.includes("DATABASE_URL=");
-    check(
-      "DATABASE_URL définie",
-      hasDbUrl,
-      hasDbUrl ? "" : "Ajoutez DATABASE_URL dans .env"
-    );
+    check("DATABASE_URL définie", hasDbUrl, hasDbUrl ? "" : "Ajoutez DATABASE_URL dans .env");
 
-    const hasPlaceholder =
-      envContent.includes("yourPassword") || envContent.includes("password@");
+    const hasPlaceholder = envContent.includes("yourPassword") || envContent.includes("password@");
     check(
       "DATABASE_URL configurée",
       hasDbUrl && !hasPlaceholder,
@@ -217,10 +198,7 @@ function main() {
   section("8. Résumé");
 
   log("\n✅ Si toutes les vérifications sont vertes, vous êtes prêt !", "green");
-  log(
-    "❌ Si des vérifications sont rouges, consultez SETUP.md pour les instructions",
-    "yellow"
-  );
+  log("❌ Si des vérifications sont rouges, consultez SETUP.md pour les instructions", "yellow");
 
   log("\n📚 Commandes utiles:", "cyan");
   log("  pnpm install              # Installer les dépendances", "reset");

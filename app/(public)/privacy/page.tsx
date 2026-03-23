@@ -1,49 +1,57 @@
 "use client";
 
-import { Box, Container, Heading, Text, Separator, Flex, Grid } from "@radix-ui/themes";
+import {
+  Box,
+  Container,
+  Heading,
+  Text,
+  Separator,
+  Flex,
+  Grid,
+} from "@radix-ui/themes";
 import { motion } from "motion/react";
 import { PageHeader } from "@/components/public";
 import {
-  Shield,
+  ShieldCheck,
   Lock,
   Eye,
-  Server,
+  HardDrives,
   Users,
   Clock,
-  Mail,
-  Trash2,
+  EnvelopeSimple,
+  Trash,
   Calendar,
-} from "lucide-react";
+} from "@phosphor-icons/react";
 
 const dataTypes = [
   {
     icon: Users,
-    title: "Données d'identification",
+    title: "Donnees d'identification",
     items: [
-      "Nom et prénom",
+      "Nom et prenom",
       "Adresse e-mail",
-      "Numéro de téléphone",
-      "Nom de l'établissement",
+      "Numero de telephone",
+      "Nom de l'etablissement",
     ],
   },
   {
-    icon: Server,
-    title: "Données techniques",
+    icon: HardDrives,
+    title: "Donnees techniques",
     items: [
       "Adresse IP",
       "Type de navigateur",
-      "Données de connexion",
+      "Donnees de connexion",
       "Logs d'utilisation",
     ],
   },
   {
     icon: Lock,
-    title: "Données commerciales",
+    title: "Donnees commerciales",
     items: [
       "Transactions de vente",
       "Historique des commandes",
-      "Données de facturation",
-      "Statistiques d'activité",
+      "Donnees de facturation",
+      "Statistiques d'activite",
     ],
   },
 ];
@@ -51,97 +59,107 @@ const dataTypes = [
 const rights = [
   {
     icon: Eye,
-    title: "Droit d'accès",
-    description: "Vous pouvez demander une copie de toutes les données que nous détenons à votre sujet.",
+    title: "Droit d'acces",
+    description:
+      "Vous pouvez demander une copie de toutes les donnees que nous detenons a votre sujet.",
   },
   {
-    icon: Trash2,
+    icon: Trash,
     title: "Droit de suppression",
-    description: "Vous pouvez demander la suppression de vos données personnelles de nos systèmes.",
+    description:
+      "Vous pouvez demander la suppression de vos donnees personnelles de nos systemes.",
   },
   {
     icon: Lock,
     title: "Droit de rectification",
-    description: "Vous pouvez modifier ou corriger vos informations personnelles à tout moment.",
+    description:
+      "Vous pouvez modifier ou corriger vos informations personnelles a tout moment.",
   },
   {
     icon: Clock,
-    title: "Droit de portabilité",
-    description: "Vous pouvez récupérer vos données dans un format structuré et lisible.",
+    title: "Droit de portabilite",
+    description:
+      "Vous pouvez recuperer vos donnees dans un format structure et lisible.",
   },
 ];
 
 const sections = [
   {
     id: "collecte",
-    title: "1. Collecte des données",
-    content: `Nous collectons vos données personnelles lorsque vous :
+    number: "1",
+    title: "Collecte des donnees",
+    content: `Nous collectons vos donnees personnelles lorsque vous :
 
-• Créez un compte sur notre plateforme
-• Utilisez notre système de caisse
-• Contactez notre service client
-• Souscrivez à un abonnement
+- Creez un compte sur notre plateforme
+- Utilisez notre systeme de caisse
+- Contactez notre service client
+- Souscrivez a un abonnement
 
-Ces données sont collectées de manière loyale et transparente, avec votre consentement explicite.`,
+Ces donnees sont collectees de maniere loyale et transparente, avec votre consentement explicite.`,
   },
   {
     id: "utilisation",
-    title: "2. Utilisation des données",
-    content: `Vos données sont utilisées pour :
+    number: "2",
+    title: "Utilisation des donnees",
+    content: `Vos donnees sont utilisees pour :
 
-• Fournir et améliorer nos services
-• Traiter vos transactions et paiements
-• Vous envoyer des informations importantes sur votre compte
-• Assurer le support technique
-• Générer des rapports et statistiques anonymisées
-• Respecter nos obligations légales
+- Fournir et ameliorer nos services
+- Traiter vos transactions et paiements
+- Vous envoyer des informations importantes sur votre compte
+- Assurer le support technique
+- Generer des rapports et statistiques anonymisees
+- Respecter nos obligations legales
 
-Nous ne vendons jamais vos données à des tiers.`,
+Nous ne vendons jamais vos donnees a des tiers.`,
   },
   {
     id: "conservation",
-    title: "3. Conservation des données",
-    content: `Vos données sont conservées pendant la durée nécessaire aux finalités pour lesquelles elles ont été collectées :
+    number: "3",
+    title: "Conservation des donnees",
+    content: `Vos donnees sont conservees pendant la duree necessaire aux finalites pour lesquelles elles ont ete collectees :
 
-• Données de compte : durée de la relation commerciale + 3 ans
-• Données de transaction : 10 ans (obligations comptables)
-• Logs techniques : 12 mois
+- Donnees de compte : duree de la relation commerciale + 3 ans
+- Donnees de transaction : 10 ans (obligations comptables)
+- Logs techniques : 12 mois
 
-À l'expiration de ces délais, vos données sont supprimées ou anonymisées.`,
+A l'expiration de ces delais, vos donnees sont supprimees ou anonymisees.`,
   },
   {
     id: "securite",
-    title: "4. Sécurité des données",
-    content: `Nous mettons en œuvre des mesures de sécurité robustes pour protéger vos données :
+    number: "4",
+    title: "Securite des donnees",
+    content: `Nous mettons en oeuvre des mesures de securite robustes pour proteger vos donnees :
 
-• Chiffrement SSL/TLS pour toutes les transmissions
-• Stockage sécurisé sur des serveurs protégés
-• Accès restreint aux données (principe du moindre privilège)
-• Authentification forte et codes PIN hachés
-• Sauvegardes régulières et plan de reprise d'activité
-• Audits de sécurité réguliers`,
+- Chiffrement SSL/TLS pour toutes les transmissions
+- Stockage securise sur des serveurs proteges
+- Acces restreint aux donnees (principe du moindre privilege)
+- Authentification forte et codes PIN haches
+- Sauvegardes regulieres et plan de reprise d'activite
+- Audits de securite reguliers`,
   },
   {
     id: "partage",
-    title: "5. Partage des données",
-    content: `Vos données peuvent être partagées avec :
+    number: "5",
+    title: "Partage des donnees",
+    content: `Vos donnees peuvent etre partagees avec :
 
-• Nos sous-traitants techniques (hébergement, paiement) sous contrat strict
-• Les autorités compétentes en cas d'obligation légale
-• Votre établissement si vous êtes employé
+- Nos sous-traitants techniques (hebergement, paiement) sous contrat strict
+- Les autorites competentes en cas d'obligation legale
+- Votre etablissement si vous etes employe
 
-Tout transfert de données hors du Gabon est encadré par des garanties appropriées.`,
+Tout transfert de donnees hors du Gabon est encadre par des garanties appropriees.`,
   },
   {
     id: "cookies",
-    title: "6. Cookies et traceurs",
+    number: "6",
+    title: "Cookies et traceurs",
     content: `Nous utilisons des cookies pour :
 
-• Assurer le bon fonctionnement du site (cookies essentiels)
-• Mémoriser vos préférences (cookies fonctionnels)
-• Analyser l'utilisation du service (cookies analytiques)
+- Assurer le bon fonctionnement du site (cookies essentiels)
+- Memoriser vos preferences (cookies fonctionnels)
+- Analyser l'utilisation du service (cookies analytiques)
 
-Vous pouvez gérer vos préférences de cookies via les paramètres de votre navigateur.`,
+Vous pouvez gerer vos preferences de cookies via les parametres de votre navigateur.`,
   },
 ];
 
@@ -149,9 +167,9 @@ export default function PrivacyPage() {
   return (
     <>
       <PageHeader
-        title="Politique de Confidentialité"
-        subtitle="Découvrez comment nous protégeons et utilisons vos données personnelles."
-        badge="Vie privée"
+        title="Politique de confidentialite"
+        subtitle="Comment nous protegetons et utilisons vos donnees personnelles."
+        badge="Vie privee"
       />
 
       <Container size="3" py="9">
@@ -159,7 +177,7 @@ export default function PrivacyPage() {
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.2, duration: 0.5 }}
+          transition={{ delay: 0.2, duration: 0.4 }}
         >
           <Flex
             gap="6"
@@ -175,19 +193,24 @@ export default function PrivacyPage() {
             <Flex align="center" gap="2">
               <Calendar size={18} style={{ color: "var(--gray-10)" }} />
               <Text size="2" color="gray">
-                Dernière mise à jour : Janvier 2026
+                Derniere mise a jour : Mars 2026
               </Text>
             </Flex>
             <Flex align="center" gap="2">
-              <Shield size={18} style={{ color: "var(--green-10)" }} />
+              <ShieldCheck
+                size={18}
+                weight="fill"
+                style={{ color: "var(--green-10)" }}
+              />
               <Text size="2" color="gray">
-                Conforme à la Loi n°001/2011 (protection des données personnelles)
+                Conforme a la Loi n 001/2011 (protection des donnees
+                personnelles)
               </Text>
             </Flex>
           </Flex>
         </motion.div>
 
-        {/* Introduction */}
+        {/* Engagement */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -197,29 +220,36 @@ export default function PrivacyPage() {
             mb="9"
             p="6"
             style={{
-              background:
-                "linear-gradient(135deg, var(--violet-a2) 0%, var(--purple-a2) 100%)",
+              background: "var(--accent-a2)",
               borderRadius: 16,
-              border: "1px solid var(--violet-a4)",
+              border: "1px solid var(--accent-a4)",
             }}
           >
             <Flex align="center" gap="3" mb="4">
               <Box
                 p="3"
                 style={{
-                  background: "var(--violet-a4)",
+                  background: "var(--accent-a3)",
                   borderRadius: 12,
                 }}
               >
-                <Shield size={24} style={{ color: "var(--violet-9)" }} />
+                <ShieldCheck
+                  size={24}
+                  weight="duotone"
+                  style={{ color: "var(--accent-9)" }}
+                />
               </Box>
               <Heading size="4">Notre engagement</Heading>
             </Flex>
-            <Text size="3" style={{ color: "var(--gray-11)", lineHeight: 1.8 }}>
-              Chez Oréma N+, la protection de vos données personnelles est une priorité absolue.
-              Nous nous engageons à traiter vos informations avec le plus grand soin et en toute
-              transparence, conformément à la réglementation en vigueur au Gabon et aux standards
-              internationaux de protection des données.
+            <Text
+              size="3"
+              style={{ color: "var(--gray-11)", lineHeight: 1.8 }}
+            >
+              Chez Orema N+, la protection de vos donnees personnelles est une
+              priorite. Nous traitons vos informations avec le plus grand soin
+              et en toute transparence, conformement a la reglementation en
+              vigueur au Gabon et aux standards internationaux de protection
+              des donnees.
             </Text>
           </Box>
         </motion.div>
@@ -231,7 +261,7 @@ export default function PrivacyPage() {
           transition={{ delay: 0.4, duration: 0.5 }}
         >
           <Heading size="5" mb="5">
-            Données que nous collectons
+            Donnees que nous collectons
           </Heading>
           <Grid columns={{ initial: "1", md: "3" }} gap="4" mb="9">
             {dataTypes.map((type, index) => (
@@ -239,7 +269,7 @@ export default function PrivacyPage() {
                 key={type.title}
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.5 + index * 0.1, duration: 0.5 }}
+                transition={{ delay: 0.5 + index * 0.1, duration: 0.4 }}
               >
                 <Box
                   p="5"
@@ -254,11 +284,15 @@ export default function PrivacyPage() {
                     <Box
                       p="2"
                       style={{
-                        background: "var(--violet-a3)",
+                        background: "var(--accent-a3)",
                         borderRadius: 8,
                       }}
                     >
-                      <type.icon size={20} style={{ color: "var(--violet-9)" }} />
+                      <type.icon
+                        size={20}
+                        weight="duotone"
+                        style={{ color: "var(--accent-9)" }}
+                      />
                     </Box>
                     <Text size="3" weight="bold">
                       {type.title}
@@ -267,7 +301,7 @@ export default function PrivacyPage() {
                   <Flex direction="column" gap="2">
                     {type.items.map((item, i) => (
                       <Text key={i} size="2" color="gray">
-                        • {item}
+                        - {item}
                       </Text>
                     ))}
                   </Flex>
@@ -284,11 +318,11 @@ export default function PrivacyPage() {
             id={section.id}
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.6 + index * 0.05, duration: 0.5 }}
+            transition={{ delay: 0.6 + index * 0.05, duration: 0.4 }}
           >
             <Box mb="8">
               <Heading size="5" mb="4" style={{ color: "var(--gray-12)" }}>
-                {section.title}
+                {section.number}. {section.title}
               </Heading>
               <Text
                 size="3"
@@ -300,7 +334,9 @@ export default function PrivacyPage() {
               >
                 {section.content}
               </Text>
-              {index < sections.length - 1 && <Separator size="4" my="6" />}
+              {index < sections.length - 1 && (
+                <Separator size="4" my="6" />
+              )}
             </Box>
           </motion.div>
         ))}
@@ -332,7 +368,11 @@ export default function PrivacyPage() {
                   }}
                 >
                   <Flex align="center" gap="3" mb="3">
-                    <right.icon size={20} style={{ color: "var(--green-9)" }} />
+                    <right.icon
+                      size={20}
+                      weight="duotone"
+                      style={{ color: "var(--green-9)" }}
+                    />
                     <Text size="3" weight="bold">
                       {right.title}
                     </Text>
@@ -346,11 +386,11 @@ export default function PrivacyPage() {
           </Grid>
         </motion.div>
 
-        {/* Contact */}
+        {/* Contact DPO */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 1.2, duration: 0.5 }}
+          transition={{ delay: 1.2, duration: 0.4 }}
         >
           <Box
             p="6"
@@ -361,24 +401,41 @@ export default function PrivacyPage() {
             }}
           >
             <Flex align="center" gap="3" mb="3">
-              <Mail size={20} style={{ color: "var(--violet-9)" }} />
-              <Heading size="4">Délégué à la Protection des Données</Heading>
+              <EnvelopeSimple
+                size={20}
+                weight="duotone"
+                style={{ color: "var(--accent-9)" }}
+              />
+              <Heading size="4">
+                Delegue a la Protection des Donnees
+              </Heading>
             </Flex>
-            <Text size="3" color="gray" mb="4" style={{ display: "block" }}>
-              Pour exercer vos droits ou pour toute question relative à la protection de vos données
-              personnelles, contactez notre DPO :
+            <Text
+              size="3"
+              color="gray"
+              mb="4"
+              style={{ display: "block" }}
+            >
+              Pour exercer vos droits ou pour toute question relative a la
+              protection de vos donnees personnelles, contactez notre DPO :
             </Text>
             <Flex direction="column" gap="2">
               <Text size="3">
                 Email :{" "}
                 <a
                   href="mailto:dpo@orema-nplus.ga"
-                  style={{ color: "var(--violet-9)", textDecoration: "none" }}
+                  style={{
+                    color: "var(--accent-9)",
+                    textDecoration: "none",
+                  }}
                 >
                   dpo@orema-nplus.ga
                 </a>
               </Text>
-              <Text size="3">Adresse : Boulevard Triomphal Omar Bongo, Immeuble Les Arcades, 3e étage, Libreville, Gabon</Text>
+              <Text size="3">
+                Adresse : Boulevard Triomphal Omar Bongo, Immeuble Les
+                Arcades, 3e etage, Libreville, Gabon
+              </Text>
             </Flex>
           </Box>
         </motion.div>

@@ -2,122 +2,245 @@
 
 /**
  * Page de gestion des établissements - SUPER_ADMIN uniquement
- * Permet de voir et supprimer des établissements avec toutes leurs données
+ * Vue liste complète avec filtres, recherche, tri, sélection, comparaison
  */
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import {
   Box,
   Flex,
   Grid,
   Heading,
   Text,
-  Badge,
   Button,
+  IconButton,
+  Separator,
   Skeleton,
-  Table,
-  Dialog,
-  TextField,
-  Callout,
-  ScrollArea,
 } from "@radix-ui/themes";
 import {
-  Building2,
+  Buildings,
   Users,
-  Package,
-  ShoppingCart,
-  UserCheck,
-  Trash2,
-  AlertTriangle,
-  CheckCircle2,
-  XCircle,
-  RefreshCw,
-} from "lucide-react";
+  CurrencyCircleDollar,
+  Plus,
+  ArrowClockwise,
+  SquaresFour,
+  List,
+} from "@phosphor-icons/react";
+import { StatCard } from "@/components/composed";
 import { motion } from "motion/react";
 import { toast } from "sonner";
-import {
-  getAllEtablissements,
-  deleteEtablissement,
-  type EtablissementWithStats,
-} from "@/actions/admin/etablissements";
+import { searchEtablissements } from "@/actions/admin/etablissements";
+import { bulkSuspend, bulkReactivate } from "@/actions/admin/etablissements-bulk";
+import { formatCurrency } from "@/lib/utils";
+import { EtablissementsFilters, defaultFilters } from "@/components/admin/etablissements/etablissements-filters";
+import { EtablissementsTable } from "@/components/admin/etablissements/etablissements-table";
+import { EtablissementsCards } from "@/components/admin/etablissements/etablissements-cards";
+import { CreateEtablissementDialog } from "@/components/admin/etablissements/create-etablissement-dialog";
+import { EtablissementComparison } from "@/components/admin/etablissements/etablissement-comparison";
+import { BulkActionsBar } from "@/components/admin/etablissements/bulk-actions-bar";
+import { DeleteEtablissementDialog } from "@/components/admin/etablissements/detail/delete-etablissement-dialog";
+import type { EtablissementWithStatsExtended, ViewMode } from "@/components/admin/etablissements/types";
+import type { EtablissementFilters } from "@/components/admin/etablissements/etablissements-filters";
 
 export default function AdminEtablissementsPage() {
-  const [etablissements, setEtablissements] = useState<EtablissementWithStats[]>([]);
+  // Data
+  const [etablissements, setEtablissements] = useState<EtablissementWithStatsExtended[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [selectedEtab, setSelectedEtab] = useState<EtablissementWithStats | null>(null);
-  const [confirmationNom, setConfirmationNom] = useState("");
-  const [isDeleting, setIsDeleting] = useState(false);
-  const [deleteResult, setDeleteResult] = useState<{
-    success: boolean;
-    counts?: Record<string, number>;
-    error?: string;
-  } | null>(null);
+  const [totalCount, setTotalCount] = useState(0);
+  const [totalPages, setTotalPages] = useState(1);
 
-  const loadEtablissements = async () => {
+  // Filters & view
+  const [filters, setFilters] = useState<EtablissementFilters>(defaultFilters);
+  const [viewMode, setViewMode] = useState<ViewMode>("table");
+  const [page, setPage] = useState(1);
+  const pageSize = 20;
+
+  // Selection
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+
+  // Dialogs
+  const [createDialogOpen, setCreateDialogOpen] = useState(false);
+  const [showComparison, setShowComparison] = useState(false);
+
+  // Delete dialog
+  const [selectedForDelete, setSelectedForDelete] = useState<EtablissementWithStatsExtended | null>(null);
+
+  // Load data using server-side search
+  const loadEtablissements = useCallback(async () => {
     setIsLoading(true);
     try {
-      const result = await getAllEtablissements();
+      const result = await searchEtablissements({
+        search: filters.search || undefined,
+        statut: (filters.statut || "all") as "all" | "actif" | "suspendu" | "en_essai" | undefined,
+        plan: (filters.plan || "all") as "all" | "essentiel" | "pro" | "business" | "enterprise" | undefined,
+        sortBy: (filters.sortBy || "created_at") as "nom" | "created_at" | "chiffre_affaires" | "nb_utilisateurs" | "nb_ventes" | undefined,
+        sortOrder: filters.sortOrder || "desc",
+        page,
+        pageSize,
+      });
       if (result.success && result.data) {
-        setEtablissements(result.data);
+        // Map server data to extended type for component compatibility
+        const extended: EtablissementWithStatsExtended[] = result.data.data.map((e) => ({
+          id: e.id,
+          nom: e.nom,
+          email: e.email,
+          telephone: e.telephone,
+          adresse: e.adresse,
+          createdAt: new Date(e.created_at),
+          nbUtilisateurs: e.nb_utilisateurs,
+          nbProduits: e.nb_produits,
+          nbVentes: e.nb_ventes,
+          nbClients: e.nb_clients,
+          statut: e.statut || "actif",
+          plan: e.plan || "essentiel",
+          chiffreAffaires: e.ca_total || 0,
+          nif: e.nif,
+          rccm: e.rccm,
+        }));
+        setEtablissements(extended);
+        setTotalCount(result.data.count);
+        setTotalPages(result.data.totalPages);
       } else {
         toast.error(result.error || "Erreur de chargement");
       }
-    } catch (error) {
+    } catch {
       toast.error("Erreur lors du chargement");
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [filters, page, pageSize]);
 
   useEffect(() => {
     loadEtablissements();
-  }, []);
+  }, [loadEtablissements]);
 
-  const handleDelete = async () => {
-    if (!selectedEtab) return;
+  // Stats (computed from current page data for display -- totals come from server count)
+  const totalUtilisateurs = etablissements.reduce((sum, e) => sum + e.nbUtilisateurs, 0);
+  const totalCA = etablissements.reduce((sum, e) => sum + (e.chiffreAffaires || 0), 0);
+  const nbActifs = etablissements.filter((e) => (e.statut || "actif") === "actif").length;
 
-    setIsDeleting(true);
-    setDeleteResult(null);
+  const statsCards = [
+    {
+      label: "Établissements",
+      value: totalCount.toString(),
+      icon: Buildings,
+      color: "violet" as const,
+    },
+    {
+      label: "Actifs",
+      value: nbActifs.toString(),
+      icon: Buildings,
+      color: "green" as const,
+    },
+    {
+      label: "Utilisateurs",
+      value: totalUtilisateurs.toString(),
+      icon: Users,
+      color: "blue" as const,
+    },
+    {
+      label: "CA global",
+      value: formatCurrency(totalCA),
+      icon: CurrencyCircleDollar,
+      color: "amber" as const,
+    },
+  ];
 
-    try {
-      const result = await deleteEtablissement(selectedEtab.id, confirmationNom);
-
-      if (result.success) {
-        setDeleteResult({
-          success: true,
-          counts: result.data?.deletedCounts,
-        });
-        toast.success(`Établissement "${selectedEtab.nom}" supprimé avec succès`);
-        // Recharger la liste après 2 secondes
-        setTimeout(() => {
-          setSelectedEtab(null);
-          setConfirmationNom("");
-          setDeleteResult(null);
-          loadEtablissements();
-        }, 2000);
-      } else {
-        setDeleteResult({
-          success: false,
-          error: result.error,
-        });
-      }
-    } catch (error) {
-      setDeleteResult({
-        success: false,
-        error: "Erreur inattendue lors de la suppression",
+  // Sort handler for table headers
+  const handleSortChange = (column: string) => {
+    if (filters.sortBy === column) {
+      setFilters({
+        ...filters,
+        sortOrder: filters.sortOrder === "asc" ? "desc" : "asc",
       });
-    } finally {
-      setIsDeleting(false);
+    } else {
+      setFilters({ ...filters, sortBy: column, sortOrder: "desc" });
+    }
+    setPage(1);
+  };
+
+  // Suspend / Reactivate handlers
+  const handleSuspend = async (etab: EtablissementWithStatsExtended) => {
+    try {
+      const { suspendEtablissement } = await import("@/actions/admin/etablissements");
+      const result = await suspendEtablissement(etab.id, { motif: "Suspendu depuis la liste admin" });
+      if (result.success) {
+        toast.success(`"${etab.nom}" suspendu`);
+        loadEtablissements();
+      } else {
+        toast.error(result.error || "Erreur");
+      }
+    } catch {
+      toast.error("Erreur lors de la suspension");
     }
   };
 
-  const closeDialog = () => {
-    if (!isDeleting) {
-      setSelectedEtab(null);
-      setConfirmationNom("");
-      setDeleteResult(null);
+  const handleReactivate = async (etab: EtablissementWithStatsExtended) => {
+    try {
+      const { reactivateEtablissement } = await import("@/actions/admin/etablissements");
+      const result = await reactivateEtablissement(etab.id);
+      if (result.success) {
+        toast.success(`"${etab.nom}" réactivé`);
+        loadEtablissements();
+      } else {
+        toast.error(result.error || "Erreur");
+      }
+    } catch {
+      toast.error("Erreur lors de la réactivation");
     }
   };
+
+  // Bulk actions using dedicated bulk server actions
+  const handleBulkSuspend = async () => {
+    const ids = Array.from(selectedIds);
+    try {
+      const result = await bulkSuspend({
+        etablissement_ids: ids,
+        motif: "Suspension groupee depuis la liste admin",
+      });
+      if (result.success && result.data) {
+        toast.success(
+          `${result.data.suspended}/${ids.length} etablissement(s) suspendu(s)`
+        );
+        if (result.data.failed.length > 0) {
+          toast.warning(`${result.data.failed.length} echec(s)`);
+        }
+      } else {
+        toast.error(result.error || "Erreur lors de la suspension en masse");
+      }
+    } catch {
+      toast.error("Erreur lors de la suspension en masse");
+    }
+    setSelectedIds(new Set());
+    loadEtablissements();
+  };
+
+  const handleBulkReactivate = async () => {
+    const ids = Array.from(selectedIds);
+    try {
+      const result = await bulkReactivate({
+        etablissement_ids: ids,
+      });
+      if (result.success && result.data) {
+        toast.success(
+          `${result.data.reactivated}/${ids.length} etablissement(s) reactive(s)`
+        );
+        if (result.data.failed.length > 0) {
+          toast.warning(`${result.data.failed.length} echec(s)`);
+        }
+      } else {
+        toast.error(result.error || "Erreur lors de la reactivation en masse");
+      }
+    } catch {
+      toast.error("Erreur lors de la reactivation en masse");
+    }
+    setSelectedIds(new Set());
+    loadEtablissements();
+  };
+
+  // Comparison
+  const selectedEtablissements = etablissements.filter((e) => selectedIds.has(e.id));
+  const canCompare = selectedIds.size >= 2 && selectedIds.size <= 3;
 
   return (
     <Box>
@@ -125,404 +248,282 @@ export default function AdminEtablissementsPage() {
       <motion.div
         initial={{ opacity: 0, y: -10 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.4 }}
+        transition={{ duration: 0.35 }}
       >
         <Flex align="center" justify="between" mb="6">
           <Flex align="center" gap="3">
             <Box
               p="3"
               style={{
-                background: "linear-gradient(135deg, var(--red-9) 0%, var(--violet-9) 100%)",
-                borderRadius: 12,
-                boxShadow: "0 4px 16px var(--red-a4)",
+                background: "var(--accent-a3)",
+                borderRadius: 8,
               }}
             >
-              <Building2 size={24} style={{ color: "white" }} />
+              <Buildings size={24} weight="duotone" style={{ color: "var(--accent-9)" }} />
             </Box>
             <Box>
-              <Heading size="6">Gestion des établissements</Heading>
+              <Heading size="6" weight="bold">
+                Gestion des établissements
+              </Heading>
               <Text size="2" color="gray">
-                Gérer et supprimer des établissements (action irréversible)
+                {totalCount} établissement{totalCount !== 1 ? "s" : ""}{" "}
+                {filters.search || filters.statut !== "all" || filters.plan !== "all"
+                  ? "(filtré)"
+                  : ""}
               </Text>
             </Box>
           </Flex>
 
-          <Button
-            variant="soft"
-            onClick={loadEtablissements}
-            disabled={isLoading}
-          >
-            <RefreshCw size={16} className={isLoading ? "animate-spin" : ""} />
-            Actualiser
-          </Button>
-        </Flex>
-      </motion.div>
+          <Flex gap="3" align="center">
+            {/* Toggle vue */}
+            <Flex
+              align="center"
+              style={{
+                background: "var(--gray-a3)",
+                borderRadius: "var(--radius-3)",
+                padding: 3,
+                gap: 2,
+              }}
+            >
+              <IconButton
+                variant={viewMode === "cards" ? "soft" : "ghost"}
+                color={viewMode === "cards" ? undefined : "gray"}
+                size="2"
+                onClick={() => setViewMode("cards")}
+                style={{ cursor: "pointer", borderRadius: "var(--radius-2)" }}
+                aria-label="Vue grille"
+              >
+                <SquaresFour size={18} weight={viewMode === "cards" ? "fill" : "regular"} />
+              </IconButton>
+              <IconButton
+                variant={viewMode === "table" ? "soft" : "ghost"}
+                color={viewMode === "table" ? undefined : "gray"}
+                size="2"
+                onClick={() => setViewMode("table")}
+                style={{ cursor: "pointer", borderRadius: "var(--radius-2)" }}
+                aria-label="Vue tableau"
+              >
+                <List size={18} weight={viewMode === "table" ? "fill" : "regular"} />
+              </IconButton>
+            </Flex>
 
-      {/* Warning */}
-      <motion.div
-        initial={{ opacity: 0, y: 10 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.4, delay: 0.1 }}
-      >
-        <Callout.Root color="red" mb="5">
-          <Callout.Icon>
-            <AlertTriangle size={18} />
-          </Callout.Icon>
-          <Callout.Text>
-            <Text weight="bold">Attention :</Text> La suppression d'un établissement est{" "}
-            <Text weight="bold">définitive et irréversible</Text>. Toutes les données
-            associées (utilisateurs, produits, ventes, clients, etc.) seront
-            supprimées.
-          </Callout.Text>
-        </Callout.Root>
+            <Separator orientation="vertical" size="1" />
+
+            <IconButton
+              variant="soft"
+              color="gray"
+              size="2"
+              onClick={loadEtablissements}
+              disabled={isLoading}
+              aria-label="Actualiser"
+              style={{ cursor: "pointer" }}
+            >
+              <ArrowClockwise
+                size={18}
+                weight="bold"
+                className={isLoading ? "animate-spin" : ""}
+              />
+            </IconButton>
+
+            <Button size="2" onClick={() => setCreateDialogOpen(true)} style={{ cursor: "pointer" }}>
+              <Plus size={16} weight="bold" />
+              Créer un établissement
+            </Button>
+          </Flex>
+        </Flex>
       </motion.div>
 
       {/* Stats globales */}
       <motion.div
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.4, delay: 0.2 }}
+        transition={{ duration: 0.35, delay: 0.08 }}
       >
         <Grid columns={{ initial: "2", md: "4" }} gap="4" mb="6">
-          <Box
-            p="4"
-            style={{
-              background: "var(--color-background)",
-              borderRadius: 12,
-              border: "1px solid var(--gray-a4)",
-            }}
-          >
-            <Flex align="center" gap="3">
-              <Box p="2" style={{ background: "var(--blue-a3)", borderRadius: 8 }}>
-                <Building2 size={18} style={{ color: "var(--blue-9)" }} />
-              </Box>
-              <Box>
-                <Text size="1" color="gray">Établissements</Text>
-                <Text size="5" weight="bold">
-                  {isLoading ? <Skeleton style={{ width: 30 }} /> : etablissements.length}
-                </Text>
-              </Box>
-            </Flex>
-          </Box>
-
-          <Box
-            p="4"
-            style={{
-              background: "var(--color-background)",
-              borderRadius: 12,
-              border: "1px solid var(--gray-a4)",
-            }}
-          >
-            <Flex align="center" gap="3">
-              <Box p="2" style={{ background: "var(--green-a3)", borderRadius: 8 }}>
-                <Users size={18} style={{ color: "var(--green-9)" }} />
-              </Box>
-              <Box>
-                <Text size="1" color="gray">Utilisateurs total</Text>
-                <Text size="5" weight="bold">
-                  {isLoading ? (
-                    <Skeleton style={{ width: 30 }} />
-                  ) : (
-                    etablissements.reduce((sum, e) => sum + e.nbUtilisateurs, 0)
-                  )}
-                </Text>
-              </Box>
-            </Flex>
-          </Box>
-
-          <Box
-            p="4"
-            style={{
-              background: "var(--color-background)",
-              borderRadius: 12,
-              border: "1px solid var(--gray-a4)",
-            }}
-          >
-            <Flex align="center" gap="3">
-              <Box p="2" style={{ background: "var(--violet-a3)", borderRadius: 8 }}>
-                <Package size={18} style={{ color: "var(--violet-9)" }} />
-              </Box>
-              <Box>
-                <Text size="1" color="gray">Produits total</Text>
-                <Text size="5" weight="bold">
-                  {isLoading ? (
-                    <Skeleton style={{ width: 30 }} />
-                  ) : (
-                    etablissements.reduce((sum, e) => sum + e.nbProduits, 0)
-                  )}
-                </Text>
-              </Box>
-            </Flex>
-          </Box>
-
-          <Box
-            p="4"
-            style={{
-              background: "var(--color-background)",
-              borderRadius: 12,
-              border: "1px solid var(--gray-a4)",
-            }}
-          >
-            <Flex align="center" gap="3">
-              <Box p="2" style={{ background: "var(--purple-a3)", borderRadius: 8 }}>
-                <ShoppingCart size={18} style={{ color: "var(--purple-9)" }} />
-              </Box>
-              <Box>
-                <Text size="1" color="gray">Ventes total</Text>
-                <Text size="5" weight="bold">
-                  {isLoading ? (
-                    <Skeleton style={{ width: 30 }} />
-                  ) : (
-                    etablissements.reduce((sum, e) => sum + e.nbVentes, 0)
-                  )}
-                </Text>
-              </Box>
-            </Flex>
-          </Box>
+          {statsCards.map((stat, index) => (
+            <motion.div
+              key={stat.label}
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.3, delay: 0.12 + index * 0.06 }}
+            >
+              <StatCard
+                title={stat.label}
+                value={isLoading ? "..." : stat.value}
+                icon={stat.icon}
+                color={stat.color}
+              />
+            </motion.div>
+          ))}
         </Grid>
       </motion.div>
 
-      {/* Table des établissements */}
+      {/* Filtres */}
       <motion.div
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.4, delay: 0.3 }}
+        transition={{ duration: 0.35, delay: 0.2 }}
+        style={{ marginBottom: 20 }}
       >
-        <Box
-          style={{
-            background: "var(--color-background)",
-            borderRadius: 12,
-            border: "1px solid var(--gray-a4)",
-            overflow: "hidden",
+        <EtablissementsFilters
+          filters={filters}
+          onFiltersChange={(f) => {
+            setFilters(f);
+            setPage(1);
           }}
-        >
-          <Table.Root>
-            <Table.Header>
-              <Table.Row>
-                <Table.ColumnHeaderCell>Établissement</Table.ColumnHeaderCell>
-                <Table.ColumnHeaderCell>Contact</Table.ColumnHeaderCell>
-                <Table.ColumnHeaderCell align="center">Utilisateurs</Table.ColumnHeaderCell>
-                <Table.ColumnHeaderCell align="center">Produits</Table.ColumnHeaderCell>
-                <Table.ColumnHeaderCell align="center">Ventes</Table.ColumnHeaderCell>
-                <Table.ColumnHeaderCell align="center">Clients</Table.ColumnHeaderCell>
-                <Table.ColumnHeaderCell align="center">Créé le</Table.ColumnHeaderCell>
-                <Table.ColumnHeaderCell align="right">Actions</Table.ColumnHeaderCell>
-              </Table.Row>
-            </Table.Header>
-            <Table.Body>
-              {isLoading ? (
-                Array.from({ length: 3 }).map((_, i) => (
-                  <Table.Row key={i}>
-                    <Table.Cell><Skeleton style={{ height: 20 }} /></Table.Cell>
-                    <Table.Cell><Skeleton style={{ height: 20 }} /></Table.Cell>
-                    <Table.Cell><Skeleton style={{ height: 20 }} /></Table.Cell>
-                    <Table.Cell><Skeleton style={{ height: 20 }} /></Table.Cell>
-                    <Table.Cell><Skeleton style={{ height: 20 }} /></Table.Cell>
-                    <Table.Cell><Skeleton style={{ height: 20 }} /></Table.Cell>
-                    <Table.Cell><Skeleton style={{ height: 20 }} /></Table.Cell>
-                    <Table.Cell><Skeleton style={{ height: 20 }} /></Table.Cell>
-                  </Table.Row>
-                ))
-              ) : etablissements.length === 0 ? (
-                <Table.Row>
-                  <Table.Cell colSpan={8}>
-                    <Text color="gray" align="center">
-                      Aucun établissement trouvé
-                    </Text>
-                  </Table.Cell>
-                </Table.Row>
-              ) : (
-                etablissements.map((etab) => (
-                  <Table.Row key={etab.id}>
-                    <Table.Cell>
-                      <Flex direction="column" gap="1">
-                        <Text weight="medium">{etab.nom}</Text>
-                        <Text size="1" color="gray">{etab.id.slice(0, 8)}...</Text>
-                      </Flex>
-                    </Table.Cell>
-                    <Table.Cell>
-                      <Flex direction="column" gap="1">
-                        <Text size="2">{etab.email || "-"}</Text>
-                        <Text size="1" color="gray">{etab.telephone || "-"}</Text>
-                      </Flex>
-                    </Table.Cell>
-                    <Table.Cell align="center">
-                      <Badge color="blue" variant="soft">{etab.nbUtilisateurs}</Badge>
-                    </Table.Cell>
-                    <Table.Cell align="center">
-                      <Badge color="violet" variant="soft">{etab.nbProduits}</Badge>
-                    </Table.Cell>
-                    <Table.Cell align="center">
-                      <Badge color="green" variant="soft">{etab.nbVentes}</Badge>
-                    </Table.Cell>
-                    <Table.Cell align="center">
-                      <Badge color="purple" variant="soft">{etab.nbClients}</Badge>
-                    </Table.Cell>
-                    <Table.Cell align="center">
-                      <Text size="2">
-                        {etab.createdAt.toLocaleDateString("fr-FR")}
-                      </Text>
-                    </Table.Cell>
-                    <Table.Cell align="right">
-                      <Button
-                        color="red"
-                        variant="soft"
-                        size="1"
-                        onClick={() => setSelectedEtab(etab)}
-                      >
-                        <Trash2 size={14} />
-                        Supprimer
-                      </Button>
-                    </Table.Cell>
-                  </Table.Row>
-                ))
-              )}
-            </Table.Body>
-          </Table.Root>
-        </Box>
+          disabled={isLoading}
+        />
       </motion.div>
 
-      {/* Dialog de confirmation de suppression */}
-      <Dialog.Root open={!!selectedEtab} onOpenChange={(open) => !open && closeDialog()}>
-        <Dialog.Content maxWidth="500px">
-          <Dialog.Title>
-            <Flex align="center" gap="2">
-              <AlertTriangle size={20} style={{ color: "var(--red-9)" }} />
-              Supprimer l'établissement
-            </Flex>
-          </Dialog.Title>
+      {/* Comparaison */}
+      {showComparison && selectedEtablissements.length >= 2 ? <Box mb="5">
+          <EtablissementComparison
+            etablissements={selectedEtablissements}
+            onClose={() => setShowComparison(false)}
+          />
+        </Box> : null}
 
-          {deleteResult?.success ? (
-            // Résultat de succès
-            <Box>
-              <Callout.Root color="green" mb="4">
-                <Callout.Icon>
-                  <CheckCircle2 size={18} />
-                </Callout.Icon>
-                <Callout.Text>
-                  Établissement supprimé avec succès !
-                </Callout.Text>
-              </Callout.Root>
-
+      {/* Liste */}
+      <motion.div
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.35, delay: 0.3 }}
+      >
+        {isLoading ? (
+          <Box
+            style={{
+              background: "var(--color-background)",
+              borderRadius: 12,
+              border: "1px solid var(--gray-a4)",
+              overflow: "hidden",
+            }}
+          >
+            {Array.from({ length: 5 }).map((_, i) => (
               <Box
-                p="3"
-                style={{
-                  background: "var(--gray-a2)",
-                  borderRadius: 8,
-                }}
+                key={i}
+                px="4"
+                py="3"
+                style={{ borderBottom: "1px solid var(--gray-a3)" }}
               >
-                <Text size="2" weight="medium" mb="2" style={{ display: "block" }}>
-                  Données supprimées :
-                </Text>
-                <ScrollArea style={{ maxHeight: 200 }}>
-                  <Grid columns="2" gap="2">
-                    {Object.entries(deleteResult.counts || {}).map(([key, count]) => (
-                      <Flex key={key} justify="between" align="center" py="1">
-                        <Text size="2" color="gray">{key.replace(/_/g, " ")}</Text>
-                        <Badge color="red" variant="soft">{count}</Badge>
-                      </Flex>
-                    ))}
-                  </Grid>
-                </ScrollArea>
+                <Flex gap="4" align="center">
+                  <Skeleton style={{ width: 20, height: 20 }} />
+                  <Box style={{ flex: 1 }}>
+                    <Skeleton style={{ width: 160, height: 16, marginBottom: 4 }} />
+                    <Skeleton style={{ width: 80, height: 12 }} />
+                  </Box>
+                  <Skeleton style={{ width: 60, height: 22, borderRadius: 10 }} />
+                  <Skeleton style={{ width: 50, height: 22, borderRadius: 10 }} />
+                  <Skeleton style={{ width: 28, height: 28, borderRadius: 6 }} />
+                </Flex>
               </Box>
-            </Box>
-          ) : deleteResult?.error ? (
-            // Résultat d'erreur
-            <Callout.Root color="red" mb="4">
-              <Callout.Icon>
-                <XCircle size={18} />
-              </Callout.Icon>
-              <Callout.Text>{deleteResult.error}</Callout.Text>
-            </Callout.Root>
-          ) : (
-            // Formulaire de confirmation
-            <>
-              <Dialog.Description size="2" mb="4">
-                Vous êtes sur le point de supprimer définitivement l'établissement{" "}
-                <Text weight="bold">"{selectedEtab?.nom}"</Text> et toutes ses données.
-              </Dialog.Description>
+            ))}
+          </Box>
+        ) : viewMode === "table" ? (
+          <EtablissementsTable
+            etablissements={etablissements}
+            selectedIds={selectedIds}
+            onSelectionChange={setSelectedIds}
+            sortBy={filters.sortBy}
+            sortOrder={filters.sortOrder}
+            onSortChange={handleSortChange}
+            onSuspend={handleSuspend}
+            onReactivate={handleReactivate}
+            onDelete={setSelectedForDelete}
+          />
+        ) : (
+          <EtablissementsCards
+            etablissements={etablissements}
+            selectedIds={selectedIds}
+            onSelectionChange={setSelectedIds}
+            onSuspend={handleSuspend}
+            onReactivate={handleReactivate}
+            onDelete={setSelectedForDelete}
+          />
+        )}
+      </motion.div>
 
-              <Box
-                p="3"
-                mb="4"
-                style={{
-                  background: "var(--red-a2)",
-                  borderRadius: 8,
-                  border: "1px solid var(--red-a5)",
-                }}
-              >
-                <Text size="2" color="red">
-                  Cette action supprimera :
-                </Text>
-                <Grid columns="2" gap="2" mt="2">
-                  <Flex align="center" gap="2">
-                    <Users size={14} style={{ color: "var(--red-9)" }} />
-                    <Text size="2">{selectedEtab?.nbUtilisateurs} utilisateur(s)</Text>
-                  </Flex>
-                  <Flex align="center" gap="2">
-                    <Package size={14} style={{ color: "var(--red-9)" }} />
-                    <Text size="2">{selectedEtab?.nbProduits} produit(s)</Text>
-                  </Flex>
-                  <Flex align="center" gap="2">
-                    <ShoppingCart size={14} style={{ color: "var(--red-9)" }} />
-                    <Text size="2">{selectedEtab?.nbVentes} vente(s)</Text>
-                  </Flex>
-                  <Flex align="center" gap="2">
-                    <UserCheck size={14} style={{ color: "var(--red-9)" }} />
-                    <Text size="2">{selectedEtab?.nbClients} client(s)</Text>
-                  </Flex>
-                </Grid>
-              </Box>
-
-              <Box mb="4">
-                <Text size="2" weight="medium" mb="2" style={{ display: "block" }}>
-                  Pour confirmer, tapez le nom exact de l'établissement :
-                </Text>
-                <Text size="1" color="gray" mb="2" style={{ display: "block" }}>
-                  "{selectedEtab?.nom}"
-                </Text>
-                <TextField.Root
-                  placeholder="Nom de l'établissement"
-                  value={confirmationNom}
-                  onChange={(e) => setConfirmationNom(e.target.value)}
-                />
-              </Box>
-            </>
-          )}
-
-          <Flex gap="3" mt="4" justify="end">
-            <Dialog.Close>
-              <Button variant="soft" color="gray" disabled={isDeleting}>
-                {deleteResult?.success ? "Fermer" : "Annuler"}
-              </Button>
-            </Dialog.Close>
-
-            {!deleteResult?.success && (
+      {/* Pagination */}
+      {totalPages > 1 && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.3, delay: 0.4 }}
+        >
+          <Flex align="center" justify="between" mt="4">
+            <Text size="2" color="gray">
+              Page {page} sur {totalPages} ({totalCount} résultat
+              {totalCount !== 1 ? "s" : ""})
+            </Text>
+            <Flex gap="2">
               <Button
-                color="red"
-                onClick={handleDelete}
-                disabled={
-                  isDeleting ||
-                  confirmationNom !== selectedEtab?.nom ||
-                  !!deleteResult?.error
-                }
+                variant="soft"
+                color="gray"
+                size="2"
+                disabled={page <= 1}
+                onClick={() => setPage(page - 1)}
               >
-                {isDeleting ? (
-                  <>
-                    <RefreshCw size={14} className="animate-spin" />
-                    Suppression...
-                  </>
-                ) : (
-                  <>
-                    <Trash2 size={14} />
-                    Supprimer définitivement
-                  </>
-                )}
+                Précédent
               </Button>
-            )}
+              {Array.from({ length: Math.min(totalPages, 5) }).map((_, i) => {
+                const pageNum = i + 1;
+                return (
+                  <Button
+                    key={pageNum}
+                    variant={pageNum === page ? "solid" : "soft"}
+                    color={pageNum === page ? undefined : "gray"}
+                    size="2"
+                    onClick={() => setPage(pageNum)}
+                    style={{ minWidth: 36, cursor: "pointer" }}
+                  >
+                    {pageNum}
+                  </Button>
+                );
+              })}
+              {totalPages > 5 && (
+                <Text size="2" color="gray" style={{ alignSelf: "center" }}>
+                  ...
+                </Text>
+              )}
+              <Button
+                variant="soft"
+                color="gray"
+                size="2"
+                disabled={page >= totalPages}
+                onClick={() => setPage(page + 1)}
+              >
+                Suivant
+              </Button>
+            </Flex>
           </Flex>
-        </Dialog.Content>
-      </Dialog.Root>
+        </motion.div>
+      )}
+
+      {/* Bulk actions bar */}
+      <BulkActionsBar
+        selectedCount={selectedIds.size}
+        onSuspend={handleBulkSuspend}
+        onReactivate={handleBulkReactivate}
+        onCompare={() => setShowComparison(true)}
+        onDeselectAll={() => setSelectedIds(new Set())}
+        canCompare={canCompare}
+      />
+
+      {/* Dialog de création */}
+      <CreateEtablissementDialog
+        open={createDialogOpen}
+        onOpenChange={setCreateDialogOpen}
+        onCreated={loadEtablissements}
+      />
+
+      {/* Dialog de confirmation de suppression */}
+      <DeleteEtablissementDialog
+        etablissement={selectedForDelete}
+        open={!!selectedForDelete}
+        onOpenChange={(open) => {
+          if (!open) setSelectedForDelete(null);
+        }}
+        onDeleted={loadEtablissements}
+      />
     </Box>
   );
 }

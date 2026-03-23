@@ -6,16 +6,16 @@
  * une barre de défilement bien espacée du contenu.
  */
 
-import { ScrollArea as RadixScrollArea, Box } from '@radix-ui/themes'
-import type { ComponentPropsWithoutRef, ReactNode } from 'react'
+import { ScrollArea as RadixScrollArea, Box } from "@radix-ui/themes";
+import type { ComponentPropsWithoutRef, ReactNode } from "react";
 
-type RadixScrollAreaProps = ComponentPropsWithoutRef<typeof RadixScrollArea>
-type ScrollbarDirection = 'vertical' | 'horizontal' | 'both'
+type RadixScrollAreaProps = ComponentPropsWithoutRef<typeof RadixScrollArea>;
+type ScrollbarDirection = "vertical" | "horizontal" | "both";
 
-export interface ScrollAreaProps extends Omit<RadixScrollAreaProps, 'children'> {
-  children: ReactNode
+export interface ScrollAreaProps extends Omit<RadixScrollAreaProps, "children"> {
+  children: ReactNode;
   /** Padding pour espacer le contenu de la scrollbar (default: "5") */
-  contentPadding?: '0' | '1' | '2' | '3' | '4' | '5' | '6' | '7' | '8' | '9'
+  contentPadding?: "0" | "1" | "2" | "3" | "4" | "5" | "6" | "7" | "8" | "9";
 }
 
 /**
@@ -44,34 +44,32 @@ export interface ScrollAreaProps extends Omit<RadixScrollAreaProps, 'children'> 
  */
 export function ScrollArea({
   children,
-  type = 'always',
-  scrollbars = 'vertical',
-  size = '1',
+  type = "always",
+  scrollbars = "vertical",
+  size = "1",
   contentPadding,
   ...props
 }: ScrollAreaProps) {
   // Padding par défaut: plus grand pour vertical, plus petit pour horizontal
-  const defaultPadding = scrollbars === 'horizontal' ? '2' : '5'
-  const padding = contentPadding ?? defaultPadding
+  const defaultPadding = scrollbars === "horizontal" ? "2" : "5";
+  const padding = contentPadding ?? defaultPadding;
 
   // Appliquer le padding selon la direction du scroll
   const paddingProps = {
-    pr: scrollbars === 'vertical' || scrollbars === 'both' ? padding : undefined,
-    pb: scrollbars === 'horizontal' || scrollbars === 'both' ? (scrollbars === 'both' ? padding : padding) : undefined,
-  }
+    pr: scrollbars === "vertical" || scrollbars === "both" ? padding : undefined,
+    pb:
+      scrollbars === "horizontal" || scrollbars === "both"
+        ? scrollbars === "both"
+          ? padding
+          : padding
+        : undefined,
+  };
 
   return (
-    <RadixScrollArea
-      type={type}
-      scrollbars={scrollbars}
-      size={size}
-      {...props}
-    >
-      <Box {...paddingProps}>
-        {children}
-      </Box>
+    <RadixScrollArea type={type} scrollbars={scrollbars} size={size} {...props}>
+      <Box {...paddingProps}>{children}</Box>
     </RadixScrollArea>
-  )
+  );
 }
 
-export type { RadixScrollAreaProps }
+export type { RadixScrollAreaProps };

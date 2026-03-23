@@ -16,11 +16,7 @@ import {
   Card,
   Skeleton,
 } from "@radix-ui/themes";
-import {
-  ArrowLeft,
-  FileText,
-  Sparkles,
-} from "lucide-react";
+import { ArrowLeft, FileText, Sparkle } from "@phosphor-icons/react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
@@ -33,10 +29,7 @@ import {
   generateSlug,
   estimateReadTime,
 } from "@/schemas/content.schema";
-import {
-  createDocArticle,
-  getDocCategoryById,
-} from "@/actions/admin/documentation";
+import { createDocArticle, getDocCategoryById } from "@/actions/admin/documentation";
 import { MarkdownEditor, StatusSelect } from "@/components/admin/content";
 
 interface DocCategory {
@@ -46,11 +39,7 @@ interface DocCategory {
   color: string;
 }
 
-export default function NouvelArticlePage({
-  params,
-}: {
-  params: Promise<{ categoryId: string }>;
-}) {
+export default function NouvelArticlePage({ params }: { params: Promise<{ categoryId: string }> }) {
   const { categoryId } = use(params);
   const router = useRouter();
   const [category, setCategory] = useState<DocCategory | null>(null);
@@ -79,7 +68,8 @@ export default function NouvelArticlePage({
     },
   });
 
-  const watchedValues = watch();
+  const [slug, content, status] = watch(["slug", "content", "status"]);
+  const watchedValues = { slug, content, status };
 
   useEffect(() => {
     async function loadCategory() {
@@ -156,7 +146,7 @@ export default function NouvelArticlePage({
         <Flex align="center" gap="4" mb="6">
           <Link href={`/admin/contenu/documentation/${categoryId}`}>
             <Button variant="ghost" size="2" style={{ cursor: "pointer" }}>
-              <ArrowLeft size={18} />
+              <ArrowLeft size={18} weight="bold" />
             </Button>
           </Link>
           <Box
@@ -166,7 +156,7 @@ export default function NouvelArticlePage({
               borderRadius: 8,
             }}
           >
-            <FileText size={20} style={{ color: `var(--${category.color}-9)` }} />
+            <FileText size={20} weight="duotone" style={{ color: `var(--${category.color}-9)` }} />
           </Box>
           <Box>
             <Heading size="5">Nouvel article</Heading>
@@ -200,9 +190,11 @@ export default function NouvelArticlePage({
                       {...register("title")}
                       onChange={handleTitleChange}
                     />
-                    {errors.title ? <Text size="1" color="red" mt="1">
+                    {errors.title ? (
+                      <Text size="1" color="red" mt="1">
                         {errors.title.message}
-                      </Text> : null}
+                      </Text>
+                    ) : null}
                   </Box>
 
                   <Box>
@@ -215,12 +207,16 @@ export default function NouvelArticlePage({
                       {...register("slug")}
                     >
                       <TextField.Slot side="left">
-                        <Text size="1" color="gray">/docs/{category.slug}/</Text>
+                        <Text size="1" color="gray">
+                          /docs/{category.slug}/
+                        </Text>
                       </TextField.Slot>
                     </TextField.Root>
-                    {errors.slug ? <Text size="1" color="red" mt="1">
+                    {errors.slug ? (
+                      <Text size="1" color="red" mt="1">
                         {errors.slug.message}
-                      </Text> : null}
+                      </Text>
+                    ) : null}
                   </Box>
 
                   <Box>
@@ -308,11 +304,7 @@ export default function NouvelArticlePage({
                     <Text size="2" weight="medium" mb="2" style={{ display: "block" }}>
                       Temps de lecture
                     </Text>
-                    <TextField.Root
-                      size="3"
-                      placeholder="5 min"
-                      {...register("readTime")}
-                    />
+                    <TextField.Root size="3" placeholder="5 min" {...register("readTime")} />
                     <Text size="1" color="gray" mt="1">
                       Calculé automatiquement
                     </Text>
@@ -342,7 +334,7 @@ export default function NouvelArticlePage({
                     disabled={isSubmitting}
                     style={{
                       width: "100%",
-                      background: `linear-gradient(135deg, var(--${category.color}-9) 0%, var(--${category.color}-10) 100%)`,
+                      background: `var(--${category.color}-9)`,
                       cursor: isSubmitting ? "wait" : "pointer",
                     }}
                   >
@@ -350,7 +342,7 @@ export default function NouvelArticlePage({
                       <>Création...</>
                     ) : (
                       <>
-                        <Sparkles size={18} />
+                        <Sparkle size={18} weight="bold" />
                         Créer l'article
                       </>
                     )}
