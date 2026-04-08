@@ -119,7 +119,7 @@ async function migrateUsers(): Promise<void> {
     const displayName = `${user.prenom} ${user.nom}`;
     log(`\nTraitement: ${displayName} (${user.email})`, colors.blue);
     log(`  Role: ${user.role}`, colors.dim);
-    log(`  Etablissement: ${user.etablissement.nom}`, colors.dim);
+    log(`  Établissement: ${user.etablissement.nom}`, colors.dim);
     log(`  Actif: ${user.actif ? "Oui" : "Non"}`, colors.dim);
 
     if (DRY_RUN) {
@@ -171,7 +171,7 @@ async function migrateUsers(): Promise<void> {
       continue;
     }
 
-    log("  -> CREE avec succes", colors.green);
+    log("  -> CRÉÉ avec succès", colors.green);
     log(`  -> ID Supabase: ${newUser.user.id}`, colors.dim);
     log(`  -> Mot de passe temporaire: ${tempPassword}`, colors.yellow);
 

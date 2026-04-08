@@ -37,11 +37,20 @@ import {
 // TYPES
 // ============================================================================
 
+interface BillingInfo {
+  nom: string;
+  adresse: string;
+  email: string;
+  nif?: string;
+  rccm?: string;
+}
+
 interface InitiatePaymentInput {
   planSlug: string;
   billingCycle: BillingCycle;
   paymentMethod: SubscriptionPaymentProvider;
   phone?: string;
+  billingInfo?: BillingInfo;
 }
 
 interface PaymentStatusInfo {
@@ -95,7 +104,7 @@ export async function initiatePayment(
   if (!user.etablissementId)
     return { success: false, error: "Aucun etablissement associe" };
 
-  const { planSlug, billingCycle, paymentMethod, phone } = input;
+  const { planSlug, billingCycle, paymentMethod, phone, billingInfo } = input;
 
   // Validation du plan
   const amount = getPlanPrice(planSlug, billingCycle);
@@ -118,6 +127,21 @@ export async function initiatePayment(
 
   const baseUrl = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
   const supabase = createServiceClient();
+
+  // Sauvegarder les infos de facturation sur l'établissement (pré-remplissage futur)
+  if (billingInfo) {
+    const updateData: Record<string, unknown> = {};
+    if (billingInfo.email) updateData.email = billingInfo.email;
+    if (billingInfo.nif) updateData.nif = billingInfo.nif;
+    if (billingInfo.rccm) updateData.rccm = billingInfo.rccm;
+
+    if (Object.keys(updateData).length > 0) {
+      await supabase
+        .from("etablissements")
+        .update({ ...updateData, updated_at: new Date().toISOString() } as never)
+        .eq("id", user.etablissementId);
+    }
+  }
 
   // Calculer les periodes
   const now = new Date();
@@ -143,6 +167,7 @@ export async function initiatePayment(
       provider_payload: {
         plan_slug: planSlug,
         billing_cycle: billingCycle,
+        billing_info: billingInfo ?? null,
       },
       periode_debut: now.toISOString(),
       periode_fin: periodEnd.toISOString(),
@@ -153,7 +178,7 @@ export async function initiatePayment(
     const result = await initMonetbilPayment({
       amount,
       phone: formattedPhone,
-      description: `Abonnement Orema N+ - Plan ${planSlug} (${billingCycle})`,
+      description: `Abonnement Oréma N+ - Plan ${planSlug} (${billingCycle})${billingInfo?.nom ? ` - ${billingInfo.nom}` : ""}`,
       returnUrl: `${baseUrl}/parametres/abonnement?payment=done&ref=${paymentRef}`,
       notifyUrl: `${baseUrl}/api/webhooks/monetbil`,
       paymentRef,
@@ -180,7 +205,8 @@ export async function initiatePayment(
   } else if (paymentMethod === "stripe") {
     // Stripe (carte bancaire)
     // Recuperer ou creer le customer Stripe
-    const email = user.email ?? "";
+    const email = billingInfo?.email || user.email || "";
+    const customerName = billingInfo?.nom || user.nom || undefined;
     let customerId: string | undefined;
 
     if (email) {
@@ -188,10 +214,10 @@ export async function initiatePayment(
         customerId = await getOrCreateStripeCustomer({
           email,
           etablissementId: user.etablissementId,
-          name: user.nom ?? undefined,
+          name: customerName,
         });
       } catch (error) {
-        console.error("[Billing] Erreur creation customer Stripe:", error);
+        console.error("[Billing] Erreur création customer Stripe:", error);
       }
     }
 
@@ -347,7 +373,7 @@ export async function getInvoices(): Promise<ActionResult<InvoiceInfo[]>> {
 }
 
 /**
- * Recupere l'URL de telechargement d'une facture.
+ * Récupère l'URL de téléchargement d'une facture.
  * Pour les factures Stripe, retourne le lien PDF Stripe.
  * Pour Monetbil, genere un PDF interne (TODO).
  */

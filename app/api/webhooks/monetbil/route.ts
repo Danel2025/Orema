@@ -15,7 +15,7 @@ import {
   validateMonetbilWebhook,
   type MonetbilWebhookPayload,
 } from "@/lib/payments";
-import { PLANS, resolvePlanSlug, getPlanQuotas } from "@/lib/config/plans";
+import { resolvePlanSlug, getPlanQuotas } from "@/lib/config/plans";
 import {
   createFactureAbonnementSafe,
 } from "@/lib/db/queries/abonnements";
@@ -97,18 +97,29 @@ export async function POST(request: Request) {
     const internalStatus = statusMap[status] ?? "echoue";
 
     if (existingRow) {
-      // Mettre a jour le paiement existant
+      // Recuperer le provider_payload existant pour preserver plan_slug et billing_cycle
+      const { data: existingPayload } = await supabase
+        .from("paiements_abonnement")
+        .select("provider_payload")
+        .eq("id", existingRow.id)
+        .single();
+
+      const prevPayload = (existingPayload as { provider_payload: Record<string, unknown> | null } | null)?.provider_payload ?? {};
+
+      // Mettre a jour le paiement existant (fusion des payloads pour conserver plan_slug/billing_cycle)
       const { error: updateError } = await supabase
         .from("paiements_abonnement")
         .update({
           statut: internalStatus,
           reference_externe: payload.transaction_id ?? existingRow.reference_externe,
           provider_payload: {
+            ...prevPayload,
             operator: payload.operator,
             fee: payload.fee,
             country: payload.country_name,
             message: payload.message,
             phone: payload.phone,
+            transaction_id: payload.transaction_id,
           },
         } as never)
         .eq("id", existingRow.id);
@@ -152,10 +163,10 @@ async function activateSubscription(
   supabase: ReturnType<typeof createServiceClient>,
   paiementId: string
 ) {
-  // Recuperer les details du paiement
+  // Recuperer les details du paiement (inclut provider_payload avec le plan cible)
   const { data } = await supabase
     .from("paiements_abonnement")
-    .select("etablissement_id, periode_debut, periode_fin, montant, methode")
+    .select("etablissement_id, periode_debut, periode_fin, montant, methode, provider_payload")
     .eq("id", paiementId)
     .single();
 
@@ -165,32 +176,32 @@ async function activateSubscription(
     periode_fin: string;
     montant: number;
     methode: string;
+    provider_payload: Record<string, unknown> | null;
   } | null;
 
   if (!payment) return;
 
-  // Recuperer l'etablissement pour connaitre le plan cible
-  const { data: etabData } = await supabase
-    .from("etablissements")
-    .select("plan, billing_cycle")
-    .eq("id", payment.etablissement_id)
-    .single();
+  // Le plan cible est stocke dans provider_payload lors de l'initiation du paiement
+  // (cf. actions/billing.ts -> initiatePayment)
+  const targetPlan = payment.provider_payload?.plan_slug as string | undefined;
+  const billingCycle = (payment.provider_payload?.billing_cycle as string) ?? "mensuel";
 
-  const etab = etabData as {
-    plan: string;
-    billing_cycle: string;
-  } | null;
+  if (!targetPlan) {
+    console.error(
+      `[Webhook Monetbil] provider_payload.plan_slug manquant pour paiement ${paiementId}`
+    );
+    return;
+  }
 
-  if (!etab) return;
-
-  const planSlug = resolvePlanSlug(etab.plan);
+  const planSlug = resolvePlanSlug(targetPlan);
   const quotas = getPlanQuotas(planSlug);
 
-  // Mettre a jour l'etablissement
+  // Mettre a jour l'etablissement avec le plan cible et le cycle de facturation
   const { error: etabUpdateError } = await supabase
     .from("etablissements")
     .update({
       plan: planSlug,
+      billing_cycle: billingCycle,
       max_utilisateurs: quotas.max_utilisateurs,
       max_produits: quotas.max_produits,
       max_ventes_mois: quotas.max_ventes_mois,
@@ -203,20 +214,57 @@ async function activateSubscription(
     console.error(`[Webhook Monetbil] Erreur update etablissement ${payment.etablissement_id}:`, etabUpdateError.message);
   }
 
-  // Mettre a jour l'abonnement dans la table abonnements si elle existe
-  const { error: aboUpdateError } = await supabase
+  // Mettre a jour ou creer l'abonnement dans la table abonnements
+  // D'abord tenter un update sur l'abonnement actif ou en essai
+  const { data: existingAbo } = await supabase
     .from("abonnements" as never)
-    .update({
-      statut: "actif",
-      date_debut: payment.periode_debut,
-      date_fin: payment.periode_fin,
-      updated_at: new Date().toISOString(),
-    } as never)
+    .select("id, statut")
     .eq("etablissement_id", payment.etablissement_id)
-    .eq("statut", "en_essai");
+    .in("statut", ["actif", "en_essai", "annule"])
+    .order("created_at", { ascending: false })
+    .limit(1)
+    .single();
 
-  if (aboUpdateError) {
-    console.error(`[Webhook Monetbil] Erreur update abonnement ${payment.etablissement_id}:`, aboUpdateError.message);
+  if (existingAbo) {
+    const { error: aboUpdateError } = await supabase
+      .from("abonnements" as never)
+      .update({
+        plan: planSlug,
+        statut: "actif",
+        billing_cycle: billingCycle,
+        date_debut: payment.periode_debut,
+        date_fin: payment.periode_fin,
+        prix_mensuel: payment.montant,
+        monetbil_payment_id: paiementId,
+        updated_at: new Date().toISOString(),
+      } as never)
+      .eq("id", (existingAbo as { id: string }).id);
+
+    if (aboUpdateError) {
+      console.error(`[Webhook Monetbil] Erreur update abonnement ${payment.etablissement_id}:`, aboUpdateError.message);
+    }
+  } else {
+    // Creer un nouvel abonnement si aucun n'existe
+    const { error: aboInsertError } = await supabase
+      .from("abonnements" as never)
+      .insert({
+        etablissement_id: payment.etablissement_id,
+        plan: planSlug,
+        statut: "actif",
+        billing_cycle: billingCycle,
+        date_debut: payment.periode_debut,
+        date_fin: payment.periode_fin,
+        prix_mensuel: payment.montant,
+        monetbil_payment_id: paiementId,
+        quota_utilisateurs: quotas.max_utilisateurs,
+        quota_produits: quotas.max_produits,
+        quota_ventes_mois: quotas.max_ventes_mois,
+        quota_etablissements: quotas.max_etablissements,
+      } as never);
+
+    if (aboInsertError) {
+      console.error(`[Webhook Monetbil] Erreur insert abonnement ${payment.etablissement_id}:`, aboInsertError.message);
+    }
   }
 
   console.log(

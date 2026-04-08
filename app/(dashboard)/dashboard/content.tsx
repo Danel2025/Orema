@@ -163,7 +163,7 @@ export function DashboardContent({
               textDecoration: "none",
             }}
           >
-            {isCaisseOuverte ? "Acceder" : "Ouvrir"}
+            {isCaisseOuverte ? "Accéder" : "Ouvrir"}
           </Link>
         </div>
       </div>

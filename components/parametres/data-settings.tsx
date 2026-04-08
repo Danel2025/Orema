@@ -136,7 +136,7 @@ export function DataSettings({
 
       if (result.success) {
         setResetStatus("success");
-        toast.success("Donnees supprimees avec succes", {
+        toast.success("Données supprimées avec succès", {
           description: `Operation effectuee a ${new Date().toLocaleTimeString()}`,
         });
         setDialogOpen(false);
@@ -150,7 +150,7 @@ export function DataSettings({
       }
     } catch {
       setResetStatus("error");
-      toast.error("Erreur lors de la suppression des donnees");
+      toast.error("Erreur lors de la suppression des données");
     } finally {
       setIsLoading(false);
     }

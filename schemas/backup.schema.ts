@@ -63,7 +63,7 @@ export type BackupCategoryKey = (typeof backupCategories)[number]["key"];
 // ============================================================================
 
 export const backupTypeOptions = [
-  { value: "full", label: "Sauvegarde complete", description: "Toutes les categories de donnees" },
+  { value: "full", label: "Sauvegarde complete", description: "Toutes les catégories de données" },
   {
     value: "partial",
     label: "Sauvegarde partielle",

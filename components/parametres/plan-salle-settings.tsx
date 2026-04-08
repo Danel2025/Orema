@@ -189,8 +189,8 @@ export function PlanSalleSettings({ initialData }: PlanSalleSettingsProps) {
                 control={control}
                 render={({ field }) => (
                   <ColorPicker
-                    label="En preparation"
-                    description="Commande en cours de preparation"
+                    label="En préparation"
+                    description="Commande en cours de préparation"
                     value={field.value}
                     onChange={field.onChange}
                     error={errors.couleurTablePrepa?.message}

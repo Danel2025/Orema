@@ -165,7 +165,7 @@ export function TableDetailsPanel({
       try {
         const result = await deleteTable(table.id);
         if (result.success) {
-          toast.success("Table supprimee");
+          toast.success("Table supprimée");
           setShowDeleteDialog(false);
           onClose();
           onRefresh();

@@ -29,7 +29,7 @@ function validate<T>(
 ): { valid: true; data: T } | { valid: false; error: string } {
   const result = schema.safeParse(data);
   if (!result.success)
-    return { valid: false, error: result.error.issues[0]?.message || "Donnees invalides" };
+    return { valid: false, error: result.error.issues[0]?.message || "Données invalides" };
   return { valid: true, data: result.data };
 }
 

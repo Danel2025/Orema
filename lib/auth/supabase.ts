@@ -18,6 +18,12 @@ export interface AuthUser {
   /** ID de l'établissement (peut être null pour SUPER_ADMIN global) */
   etablissementId: string | null;
   etablissementNom?: string;
+  /** Plan de l'établissement */
+  plan?: string;
+  /** Statut de l'abonnement */
+  planStatut?: string;
+  /** Date de fin de l'abonnement/essai */
+  planDateFin?: string;
   /** Routes personnalisées autorisées (override les permissions du rôle pour les non-admins) */
   allowedRoutes?: string[];
 }
@@ -61,7 +67,7 @@ export async function getCurrentUser(): Promise<AuthUser | null> {
       const { data: utilisateur } = await supabase
         .from("utilisateurs")
         .select(
-          "id, email, nom, prenom, role, actif, etablissement_id, allowed_routes, etablissements(id, nom)"
+          "id, email, nom, prenom, role, actif, etablissement_id, allowed_routes, etablissements(id, nom, plan)"
         )
         .eq("id", legacySession.userId)
         .single();
@@ -70,6 +76,29 @@ export async function getCurrentUser(): Promise<AuthUser | null> {
         // Récupérer allowed_routes (routes individuelles par utilisateur)
         const allowedRoutes =
           (utilisateur.allowed_routes as string[] | null | undefined) ?? undefined;
+        const etab = utilisateur.etablissements as unknown as { nom: string; plan?: string } | null;
+
+        // Charger l'abonnement actif
+        let planStatut = "actif";
+        let planDateFin: string | undefined;
+
+        if (utilisateur.etablissement_id) {
+          const { data: abo } = await supabase
+            .from("abonnements" as never)
+            .select("statut, date_fin")
+            .eq("etablissement_id", utilisateur.etablissement_id)
+            .in("statut", ["actif", "en_essai", "annule"])
+            .order("created_at", { ascending: false })
+            .limit(1)
+            .single();
+
+          if (abo) {
+            const aboData = abo as { statut: string; date_fin: string | null };
+            planStatut = aboData.statut;
+            planDateFin = aboData.date_fin ?? undefined;
+          }
+        }
+
         return {
           authId: legacySession.userId,
           userId: utilisateur.id,
@@ -78,7 +107,10 @@ export async function getCurrentUser(): Promise<AuthUser | null> {
           prenom: utilisateur.prenom,
           role: utilisateur.role as Role,
           etablissementId: utilisateur.etablissement_id,
-          etablissementNom: (utilisateur.etablissements as unknown as { nom: string })?.nom,
+          etablissementNom: etab?.nom,
+          plan: etab?.plan ?? "essentiel",
+          planStatut,
+          planDateFin,
           allowedRoutes,
         };
       }
@@ -91,7 +123,7 @@ export async function getCurrentUser(): Promise<AuthUser | null> {
       const { data: utilisateur } = await supabase
         .from("utilisateurs")
         .select(
-          "id, email, nom, prenom, role, actif, etablissement_id, allowed_routes, etablissements(id, nom)"
+          "id, email, nom, prenom, role, actif, etablissement_id, allowed_routes, etablissements(id, nom, plan)"
         )
         .eq("email", supabaseUser.email)
         .single();
@@ -100,6 +132,29 @@ export async function getCurrentUser(): Promise<AuthUser | null> {
         // Récupérer allowed_routes (routes individuelles par utilisateur)
         const allowedRoutes =
           (utilisateur.allowed_routes as string[] | null | undefined) ?? undefined;
+        const etab = utilisateur.etablissements as unknown as { nom: string; plan?: string } | null;
+
+        // Charger l'abonnement actif
+        let planStatut = "actif";
+        let planDateFin: string | undefined;
+
+        if (utilisateur.etablissement_id) {
+          const { data: abo } = await supabase
+            .from("abonnements" as never)
+            .select("statut, date_fin")
+            .eq("etablissement_id", utilisateur.etablissement_id)
+            .in("statut", ["actif", "en_essai", "annule"])
+            .order("created_at", { ascending: false })
+            .limit(1)
+            .single();
+
+          if (abo) {
+            const aboData = abo as { statut: string; date_fin: string | null };
+            planStatut = aboData.statut;
+            planDateFin = aboData.date_fin ?? undefined;
+          }
+        }
+
         return {
           authId: supabaseUser.id,
           userId: utilisateur.id,
@@ -108,7 +163,10 @@ export async function getCurrentUser(): Promise<AuthUser | null> {
           prenom: utilisateur.prenom,
           role: utilisateur.role as Role,
           etablissementId: utilisateur.etablissement_id,
-          etablissementNom: (utilisateur.etablissements as unknown as { nom: string })?.nom,
+          etablissementNom: etab?.nom,
+          plan: etab?.plan ?? "essentiel",
+          planStatut,
+          planDateFin,
           allowedRoutes,
         };
       }

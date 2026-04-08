@@ -59,7 +59,7 @@ export function OpenSessionDialog({ open, onOpenChange, onSuccess }: OpenSession
       const result = await openSession({ fondCaisse: montant });
 
       if (result.success) {
-        toast.success("Session de caisse ouverte avec succes");
+        toast.success("Session de caisse ouverte avec succès");
         resetForm();
         onSuccess();
         onOpenChange(false);

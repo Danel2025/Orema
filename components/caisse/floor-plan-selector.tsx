@@ -18,6 +18,7 @@ import {
   MapPin,
 } from "@phosphor-icons/react";
 import type { DecorElementData } from "@/components/salle/DecorElement";
+import { useAuth } from "@/lib/auth/context";
 import { type ZoneData, loadZones } from "@/components/salle/ZoneElement";
 import { updateTableStatut } from "@/actions/tables";
 import { toast } from "sonner";
@@ -79,11 +80,11 @@ interface FloorPlanSelectorProps {
   onlyFreeTables?: boolean;
 }
 
-// Charger les éléments de décor depuis le localStorage
-function loadDecorElements(): DecorElementData[] {
-  if (typeof window === "undefined") return [];
+// Charger les éléments de décor depuis le localStorage (scopé par établissement)
+function loadDecorElements(etablissementId: string): DecorElementData[] {
+  if (typeof window === "undefined" || !etablissementId) return [];
   try {
-    const saved = localStorage.getItem("floorplan-decor");
+    const saved = localStorage.getItem(`floorplan-decor-${etablissementId}`);
     if (saved) {
       return JSON.parse(saved);
     }
@@ -100,6 +101,7 @@ export function FloorPlanSelector({
   onClose,
   onlyFreeTables = true,
 }: FloorPlanSelectorProps) {
+  const { user } = useAuth();
   const [zoom, setZoom] = useState(0.8);
   const [hoveredTableId, setHoveredTableId] = useState<string | null>(null);
   const [pan, setPan] = useState({ x: 20, y: 20 });
@@ -107,8 +109,9 @@ export function FloorPlanSelector({
   const panStartRef = useRef({ x: 0, y: 0, panX: 0, panY: 0 });
   const containerRef = useRef<HTMLDivElement>(null);
 
-  // Charger les éléments de décor et zones (lazy init)
-  const [decorElements] = useState<DecorElementData[]>(() => loadDecorElements());
+  // Charger les éléments de décor et zones (lazy init, scopé par établissement)
+  const etablissementId = user?.etablissementId ?? "";
+  const [decorElements] = useState<DecorElementData[]>(() => loadDecorElements(etablissementId));
   const [zoneElements] = useState<ZoneData[]>(() => loadZones());
 
   // Filtrer par zone - collecter les zones uniques

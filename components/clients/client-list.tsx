@@ -279,7 +279,7 @@ export function ClientList({
                             }}
                           >
                             <Trash2 size={14} />
-                            {client._count?.ventes ? "Desactiver" : "Supprimer"}
+                            {client._count?.ventes ? "Désactiver" : "Supprimer"}
                           </DropdownMenu.Item>
                         </DropdownMenu.Content>
                       </DropdownMenu.Root>
@@ -339,7 +339,7 @@ export function ClientList({
       <AlertDialog.Root open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
         <AlertDialog.Content maxWidth="400px">
           <AlertDialog.Title>
-            {clientToDelete?._count?.ventes ? "Desactiver le client" : "Supprimer le client"}
+            {clientToDelete?._count?.ventes ? "Désactiver le client" : "Supprimer le client"}
           </AlertDialog.Title>
           <AlertDialog.Description size="2">
             {clientToDelete?._count?.ventes ? (
@@ -364,7 +364,7 @@ export function ClientList({
             </AlertDialog.Cancel>
             <AlertDialog.Action>
               <Button color="red" onClick={handleDelete} disabled={isDeleting}>
-                {clientToDelete?._count?.ventes ? "Desactiver" : "Supprimer"}
+                {clientToDelete?._count?.ventes ? "Désactiver" : "Supprimer"}
               </Button>
             </AlertDialog.Action>
           </Flex>

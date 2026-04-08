@@ -39,7 +39,7 @@ interface KanbanColumn {
 const COLUMNS: KanbanColumn[] = [
   {
     statut: STATUT_LIVRAISON.EN_PREPARATION,
-    label: "En preparation",
+    label: "En préparation",
     icon: ChefHat,
     color: "orange",
   },

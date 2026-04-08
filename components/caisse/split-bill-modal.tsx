@@ -158,7 +158,7 @@ export function SplitBillModal({ onComplete }: SplitBillModalProps) {
    */
   const handleComplete = async () => {
     if (!toutesPayees) {
-      setError("Toutes les parts doivent etre payees");
+      setError("Toutes les parts doivent être payées");
       return;
     }
 

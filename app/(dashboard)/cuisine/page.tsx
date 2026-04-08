@@ -5,7 +5,7 @@ import { KitchenDisplay } from "@/components/cuisine/kitchen-display";
 
 export const metadata = {
   title: "Cuisine | Orema N+",
-  description: "Ecran de preparation des commandes cuisine (KDS)",
+  description: "Écran de préparation des commandes cuisine (KDS)",
 };
 
 export default async function CuisinePage() {

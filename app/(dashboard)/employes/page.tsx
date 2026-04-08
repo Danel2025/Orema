@@ -249,7 +249,7 @@ export default function EmployesPage() {
       const result = await deleteEmploye(employeeToDelete.id);
 
       if (result.success) {
-        toast.success("Employe supprime");
+        toast.success("Employé supprimé");
         setDeleteDialogOpen(false);
         setEmployeeToDelete(null);
         loadEmployees();

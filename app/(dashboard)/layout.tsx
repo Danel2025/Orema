@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import { getCurrentUser, type AuthUser } from "@/lib/auth";
 import { getPermissionsForRole, getAllowedRoutesForRole } from "@/lib/permissions-db";
 import { DashboardProviders } from "@/components/layout/dashboard-providers";
+import { UpdateNotifier } from "@/components/layout/update-notifier";
 
 // Forcer le rendu dynamique pour vérifier l'auth à chaque requête
 export const dynamic = "force-dynamic";
@@ -59,6 +60,9 @@ export default async function DashboardLayout({ children }: { children: React.Re
     role: user.role,
     etablissementId: user.etablissementId,
     etablissementNom: user.etablissementNom,
+    plan: user.plan ?? "essentiel",
+    planStatut: user.planStatut,
+    planDateFin: user.planDateFin,
     allowedRoutes: finalAllowedRoutes,
   };
 
@@ -68,6 +72,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
         Aller au contenu principal
       </a>
       {children}
+      <UpdateNotifier />
     </DashboardProviders>
   );
 }

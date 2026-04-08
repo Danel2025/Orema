@@ -131,7 +131,7 @@ export function SalesByType({ initialData }: SalesByTypeProps) {
           Ventes par type
         </Text>
         <Select.Root value={periode} onValueChange={(v) => setPeriode(v as PeriodeType)}>
-          <Select.Trigger placeholder="Periode" />
+          <Select.Trigger placeholder="Période" />
           <Select.Content position="popper">
             <Select.Item value="jour">Aujourd'hui</Select.Item>
             <Select.Item value="semaine">Cette semaine</Select.Item>

@@ -5,7 +5,7 @@ import { BarDisplay } from "@/components/bar/bar-display";
 
 export const metadata = {
   title: "Bar | Orema N+",
-  description: "Ecran de preparation des commandes bar",
+  description: "Écran de préparation des commandes bar",
 };
 
 export default async function BarPage() {

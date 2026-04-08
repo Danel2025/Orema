@@ -202,7 +202,7 @@ export default function ParametresPage() {
 
         {/* Onglets de parametres - Composant client pour éviter erreur d'hydratation */}
         <ParametresTabs>
-          {/* Contenu: Etablissement */}
+          {/* Contenu: Établissement */}
           <TabContent value="etablissement">
             <Suspense fallback={<SettingsLoading />}>
               <EtablissementSettingsLoader />

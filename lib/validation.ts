@@ -141,7 +141,7 @@ export const pinSchema = z
  */
 export const phoneSchema = z
   .string()
-  .regex(/^(\+241)?[0-9]{7,8}$/, "Numero de telephone invalide. Format: +241XXXXXXXX ou XXXXXXXX")
+  .regex(/^(\+241)?[0-9]{7,8}$/, "Numéro de téléphone invalide. Format: +241XXXXXXXX ou XXXXXXXX")
   .transform((phone) => {
     // Normaliser au format +241XXXXXXXX
     const cleaned = phone.replace(/\s+/g, "");
@@ -159,8 +159,8 @@ export const phoneSchema = z
  */
 export const montantSchema = z
   .number()
-  .int("Le montant doit etre un nombre entier")
-  .nonnegative("Le montant ne peut pas etre negatif")
+  .int("Le montant doit être un nombre entier")
+  .nonnegative("Le montant ne peut pas être négatif")
   .max(999999999, "Montant trop eleve"); // Max ~1 milliard FCFA
 
 /**
@@ -168,8 +168,8 @@ export const montantSchema = z
  */
 export const quantiteSchema = z
   .number()
-  .int("La quantite doit etre un nombre entier")
-  .positive("La quantite doit etre positive")
+  .int("La quantité doit être un nombre entier")
+  .positive("La quantité doit être positive")
   .max(99999, "Quantite trop elevee");
 
 /**
@@ -177,7 +177,7 @@ export const quantiteSchema = z
  */
 export const pourcentageSchema = z
   .number()
-  .min(0, "Le pourcentage doit etre au moins 0")
+  .min(0, "Le pourcentage doit être au moins 0")
   .max(100, "Le pourcentage ne peut pas depasser 100");
 
 /**

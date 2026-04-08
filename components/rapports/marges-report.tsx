@@ -301,7 +301,7 @@ export function MargesReport() {
           </Text>
         </Flex>
         <Select.Root value={periode} onValueChange={(v) => setPeriode(v as PeriodeType)}>
-          <Select.Trigger placeholder="Periode" />
+          <Select.Trigger placeholder="Période" />
           <Select.Content position="popper">
             <Select.Item value="jour">Aujourd&apos;hui</Select.Item>
             <Select.Item value="semaine">Cette semaine</Select.Item>
@@ -338,7 +338,7 @@ export function MargesReport() {
                 <Table.Header>
                   <Table.Row>
                     <Table.ColumnHeaderCell>Produit</Table.ColumnHeaderCell>
-                    <Table.ColumnHeaderCell>Categorie</Table.ColumnHeaderCell>
+                    <Table.ColumnHeaderCell>Catégorie</Table.ColumnHeaderCell>
                     <Table.ColumnHeaderCell align="right">Prix vente</Table.ColumnHeaderCell>
                     <Table.ColumnHeaderCell align="right">Cout</Table.ColumnHeaderCell>
                     <Table.ColumnHeaderCell align="right">Qte vendue</Table.ColumnHeaderCell>
@@ -435,7 +435,7 @@ export function MargesReport() {
             <Table.Root>
               <Table.Header>
                 <Table.Row>
-                  <Table.ColumnHeaderCell>Categorie</Table.ColumnHeaderCell>
+                  <Table.ColumnHeaderCell>Catégorie</Table.ColumnHeaderCell>
                   <Table.ColumnHeaderCell align="right">Nb produits</Table.ColumnHeaderCell>
                   <Table.ColumnHeaderCell align="right">Total ventes</Table.ColumnHeaderCell>
                   <Table.ColumnHeaderCell align="right">Total cout</Table.ColumnHeaderCell>

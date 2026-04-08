@@ -255,14 +255,14 @@ export function DisplayScreen({
 
         if (!response.ok) {
           const error = await response.json().catch(() => ({}));
-          toast.error(error.error ?? "Erreur de mise a jour");
+          toast.error(error.error ?? "Erreur de mise à jour");
           return;
         }
 
         await fetchOrders();
       } catch (error) {
         console.error("[DisplayScreen] Status update error:", error);
-        toast.error("Erreur de mise a jour");
+        toast.error("Erreur de mise à jour");
       } finally {
         setIsUpdating(false);
       }
@@ -289,16 +289,16 @@ export function DisplayScreen({
 
         if (!response.ok) {
           const error = await response.json().catch(() => ({}));
-          toast.error(error.error ?? "Erreur de mise a jour");
+          toast.error(error.error ?? "Erreur de mise à jour");
           return;
         }
 
         const result = await response.json();
-        toast.success(`${result.data?.count ?? 0} item(s) mis a jour`);
+        toast.success(`${result.data?.count ?? 0} item(s) mis à jour`);
         await fetchOrders();
       } catch (error) {
         console.error("[DisplayScreen] Bulk status update error:", error);
-        toast.error("Erreur de mise a jour");
+        toast.error("Erreur de mise à jour");
       } finally {
         setIsUpdating(false);
       }
@@ -405,14 +405,14 @@ export function DisplayScreen({
           </Text>
 
           {/* Toggle son */}
-          <Tooltip content={soundEnabled ? "Desactiver le son" : "Activer le son"}>
+          <Tooltip content={soundEnabled ? "Désactiver le son" : "Activer le son"}>
             <IconButton
               variant="surface"
               color={soundEnabled ? "green" : "gray"}
               size="2"
               onClick={toggleSound}
               style={{ cursor: "pointer" }}
-              aria-label={soundEnabled ? "Desactiver le son" : "Activer le son"}
+              aria-label={soundEnabled ? "Désactiver le son" : "Activer le son"}
             >
               {soundEnabled ? (
                 <SpeakerHigh size={16} weight="fill" />
@@ -498,7 +498,7 @@ export function DisplayScreen({
           onBulkStatusChange={handleBulkStatusChange}
           headerAction={
             enAttente.length > 0 ? (
-              <Tooltip content="Tout passer en preparation">
+              <Tooltip content="Tout passer en préparation">
                 <Button
                   variant="soft"
                   color="orange"
@@ -517,7 +517,7 @@ export function DisplayScreen({
 
         {/* Colonne En Preparation */}
         <Column
-          title="En preparation"
+          title="En préparation"
           count={enPreparation.length}
           color="blue"
           icon={ecranType === "BAR" ? <BeerBottle size={18} weight="fill" /> : <CookingPot size={18} weight="fill" />}

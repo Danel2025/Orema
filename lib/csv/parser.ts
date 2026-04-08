@@ -281,7 +281,7 @@ export function validateProductRow(
     errors.push({
       ligne,
       champ: "prixVente",
-      message: "Le prix de vente doit etre un entier positif",
+      message: "Le prix de vente doit être un entier positif",
       valeur: String(row.prixvente ?? row.prixVente ?? ""),
     });
   }
@@ -292,7 +292,7 @@ export function validateProductRow(
     errors.push({
       ligne,
       champ: "categorie",
-      message: "La categorie est requise",
+      message: "La catégorie est requise",
     });
   }
 
@@ -307,7 +307,7 @@ export function validateProductRow(
     warnings.push({
       ligne,
       champ: "prixAchat",
-      message: "Le prix d'achat devrait etre un entier positif",
+      message: "Le prix d'achat devrait être un entier positif",
     });
   }
 
@@ -323,7 +323,7 @@ export function validateProductRow(
     errors.push({
       ligne,
       champ: "stockActuel",
-      message: "Le stock actuel ne peut pas etre negatif",
+      message: "Le stock actuel ne peut pas être négatif",
       valeur: String(row.stockactuel ?? row.stockActuel),
     });
   }
@@ -332,7 +332,7 @@ export function validateProductRow(
     warnings.push({
       ligne,
       champ: "stockActuel",
-      message: `Stock actuel (${stockActuel}) inferieur au stock minimum (${stockMin})`,
+      message: `Stock actuel (${stockActuel}) inférieur au stock minimum (${stockMin})`,
     });
   }
 
@@ -340,7 +340,7 @@ export function validateProductRow(
     warnings.push({
       ligne,
       champ: "stockMax",
-      message: "Le stock maximum est inferieur au stock minimum",
+      message: "Le stock maximum est inférieur au stock minimum",
     });
   }
 

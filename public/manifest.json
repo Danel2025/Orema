@@ -1,23 +1,98 @@
 {
-  "name": "Oréma N+ - Système de Caisse POS",
+  "id": "/caisse",
+  "name": "Oréma N+ - Point de Vente",
   "short_name": "Oréma N+",
-  "description": "Système de point de vente moderne pour restaurants, bars et commerces en Afrique",
-  "start_url": "/",
+  "description": "Système de point de vente moderne pour restaurants, bars et commerces au Gabon",
+  "start_url": "/caisse",
+  "scope": "/",
   "display": "standalone",
+  "orientation": "any",
   "background_color": "#ffffff",
   "theme_color": "#f97316",
-  "orientation": "any",
+  "lang": "fr",
+  "dir": "ltr",
+  "categories": ["business", "finance"],
+  "prefer_related_applications": false,
   "icons": [
     {
       "src": "/icons/icon.svg",
       "sizes": "any",
       "type": "image/svg+xml",
-      "purpose": "any maskable"
+      "purpose": "any"
+    },
+    {
+      "src": "/images/logos/ic-lg.webp",
+      "sizes": "192x192",
+      "type": "image/webp",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/icon-192x192.svg",
+      "sizes": "192x192",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/icon-512x512.svg",
+      "sizes": "512x512",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/icon-maskable-192x192.svg",
+      "sizes": "192x192",
+      "type": "image/svg+xml",
+      "purpose": "maskable"
+    },
+    {
+      "src": "/icons/icon-maskable-512x512.svg",
+      "sizes": "512x512",
+      "type": "image/svg+xml",
+      "purpose": "maskable"
     }
   ],
-  "categories": ["business", "finance", "productivity"],
-  "lang": "fr",
-  "dir": "ltr",
-  "scope": "/",
-  "prefer_related_applications": false
+  "screenshots": [
+    {
+      "src": "/images/demo/04-tableau-de-bord.png",
+      "sizes": "1920x1080",
+      "type": "image/png",
+      "form_factor": "wide",
+      "label": "Tableau de bord"
+    },
+    {
+      "src": "/images/demo/01-caisse-vide.png",
+      "sizes": "1920x1080",
+      "type": "image/png",
+      "form_factor": "wide",
+      "label": "Interface de caisse"
+    },
+    {
+      "src": "/images/demo/02-produits.png",
+      "sizes": "1920x1080",
+      "type": "image/png",
+      "form_factor": "wide",
+      "label": "Gestion des produits"
+    },
+    {
+      "src": "/images/demo/03-plan-de-salle.png",
+      "sizes": "1920x1080",
+      "type": "image/png",
+      "form_factor": "wide",
+      "label": "Plan de salle"
+    },
+    {
+      "src": "/images/demo/05-rapports-new.png",
+      "sizes": "1920x1080",
+      "type": "image/png",
+      "form_factor": "wide",
+      "label": "Rapports et statistiques"
+    },
+    {
+      "src": "/images/demo/mobile-375.png",
+      "sizes": "375x812",
+      "type": "image/png",
+      "form_factor": "narrow",
+      "label": "Vue mobile"
+    }
+  ]
 }

@@ -1,6 +1,6 @@
 "use client";
 
-import { Box, Flex, Grid, Text, Heading, Badge } from "@radix-ui/themes";
+import { Box, Flex, Grid, Text, Heading, Badge, Button } from "@radix-ui/themes";
 import {
   Star,
   Rocket,
@@ -10,7 +10,9 @@ import {
   Package,
   ShoppingCart,
   Storefront,
+  ArrowClockwise,
 } from "@phosphor-icons/react";
+import Link from "next/link";
 import { motion } from "motion/react";
 import { formatCurrency } from "@/lib/utils";
 import {
@@ -149,6 +151,16 @@ export function CurrentPlanCard({
   const color = PLAN_COLORS[plan];
   const monthlyPrice = getPlanMonthlyPrice(plan, cycle);
 
+  // Déterminer si le bouton "Renouveler" doit être affiché
+  const showRenewButton = (() => {
+    if (statut === "expire") return true;
+    if (!dateFin) return false;
+    const daysLeft = Math.ceil(
+      (new Date(dateFin).getTime() - Date.now()) / (1000 * 60 * 60 * 24)
+    );
+    return daysLeft <= 7;
+  })();
+
   return (
     <Flex direction="column" gap="5">
       {/* Plan info card */}
@@ -216,7 +228,7 @@ export function CurrentPlanCard({
               </Box>
             </Flex>
 
-            <Box style={{ textAlign: "right" }}>
+            <Flex direction="column" align="end" gap="2">
               <Text
                 size="6"
                 weight="bold"
@@ -236,7 +248,15 @@ export function CurrentPlanCard({
                   par mois ({cycle === "annuel" ? "facturation annuelle" : "facturation mensuelle"})
                 </Text>
               )}
-            </Box>
+              {showRenewButton && (
+                <Button asChild variant="solid" size="2">
+                  <Link href="/parametres/abonnement#plans">
+                    <ArrowClockwise size={16} weight="bold" />
+                    Renouveler
+                  </Link>
+                </Button>
+              )}
+            </Flex>
           </Flex>
         </Box>
       </motion.div>

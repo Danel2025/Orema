@@ -124,7 +124,7 @@ export const ACTION_DESCRIPTIONS: Record<ActionAudit, string> = {
   UPDATE: "Modification",
   DELETE: "Suppression",
   LOGIN: "Connexion",
-  LOGOUT: "Deconnexion",
+  LOGOUT: "Déconnexion",
   CAISSE_OUVERTURE: "Ouverture de caisse",
   CAISSE_CLOTURE: "Cloture de caisse",
   ANNULATION_VENTE: "Annulation de vente",

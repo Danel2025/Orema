@@ -208,7 +208,7 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
     const validation = produitPatchSchema.safeParse(body);
     if (!validation.success) {
       return NextResponse.json(
-        { success: false, error: "Donnees invalides", details: validation.error.issues },
+        { success: false, error: "Données invalides", details: validation.error.issues },
         { status: 400 }
       );
     }

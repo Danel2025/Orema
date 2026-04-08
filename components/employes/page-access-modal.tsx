@@ -157,7 +157,7 @@ export function PageAccessModal({ open, onOpenChange, employee, onSuccess }: Pag
         onOpenChange(false);
         onSuccess?.();
       } else {
-        toast.error(result.error || "Erreur lors de la mise a jour");
+        toast.error(result.error || "Erreur lors de la mise à jour");
       }
     } catch (error) {
       toast.error("Une erreur est survenue");
@@ -171,7 +171,7 @@ export function PageAccessModal({ open, onOpenChange, employee, onSuccess }: Pag
   return (
     <Dialog.Root open={open} onOpenChange={onOpenChange}>
       <Dialog.Content maxWidth="550px">
-        <Dialog.Title>Acces aux pages</Dialog.Title>
+        <Dialog.Title>Accès aux pages</Dialog.Title>
         <Dialog.Description size="2" mb="4">
           Definir les pages accessibles pour{" "}
           <Text weight="bold">

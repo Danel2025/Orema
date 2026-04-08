@@ -32,7 +32,7 @@ const PUBLIC_ROUTES = [
 ];
 
 /** Prefixes de routes publiques (match par startsWith) */
-const PUBLIC_PREFIXES = ["/login/", "/docs/", "/blog/", "/_next/", "/api/health"];
+const PUBLIC_PREFIXES = ["/login/", "/docs/", "/blog/", "/donner-avis/", "/_next/", "/api/health"];
 
 /** Routes API qui necessitent une authentification */
 const PROTECTED_API_PREFIX = "/api/";

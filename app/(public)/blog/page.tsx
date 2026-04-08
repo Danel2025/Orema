@@ -97,7 +97,7 @@ export default function BlogPage() {
       setCategories(cats as BlogCategory[]);
     } catch (_err) {
       setError(
-        "Impossible de charger les articles. Veuillez verifier votre connexion et reessayer."
+        "Impossible de charger les articles. Veuillez vérifier votre connexion et réessayer."
       );
     } finally {
       setIsLoading(false);

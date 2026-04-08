@@ -106,7 +106,7 @@ export default function DocsPage() {
       setCategories(data as unknown as DocCategory[]);
     } catch (_err) {
       setError(
-        "Impossible de charger la documentation. Veuillez verifier votre connexion et reessayer."
+        "Impossible de charger la documentation. Veuillez vérifier votre connexion et réessayer."
       );
     } finally {
       setIsLoading(false);

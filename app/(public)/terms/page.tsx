@@ -36,7 +36,7 @@ Orema N+ se reserve le droit de modifier a tout moment les presentes CGU. Les ut
   {
     id: "acces",
     number: "3",
-    title: "Acces au Service",
+    title: "Accès au Service",
     content: `Le Service est accessible 24h/24 et 7j/7, sauf cas de force majeure ou maintenance programmee. Orema N+ met en oeuvre tous les moyens raisonnables pour assurer un acces continu au Service.
 
 L'utilisateur est responsable de la compatibilite de son equipement informatique avec le Service et de son acces a Internet. Orema N+ ne saurait etre tenu responsable en cas d'impossibilite d'acces au Service liee a des problemes techniques exterieurs.`,
@@ -66,8 +66,8 @@ En cas de suspicion d'utilisation frauduleuse, l'utilisateur doit en informer im
   {
     id: "donnees",
     number: "6",
-    title: "Donnees et propriete intellectuelle",
-    content: `L'utilisateur conserve la propriete de toutes les donnees qu'il saisit dans le Service. Il accorde a Orema N+ une licence limitee d'utilisation de ces donnees aux seules fins de fourniture du Service.
+    title: "Données et propriété intellectuelle",
+    content: `L'utilisateur conserve la propriété de toutes les données qu'il saisit dans le Service. Il accorde a Orema N+ une licence limitee d'utilisation de ces donnees aux seules fins de fourniture du Service.
 
 Tous les elements du Service (marques, logos, textes, graphiques, logiciels) sont la propriete exclusive d'Orema N+ et sont proteges par l'Accord de Bangui (OAPI) et les conventions internationales relatives a la propriete intellectuelle.`,
   },

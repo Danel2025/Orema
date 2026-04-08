@@ -112,7 +112,7 @@ const SETTING_CATEGORIES: {
   },
   {
     key: "securite",
-    label: "Securite",
+    label: "Sécurité",
     description: "PIN, tentatives login, session timeout",
     icon: ShieldCheck,
     color: "red",

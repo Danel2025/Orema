@@ -17,7 +17,7 @@ import { test, expect } from "@playwright/test";
 // TESTS SANS AUTHENTIFICATION
 // =============================================================================
 
-test.describe("Livraison - Acces sans authentification", () => {
+test.describe("Livraison - Accès sans authentification", () => {
   test("redirige vers /login quand non authentifie", async ({ page }) => {
     await page.goto("/livraison");
     await expect(page).toHaveURL(/\/login/);
@@ -192,7 +192,7 @@ test.describe("Livraison - Board Kanban", () => {
     }
   });
 
-  test("affiche la colonne 'En preparation'", async ({ page }) => {
+  test("affiche la colonne 'En préparation'", async ({ page }) => {
     await expect(page.getByText(/en pr[eé]paration/i).first()).toBeVisible();
   });
 

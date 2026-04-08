@@ -7,24 +7,32 @@ import { usePathname } from "next/navigation";
 import { useMemo } from "react";
 
 import { useMounted } from "@/hooks/use-mounted";
+import type { Icon as PhosphorIcon } from "@phosphor-icons/react";
 import {
-  Search,
+  MagnifyingGlass,
   Sun,
   Moon,
-  LayoutDashboard,
+  SquaresFour,
   ShoppingCart,
-  UtensilsCrossed,
+  ForkKnife,
   Package,
   Warehouse,
   Users,
   UserCircle,
-  BarChart3,
-  Settings,
-} from "lucide-react";
+  ChartBar,
+  Gear,
+  Star,
+  Rocket,
+  Crown,
+  Sparkle,
+  ArrowUp,
+} from "@phosphor-icons/react";
+import { Tooltip } from "@radix-ui/themes";
 import { NotificationCenter } from "./notification-center";
 import { useTheme } from "next-themes";
 import { UserMenu } from "./user-menu";
 import { useAuth } from "@/lib/auth/context";
+import { resolvePlanSlug, isPlanFree, PLANS, type PlanSlug } from "@/lib/config/plans";
 
 interface NavItem {
   label: string;
@@ -33,16 +41,80 @@ interface NavItem {
 }
 
 const allNavItems: NavItem[] = [
-  { label: "Tableau de bord", href: "/dashboard" as Route, icon: LayoutDashboard },
+  { label: "Tableau de bord", href: "/dashboard" as Route, icon: SquaresFour },
   { label: "Caisse", href: "/caisse" as Route, icon: ShoppingCart },
-  { label: "Salle", href: "/salle" as Route, icon: UtensilsCrossed },
+  { label: "Salle", href: "/salle" as Route, icon: ForkKnife },
   { label: "Produits", href: "/produits" as Route, icon: Package },
   { label: "Stocks", href: "/stocks" as Route, icon: Warehouse },
   { label: "Clients", href: "/clients" as Route, icon: Users },
   { label: "Employés", href: "/employes" as Route, icon: UserCircle },
-  { label: "Rapports", href: "/rapports" as Route, icon: BarChart3 },
-  { label: "Paramètres", href: "/parametres" as Route, icon: Settings },
+  { label: "Rapports", href: "/rapports" as Route, icon: ChartBar },
+  { label: "Paramètres", href: "/parametres" as Route, icon: Gear },
 ];
+
+// ── Plan Badge Config ─────────────────────────────────────────────────
+
+const PLAN_ICONS: Record<PlanSlug, PhosphorIcon> = {
+  essentiel: Star,
+  pro: Rocket,
+  business: Crown,
+  enterprise: Sparkle,
+};
+
+const PLAN_COLORS: Record<PlanSlug, { bg: string; border: string; icon: string; text: string }> = {
+  essentiel: { bg: "var(--gray-a3)", border: "var(--gray-a5)", icon: "var(--gray-9)", text: "var(--gray-11)" },
+  pro: { bg: "var(--blue-a3)", border: "var(--blue-a5)", icon: "var(--blue-9)", text: "var(--blue-11)" },
+  business: { bg: "var(--orange-a3)", border: "var(--orange-a5)", icon: "var(--orange-9)", text: "var(--orange-11)" },
+  enterprise: { bg: "var(--violet-a3)", border: "var(--violet-a5)", icon: "var(--violet-9)", text: "var(--violet-11)" },
+};
+
+function HeaderPlanBadge({ user }: { user: ReturnType<typeof useAuth>["user"] }) {
+  if (!user) return null;
+
+  const planSlug = resolvePlanSlug(user.plan ?? "essentiel");
+  const plan = PLANS[planSlug];
+  const PlanIcon = PLAN_ICONS[planSlug];
+  const colors = PLAN_COLORS[planSlug];
+  const isFree = isPlanFree(planSlug);
+
+  return (
+    <Tooltip content="Gérer votre abonnement">
+      <Link
+        href="/parametres/abonnement"
+        style={{
+          display: "flex",
+          alignItems: "center",
+          gap: 6,
+          padding: "6px 12px",
+          borderRadius: 6,
+          background: colors.bg,
+          border: `1px solid ${colors.border}`,
+          textDecoration: "none",
+          transition: "all 0.15s ease",
+          whiteSpace: "nowrap",
+        }}
+        onMouseEnter={(e) => {
+          e.currentTarget.style.borderColor = colors.icon;
+        }}
+        onMouseLeave={(e) => {
+          e.currentTarget.style.borderColor = colors.border;
+        }}
+      >
+        <PlanIcon size={16} weight="duotone" style={{ color: colors.icon, flexShrink: 0 }} />
+        <span style={{ fontSize: 13, fontWeight: 600, color: colors.text }}>
+          {plan.nom}
+        </span>
+        {isFree && (
+          <ArrowUp
+            size={14}
+            weight="bold"
+            style={{ color: "var(--accent-9)", flexShrink: 0 }}
+          />
+        )}
+      </Link>
+    </Tooltip>
+  );
+}
 
 export function Header() {
   const mounted = useMounted();
@@ -118,7 +190,7 @@ export function Header() {
               alt="Oréma N+"
               width={36}
               height={36}
-              style={{ objectFit: "contain", flexShrink: 0 }}
+              style={{ objectFit: "contain", flexShrink: 0, width: "auto", height: "auto" }}
             />
             <span
               style={{
@@ -189,7 +261,7 @@ export function Header() {
             padding: "10px 14px",
           }}
         >
-          <Search size={18} style={{ color: "var(--gray-9)" }} />
+          <MagnifyingGlass size={18} style={{ color: "var(--gray-9)" }} />
           <input
             type="text"
             placeholder="Rechercher produits, clients..."
@@ -235,6 +307,9 @@ export function Header() {
           {/* Notifications */}
           <NotificationCenter />
         </div>
+
+        {/* Plan Badge */}
+        <HeaderPlanBadge user={user} />
 
         {/* User Menu */}
         <UserMenu />

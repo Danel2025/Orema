@@ -108,7 +108,7 @@ export function InvoiceHistory({
               <Table.Header>
                 <Table.Row>
                   <Table.ColumnHeaderCell>Date</Table.ColumnHeaderCell>
-                  <Table.ColumnHeaderCell>Numero</Table.ColumnHeaderCell>
+                  <Table.ColumnHeaderCell>Numéro</Table.ColumnHeaderCell>
                   <Table.ColumnHeaderCell align="right">Montant</Table.ColumnHeaderCell>
                   <Table.ColumnHeaderCell>Statut</Table.ColumnHeaderCell>
                   <Table.ColumnHeaderCell align="right">Action</Table.ColumnHeaderCell>

@@ -160,7 +160,7 @@ export function KitchenDisplay({ initialOrders }: KitchenDisplayProps) {
         if (result.success) {
           await refreshOrders();
         } else {
-          toast.error(result.error ?? "Erreur lors de la mise a jour");
+          toast.error(result.error ?? "Erreur lors de la mise à jour");
         }
       });
     },
@@ -173,17 +173,17 @@ export function KitchenDisplay({ initialOrders }: KitchenDisplayProps) {
       startTransition(async () => {
         const result = await updateBulkPreparationStatus(ligneVenteIds, newStatus);
         if (result.success) {
-          toast.success(`${result.data?.count ?? 0} item(s) mis a jour`);
+          toast.success(`${result.data?.count ?? 0} item(s) mis à jour`);
           await refreshOrders();
         } else {
-          toast.error(result.error ?? "Erreur lors de la mise a jour");
+          toast.error(result.error ?? "Erreur lors de la mise à jour");
         }
       });
     },
     [refreshOrders]
   );
 
-  // Marquer toutes les commandes en attente comme "en preparation"
+  // Marquer toutes les commandes en attente comme "en préparation"
   const handleMarkAllInProgress = useCallback(() => {
     const allEnAttenteIds = orders.flatMap((o) =>
       o.lignes.filter((l) => l.statut_preparation === "EN_ATTENTE").map((l) => l.id)
@@ -268,14 +268,14 @@ export function KitchenDisplay({ initialOrders }: KitchenDisplayProps) {
             </Text> : null}
 
           {/* Toggle son */}
-          <Tooltip content={soundEnabled ? "Desactiver le son" : "Activer le son"}>
+          <Tooltip content={soundEnabled ? "Désactiver le son" : "Activer le son"}>
             <IconButton
               variant="surface"
               color={soundEnabled ? "green" : "gray"}
               size="2"
               onClick={toggleSound}
               style={{ cursor: "pointer" }}
-              aria-label={soundEnabled ? "Desactiver le son" : "Activer le son"}
+              aria-label={soundEnabled ? "Désactiver le son" : "Activer le son"}
             >
               {soundEnabled ? (
                 <SpeakerHigh size={16} weight="fill" />
@@ -345,7 +345,7 @@ export function KitchenDisplay({ initialOrders }: KitchenDisplayProps) {
           onBulkStatusChange={handleBulkStatusChange}
           headerAction={
             enAttente.length > 0 ? (
-              <Tooltip content="Tout passer en preparation">
+              <Tooltip content="Tout passer en préparation">
                 <Button
                   variant="soft"
                   color="orange"
@@ -364,7 +364,7 @@ export function KitchenDisplay({ initialOrders }: KitchenDisplayProps) {
 
         {/* Colonne En Preparation */}
         <Column
-          title="En preparation"
+          title="En préparation"
           count={enPreparation.length}
           color="blue"
           orders={enPreparation}

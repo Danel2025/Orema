@@ -51,14 +51,14 @@ export default function LogoutPage() {
           <LogOutIcon size={48} style={{ color: "var(--accent-9)" }} />
 
           <Heading size="5" align="center">
-            {error ? "Erreur" : "Deconnexion..."}
+            {error ? "Erreur" : "Déconnexion..."}
           </Heading>
 
           {isLoading ? (
             <Flex direction="column" gap="3" align="center">
               <Spinner size="3" />
               <Text size="2" color="gray">
-                Deconnexion en cours, veuillez patienter...
+                Déconnexion en cours, veuillez patienter...
               </Text>
             </Flex>
           ) : error ? (

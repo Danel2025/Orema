@@ -20,7 +20,7 @@ import { creerNotification } from "@/actions/notifications";
 
 const StatutPreparationEnum = z.enum(
   ["EN_ATTENTE", "EN_PREPARATION", "PRETE", "SERVIE"],
-  { message: "Statut de preparation invalide" }
+  { message: "Statut de préparation invalide" }
 );
 
 const UpdatePreparationStatusSchema = z.object({
@@ -209,7 +209,7 @@ export async function updatePreparationStatus(
 
     if (updateError) {
       console.error("[updatePreparationStatus] Erreur update:", updateError);
-      return { success: false, error: "Erreur lors de la mise a jour du statut" };
+      return { success: false, error: "Erreur lors de la mise à jour du statut" };
     }
 
     // 7. Notification "Commande prete" au serveur (non bloquant)
@@ -309,7 +309,7 @@ export async function updateBulkPreparationStatus(
 
     if (updateError) {
       console.error("[updateBulkPreparationStatus] Erreur update:", updateError);
-      return { success: false, error: "Erreur lors de la mise a jour des statuts" };
+      return { success: false, error: "Erreur lors de la mise à jour des statuts" };
     }
 
     // 7. Notification "Commande prete" au serveur (non bloquant, groupee par vente)

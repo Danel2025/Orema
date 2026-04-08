@@ -61,7 +61,7 @@ const actionConfig: Record<
   UPDATE: { icon: PencilSimple, label: "Modification", severity: "info" },
   DELETE: { icon: Trash, label: "Suppression", severity: "danger" },
   LOGIN: { icon: SignIn, label: "Connexion", severity: "info" },
-  LOGOUT: { icon: SignIn, label: "Deconnexion", severity: "info" },
+  LOGOUT: { icon: SignIn, label: "Déconnexion", severity: "info" },
   CAISSE_OUVERTURE: { icon: Receipt, label: "Ouverture caisse", severity: "info" },
   CAISSE_CLOTURE: { icon: Receipt, label: "Cloture caisse", severity: "info" },
   ANNULATION_VENTE: { icon: CurrencyCircleDollar, label: "Annulation vente", severity: "danger" },
@@ -177,7 +177,7 @@ export function AuditTab({
             </Select.Root> : null}
 
           <Select.Root value={dateFilter} onValueChange={(v) => handleFilterChange("date", v)}>
-            <Select.Trigger placeholder="Periode" variant="surface" />
+            <Select.Trigger placeholder="Période" variant="surface" />
             <Select.Content>
               <Select.Item value="all">Toutes les dates</Select.Item>
               <Select.Separator />

@@ -4,6 +4,7 @@ import { useUIStore } from "@/stores/ui-store";
 import { useAuth } from "@/lib/auth/context";
 import { Sidebar, SIDEBAR_WIDTH_EXPANDED, SIDEBAR_WIDTH_COLLAPSED } from "./sidebar";
 import { Header } from "./header";
+import { SubscriptionExpiryBanner } from "@/components/shared/subscription-expiry-banner";
 
 interface DashboardShellProps {
   children: React.ReactNode;
@@ -48,6 +49,11 @@ export function DashboardShell({ children }: DashboardShellProps) {
         {/* Header sticky en haut avec z-index */}
         <div className="kds-header-wrapper" style={{ flexShrink: 0, zIndex: 10 }}>
           <Header />
+        </div>
+
+        {/* Banner d'expiration d'abonnement */}
+        <div style={{ padding: "16px 32px 0" }}>
+          <SubscriptionExpiryBanner />
         </div>
 
         {/* Contenu principal avec padding et scroll interne */}

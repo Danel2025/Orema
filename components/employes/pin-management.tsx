@@ -74,7 +74,7 @@ export function PinManagement({ open, onOpenChange, employee, onSuccess }: PinMa
         toast.success("PIN mis à jour avec succès");
         onSuccess?.();
       } else {
-        toast.error(result.error || "Erreur lors de la mise a jour du PIN");
+        toast.error(result.error || "Erreur lors de la mise à jour du PIN");
       }
     } catch (error) {
       toast.error("Une erreur est survenue");
@@ -125,7 +125,7 @@ export function PinManagement({ open, onOpenChange, employee, onSuccess }: PinMa
               </Callout.Icon>
               <Callout.Text>
                 <Flex direction="column" gap="2">
-                  <Text>Nouveau PIN configure avec succes :</Text>
+                  <Text>Nouveau PIN configuré avec succès :</Text>
                   <Flex align="center" gap="2">
                     <Text
                       size="5"

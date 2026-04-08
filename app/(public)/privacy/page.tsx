@@ -26,32 +26,32 @@ import {
 const dataTypes = [
   {
     icon: Users,
-    title: "Donnees d'identification",
+    title: "Données d'identification",
     items: [
-      "Nom et prenom",
+      "Nom et prénom",
       "Adresse e-mail",
-      "Numero de telephone",
-      "Nom de l'etablissement",
+      "Numéro de téléphone",
+      "Nom de l'établissement",
     ],
   },
   {
     icon: HardDrives,
-    title: "Donnees techniques",
+    title: "Données techniques",
     items: [
       "Adresse IP",
       "Type de navigateur",
-      "Donnees de connexion",
+      "Données de connexion",
       "Logs d'utilisation",
     ],
   },
   {
     icon: Lock,
-    title: "Donnees commerciales",
+    title: "Données commerciales",
     items: [
       "Transactions de vente",
       "Historique des commandes",
-      "Donnees de facturation",
-      "Statistiques d'activite",
+      "Données de facturation",
+      "Statistiques d'activité",
     ],
   },
 ];
@@ -59,27 +59,27 @@ const dataTypes = [
 const rights = [
   {
     icon: Eye,
-    title: "Droit d'acces",
+    title: "Droit d'accès",
     description:
-      "Vous pouvez demander une copie de toutes les donnees que nous detenons a votre sujet.",
+      "Vous pouvez demander une copie de toutes les données que nous détenons à votre sujet.",
   },
   {
     icon: Trash,
     title: "Droit de suppression",
     description:
-      "Vous pouvez demander la suppression de vos donnees personnelles de nos systemes.",
+      "Vous pouvez demander la suppression de vos données personnelles de nos systèmes.",
   },
   {
     icon: Lock,
     title: "Droit de rectification",
     description:
-      "Vous pouvez modifier ou corriger vos informations personnelles a tout moment.",
+      "Vous pouvez modifier ou corriger vos informations personnelles à tout moment.",
   },
   {
     icon: Clock,
-    title: "Droit de portabilite",
+    title: "Droit de portabilité",
     description:
-      "Vous pouvez recuperer vos donnees dans un format structure et lisible.",
+      "Vous pouvez récupérer vos données dans un format structuré et lisible.",
   },
 ];
 
@@ -87,67 +87,67 @@ const sections = [
   {
     id: "collecte",
     number: "1",
-    title: "Collecte des donnees",
-    content: `Nous collectons vos donnees personnelles lorsque vous :
+    title: "Collecte des données",
+    content: `Nous collectons vos données personnelles lorsque vous :
 
-- Creez un compte sur notre plateforme
-- Utilisez notre systeme de caisse
+- Créez un compte sur notre plateforme
+- Utilisez notre système de caisse
 - Contactez notre service client
-- Souscrivez a un abonnement
+- Souscrivez à un abonnement
 
-Ces donnees sont collectees de maniere loyale et transparente, avec votre consentement explicite.`,
+Ces données sont collectées de manière loyale et transparente, avec votre consentement explicite.`,
   },
   {
     id: "utilisation",
     number: "2",
-    title: "Utilisation des donnees",
-    content: `Vos donnees sont utilisees pour :
+    title: "Utilisation des données",
+    content: `Vos données sont utilisées pour :
 
-- Fournir et ameliorer nos services
+- Fournir et améliorer nos services
 - Traiter vos transactions et paiements
 - Vous envoyer des informations importantes sur votre compte
 - Assurer le support technique
-- Generer des rapports et statistiques anonymisees
-- Respecter nos obligations legales
+- Générer des rapports et statistiques anonymisées
+- Respecter nos obligations légales
 
-Nous ne vendons jamais vos donnees a des tiers.`,
+Nous ne vendons jamais vos données à des tiers.`,
   },
   {
     id: "conservation",
     number: "3",
-    title: "Conservation des donnees",
-    content: `Vos donnees sont conservees pendant la duree necessaire aux finalites pour lesquelles elles ont ete collectees :
+    title: "Conservation des données",
+    content: `Vos données sont conservées pendant la durée nécessaire aux finalités pour lesquelles elles ont été collectées :
 
-- Donnees de compte : duree de la relation commerciale + 3 ans
-- Donnees de transaction : 10 ans (obligations comptables)
+- Données de compte : durée de la relation commerciale + 3 ans
+- Données de transaction : 10 ans (obligations comptables)
 - Logs techniques : 12 mois
 
-A l'expiration de ces delais, vos donnees sont supprimees ou anonymisees.`,
+À l'expiration de ces délais, vos données sont supprimées ou anonymisées.`,
   },
   {
     id: "securite",
     number: "4",
-    title: "Securite des donnees",
-    content: `Nous mettons en oeuvre des mesures de securite robustes pour proteger vos donnees :
+    title: "Sécurité des données",
+    content: `Nous mettons en œuvre des mesures de sécurité robustes pour protéger vos données :
 
 - Chiffrement SSL/TLS pour toutes les transmissions
-- Stockage securise sur des serveurs proteges
-- Acces restreint aux donnees (principe du moindre privilege)
-- Authentification forte et codes PIN haches
-- Sauvegardes regulieres et plan de reprise d'activite
-- Audits de securite reguliers`,
+- Stockage sécurisé sur des serveurs protégés
+- Accès restreint aux données (principe du moindre privilège)
+- Authentification forte et codes PIN hachés
+- Sauvegardes régulières et plan de reprise d'activité
+- Audits de sécurité réguliers`,
   },
   {
     id: "partage",
     number: "5",
-    title: "Partage des donnees",
-    content: `Vos donnees peuvent etre partagees avec :
+    title: "Partage des données",
+    content: `Vos données peuvent être partagées avec :
 
-- Nos sous-traitants techniques (hebergement, paiement) sous contrat strict
-- Les autorites competentes en cas d'obligation legale
-- Votre etablissement si vous etes employe
+- Nos sous-traitants techniques (hébergement, paiement) sous contrat strict
+- Les autorités compétentes en cas d'obligation légale
+- Votre établissement si vous êtes employé
 
-Tout transfert de donnees hors du Gabon est encadre par des garanties appropriees.`,
+Tout transfert de données hors du Gabon est encadré par des garanties appropriées.`,
   },
   {
     id: "cookies",
@@ -156,10 +156,10 @@ Tout transfert de donnees hors du Gabon est encadre par des garanties appropriee
     content: `Nous utilisons des cookies pour :
 
 - Assurer le bon fonctionnement du site (cookies essentiels)
-- Memoriser vos preferences (cookies fonctionnels)
+- Mémoriser vos préférences (cookies fonctionnels)
 - Analyser l'utilisation du service (cookies analytiques)
 
-Vous pouvez gerer vos preferences de cookies via les parametres de votre navigateur.`,
+Vous pouvez gérer vos préférences de cookies via les paramètres de votre navigateur.`,
   },
 ];
 
@@ -167,9 +167,9 @@ export default function PrivacyPage() {
   return (
     <>
       <PageHeader
-        title="Politique de confidentialite"
-        subtitle="Comment nous protegetons et utilisons vos donnees personnelles."
-        badge="Vie privee"
+        title="Politique de confidentialité"
+        subtitle="Comment nous protégeons et utilisons vos données personnelles."
+        badge="Vie privée"
       />
 
       <Container size="3" py="9">
@@ -193,7 +193,7 @@ export default function PrivacyPage() {
             <Flex align="center" gap="2">
               <Calendar size={18} style={{ color: "var(--gray-10)" }} />
               <Text size="2" color="gray">
-                Derniere mise a jour : Mars 2026
+                Dernière mise à jour : Mars 2026
               </Text>
             </Flex>
             <Flex align="center" gap="2">
@@ -203,7 +203,7 @@ export default function PrivacyPage() {
                 style={{ color: "var(--green-10)" }}
               />
               <Text size="2" color="gray">
-                Conforme a la Loi n 001/2011 (protection des donnees
+                Conforme à la Loi n° 001/2011 (protection des données
                 personnelles)
               </Text>
             </Flex>
@@ -245,11 +245,11 @@ export default function PrivacyPage() {
               size="3"
               style={{ color: "var(--gray-11)", lineHeight: 1.8 }}
             >
-              Chez Orema N+, la protection de vos donnees personnelles est une
-              priorite. Nous traitons vos informations avec le plus grand soin
-              et en toute transparence, conformement a la reglementation en
+              Chez Orema N+, la protection de vos données personnelles est une
+              priorité. Nous traitons vos informations avec le plus grand soin
+              et en toute transparence, conformément à la réglementation en
               vigueur au Gabon et aux standards internationaux de protection
-              des donnees.
+              des données.
             </Text>
           </Box>
         </motion.div>
@@ -261,7 +261,7 @@ export default function PrivacyPage() {
           transition={{ delay: 0.4, duration: 0.5 }}
         >
           <Heading size="5" mb="5">
-            Donnees que nous collectons
+            Données que nous collectons
           </Heading>
           <Grid columns={{ initial: "1", md: "3" }} gap="4" mb="9">
             {dataTypes.map((type, index) => (

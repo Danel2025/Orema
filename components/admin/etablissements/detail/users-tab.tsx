@@ -234,7 +234,7 @@ export function UsersTab({
             <Warning size={16} weight="fill" />
           </Callout.Icon>
           <Callout.Text>
-            Quota d'utilisateurs atteint ({maxUsers}). Passez a un plan superieur pour ajouter plus d'utilisateurs.
+            Quota d'utilisateurs atteint ({maxUsers}). Passez a un plan supérieur pour ajouter plus d'utilisateurs.
           </Callout.Text>
         </Callout.Root>
       )}
@@ -259,7 +259,7 @@ export function UsersTab({
                 <Table.ColumnHeaderCell>Utilisateur</Table.ColumnHeaderCell>
                 <Table.ColumnHeaderCell>Email</Table.ColumnHeaderCell>
                 <Table.ColumnHeaderCell align="center">Role</Table.ColumnHeaderCell>
-                <Table.ColumnHeaderCell align="center">Derniere connexion</Table.ColumnHeaderCell>
+                <Table.ColumnHeaderCell align="center">Dernière connexion</Table.ColumnHeaderCell>
                 <Table.ColumnHeaderCell align="center">Statut</Table.ColumnHeaderCell>
                 <Table.ColumnHeaderCell align="right">Actions</Table.ColumnHeaderCell>
               </Table.Row>

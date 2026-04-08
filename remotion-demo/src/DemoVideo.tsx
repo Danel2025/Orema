@@ -147,33 +147,21 @@ const IntroScene: React.FC = () => {
       >
         <div
           style={{
-            width: 140,
-            height: 140,
-            borderRadius: 32,
-            background: `linear-gradient(135deg, ${ORANGE} 0%, ${ORANGE_DARK} 100%)`,
-            display: "flex",
-            justifyContent: "center",
-            alignItems: "center",
-            fontSize: 70,
-            fontWeight: 900,
-            color: "white",
-            fontFamily: gabarito,
-            boxShadow: `0 20px 60px ${ORANGE}50, 0 0 100px ${ORANGE}30`,
-            position: "relative",
+            filter: `drop-shadow(0 20px 60px #fed11250) drop-shadow(0 0 100px #fed11230)`,
           }}
         >
-          O+
-          <div
-            style={{
-              position: "absolute",
-              top: 10,
-              left: 10,
-              right: 30,
-              height: 30,
-              background: "linear-gradient(180deg, rgba(255,255,255,0.3) 0%, transparent 100%)",
-              borderRadius: "20px 20px 50% 50%",
-            }}
-          />
+          <svg
+            width={140}
+            height={120}
+            viewBox="0 0 831.46 710.47"
+          >
+            <polygon fill="#fed112" points="415.73 144.17 239.98 0 0 175.86 415.73 144.17" />
+            <polygon fill="#6bfdc0" points="0 358.42 0 175.86 415.73 144.17 0 358.42" />
+            <polygon fill="#f54f6d" points="0 358.42 415.73 144.17 415.73 710.47 0 358.42" />
+            <polygon fill="#6bfdc0" points="415.73 144.17 591.49 0 831.46 175.86 415.73 144.17" />
+            <polygon fill="#a855f7" points="831.46 358.42 831.46 175.86 415.73 144.17 831.46 358.42" />
+            <polygon fill="#fed112" points="831.46 358.42 415.73 144.17 415.73 710.47 831.46 358.42" />
+          </svg>
         </div>
 
         <h1
@@ -425,8 +413,8 @@ const DemoVideoSection: React.FC = () => {
   const relativeFrame = frame - sceneStartFrame;
 
   return (
-    <AbsoluteFill>
-      {/* Vidéo de fond */}
+    <AbsoluteFill style={{ background: "#0a0a0a" }}>
+      {/* Vidéo de fond - léger zoom pour combler les espaces vides */}
       <Video
         src={staticFile("demo-video.webm")}
         style={{

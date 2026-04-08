@@ -155,7 +155,7 @@ export function PrinterSettings({ initialData, etablissementNom }: PrinterSettin
   const handleSystemTestPrint = async () => {
     setIsSystemTesting(true);
     try {
-      const result = await printSystemTest(etablissementNom || "Mon Etablissement");
+      const result = await printSystemTest(etablissementNom || "Mon Établissement");
       if (result.success) {
         toast.success("Page de test envoyee au systeme d'impression");
       } else {
@@ -229,7 +229,7 @@ export function PrinterSettings({ initialData, etablissementNom }: PrinterSettin
       if (result.success) {
         toast.success(result.message || "Connexion reussie");
       } else {
-        toast.error(result.error || "Test echoue");
+        toast.error(result.error || "Test échoué");
       }
     } catch {
       toast.error("Erreur lors du test");
@@ -257,7 +257,7 @@ export function PrinterSettings({ initialData, etablissementNom }: PrinterSettin
   // Dissocier une imprimante web
   const handleUnpair = (printerId: string) => {
     webPrinter.unpairPrinter(printerId);
-    toast.info("Association supprimee");
+    toast.info("Association supprimée");
   };
 
   // Helper : trouver l'imprimante web associee
@@ -777,7 +777,7 @@ export function PrinterSettings({ initialData, etablissementNom }: PrinterSettin
               <strong>Important :</strong> Les navigateurs web ne peuvent pas lister les
               imprimantes installees sur votre systeme (limitation de securite). Pour les
               imprimantes classiques (Canon, HP, Brother...), utilisez le type{" "}
-              <strong>&quot;Systeme&quot;</strong> qui ouvre le dialogue d&apos;impression standard.
+              <strong>&quot;Système&quot;</strong> qui ouvre le dialogue d&apos;impression standard.
               La detection USB/Bluetooth ne fonctionne qu&apos;avec les imprimantes thermiques
               de caisse compatibles ESC/POS.
             </Callout.Text>

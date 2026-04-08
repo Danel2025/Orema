@@ -1,24 +1,141 @@
 /**
- * Service Worker minimal pour Oréma N+ POS
+ * Service Worker pour Orema N+ POS
  *
- * Ce service worker est volontairement minimal pour éviter les 404.
- * Il peut être étendu plus tard pour le mode hors-ligne.
+ * Strategies :
+ * - Cache-first pour les assets statiques (/_next/static/, icones, polices)
+ * - Network-first pour les appels API (/api/)
+ * - Network-first par defaut (pages HTML)
+ * - Fallback offline basique
+ *
+ * NE gere PAS le cache de donnees metier (IndexedDB s'en occupe)
  */
 
-// Installation - met en cache les ressources essentielles si nécessaire
+const CACHE_NAME = "orema-pos-v1";
+
+const PRECACHE_URLS = ["/offline.html"];
+
+// Installation : pre-cache la page offline
 self.addEventListener("install", (event) => {
-  // Force l'activation immédiate
-  self.skipWaiting();
+  event.waitUntil(
+    caches
+      .open(CACHE_NAME)
+      .then((cache) => cache.addAll(PRECACHE_URLS))
+      .then(() => self.skipWaiting())
+  );
 });
 
-// Activation - nettoyage des anciens caches si besoin
+// Activation : nettoyage des anciens caches
 self.addEventListener("activate", (event) => {
-  // Prend le contrôle de toutes les pages immédiatement
-  event.waitUntil(self.clients.claim());
+  event.waitUntil(
+    caches
+      .keys()
+      .then((keys) =>
+        Promise.all(
+          keys
+            .filter((key) => key !== CACHE_NAME)
+            .map((key) => caches.delete(key))
+        )
+      )
+      .then(() => self.clients.claim())
+  );
 });
 
-// Fetch - stratégie network-first (pas de mise en cache pour l'instant)
+// Fetch : routage des requetes
 self.addEventListener("fetch", (event) => {
-  // Laisse le navigateur gérer normalement
-  // Pour activer le mode offline, implémenter une stratégie de cache ici
+  const { request } = event;
+  const url = new URL(request.url);
+
+  // Ignorer les requetes non-GET
+  if (request.method !== "GET") return;
+
+  // Ignorer les requetes vers d'autres origines (Supabase, etc.)
+  if (url.origin !== self.location.origin) return;
+
+  // Strategy cache-first pour les assets statiques Next.js
+  if (
+    url.pathname.startsWith("/_next/static/") ||
+    url.pathname.startsWith("/icons/") ||
+    url.pathname.match(/\.(svg|png|jpg|jpeg|webp|ico|woff2?)$/)
+  ) {
+    event.respondWith(cacheFirst(request));
+    return;
+  }
+
+  // Strategy network-first pour les appels API
+  if (url.pathname.startsWith("/api/")) {
+    event.respondWith(networkFirst(request));
+    return;
+  }
+
+  // Network-first pour les pages HTML (navigation)
+  if (request.mode === "navigate") {
+    event.respondWith(networkFirstWithOfflineFallback(request));
+    return;
+  }
+
+  // Par defaut : network-first
+  event.respondWith(networkFirst(request));
 });
+
+/**
+ * Cache-first : cherche dans le cache, sinon reseau et mise en cache
+ */
+async function cacheFirst(request) {
+  const cached = await caches.match(request);
+  if (cached) return cached;
+
+  try {
+    const response = await fetch(request);
+    if (response.ok) {
+      const cache = await caches.open(CACHE_NAME);
+      cache.put(request, response.clone());
+    }
+    return response;
+  } catch {
+    return new Response("", { status: 503, statusText: "Service Unavailable" });
+  }
+}
+
+/**
+ * Network-first : essaie le reseau, sinon le cache
+ */
+async function networkFirst(request) {
+  try {
+    const response = await fetch(request);
+    if (response.ok) {
+      const cache = await caches.open(CACHE_NAME);
+      cache.put(request, response.clone());
+    }
+    return response;
+  } catch {
+    const cached = await caches.match(request);
+    if (cached) return cached;
+    return new Response("", { status: 503, statusText: "Service Unavailable" });
+  }
+}
+
+/**
+ * Network-first avec fallback vers la page offline
+ */
+async function networkFirstWithOfflineFallback(request) {
+  try {
+    const response = await fetch(request);
+    if (response.ok) {
+      const cache = await caches.open(CACHE_NAME);
+      cache.put(request, response.clone());
+    }
+    return response;
+  } catch {
+    const cached = await caches.match(request);
+    if (cached) return cached;
+
+    // Fallback : page offline
+    const offlinePage = await caches.match("/offline.html");
+    if (offlinePage) return offlinePage;
+
+    return new Response(
+      "<html><body><h1>Hors connexion</h1><p>Verifiez votre connexion internet.</p></body></html>",
+      { status: 503, headers: { "Content-Type": "text/html; charset=utf-8" } }
+    );
+  }
+}

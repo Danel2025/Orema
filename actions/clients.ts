@@ -229,7 +229,7 @@ export async function createClient(data: ClientFormData) {
     if (!validated.success) {
       return {
         success: false,
-        error: validated.error.issues[0]?.message || "Donnees invalides",
+        error: validated.error.issues[0]?.message || "Données invalides",
       };
     }
 
@@ -243,7 +243,7 @@ export async function createClient(data: ClientFormData) {
       if (existing) {
         return {
           success: false,
-          error: "Un client avec ce numero de telephone existe deja",
+          error: "Un client avec ce numéro de téléphone existe deja",
           existingClient: existing,
         };
       }
@@ -296,10 +296,10 @@ export async function createClient(data: ClientFormData) {
       },
     };
   } catch (error) {
-    console.error("Erreur lors de la creation du client:", error);
+    console.error("Erreur lors de la création du client:", error);
     return {
       success: false,
-      error: "Erreur lors de la creation du client",
+      error: "Erreur lors de la création du client",
     };
   }
 }
@@ -324,7 +324,7 @@ export async function updateClient(id: string, data: ClientFormData) {
     if (!validated.success) {
       return {
         success: false,
-        error: validated.error.issues[0]?.message || "Donnees invalides",
+        error: validated.error.issues[0]?.message || "Données invalides",
       };
     }
 
@@ -348,7 +348,7 @@ export async function updateClient(id: string, data: ClientFormData) {
       if (duplicatePhone && duplicatePhone.id !== id) {
         return {
           success: false,
-          error: "Un autre client utilise deja ce numero de telephone",
+          error: "Un autre client utilise déjà ce numéro de téléphone",
         };
       }
     }
@@ -361,7 +361,7 @@ export async function updateClient(id: string, data: ClientFormData) {
       if (duplicateEmail) {
         return {
           success: false,
-          error: "Un autre client utilise deja cet email",
+          error: "Un autre client utilise déjà cet email",
         };
       }
     }
@@ -399,10 +399,10 @@ export async function updateClient(id: string, data: ClientFormData) {
       },
     };
   } catch (error) {
-    console.error("Erreur lors de la mise a jour du client:", error);
+    console.error("Erreur lors de la mise à jour du client:", error);
     return {
       success: false,
-      error: "Erreur lors de la mise a jour du client",
+      error: "Erreur lors de la mise à jour du client",
     };
   }
 }
@@ -472,7 +472,7 @@ export async function rechargerComptePrepaye(data: RechargeCompteData) {
     if (!validated.success) {
       return {
         success: false,
-        error: validated.error.issues[0]?.message || "Donnees invalides",
+        error: validated.error.issues[0]?.message || "Données invalides",
       };
     }
 

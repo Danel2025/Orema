@@ -20,6 +20,7 @@ import {
   validerModificationPrix,
   validerMarge,
 } from "@/lib/tarification/enforcement";
+import { checkProductQuota } from "@/lib/plan-enforcement";
 import { createAuditLog } from "@/actions/audit";
 
 // Rôles autorisés à modifier les produits (CRUD)
@@ -265,6 +266,12 @@ export async function createProduit(data: ProduitFormData) {
       etablissementId,
       role: user.role,
     });
+
+    // Vérification du quota produits
+    const quotaCheck = await checkProductQuota(supabase, etablissementId, { userRole: user.role });
+    if (!quotaCheck.allowed) {
+      return { success: false, error: quotaCheck.message };
+    }
 
     // Validation
     const validationResult = produitSchema.safeParse(data);
@@ -807,7 +814,7 @@ export async function getCSVTemplate() {
   const csvContent = [headers.join(";"), exampleRow.join(";")].join("\n");
 
   // Ajouter un commentaire avec les catégories disponibles
-  const categoriesComment = `# Categories disponibles: ${categories.map((c) => c.nom).join(", ")}`;
+  const categoriesComment = `# Catégories disponibles: ${categories.map((c) => c.nom).join(", ")}`;
   const tvaComment = "# Taux TVA: 0 (Exonere), 10 (Reduit), 18 (Standard)";
   const boolComment = "# Valeurs booleennes: Oui/Non ou true/false ou 1/0";
 
@@ -1041,6 +1048,18 @@ export async function importProduitsCSV(produitsData: ProduitCsvData[]) {
         toUpdate.push({ id: existing.id, data });
       } else {
         toCreate.push({ ...data, etablissement_id: etablissementId });
+      }
+    }
+
+    // Vérification du quota produits pour l'import
+    if (toCreate.length > 0) {
+      const quotaCheck = await checkProductQuota(supabase, etablissementId, { userRole: user.role });
+      const remaining = quotaCheck.max - quotaCheck.current;
+      if (toCreate.length > remaining) {
+        return {
+          success: false,
+          error: `Import impossible : ${toCreate.length} produits à créer mais seulement ${remaining} place(s) restante(s) sur votre quota de ${quotaCheck.max} produits. ${quotaCheck.message ?? ""}`.trim(),
+        };
       }
     }
 

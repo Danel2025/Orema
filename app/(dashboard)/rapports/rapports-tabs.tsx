@@ -111,7 +111,7 @@ export function RapportsTabs() {
         </Grid>
       </Tabs.Content>
 
-      {/* Employes */}
+      {/* Employés */}
       <Tabs.Content value="employes">
         <Grid columns={{ initial: "1" }} gap="4">
           <Suspense fallback={<ChartLoading />}>

@@ -15,28 +15,28 @@ const steps = [
     icon: DownloadSimple,
     title: "Inscrivez-vous",
     description:
-      "Creez votre compte en 2 minutes. Aucune carte bancaire requise.",
+      "Créez votre compte en 2 minutes. Aucune carte bancaire requise.",
   },
   {
     number: "02",
     icon: GearSix,
     title: "Configurez",
     description:
-      "Ajoutez vos produits, categories et connectez votre imprimante.",
+      "Ajoutez vos produits, catégories et connectez votre imprimante.",
   },
   {
     number: "03",
     icon: ShoppingCart,
     title: "Vendez",
     description:
-      "Commencez a encaisser. Interface intuitive, formation minimale.",
+      "Commencez à encaisser. Interface intuitive, formation minimale.",
   },
   {
     number: "04",
     icon: TrendUp,
     title: "Analysez",
     description:
-      "Suivez vos ventes et prenez les bonnes decisions avec des donnees fiables.",
+      "Suivez vos ventes et prenez les bonnes décisions avec des données fiables.",
   },
 ];
 
@@ -62,7 +62,7 @@ export function HowItWorks() {
                 letterSpacing: "0.08em",
               }}
             >
-              Comment ca marche
+              Comment ça marche
             </Text>
 
             <Heading
@@ -71,7 +71,7 @@ export function HowItWorks() {
               weight="bold"
               style={{ letterSpacing: "-0.02em" }}
             >
-              Operationnel en 15 minutes
+              Opérationnel en 15 minutes
             </Heading>
 
             <Text
@@ -81,8 +81,8 @@ export function HowItWorks() {
               className="max-w-md"
               style={{ lineHeight: 1.6 }}
             >
-              De l&apos;inscription a votre premiere vente. Pas besoin
-              d&apos;etre un expert.
+              De l&apos;inscription à votre première vente. Pas besoin
+              d&apos;être un expert.
             </Text>
           </Flex>
         </FadeIn>

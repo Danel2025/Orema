@@ -180,7 +180,7 @@ describe("destinationOptions - Options de destination disponibles", () => {
     expect(autoOption!.description).toMatch(/[Dd][eé]tection/);
   });
 
-  it("l'option AUCUNE mentionne l'absence de bon de preparation", () => {
+  it("l'option AUCUNE mentionne l'absence de bon de préparation", () => {
     const aucuneOption = destinationOptions.find((o) => o.value === "AUCUNE");
     expect(aucuneOption).toBeDefined();
     expect(aucuneOption!.description).toMatch(/[Pp]as de bon/);

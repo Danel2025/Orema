@@ -30,11 +30,11 @@ import { useState } from "react";
 
 const categories = [
   { id: "all", label: "Toutes", icon: Question },
-  { id: "getting-started", label: "Demarrage", icon: Lightning },
+  { id: "getting-started", label: "Démarrage", icon: Lightning },
   { id: "payments", label: "Paiements", icon: CreditCard },
   { id: "configuration", label: "Configuration", icon: GearSix },
   { id: "printing", label: "Impression", icon: Printer },
-  { id: "security", label: "Securite", icon: ShieldCheck },
+  { id: "security", label: "Sécurité", icon: ShieldCheck },
   { id: "mobile", label: "Mobile", icon: DeviceMobile },
 ];
 
@@ -67,7 +67,7 @@ const faqs = [
     category: "payments",
     question: "Comment configurer Airtel Money et Moov Money ?",
     answer:
-      "Dans Parametres > Paiements, activez les options Mobile Money et renseignez vos numeros marchands respectifs. Les transactions sont ensuite enregistrees avec leur reference pour faciliter le rapprochement.",
+      "Dans Paramètres > Paiements, activez les options Mobile Money et renseignez vos numéros marchands respectifs. Les transactions sont ensuite enregistrées avec leur référence pour faciliter le rapprochement.",
   },
   {
     category: "payments",
@@ -79,7 +79,7 @@ const faqs = [
     category: "configuration",
     question: "Comment configurer les taxes (TVA) ?",
     answer:
-      "Par defaut, la TVA gabonaise standard de 18% est configuree. Vous pouvez definir des taux differents (10% reduit, 0% exonere) par produit dans Parametres > Fiscalite. La TVA est calculee automatiquement sur chaque ticket.",
+      "Par défaut, la TVA gabonaise standard de 18% est configurée. Vous pouvez définir des taux différents (10% réduit, 0% exonéré) par produit dans Paramètres > Fiscalité. La TVA est calculée automatiquement sur chaque ticket.",
   },
   {
     category: "configuration",
@@ -91,7 +91,7 @@ const faqs = [
     category: "configuration",
     question: "Comment personnaliser mes tickets de caisse ?",
     answer:
-      "Dans Parametres > Impression > Format ticket. Ajoutez votre logo, personnalisez l'en-tete et le pied de page, choisissez les informations a afficher (NIF, RCCM, message promotionnel, etc.).",
+      "Dans Paramètres > Impression > Format ticket. Ajoutez votre logo, personnalisez l'en-tête et le pied de page, choisissez les informations à afficher (NIF, RCCM, message promotionnel, etc.).",
   },
   {
     category: "printing",
@@ -110,25 +110,25 @@ const faqs = [
     category: "printing",
     question: "Que faire si mon imprimante ne fonctionne pas ?",
     answer:
-      "Verifiez d'abord la connexion (cable USB, reseau). Dans Parametres > Impression, cliquez sur 'Tester'. Si le probleme persiste, consultez notre guide de depannage ou contactez le support technique.",
+      "Vérifiez d'abord la connexion (câble USB, réseau). Dans Paramètres > Impression, cliquez sur 'Tester'. Si le problème persiste, consultez notre guide de dépannage ou contactez le support technique.",
   },
   {
     category: "security",
-    question: "Mes donnees sont-elles securisees ?",
+    question: "Mes données sont-elles sécurisées ?",
     answer:
-      "Toutes les donnees sont chiffrees en transit (SSL/TLS) et au repos. Sauvegardes quotidiennes. Serveurs heberges chez Vercel/Supabase avec certifications de securite internationales.",
+      "Toutes les données sont chiffrées en transit (SSL/TLS) et au repos. Sauvegardes quotidiennes. Serveurs hébergés chez Vercel/Supabase avec certifications de sécurité internationales.",
   },
   {
     category: "security",
-    question: "Comment gerer les acces de mon equipe ?",
+    question: "Comment gérer les accès de mon équipe ?",
     answer:
-      "Creez des comptes utilisateurs avec differents roles : Admin, Manager, Caissier, Serveur. Chaque role a des permissions specifiques. Les caissiers peuvent se connecter rapidement via un code PIN a 4 chiffres.",
+      "Créez des comptes utilisateurs avec différents rôles : Admin, Manager, Caissier, Serveur. Chaque rôle a des permissions spécifiques. Les caissiers peuvent se connecter rapidement via un code PIN à 4 chiffres.",
   },
   {
     category: "security",
     question: "Orema N+ fonctionne-t-il hors connexion ?",
     answer:
-      "Oui. Le mode hors-ligne permet de continuer a encaisser sans Internet. Les transactions sont stockees localement et synchronisees automatiquement des que la connexion est retablie.",
+      "Oui. Le mode hors-ligne permet de continuer à encaisser sans Internet. Les transactions sont stockées localement et synchronisées automatiquement dès que la connexion est rétablie.",
   },
   {
     category: "mobile",

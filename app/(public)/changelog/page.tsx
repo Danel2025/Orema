@@ -43,7 +43,7 @@ const releases: ChangelogEntry[] = [
     changes: [
       {
         icon: RocketLaunch,
-        text: "Systeme de caisse complet (vente directe, table, livraison, emporter)",
+        text: "Système de caisse complet (vente directe, table, livraison, emporter)",
       },
       {
         icon: Check,
@@ -88,7 +88,7 @@ const releases: ChangelogEntry[] = [
       },
       {
         icon: ShieldCheck,
-        text: "Securite renforcee (Row-Level Security, validation des entrees)",
+        text: "Sécurité renforcée (Row-Level Security, validation des entrées)",
       },
       {
         icon: Bug,
@@ -96,7 +96,7 @@ const releases: ChangelogEntry[] = [
       },
       {
         icon: ArrowUp,
-        text: "Amelioration de l'experience utilisateur sur les formulaires",
+        text: "Amélioration de l'expérience utilisateur sur les formulaires",
       },
     ],
   },

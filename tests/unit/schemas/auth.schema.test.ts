@@ -25,7 +25,7 @@ import { loginEmailSchema, loginPinSchema, utilisateurSchema } from "@/schemas/a
 // ============================================================================
 
 describe("loginSchema - Connexion email/password (auth.ts)", () => {
-  it("valide des donnees correctes", () => {
+  it("valide des données correctes", () => {
     const result = loginSchema.safeParse({
       email: "test@orema.ga",
       password: "password123",
@@ -411,7 +411,7 @@ describe("updatePinSchema - Mise a jour PIN (auth.ts)", () => {
 // ============================================================================
 
 describe("loginEmailSchema - Connexion email/password (auth.schema.ts)", () => {
-  it("valide des donnees correctes", () => {
+  it("valide des données correctes", () => {
     const result = loginEmailSchema.safeParse({
       email: "test@orema.ga",
       password: "password123",

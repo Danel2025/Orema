@@ -89,6 +89,12 @@ export const DASHBOARD_ROUTES: RouteConfig[] = [
     description: "Fichier clients et fidélité",
   },
   {
+    path: "/avis",
+    label: "Avis",
+    allowedRoles: ["SUPER_ADMIN", "ADMIN", "MANAGER"],
+    description: "Avis clients et analyse IA",
+  },
+  {
     path: "/employes",
     label: "Employés",
     requiredPermissions: ["employe:lire"],

@@ -265,8 +265,8 @@ export function InventaireRecap({
                 <Table.Header>
                   <Table.Row>
                     <Table.ColumnHeaderCell>Produit</Table.ColumnHeaderCell>
-                    <Table.ColumnHeaderCell>Categorie</Table.ColumnHeaderCell>
-                    <Table.ColumnHeaderCell>Stock theorique</Table.ColumnHeaderCell>
+                    <Table.ColumnHeaderCell>Catégorie</Table.ColumnHeaderCell>
+                    <Table.ColumnHeaderCell>Stock théorique</Table.ColumnHeaderCell>
                     <Table.ColumnHeaderCell>Compte</Table.ColumnHeaderCell>
                     <Table.ColumnHeaderCell>Ecart</Table.ColumnHeaderCell>
                     <Table.ColumnHeaderCell>Valeur ecart</Table.ColumnHeaderCell>

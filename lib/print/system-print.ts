@@ -545,7 +545,7 @@ export function generateAdditionHTML(data: AdditionData): string {
     lines.push(row("Adresse", data.adresseLivraison));
   }
   if (data.telephoneLivraison) {
-    lines.push(row("Telephone", data.telephoneLivraison));
+    lines.push(row("Téléphone", data.telephoneLivraison));
   }
 
   // ========== PIED DE PAGE ==========
@@ -783,7 +783,7 @@ export function generateTestPageHTML(etablissementNom: string): string {
   // ========== DATE ET HEURE ==========
   lines.push(row("Date", dateStr));
   lines.push(row("Heure", timeStr));
-  lines.push(row("Imprimante", "Systeme (window.print)"));
+  lines.push(row("Imprimante", "Système (window.print)"));
 
   lines.push('<hr class="separator">');
 
@@ -901,7 +901,7 @@ export function generateTestPageHTML(etablissementNom: string): string {
 
   // ========== PIED DE PAGE ==========
   lines.push('<div class="footer" style="margin-top:10px;">');
-  lines.push("<div class=\"bold\">Orema N+ - Systeme POS</div>");
+  lines.push("<div class=\"bold\">Orema N+ - Système POS</div>");
   lines.push(`<div>Test effectue le ${dateStr} a ${timeStr}</div>`);
   lines.push("<div class=\"small\" style=\"margin-top:4px;\">Si cette page s'imprime correctement,</div>");
   lines.push("<div class=\"small\">votre imprimante est prete a l'emploi.</div>");

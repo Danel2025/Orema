@@ -18,7 +18,7 @@ import { NextResponse } from "next/server";
 import type Stripe from "stripe";
 import { createServiceClient } from "@/lib/supabase/server";
 import { constructStripeWebhookEvent } from "@/lib/payments";
-import { PLANS, resolvePlanSlug, getPlanQuotas } from "@/lib/config/plans";
+import { resolvePlanSlug, getPlanQuotas } from "@/lib/config/plans";
 import {
   createFactureAbonnementSafe,
 } from "@/lib/db/queries/abonnements";
@@ -212,22 +212,55 @@ async function handleCheckoutCompleted(
     console.error(`[Webhook Stripe] Erreur update etablissement ${etablissementId}:`, etabError.message);
   }
 
-  // Mettre a jour la table abonnements
-  const { error: aboError } = await supabase
+  // Mettre a jour ou creer l'abonnement dans la table abonnements
+  const { data: existingAbo } = await supabase
     .from("abonnements" as never)
-    .update({
-      plan: resolvedSlug,
-      statut: "actif",
-      billing_cycle: billingCycle ?? "mensuel",
-      stripe_subscription_id: subscriptionId,
-      date_debut: now.toISOString(),
-      date_fin: periodEnd.toISOString(),
-      updated_at: new Date().toISOString(),
-    } as never)
-    .eq("etablissement_id", etablissementId);
+    .select("id")
+    .eq("etablissement_id", etablissementId)
+    .in("statut", ["actif", "en_essai", "annule"])
+    .order("created_at", { ascending: false })
+    .limit(1)
+    .single();
 
-  if (aboError) {
-    console.error(`[Webhook Stripe] Erreur update abonnement ${etablissementId}:`, aboError.message);
+  if (existingAbo) {
+    const { error: aboError } = await supabase
+      .from("abonnements" as never)
+      .update({
+        plan: resolvedSlug,
+        statut: "actif",
+        billing_cycle: billingCycle ?? "mensuel",
+        stripe_subscription_id: subscriptionId,
+        date_debut: now.toISOString(),
+        date_fin: periodEnd.toISOString(),
+        updated_at: new Date().toISOString(),
+      } as never)
+      .eq("id", (existingAbo as { id: string }).id);
+
+    if (aboError) {
+      console.error(`[Webhook Stripe] Erreur update abonnement ${etablissementId}:`, aboError.message);
+    }
+  } else {
+    const quotasForAbo = getPlanQuotas(resolvedSlug);
+    const { error: aboInsertError } = await supabase
+      .from("abonnements" as never)
+      .insert({
+        etablissement_id: etablissementId,
+        plan: resolvedSlug,
+        statut: "actif",
+        billing_cycle: billingCycle ?? "mensuel",
+        stripe_subscription_id: subscriptionId,
+        date_debut: now.toISOString(),
+        date_fin: periodEnd.toISOString(),
+        prix_mensuel: session.amount_total ? Math.round(session.amount_total) : 0,
+        quota_utilisateurs: quotasForAbo.max_utilisateurs,
+        quota_produits: quotasForAbo.max_produits,
+        quota_ventes_mois: quotasForAbo.max_ventes_mois,
+        quota_etablissements: quotasForAbo.max_etablissements,
+      } as never);
+
+    if (aboInsertError) {
+      console.error(`[Webhook Stripe] Erreur insert abonnement ${etablissementId}:`, aboInsertError.message);
+    }
   }
 
   // Creer la facture

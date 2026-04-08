@@ -205,7 +205,7 @@ export function EcransSettings({ initialEcrans, initialCategories = [] }: Ecrans
       if (result.success) {
         setEcrans((prev) => [...prev, result.data as EcranAffichage]);
         setIsCreateDialogOpen(false);
-        toast.success("Ecran cree avec succes");
+        toast.success("Écran créé avec succès");
         reset();
       } else {
         toast.error("error" in result ? result.error : "Erreur lors de la creation");
@@ -224,7 +224,7 @@ export function EcransSettings({ initialEcrans, initialCategories = [] }: Ecrans
       const result = await deleteEcran(id);
       if (result.success) {
         setEcrans((prev) => prev.filter((e) => e.id !== id));
-        toast.success("Ecran supprime");
+        toast.success("Écran supprimé");
       } else {
         toast.error(result.error || "Erreur lors de la suppression");
       }
@@ -253,7 +253,7 @@ export function EcransSettings({ initialEcrans, initialCategories = [] }: Ecrans
               : e
           )
         );
-        toast.success("Token regenere avec succes");
+        toast.success("Token régénéré avec succès");
       } else {
         toast.error("error" in result ? result.error : "Erreur lors de la regeneration");
       }

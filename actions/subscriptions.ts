@@ -417,7 +417,7 @@ export async function cancelSubscription(): Promise<ActionResult> {
   }
 
   if (currentEtab.plan === "essentiel") {
-    return { success: false, error: "Vous etes deja sur le plan gratuit" };
+    return { success: false, error: "Vous êtes déjà sur le plan gratuit" };
   }
 
   // Recuperer l'abonnement actif
@@ -518,7 +518,7 @@ export async function reactivateSubscription(): Promise<ActionResult> {
   if (abonnement.date_fin && new Date() > new Date(abonnement.date_fin)) {
     return {
       success: false,
-      error: "La periode d'abonnement est terminee. Veuillez souscrire a nouveau.",
+      error: "La période d'abonnement est terminée. Veuillez souscrire à nouveau.",
     };
   }
 
@@ -592,7 +592,7 @@ export async function getCustomerPortalUrl(): Promise<
   if (!result.url) {
     return {
       success: false,
-      error: result.error ?? "Erreur creation portail Stripe",
+      error: result.error ?? "Erreur création portail Stripe",
     };
   }
 

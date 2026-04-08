@@ -646,7 +646,7 @@ describe("quantiteSchema - Validation quantite", () => {
     expect(quantiteSchema.safeParse(99999).success).toBe(true);
   });
 
-  it("rejette zero (doit etre positive, pas non-negative)", () => {
+  it("rejette zero (doit être positive, pas non-negative)", () => {
     expect(quantiteSchema.safeParse(0).success).toBe(false);
   });
 

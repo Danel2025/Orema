@@ -43,6 +43,12 @@ export interface AuthUser {
   /** ID de l'établissement (peut être null pour SUPER_ADMIN global) */
   etablissementId: string | null;
   etablissementNom?: string;
+  /** Plan de l'établissement (essentiel, pro, business, enterprise) */
+  plan?: string;
+  /** Statut de l'abonnement */
+  planStatut?: string;
+  /** Date de fin de l'abonnement/essai */
+  planDateFin?: string;
   /** Routes personnalisées autorisées (override les permissions du rôle pour les non-admins) */
   allowedRoutes?: string[];
 }

@@ -60,7 +60,7 @@ test.describe("Page Produits - Affichage general", () => {
     }
   });
 
-  test("affiche les onglets Produits et Categories (Radix Tabs)", async ({ page }) => {
+  test("affiche les onglets Produits et Catégories (Radix Tabs)", async ({ page }) => {
     const url = page.url();
 
     if (url.includes("/login")) {
@@ -99,7 +99,7 @@ test.describe("Page Produits - Navigation onglets", () => {
     await page.waitForLoadState("networkidle");
   });
 
-  test("basculer vers l'onglet Categories", async ({ page }) => {
+  test("basculer vers l'onglet Catégories", async ({ page }) => {
     const url = page.url();
 
     if (url.includes("/login")) {
@@ -108,7 +108,7 @@ test.describe("Page Produits - Navigation onglets", () => {
       const categoriesTab = page.getByRole("tab", { name: /cat[eé]gories/i });
       await categoriesTab.click();
 
-      // L'onglet Categories doit etre selectionne
+      // L'onglet Catégories doit etre selectionne
       await expect(categoriesTab).toHaveAttribute("aria-selected", "true");
 
       // Le tabpanel des categories doit etre visible
@@ -117,7 +117,7 @@ test.describe("Page Produits - Navigation onglets", () => {
     }
   });
 
-  test("revenir a l'onglet Produits apres Categories", async ({ page }) => {
+  test("revenir a l'onglet Produits après Catégories", async ({ page }) => {
     const url = page.url();
 
     if (url.includes("/login")) {

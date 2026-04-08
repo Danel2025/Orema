@@ -398,7 +398,7 @@ export default function EtablissementDetailPage() {
       const result = await deleteEtablissement(id, confirmationNom);
       if (result.success) {
         setDeleteResult({ success: true, counts: result.data?.deletedCounts });
-        toast.success(`Etablissement "${etablissement.nom}" supprime`);
+        toast.success(`Établissement "${etablissement.nom}" supprimé`);
         setTimeout(() => {
           router.push("/admin/etablissements");
         }, 2000);

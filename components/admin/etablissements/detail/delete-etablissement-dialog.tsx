@@ -78,7 +78,7 @@ export function DeleteEtablissementDialog({
       const result = await deleteEtablissement(etablissement.id, confirmationNom);
       if (result.success) {
         setDeleteResult({ success: true, counts: result.data?.deletedCounts });
-        toast.success(`Etablissement "${etablissement.nom}" supprime avec succes`);
+        toast.success(`Établissement "${etablissement.nom}" supprimé avec succès`);
         setTimeout(() => {
           closeDialog();
           onDeleted?.();

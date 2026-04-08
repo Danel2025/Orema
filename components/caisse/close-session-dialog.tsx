@@ -113,14 +113,14 @@ export function CloseSessionDialog({
       });
 
       if (result.success) {
-        toast.success("Session de caisse cloturee avec succes");
+        toast.success("Session de caisse clôturée avec succès");
         onSuccess();
         onOpenChange(false);
       } else {
         toast.error(result.error || "Erreur lors de la cloture");
       }
     } catch {
-      toast.error("Erreur lors de la cloture de la session");
+      toast.error("Erreur lors de la clôture de la session");
     } finally {
       setIsSubmitting(false);
     }
@@ -674,8 +674,8 @@ export function CloseSessionDialog({
                     </Callout.Icon>
                     <Callout.Text>
                       {ecart > 0
-                        ? "Un excedent de caisse a ete detecte. Verifiez le comptage."
-                        : "Un deficit de caisse a ete detecte. Verifiez le comptage."}
+                        ? "Un excédent de caisse a été détecté. Vérifiez le comptage."
+                        : "Un déficit de caisse a été détecté. Vérifiez le comptage."}
                     </Callout.Text>
                   </Callout.Root>
                 )}

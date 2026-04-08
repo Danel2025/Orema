@@ -12,29 +12,29 @@ import { FadeIn } from "./motion-wrapper";
 
 const demoSlides = [
   {
-    src: "/images/demo/02-commande-en-cours.png",
-    alt: "Commande en cours avec panier",
-    label: "Prise de commande",
+    src: "/images/demo/04-tableau-de-bord.png",
+    alt: "Tableau de bord avec statistiques",
+    label: "Tableau de bord",
   },
   {
-    src: "/images/demo/03-encaissement.png",
-    alt: "Interface d'encaissement",
-    label: "Encaissement",
+    src: "/images/demo/01-caisse-vide.png",
+    alt: "Interface de caisse",
+    label: "Caisse",
   },
   {
-    src: "/images/demo/04-rendu-monnaie.png",
-    alt: "Calcul du rendu de monnaie",
-    label: "Rendu monnaie",
+    src: "/images/demo/02-produits.png",
+    alt: "Gestion des produits et catégories",
+    label: "Produits",
   },
   {
-    src: "/images/demo/05-rapports.png",
-    alt: "Tableau de bord des rapports",
+    src: "/images/demo/03-plan-de-salle.png",
+    alt: "Plan de salle interactif",
+    label: "Plan de salle",
+  },
+  {
+    src: "/images/demo/05-rapports-new.png",
+    alt: "Rapports et statistiques de ventes",
     label: "Rapports",
-  },
-  {
-    src: "/images/demo/07-caisse-dark-mode.png",
-    alt: "Interface en mode sombre",
-    label: "Mode sombre",
   },
 ];
 
@@ -90,7 +90,7 @@ export function DemoSection() {
                     letterSpacing: "0.08em",
                   }}
                 >
-                  Demo
+                  Démo
                 </Text>
 
                 <Heading
@@ -106,8 +106,8 @@ export function DemoSection() {
                   color="gray"
                   style={{ lineHeight: 1.7, maxWidth: 400 }}
                 >
-                  De la prise de commande au rapport de fin de journee. Une
-                  interface pensee pour la rapidite, meme aux heures de pointe.
+                  De la prise de commande au rapport de fin de journée. Une
+                  interface pensée pour la rapidité, même aux heures de pointe.
                 </Text>
 
                 {/* CTA */}
@@ -116,7 +116,7 @@ export function DemoSection() {
                     <a href="#pricing">Essayer gratuitement</a>
                   </Button>
                   <Button size="3" variant="outline" asChild>
-                    <a href="#contact">Demander une demo</a>
+                    <a href="#contact">Demander une démo</a>
                   </Button>
                 </Flex>
               </Flex>
@@ -191,6 +191,7 @@ export function DemoSection() {
                         src={demoSlides[currentSlide].src}
                         alt={demoSlides[currentSlide].alt}
                         fill
+                        sizes="(max-width: 768px) 100vw, (max-width: 1200px) 80vw, 1100px"
                         className="object-cover object-top"
                         priority={currentSlide === 0}
                       />
@@ -205,7 +206,7 @@ export function DemoSection() {
                       background: "rgba(255,255,255,0.9)",
                       boxShadow: "0 1px 4px rgba(0,0,0,0.1)",
                     }}
-                    aria-label="Diapositive precedente"
+                    aria-label="Diapositive précédente"
                   >
                     <CaretLeft
                       size={18}
@@ -268,7 +269,7 @@ export function DemoSection() {
                               ? "var(--accent-9)"
                               : "rgba(255,255,255,0.6)",
                         }}
-                        aria-label={`Aller a la diapositive ${index + 1}`}
+                        aria-label={`Aller à la diapositive ${index + 1}`}
                       />
                     ))}
                   </Flex>

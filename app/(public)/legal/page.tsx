@@ -48,7 +48,7 @@ const legalInfo = [
   },
   {
     icon: Phone,
-    title: "Telephone",
+    title: "Téléphone",
     value: "+241 77 12 34 56",
   },
   {
@@ -98,11 +98,11 @@ Pour toute question relative au contenu du site : publication@orema-nplus.ga`,
     id: "propriete",
     number: "3",
     title: "Propriété intellectuelle",
-    content: `L'ensemble des éléments constituant le site (textes, graphismes, logiciels, photographies, images, videos, sons, plans, noms, logos, marques, créations et œuvres protégeables diverses, bases de donnees, etc.) ainsi que le site lui-meme, sont la propriete exclusive d'Orema N+ ou de ses partenaires.
+    content: `L'ensemble des éléments constituant le site (textes, graphismes, logiciels, photographies, images, vidéos, sons, plans, noms, logos, marques, créations et œuvres protégeables diverses, bases de données, etc.) ainsi que le site lui-même, sont la propriété exclusive d'Orema N+ ou de ses partenaires.
 
-Ces éléments sont proteges par l'Accord de Bangui (OAPI) et les conventions internationales relatives a la propriete intellectuelle.
+Ces éléments sont protégés par l'Accord de Bangui (OAPI) et les conventions internationales relatives à la propriété intellectuelle.
 
-Toute reproduction, représentation, utilisation, adaptation, modification, incorporation, traduction, commercialisation, partielle ou integrale des éléments du site, par quelque procede et sur quelque support que ce soit, sans l'autorisation ecrite prealable d'Orema N+, est strictement interdite.`,
+Toute reproduction, représentation, utilisation, adaptation, modification, incorporation, traduction, commercialisation, partielle ou intégrale des éléments du site, par quelque procédé et sur quelque support que ce soit, sans l'autorisation écrite préalable d'Orema N+, est strictement interdite.`,
   },
   {
     id: "responsabilite",

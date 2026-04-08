@@ -38,7 +38,7 @@ export async function GET(request: NextRequest) {
       if (existingAdmin) {
         return NextResponse.json({
           success: true,
-          message: "Les donnees de demonstration existent deja",
+          message: "Les données de démonstration existent deja",
         });
       }
     }

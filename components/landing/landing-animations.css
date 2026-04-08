@@ -1,0 +1,115 @@
+/* ============================================================================
+   Landing page — Animations et effets
+   ============================================================================ */
+
+/* Float — mouvement organique vertical */
+@keyframes landing-float {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-14px);
+  }
+}
+
+.animate-landing-float {
+  animation: landing-float 6s ease-in-out infinite;
+}
+
+.animate-landing-float-delayed {
+  animation: landing-float 6s ease-in-out 2s infinite;
+}
+
+.animate-landing-float-slow {
+  animation: landing-float 8s ease-in-out 1s infinite;
+}
+
+/* Heartbeat — pulsation cardiaque Oréma */
+@keyframes landing-heartbeat {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  14% {
+    transform: scale(1.15);
+  }
+  28% {
+    transform: scale(1);
+  }
+  42% {
+    transform: scale(1.08);
+  }
+  70% {
+    transform: scale(1);
+  }
+}
+
+.animate-landing-heartbeat {
+  animation: landing-heartbeat 2.5s ease-in-out infinite;
+}
+
+/* Marquee — défilement infini */
+@keyframes landing-marquee {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(-50%);
+  }
+}
+
+.animate-landing-marquee {
+  animation: landing-marquee 40s linear infinite;
+}
+
+.animate-landing-marquee:hover {
+  animation-play-state: paused;
+}
+
+/* Gradient animé horizontal */
+@keyframes landing-gradient-x {
+  0%,
+  100% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+}
+
+.animate-landing-gradient-x {
+  background-size: 200% 200%;
+  animation: landing-gradient-x 6s ease infinite;
+}
+
+/* Glow pulse pour le badge hero */
+@keyframes landing-glow {
+  0%,
+  100% {
+    box-shadow: 0 0 20px var(--accent-a4);
+  }
+  50% {
+    box-shadow: 0 0 40px var(--accent-a5), 0 0 60px var(--accent-a3);
+  }
+}
+
+.animate-landing-glow {
+  animation: landing-glow 3s ease-in-out infinite;
+}
+
+/* Trait de séparation animé pour les stats */
+@keyframes landing-line-grow {
+  from {
+    width: 0;
+  }
+  to {
+    width: 48px;
+  }
+}
+
+/* Pattern géométrique africain — SVG inline pour le hero */
+.landing-african-pattern {
+  background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M30 0L60 30L30 60L0 30Z' fill='none' stroke='currentColor' stroke-width='0.5' opacity='0.15'/%3E%3Cpath d='M30 10L50 30L30 50L10 30Z' fill='none' stroke='currentColor' stroke-width='0.3' opacity='0.08'/%3E%3C/svg%3E");
+  background-size: 60px 60px;
+}

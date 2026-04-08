@@ -38,7 +38,7 @@ const optionalPhone = z
       return val.length >= 8 && val.length <= 15;
     },
     {
-      message: "Numero de telephone invalide (8-15 chiffres)",
+      message: "Numéro de téléphone invalide (8-15 chiffres)",
     }
   );
 

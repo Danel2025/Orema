@@ -131,10 +131,10 @@ describe("formatCurrency - Formatage FCFA", () => {
 });
 
 // ============================================================================
-// Tests de formatTicketNumber() - Numero de ticket
+// Tests de formatTicketNumber() - Numéro de ticket
 // ============================================================================
 
-describe("formatTicketNumber - Numero de ticket", () => {
+describe("formatTicketNumber - Numéro de ticket", () => {
   it("genere le format YYYYMMDD00001", () => {
     const date = new Date(2025, 0, 15); // 15 janvier 2025
     expect(formatTicketNumber(date, 1)).toBe("2025011500001");

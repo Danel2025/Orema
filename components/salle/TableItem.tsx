@@ -42,9 +42,10 @@ interface TableItemProps {
     };
   } | null;
   isSelected?: boolean;
+  isInMultiSelect?: boolean;
   isEditMode?: boolean;
   isDragging?: boolean;
-  onClick?: () => void;
+  onClick?: (e: React.MouseEvent) => void;
   onMouseDown?: (e: React.MouseEvent) => void;
   onRotate?: (degrees: number) => void;
 }
@@ -62,6 +63,7 @@ export function TableItem({
   rotation = 0,
   venteEnCours,
   isSelected = false,
+  isInMultiSelect = false,
   isEditMode = false,
   isDragging = false,
   onClick,
@@ -98,7 +100,8 @@ export function TableItem({
       onMouseLeave={() => setIsHovered(false)}
       className={cn(
         "absolute select-none",
-        isSelected && "ring-[3px] ring-[var(--accent-9)] ring-offset-2"
+        isSelected && "ring-[3px] ring-[var(--accent-9)] ring-offset-2",
+        isInMultiSelect && !isSelected && "outline outline-2 outline-dashed outline-[var(--accent-9)] outline-offset-2"
       )}
       style={{
         left: positionX,

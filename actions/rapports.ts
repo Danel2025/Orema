@@ -784,7 +784,7 @@ export async function getHistoriqueFactures(
 
   if (error) {
     console.error("Erreur getHistoriqueFactures:", error);
-    throw new Error("Erreur lors de la recuperation des factures");
+    throw new Error("Erreur lors de la récupération des factures");
   }
 
   const factures: FactureHistorique[] = (data || []).map((v) => ({
@@ -894,7 +894,7 @@ export async function genererRapportZAction(
     }
 
     if (!session.date_cloture) {
-      return { success: false, error: "Cette session n'est pas encore cloturee" };
+      return { success: false, error: "Cette session n'est pas encore clôturée" };
     }
 
     // 2. Recuperer l'etablissement
@@ -1126,7 +1126,7 @@ export async function getFactureDetail(venteId: string): Promise<FactureDetail |
   if (error) {
     if (error.code === "PGRST116") return null;
     console.error("Erreur getFactureDetail:", error);
-    throw new Error("Erreur lors de la recuperation de la facture");
+    throw new Error("Erreur lors de la récupération de la facture");
   }
 
   if (!data) return null;

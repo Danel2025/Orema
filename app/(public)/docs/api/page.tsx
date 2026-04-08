@@ -52,7 +52,7 @@ const endpoints = [
         method: "GET",
         url: "/api/produits/:id",
         description:
-          "Recuperer les details complets d'un produit par son identifiant.",
+          "Récupérer les détails complets d'un produit par son identifiant.",
         response: `{
   "id": "prod_abc123",
   "nom": "Poulet braise",
@@ -76,7 +76,7 @@ const endpoints = [
   "categorie": "Boissons",
   "disponible": true,
   "tva": 18,
-  "message": "Produit cree avec succes"
+  "message": "Produit créé avec succès"
 }`,
       },
     ],
@@ -117,7 +117,7 @@ const endpoints = [
   "montantTVA": 1907,
   "montantTTC": 12500,
   "statut": "VALIDEE",
-  "message": "Vente enregistree avec succes"
+  "message": "Vente enregistrée avec succès"
 }`,
       },
     ],
@@ -149,7 +149,7 @@ const endpoints = [
         method: "GET",
         url: "/api/clients/:id",
         description:
-          "Recuperer le profil complet d'un client avec son historique.",
+          "Récupérer le profil complet d'un client avec son historique.",
         response: `{
   "id": "cli_abc123",
   "nom": "Jean Ndong",
@@ -329,7 +329,7 @@ export default function ApiDocsPage() {
               Toutes les requetes a l&apos;API doivent inclure votre cle API dans
               l&apos;en-tete <code>Authorization</code>. Les cles API sont associees a
               votre etablissement et peuvent etre generees depuis le panneau{" "}
-              <strong>Parametres &gt; API</strong> de votre tableau de bord.
+              <strong>Paramètres &gt; API</strong> de votre tableau de bord.
             </Text>
 
             <CodeBlock

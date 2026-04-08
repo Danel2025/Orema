@@ -107,7 +107,7 @@ export function useOfflineData<
   );
 
   /**
-   * Logique principale de chargement des donnees
+   * Logique principale de chargement des données
    */
   const loadData = useCallback(async () => {
     if (!enabled) return;
@@ -148,7 +148,7 @@ export function useOfflineData<
               setError(
                 fetchError instanceof Error
                   ? fetchError
-                  : new Error("Erreur lors du chargement des donnees")
+                  : new Error("Erreur lors du chargement des données")
               );
             }
           }

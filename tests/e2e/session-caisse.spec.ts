@@ -15,7 +15,7 @@ import { test, expect } from "@playwright/test";
 // TESTS SANS AUTHENTIFICATION
 // =============================================================================
 
-test.describe("Session caisse - Acces sans authentification", () => {
+test.describe("Session caisse - Accès sans authentification", () => {
   test("redirige vers /login quand non authentifie", async ({ page }) => {
     await page.goto("/caisse");
     await expect(page).toHaveURL(/\/login/);
@@ -254,7 +254,7 @@ test.describe("Session caisse - Session active", () => {
     await expect(page.getByText("Mobile Money")).toBeVisible();
   });
 
-  test("le popover contient le bouton 'Cloturer la caisse'", async ({ page }) => {
+  test("le popover contient le bouton 'Clôturer la caisse'", async ({ page }) => {
     const sessionButton = page.locator("button").filter({ hasText: /ventes/ }).first();
     const isVisible = await sessionButton.isVisible().catch(() => false);
 
@@ -292,7 +292,7 @@ test.describe("Session caisse - Cloture", () => {
     }
   });
 
-  test("le bouton 'Cloturer la caisse' ouvre le dialog de cloture", async ({ page }) => {
+  test("le bouton 'Clôturer la caisse' ouvre le dialog de clôture", async ({ page }) => {
     // Ouvrir le popover de session
     const sessionButton = page.locator("button").filter({ hasText: /ventes/ }).first();
     const isVisible = await sessionButton.isVisible().catch(() => false);
@@ -309,7 +309,7 @@ test.describe("Session caisse - Cloture", () => {
     const cloturerButton = page.getByRole("button", { name: /cl[oô]turer la caisse/i });
     await cloturerButton.click();
 
-    // Le dialog de cloture doit s'ouvrir
+    // Le dialog de clôture doit s'ouvrir
     const closeDialog = page.locator('[role="dialog"]');
     await expect(closeDialog).toBeVisible({ timeout: 5000 });
   });

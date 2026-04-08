@@ -119,7 +119,7 @@ export async function loginWithPinSupabase(input: PinLoginInput): Promise<Action
     }
 
     if (!utilisateur.pin_code) {
-      return { success: false, error: "Aucun PIN configure pour cet utilisateur" };
+      return { success: false, error: "Aucun PIN configuré pour cet utilisateur" };
     }
 
     // Verifier le PIN
@@ -372,13 +372,13 @@ export async function updateSupabasePassword(newPassword: string): Promise<Actio
 
     if (error) {
       console.error("Supabase password update failed");
-      return { success: false, error: "Erreur lors de la mise a jour du mot de passe" };
+      return { success: false, error: "Erreur lors de la mise à jour du mot de passe" };
     }
 
     return { success: true };
   } catch {
     console.error("Supabase password update failed");
-    return { success: false, error: "Erreur lors de la mise a jour du mot de passe" };
+    return { success: false, error: "Erreur lors de la mise à jour du mot de passe" };
   }
 }
 

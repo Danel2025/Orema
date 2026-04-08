@@ -1,17 +1,22 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
+import { useRouter } from "next/navigation";
 import { Flex, Separator } from "@radix-ui/themes";
 import { toast } from "sonner";
 import { CurrentPlanCard } from "@/components/parametres/abonnement/current-plan-card";
 import { PlanSelector } from "@/components/parametres/abonnement/plan-selector";
-import { PaymentMethodSelector } from "@/components/parametres/abonnement/payment-method-selector";
 import { InvoiceHistory } from "@/components/parametres/abonnement/invoice-history";
-import { upgradePlan, downgradePlan } from "@/actions/subscriptions";
-import { initiatePayment, downloadInvoice } from "@/actions/billing";
+import { UpgradeCheckoutDialog } from "@/components/parametres/abonnement/upgrade-checkout-dialog";
+import { SubscriptionManagement } from "@/components/parametres/abonnement/subscription-management";
+import {
+  PaymentStatusBanner,
+  type PaymentBannerStatus,
+} from "@/components/parametres/abonnement/payment-status-banner";
+import { downgradePlan } from "@/actions/subscriptions";
+import { downloadInvoice, getPaymentStatus } from "@/actions/billing";
 import { canUpgrade, type PlanSlug, type BillingCycle } from "@/lib/config/plans";
 import type { Invoice } from "@/components/parametres/abonnement/invoice-history";
-import type { PaymentMethod } from "@/components/parametres/abonnement/payment-method-selector";
 
 // ── Types ──────────────────────────────────────────────────────────────
 
@@ -22,11 +27,26 @@ interface SubscriptionData {
   dateDebut: string;
   dateFin?: string;
   quotas: { label: string; current: number; max: number }[];
+  hasStripe?: boolean;
+}
+
+interface PaymentCallback {
+  payment: string;
+  ref?: string;
+  sessionId?: string;
 }
 
 interface AbonnementClientProps {
   initialSubscription?: SubscriptionData;
   initialInvoices?: Invoice[];
+  paymentCallback?: PaymentCallback;
+  initialBillingInfo?: {
+    nom: string;
+    adresse: string;
+    email: string;
+    nif?: string;
+    rccm?: string;
+  };
 }
 
 // ── Defaults ───────────────────────────────────────────────────────────
@@ -48,46 +68,112 @@ const DEFAULT_SUBSCRIPTION: SubscriptionData = {
 export function AbonnementClient({
   initialSubscription,
   initialInvoices = [],
+  paymentCallback,
+  initialBillingInfo,
 }: AbonnementClientProps) {
+  const router = useRouter();
   const sub = initialSubscription ?? DEFAULT_SUBSCRIPTION;
   const [currentPlan] = useState<PlanSlug>(sub.plan);
   const [currentCycle] = useState<BillingCycle>(sub.cycle);
   const [invoices] = useState<Invoice[]>(initialInvoices);
-  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>("monetbil");
+
+  // Payment callback banner state
+  const [bannerStatus, setBannerStatus] = useState<PaymentBannerStatus | null>(null);
+  const pollingRef = useRef(false);
+
+  const cleanUrl = useCallback(() => {
+    router.replace("/parametres/abonnement");
+  }, [router]);
+
+  // Polling du statut de paiement Monetbil
+  useEffect(() => {
+    if (!paymentCallback || pollingRef.current) return;
+
+    const { payment, ref, sessionId } = paymentCallback;
+
+    // Paiement annule
+    if (payment === "cancelled") {
+      setBannerStatus("cancelled");
+      toast.error("Paiement annulé");
+      cleanUrl();
+      return;
+    }
+
+    // Stripe success: le webhook confirme en arriere-plan
+    if (payment === "success" && sessionId) {
+      setBannerStatus("success");
+      toast.success("Paiement confirmé ! Votre plan a été mis à jour.");
+      router.refresh();
+      cleanUrl();
+      return;
+    }
+
+    // Monetbil: polling du statut via ref
+    if (payment === "done" && ref) {
+      pollingRef.current = true;
+      setBannerStatus("checking");
+
+      let attempts = 0;
+      const MAX_ATTEMPTS = 12;
+      const POLL_INTERVAL = 5000;
+
+      const poll = async () => {
+        attempts++;
+        try {
+          const result = await getPaymentStatus(ref);
+          if (result.success && result.data) {
+            if (result.data.status === "reussi") {
+              setBannerStatus("success");
+              toast.success("Paiement confirmé ! Votre plan a été mis à jour.");
+              router.refresh();
+              cleanUrl();
+              return;
+            }
+            if (result.data.status === "echoue") {
+              setBannerStatus("error");
+              toast.error("Le paiement n'a pas abouti");
+              cleanUrl();
+              return;
+            }
+          }
+        } catch {
+          // Ignorer les erreurs reseau pendant le polling
+        }
+
+        if (attempts >= MAX_ATTEMPTS) {
+          // Timeout: le webhook n'a peut-etre pas encore ete recu
+          setBannerStatus("error");
+          toast.error(
+            "La vérification du paiement a expiré. Vérifiez votre paiement dans quelques instants."
+          );
+          cleanUrl();
+          return;
+        }
+
+        // Continuer le polling
+        setTimeout(poll, POLL_INTERVAL);
+      };
+
+      poll();
+    }
+  }, [paymentCallback, router, cleanUrl]);
+
+  // Upgrade checkout dialog state
+  const [upgradeDialogOpen, setUpgradeDialogOpen] = useState(false);
+  const [upgradeTarget, setUpgradeTarget] = useState<{
+    plan: PlanSlug;
+    cycle: BillingCycle;
+  } | null>(null);
 
   const handleChangePlan = async (plan: PlanSlug, cycle: BillingCycle) => {
     const isUpgrading = canUpgrade(currentPlan, plan);
 
     if (isUpgrading) {
-      // Upgrade : verifier puis initier le paiement
-      const result = await upgradePlan(plan, cycle, "monetbil");
-      if (!result.success) {
-        toast.error(result.error ?? "Erreur lors de l'upgrade");
-        return;
-      }
-
-      if (result.data?.requiresPayment) {
-        // Initier le paiement
-        const paymentResult = await initiatePayment({
-          planSlug: plan,
-          billingCycle: cycle,
-          paymentMethod: "monetbil",
-        });
-
-        if (!paymentResult.success) {
-          toast.error(paymentResult.error ?? "Erreur lors du paiement");
-          return;
-        }
-
-        if (paymentResult.data?.paymentUrl) {
-          window.location.href = paymentResult.data.paymentUrl;
-          return;
-        }
-      }
-
-      toast.success(`Plan mis a jour vers ${plan}`);
+      // Ouvrir le dialog de checkout pour l'upgrade
+      setUpgradeTarget({ plan, cycle });
+      setUpgradeDialogOpen(true);
     } else {
-      // Downgrade
+      // Downgrade direct
       const result = await downgradePlan(plan);
       if (!result.success) {
         toast.error(result.error ?? "Erreur lors du downgrade");
@@ -96,19 +182,10 @@ export function AbonnementClient({
 
       const effectiveDate = result.data?.effectiveDate
         ? new Date(result.data.effectiveDate).toLocaleDateString("fr-FR")
-        : "immediatement";
+        : "immédiatement";
 
       toast.success(`Downgrade vers ${plan} effectif le ${effectiveDate}`);
     }
-  };
-
-  const handleChangePaymentMethod = async (method: PaymentMethod) => {
-    setPaymentMethod(method);
-    toast.success(
-      method === "monetbil"
-        ? "Airtel Money selectionne pour le prochain paiement"
-        : "Carte bancaire selectionnee pour le prochain paiement"
-    );
   };
 
   const handleDownloadInvoice = async (invoiceId: string) => {
@@ -125,6 +202,14 @@ export function AbonnementClient({
 
   return (
     <Flex direction="column" gap="6">
+      {/* Banner de statut de paiement */}
+      {bannerStatus && (
+        <PaymentStatusBanner
+          status={bannerStatus}
+          onClose={() => setBannerStatus(null)}
+        />
+      )}
+
       {/* Plan actuel + quotas */}
       <CurrentPlanCard
         plan={sub.plan}
@@ -146,10 +231,12 @@ export function AbonnementClient({
 
       <Separator size="4" />
 
-      {/* Methode de paiement */}
-      <PaymentMethodSelector
-        currentMethod={paymentMethod}
-        onSelect={handleChangePaymentMethod}
+      {/* Gestion de l'abonnement */}
+      <SubscriptionManagement
+        plan={sub.plan}
+        statut={sub.statut}
+        dateFin={sub.dateFin}
+        hasStripe={sub.hasStripe}
       />
 
       <Separator size="4" />
@@ -161,6 +248,19 @@ export function AbonnementClient({
         currentPage={1}
         onDownload={handleDownloadInvoice}
       />
+
+      {/* Dialog de checkout pour upgrade */}
+      {upgradeTarget && (
+        <UpgradeCheckoutDialog
+          open={upgradeDialogOpen}
+          onOpenChange={setUpgradeDialogOpen}
+          currentPlan={currentPlan}
+          currentCycle={currentCycle}
+          targetPlan={upgradeTarget.plan}
+          targetCycle={upgradeTarget.cycle}
+          initialBillingInfo={initialBillingInfo}
+        />
+      )}
     </Flex>
   );
 }

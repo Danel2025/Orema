@@ -56,7 +56,7 @@ export async function sendToPrinter(
       return {
         success: false,
         error:
-          "L'impression systeme doit etre lancee depuis le navigateur. " +
+          "L'impression système doit être lancée depuis le navigateur. " +
           "Utilisez printViaSystem() cote client.",
         printerId: printer.id,
       };

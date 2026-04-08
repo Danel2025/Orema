@@ -68,7 +68,7 @@ export async function getBillingDashboardData(): Promise<
       error:
         error instanceof Error
           ? error.message
-          : "Erreur lors de la recuperation des donnees billing",
+          : "Erreur lors de la récupération des données billing",
     };
   }
 }

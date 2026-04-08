@@ -1,6 +1,13 @@
 import type { NextConfig } from "next";
 
 /**
+ * Mode Tauri : quand TAURI_ENV est défini, Next.js produit un export statique
+ * compatible avec le shell Tauri (pas de serveur Node.js).
+ * Les Server Actions, API Routes et headers custom sont désactivés en mode export.
+ */
+const isTauri = !!process.env.TAURI_ENV;
+
+/**
  * Headers de securite pour l'application
  * @security Protection contre diverses attaques web (OWASP Top 10 aligned)
  */
@@ -79,22 +86,28 @@ const securityHeaders = [
 ];
 
 const nextConfig: NextConfig = {
+  // Export statique pour Tauri (génère un dossier `out/` sans serveur Node.js)
+  ...(isTauri && { output: "export" }),
+
   // Routes typees desactivees (certaines routes dynamiques ne sont pas compatibles)
   // typedRoutes: true,
 
   // Configuration des images
-  images: {
-    remotePatterns: [
-      {
-        protocol: "http",
-        hostname: "localhost",
+  // En mode Tauri, désactiver l'optimisation (pas de serveur Node.js pour traiter les images)
+  images: isTauri
+    ? { unoptimized: true }
+    : {
+        remotePatterns: [
+          {
+            protocol: "http",
+            hostname: "localhost",
+          },
+          {
+            protocol: "https",
+            hostname: "*.supabase.co",
+          },
+        ],
       },
-      {
-        protocol: "https",
-        hostname: "*.supabase.co",
-      },
-    ],
-  },
 
   // Configuration pour la production
   reactStrictMode: true,
@@ -105,38 +118,41 @@ const nextConfig: NextConfig = {
   },
 
   // Headers de securite appliques a toutes les routes
-  async headers() {
-    const headers = [
-      {
-        // Appliquer les headers de sécurité à toutes les routes
-        source: "/(.*)",
-        headers: securityHeaders,
-      },
-    ];
+  // Désactivé en mode Tauri (incompatible avec output: 'export')
+  ...(!isTauri && {
+    async headers() {
+      const headers = [
+        {
+          // Appliquer les headers de sécurité à toutes les routes
+          source: "/(.*)",
+          headers: securityHeaders,
+        },
+      ];
 
-    // En développement, désactiver le cache pour éviter les problèmes de Server Actions
-    if (process.env.NODE_ENV === "development") {
-      headers.push({
-        source: "/(.*)",
-        headers: [
-          {
-            key: "Cache-Control",
-            value: "no-store, no-cache, must-revalidate, proxy-revalidate",
-          },
-          {
-            key: "Pragma",
-            value: "no-cache",
-          },
-          {
-            key: "Expires",
-            value: "0",
-          },
-        ],
-      });
-    }
+      // En développement, désactiver le cache pour éviter les problèmes de Server Actions
+      if (process.env.NODE_ENV === "development") {
+        headers.push({
+          source: "/(.*)",
+          headers: [
+            {
+              key: "Cache-Control",
+              value: "no-store, no-cache, must-revalidate, proxy-revalidate",
+            },
+            {
+              key: "Pragma",
+              value: "no-cache",
+            },
+            {
+              key: "Expires",
+              value: "0",
+            },
+          ],
+        });
+      }
 
-    return headers;
-  },
+      return headers;
+    },
+  }),
 
   // Redirections de securite (désactivé temporairement pour debug)
   // async redirects() {
@@ -151,12 +167,14 @@ const nextConfig: NextConfig = {
   // },
 
   // Configuration experimentale
-  experimental: {
-    // Optimisation des Server Actions
-    serverActions: {
-      bodySizeLimit: "2mb",
+  // Server Actions désactivées en mode Tauri (incompatible avec output: 'export')
+  ...(!isTauri && {
+    experimental: {
+      serverActions: {
+        bodySizeLimit: "2mb",
+      },
     },
-  },
+  }),
 };
 
 export default nextConfig;

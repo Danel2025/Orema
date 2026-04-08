@@ -24,7 +24,7 @@ import {
 import { IconButton, Tooltip, Separator } from "@radix-ui/themes";
 import { toast } from "sonner";
 import { TableItem } from "./TableItem";
-import { FloorPlanToolbar, type ToolType } from "./FloorPlanToolbar";
+import { FloorPlanToolbar, type ToolType, type Orientation } from "./FloorPlanToolbar";
 import {
   DecorElement,
   type DecorElementData,
@@ -36,11 +36,13 @@ import {
   createZone,
   updateZone,
   deleteZone as deleteZoneAction,
+  deleteTable as deleteTableAction,
   updateZonesPositions,
   updateTablesPositions,
 } from "@/actions/tables";
 import { ElementContextMenu } from "./ElementContextMenu";
 import { TableContextMenu } from "./TableContextMenu";
+import { useAuth } from "@/lib/auth/context";
 
 import { useFloorPlanHistory } from "@/hooks/useFloorPlanHistory";
 import { useFloorPlanKeyboard } from "@/hooks/useFloorPlanKeyboard";
@@ -48,9 +50,19 @@ import type { StatutTableType, FormeTableType } from "@/schemas/table.schema";
 import {
   snapPositionIfEnabled,
   snapDimensions,
+  snapToElements,
   DEFAULT_GRID_SIZE,
   type GridSize,
+  type SnapElementRect,
 } from "@/lib/floorplan/snap-to-grid";
+import {
+  detectAlignmentGuides,
+  type AlignmentGuide,
+  type ElementRect,
+} from "@/lib/floorplan/smart-guides";
+import { RotationHandle } from "./RotationHandle";
+import { FloorPlanGrid } from "./FloorPlanGrid";
+import { SmartGuides } from "./SmartGuides";
 
 // Icone personnalisee pour le mur (coherente avec la toolbar)
 function WallIcon({ size = 16 }: { size?: number }) {
@@ -147,6 +159,12 @@ export function FloorPlan({
   const [hasChanges, setHasChanges] = useState(false);
   const [tableRotations, setTableRotations] = useState<Record<string, number>>({});
 
+  // Multi-sélection : ensemble des IDs sélectionnés (décors + tables)
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+
+  // Offsets pour le déplacement groupé (positions relatives au point de clic)
+  const dragGroupOffsetsRef = useRef<Record<string, { dx: number; dy: number }>>({});
+
   // Auto-save state
   const [autoSaveStatus, setAutoSaveStatus] = useState<"idle" | "saving" | "saved" | "error">("idle");
   const autoSaveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -166,9 +184,16 @@ export function FloorPlan({
 
   // Outils et éléments de décor
   const [activeTool, setActiveTool] = useState<ToolType>("select");
+  // Orientation pour le placement des éléments décor (H = horizontal, V = vertical)
+  const [orientation, setOrientation] = useState<Orientation>("horizontal");
 
-  // Utiliser le hook d'historique pour les éléments de décor
-  const { decorElements, setDecorElements, undo, redo, canUndo, canRedo } = useFloorPlanHistory();
+  // Récupérer l'établissement pour scoper le localStorage
+  const { user } = useAuth();
+
+  // Utiliser le hook d'historique pour les éléments de décor (scopé par établissement)
+  const { decorElements, setDecorElements, undo, redo, canUndo, canRedo } = useFloorPlanHistory(
+    user?.etablissementId ?? ""
+  );
 
   const [selectedDecorId, setSelectedDecorId] = useState<string | null>(null);
 
@@ -240,6 +265,37 @@ export function FloorPlan({
   // Indique si la souris a bougé pendant le resize (pour distinguer clic vs drag)
   const resizeHasMoved = useRef(false);
 
+  // Rotation libre (drag-to-rotate)
+  const [isRotating, setIsRotating] = useState(false);
+  const rotationStartAngleRef = useRef(0);
+  const rotationStartElementAngleRef = useRef(0);
+
+  // Smart guides - guides d'alignement actifs pendant le drag
+  const [activeGuides, setActiveGuides] = useState<AlignmentGuide[]>([]);
+
+  // Ratio d'aspect initial pour le resize proportionnel (Shift+drag sur coins)
+  const resizeAspectRatioRef = useRef<number | null>(null);
+
+  // Mode dessin : clic-glisser pour placer un élément avec dimensions personnalisées
+  const [drawing, setDrawing] = useState<{
+    type: DecorType;
+    startX: number;
+    startY: number;
+    currentX: number;
+    currentY: number;
+  } | null>(null);
+  const drawingThreshold = 10; // Seuil en px pour distinguer clic simple vs dessin
+
+  // Sélection par zone (marquee) : clic-glisser sur le canvas vide en mode select
+  const [marquee, setMarquee] = useState<{
+    startX: number;
+    startY: number;
+    currentX: number;
+    currentY: number;
+  } | null>(null);
+  const marqueeJustEndedRef = useRef(false);
+  const elementClickedRef = useRef(false);
+
   // Position actuelle d'une table (locale ou depuis la DB)
   const getPosition = useCallback(
     (table: TableData) => {
@@ -249,6 +305,46 @@ export function FloorPlan({
       return { x: table.positionX || 50, y: table.positionY || 50 };
     },
     [positions]
+  );
+
+  // Helper pour gérer la sélection simple ou multiple (Shift/Ctrl+clic)
+  const handleElementSelect = useCallback(
+    (id: string, type: "decor" | "table", e: React.MouseEvent) => {
+      const isMultiKey = e.shiftKey || e.ctrlKey || e.metaKey;
+
+      if (isMultiKey) {
+        // Toggle dans le set de multi-sélection
+        setSelectedIds((prev) => {
+          const next = new Set(prev);
+          if (next.has(id)) {
+            next.delete(id);
+          } else {
+            next.add(id);
+          }
+          return next;
+        });
+        // Mettre à jour le primary selection
+        if (type === "decor") {
+          setSelectedDecorId(id);
+          setEditSelectedTableId(null);
+        } else {
+          setEditSelectedTableId(id);
+          setSelectedDecorId(null);
+        }
+      } else {
+        // Sélection simple : vider le set et sélectionner uniquement cet élément
+        setSelectedIds(new Set([id]));
+        if (type === "decor") {
+          setSelectedDecorId(id);
+          setEditSelectedTableId(null);
+        } else {
+          setEditSelectedTableId(id);
+          setSelectedDecorId(null);
+        }
+      }
+      setSelectedZoneId(null);
+    },
+    []
   );
 
   // Démarrer le déplacement direct d'une zone
@@ -285,6 +381,8 @@ export function FloorPlan({
       if (!isEditMode || isSpacePressed) return;
       e.preventDefault();
       e.stopPropagation();
+      elementClickedRef.current = true;
+      requestAnimationFrame(() => { elementClickedRef.current = false; });
 
       const element = decorElements.find((el) => el.id === decorId);
       if (!element || !containerRef.current) return;
@@ -310,16 +408,52 @@ export function FloorPlan({
         return;
       }
 
+      // Gérer la sélection (simple ou multi)
+      handleElementSelect(decorId, "decor", e);
+
       setDragging({
         type: "decor",
         id: decorId,
         offsetX: mouseX - element.x,
         offsetY: mouseY - element.y,
       });
-      setSelectedDecorId(decorId);
+
+      // Calculer les offsets pour le drag groupé
+      // Si l'élément est déjà dans une multi-sélection (ex: après marquee), garder le set
+      const isMultiKey = e.shiftKey || e.ctrlKey || e.metaKey;
+      const alreadyInGroup = selectedIds.has(decorId) && selectedIds.size > 1;
+      const currentSelectedIds = isMultiKey
+        ? new Set([...selectedIds, decorId])
+        : alreadyInGroup
+          ? selectedIds
+          : new Set([decorId]);
+
+      if (currentSelectedIds.size > 1 && currentSelectedIds.has(decorId)) {
+        const offsets: Record<string, { dx: number; dy: number }> = {};
+        for (const sid of currentSelectedIds) {
+          if (sid === decorId) continue;
+          const decorEl = decorElements.find((el) => el.id === sid);
+          if (decorEl) {
+            offsets[sid] = { dx: decorEl.x - element.x, dy: decorEl.y - element.y };
+            continue;
+          }
+          const tableEl = tables.find((t) => t.id === sid);
+          if (tableEl) {
+            const tPos = positions[sid] || {
+              x: tableEl.positionX || 50,
+              y: tableEl.positionY || 50,
+            };
+            offsets[sid] = { dx: tPos.x - element.x, dy: tPos.y - element.y };
+          }
+        }
+        dragGroupOffsetsRef.current = offsets;
+      } else {
+        dragGroupOffsetsRef.current = {};
+      }
+
       setSelectedZoneId(null);
     },
-    [isEditMode, decorElements, setDecorElements, zoom, pan, isSpacePressed]
+    [isEditMode, decorElements, setDecorElements, zoom, pan, isSpacePressed, handleElementSelect, selectedIds, tables, positions]
   );
 
   // Démarrer le déplacement direct d'une table
@@ -329,6 +463,8 @@ export function FloorPlan({
       if (!isEditMode || isSpacePressed) return;
       e.preventDefault();
       e.stopPropagation();
+      elementClickedRef.current = true;
+      requestAnimationFrame(() => { elementClickedRef.current = false; });
 
       const table = tables.find((t) => t.id === tableId);
       if (!table || !containerRef.current) return;
@@ -346,6 +482,9 @@ export function FloorPlan({
         return;
       }
 
+      // Gérer la sélection (simple ou multi)
+      handleElementSelect(tableId, "table", e);
+
       setDragging({
         type: "table",
         id: tableId,
@@ -353,11 +492,42 @@ export function FloorPlan({
         offsetY: mouseY - pos.y,
       });
       setDraggedTable(tableId);
-      setEditSelectedTableId(tableId);
-      setSelectedDecorId(null);
+
+      // Calculer les offsets pour le drag groupé
+      const isMultiKey = e.shiftKey || e.ctrlKey || e.metaKey;
+      const alreadyInGroup = selectedIds.has(tableId) && selectedIds.size > 1;
+      const currentSelectedIds = isMultiKey
+        ? new Set([...selectedIds, tableId])
+        : alreadyInGroup
+          ? selectedIds
+          : new Set([tableId]);
+
+      if (currentSelectedIds.size > 1 && currentSelectedIds.has(tableId)) {
+        const offsets: Record<string, { dx: number; dy: number }> = {};
+        for (const sid of currentSelectedIds) {
+          if (sid === tableId) continue;
+          const decorEl = decorElements.find((el) => el.id === sid);
+          if (decorEl) {
+            offsets[sid] = { dx: decorEl.x - pos.x, dy: decorEl.y - pos.y };
+            continue;
+          }
+          const tableEl = tables.find((t) => t.id === sid);
+          if (tableEl) {
+            const tPos = positions[sid] || {
+              x: tableEl.positionX || 50,
+              y: tableEl.positionY || 50,
+            };
+            offsets[sid] = { dx: tPos.x - pos.x, dy: tPos.y - pos.y };
+          }
+        }
+        dragGroupOffsetsRef.current = offsets;
+      } else {
+        dragGroupOffsetsRef.current = {};
+      }
+
       setSelectedZoneId(null);
     },
-    [isEditMode, tables, positions, zoom, pan, isSpacePressed, onAddTable]
+    [isEditMode, tables, positions, zoom, pan, isSpacePressed, onAddTable, handleElementSelect, selectedIds, decorElements]
   );
 
   // Auto-save : sauvegarder les positions (tables et zones) avec debounce
@@ -449,6 +619,7 @@ export function FloorPlan({
     setHasChanges(false);
     setIsEditMode(false);
     setEditSelectedTableId(null);
+    setSelectedIds(new Set());
     setAutoSaveStatus("idle");
   }, [hasChanges, performAutoSave]);
 
@@ -471,7 +642,33 @@ export function FloorPlan({
     }
   }, []);
 
-  // Ajouter un élément de décor
+  // Map des types d'outils vers les types de décor
+  const decorTypeMap: Record<string, DecorType> = {
+    wall: "wall",
+    "wall-l": "wall-l",
+    "wall-t": "wall-t",
+    "wall-cross": "wall-cross",
+    shelf: "shelf",
+    door: "door",
+    counter: "counter",
+    bar: "bar",
+    decoration: "decoration",
+  };
+
+  // Dimensions par défaut (utilisées si clic simple sans glisser)
+  const defaultSizeMap: Record<DecorType, { width: number; height: number }> = {
+    wall: { width: 120, height: 10 },
+    "wall-l": { width: 80, height: 80 },
+    "wall-t": { width: 100, height: 80 },
+    "wall-cross": { width: 80, height: 80 },
+    shelf: { width: 100, height: 20 },
+    door: { width: 60, height: 20 },
+    counter: { width: 150, height: 50 },
+    bar: { width: 120, height: 60 },
+    decoration: { width: 50, height: 50 },
+  };
+
+  // Clic sur le canvas : gère les tables et zones, démarre le dessin pour les décors
   const handleCanvasClick = useCallback(
     (e: React.MouseEvent) => {
       if (!isEditMode || activeTool === "select") return;
@@ -480,11 +677,9 @@ export function FloorPlan({
       const rect = containerRef.current.getBoundingClientRect();
       const rawX = (e.clientX - rect.left - pan.x) / zoom - 40;
       const rawY = (e.clientY - rect.top - pan.y) / zoom - 40;
-
-      // Appliquer le snap si active
       const snapped = snapPositionIfEnabled(rawX, rawY, gridSize, snapEnabled);
 
-      // Si c'est un outil de table, déclencher l'ajout de table avec la position
+      // Tables : clic simple
       if (activeTool.startsWith("table-")) {
         const formeMap: Record<string, "CARREE" | "RONDE" | "RECTANGULAIRE"> = {
           "table-square": "CARREE",
@@ -495,80 +690,152 @@ export function FloorPlan({
         return;
       }
 
-      // Si c'est l'outil zone, ouvrir le dialog de création
+      // Zones : clic simple
       if (activeTool === "zone") {
         setPendingZonePosition({ x: snapped.x, y: snapped.y });
         setShowZoneDialog(true);
         return;
       }
-
-      // Sinon, ajouter un élément de décor
-      const typeMap: Record<string, DecorType> = {
-        wall: "wall",
-        "wall-l": "wall-l",
-        "wall-t": "wall-t",
-        "wall-cross": "wall-cross",
-        shelf: "shelf",
-        door: "door",
-        counter: "counter",
-        bar: "bar",
-        decoration: "decoration",
-      };
-
-      const sizeMap: Record<DecorType, { width: number; height: number }> = {
-        wall: { width: 120, height: 10 },
-        "wall-l": { width: 80, height: 80 },
-        "wall-t": { width: 100, height: 80 },
-        "wall-cross": { width: 80, height: 80 },
-        shelf: { width: 100, height: 20 },
-        door: { width: 60, height: 20 },
-        counter: { width: 150, height: 50 },
-        bar: { width: 120, height: 60 },
-        decoration: { width: 50, height: 50 },
-      };
-
-      const type = typeMap[activeTool];
-      if (!type) return;
-
-      const size = sizeMap[type];
-
-      // Snap les dimensions si active
-      const snappedSize = snapEnabled
-        ? snapDimensions(size.width, size.height, gridSize, 30, 10)
-        : size;
-
-      const newElement: DecorElementData = {
-        id: `decor-${Date.now()}`,
-        type,
-        x: Math.max(0, snapped.x),
-        y: Math.max(0, snapped.y),
-        width: snappedSize.width,
-        height: snappedSize.height,
-        label: type === "wall" ? undefined : type.charAt(0).toUpperCase() + type.slice(1),
-      };
-
-      const newElements = [...decorElements, newElement];
-      setDecorElements(newElements);
-      setHasChanges(true);
-      setSelectedDecorId(newElement.id);
     },
-    [
-      isEditMode,
-      activeTool,
-      zoom,
-      decorElements,
-      setDecorElements,
-      onAddTable,
-      gridSize,
-      snapEnabled,
-      pan,
-    ]
+    [isEditMode, activeTool, zoom, onAddTable, gridSize, snapEnabled, pan]
   );
 
-  // Supprimer l'élément sélectionné (zone ou decor)
+  // Démarrer le dessin d'un élément décor (mousedown sur canvas)
+  const handleDrawStart = useCallback(
+    (e: React.MouseEvent) => {
+      if (!isEditMode || activeTool === "select") return;
+      if (!containerRef.current) return;
+      // Ignorer les tables et zones (gérés par handleCanvasClick)
+      if (activeTool.startsWith("table-") || activeTool === "zone") return;
+
+      const type = decorTypeMap[activeTool];
+      if (!type) return;
+
+      const rect = containerRef.current.getBoundingClientRect();
+      const rawX = (e.clientX - rect.left - pan.x) / zoom;
+      const rawY = (e.clientY - rect.top - pan.y) / zoom;
+      const snapped = snapPositionIfEnabled(rawX, rawY, gridSize, snapEnabled);
+
+      setDrawing({
+        type,
+        startX: snapped.x,
+        startY: snapped.y,
+        currentX: snapped.x,
+        currentY: snapped.y,
+      });
+
+      // Désélectionner les autres éléments
+      setSelectedDecorId(null);
+      setEditSelectedTableId(null);
+      setSelectedZoneId(null);
+    },
+    [isEditMode, activeTool, zoom, gridSize, snapEnabled, pan]
+  );
+
+  // Finaliser le dessin d'un élément décor (mouseup)
+  const handleDrawEnd = useCallback(() => {
+    if (!drawing) return;
+
+    const x = Math.min(drawing.startX, drawing.currentX);
+    const y = Math.min(drawing.startY, drawing.currentY);
+    const drawnWidth = Math.abs(drawing.currentX - drawing.startX);
+    const drawnHeight = Math.abs(drawing.currentY - drawing.startY);
+
+    // Si le mouvement est trop petit (< seuil), utiliser les dimensions par défaut
+    const isSmallDrag = drawnWidth < drawingThreshold && drawnHeight < drawingThreshold;
+
+    let finalWidth: number;
+    let finalHeight: number;
+    let finalX: number;
+    let finalY: number;
+
+    if (isSmallDrag) {
+      // Clic simple → dimensions par défaut avec orientation
+      const baseSize = defaultSizeMap[drawing.type];
+      const isSquare = baseSize.width === baseSize.height;
+      const size = orientation === "vertical" && !isSquare
+        ? { width: baseSize.height, height: baseSize.width }
+        : baseSize;
+      finalWidth = size.width;
+      finalHeight = size.height;
+      // Centrer sur le point de clic
+      finalX = drawing.startX - finalWidth / 2;
+      finalY = drawing.startY - finalHeight / 2;
+    } else {
+      // Dessin libre → utiliser les dimensions glissées avec minimum 20px
+      finalWidth = Math.max(20, drawnWidth);
+      finalHeight = Math.max(20, drawnHeight);
+      finalX = x;
+      finalY = y;
+    }
+
+    // Snap les dimensions si activé
+    const snappedSize = snapEnabled
+      ? snapDimensions(finalWidth, finalHeight, gridSize, 20, 20)
+      : { width: finalWidth, height: finalHeight };
+    const snappedPos = snapPositionIfEnabled(finalX, finalY, gridSize, snapEnabled);
+
+    const newElement: DecorElementData = {
+      id: `decor-${Date.now()}`,
+      type: drawing.type,
+      x: Math.max(0, snappedPos.x),
+      y: Math.max(0, snappedPos.y),
+      width: snappedSize.width,
+      height: snappedSize.height,
+      label: drawing.type === "wall" ? undefined : drawing.type.charAt(0).toUpperCase() + drawing.type.slice(1),
+    };
+
+    const newElements = [...decorElements, newElement];
+    setDecorElements(newElements);
+    setHasChanges(true);
+    setSelectedDecorId(newElement.id);
+    setDrawing(null);
+  }, [
+    drawing,
+    decorElements,
+    setDecorElements,
+    snapEnabled,
+    gridSize,
+    orientation,
+  ]);
+
+  // Supprimer l'élément sélectionné (zone, decor ou table) — support multi-sélection
   const handleDeleteSelected = useCallback(async () => {
+    // Suppression groupée si multi-sélection active
+    if (selectedIds.size > 1) {
+      const decorIdsToDelete = [...selectedIds].filter((id) =>
+        decorElements.some((el) => el.id === id)
+      );
+      const tableIdsToDelete = [...selectedIds].filter((id) =>
+        tables.some((t) => t.id === id)
+      );
+
+      if (decorIdsToDelete.length > 0) {
+        const newElements = decorElements.filter(
+          (el) => !selectedIds.has(el.id)
+        );
+        setDecorElements(newElements);
+        setHasChanges(true);
+      }
+
+      // Supprimer les tables sélectionnées (en BDD)
+      for (const tableId of tableIdsToDelete) {
+        const result = await deleteTableAction(tableId);
+        if (!result.success) {
+          toast.error(result.error || `Erreur lors de la suppression d'une table`);
+        }
+      }
+      if (tableIdsToDelete.length > 0) {
+        onRefresh?.();
+      }
+
+      setSelectedIds(new Set());
+      setSelectedDecorId(null);
+      setEditSelectedTableId(null);
+      return;
+    }
+
     if (selectedZoneId) {
-      // Supprimer la zone via l'action serveur
       const result = await deleteZoneAction(selectedZoneId);
       if (result.success) {
         setSelectedZoneId(null);
@@ -579,13 +846,26 @@ export function FloorPlan({
       }
       return;
     }
+    if (editSelectedTableId) {
+      const result = await deleteTableAction(editSelectedTableId);
+      if (result.success) {
+        setEditSelectedTableId(null);
+        setSelectedIds(new Set());
+        toast.success("Table supprimée");
+        onRefresh?.();
+      } else {
+        toast.error(result.error || "Erreur lors de la suppression");
+      }
+      return;
+    }
     if (selectedDecorId) {
       const newElements = decorElements.filter((el) => el.id !== selectedDecorId);
       setDecorElements(newElements);
       setSelectedDecorId(null);
+      setSelectedIds(new Set());
       setHasChanges(true);
     }
-  }, [selectedDecorId, selectedZoneId, decorElements, setDecorElements, onRefresh]);
+  }, [selectedDecorId, editSelectedTableId, selectedZoneId, selectedIds, decorElements, tables, setDecorElements, onRefresh]);
 
   // Menu contextuel
   const handleContextMenu = useCallback((e: React.MouseEvent, elementId: string) => {
@@ -597,233 +877,6 @@ export function FloorPlan({
   const closeContextMenu = useCallback(() => {
     setContextMenu(null);
   }, []);
-
-  // Rotation - normalise à 0, 90, 180, 270
-  // Pour les murs droits et étagères, échange width/height lors de rotation 90°
-  const rotateElement = useCallback(
-    (degrees: number) => {
-      if (!selectedDecorId) return;
-      const newElements = decorElements.map((el) => {
-        if (el.id === selectedDecorId) {
-          const currentRotation = el.rotation || 0;
-          let newRotation = (currentRotation + degrees) % 360;
-          if (newRotation < 0) newRotation += 360;
-
-          // Les murs droits et étagères utilisent le swap visuel dans DecorElement
-          // (getEffectiveDimensions échange width/height à 90°/270°)
-          // Pas besoin d'échanger les dimensions ici
-          return { ...el, rotation: newRotation };
-        }
-        return el;
-      });
-      setDecorElements(newElements);
-      setHasChanges(true);
-    },
-    [selectedDecorId, decorElements, setDecorElements]
-  );
-
-  // Rotation des tables
-  const rotateTable = useCallback((tableId: string, degrees: number) => {
-    setTableRotations((prev) => {
-      const current = prev[tableId] || 0;
-      let newRotation = (current + degrees) % 360;
-      if (newRotation < 0) newRotation += 360;
-      return { ...prev, [tableId]: newRotation };
-    });
-    setHasChanges(true);
-  }, []);
-
-  // Redimensionnement
-  const resizeElement = useCallback(
-    (widthDelta: number, heightDelta: number) => {
-      if (!selectedDecorId) return;
-      const newElements = decorElements.map((el) => {
-        if (el.id === selectedDecorId) {
-          return {
-            ...el,
-            width: Math.max(30, el.width + widthDelta),
-            height: Math.max(10, el.height + heightDelta),
-          };
-        }
-        return el;
-      });
-      setDecorElements(newElements);
-      setHasChanges(true);
-    },
-    [selectedDecorId, decorElements, setDecorElements]
-  );
-
-  // Dupliquer
-  const duplicateElement = useCallback(() => {
-    if (!selectedDecorId) return;
-    const element = decorElements.find((el) => el.id === selectedDecorId);
-    if (!element) return;
-    const newElement: DecorElementData = {
-      ...element,
-      id: `decor-${Date.now()}`,
-      x: element.x + 20,
-      y: element.y + 20,
-    };
-    const newElements = [...decorElements, newElement];
-    setDecorElements(newElements);
-    setSelectedDecorId(newElement.id);
-    setHasChanges(true);
-  }, [selectedDecorId, decorElements, setDecorElements]);
-
-  // Copier l'élément sélectionné
-  const copyElement = useCallback(() => {
-    if (!selectedDecorId) return;
-    const element = decorElements.find((el) => el.id === selectedDecorId);
-    if (element) {
-      setClipboard({ ...element });
-      toast.success("Élément copié");
-    }
-  }, [selectedDecorId, decorElements]);
-
-  // Coller l'élément copié
-  const pasteElement = useCallback(() => {
-    if (!clipboard) return;
-    const newElement: DecorElementData = {
-      ...clipboard,
-      id: `decor-${Date.now()}`,
-      x: clipboard.x + 30,
-      y: clipboard.y + 30,
-    };
-    const newElements = [...decorElements, newElement];
-    setDecorElements(newElements);
-    setSelectedDecorId(newElement.id);
-    setHasChanges(true);
-    toast.success("Élément collé");
-  }, [clipboard, decorElements, setDecorElements]);
-
-  // Déplacer l'élément sélectionné
-  const moveElement = useCallback(
-    (deltaX: number, deltaY: number) => {
-      if (!selectedDecorId) return;
-      const newElements = decorElements.map((el) => {
-        if (el.id === selectedDecorId) {
-          return {
-            ...el,
-            x: Math.max(0, el.x + deltaX),
-            y: Math.max(0, el.y + deltaY),
-          };
-        }
-        return el;
-      });
-      setDecorElements(newElements);
-      setHasChanges(true);
-    },
-    [selectedDecorId, decorElements, setDecorElements]
-  );
-
-  // Désélectionner / quitter mode édition
-  const handleEscape = useCallback(() => {
-    if (selectedDecorId) {
-      setSelectedDecorId(null);
-    } else if (editSelectedTableId) {
-      setEditSelectedTableId(null);
-    } else if (selectedZoneId) {
-      setSelectedZoneId(null);
-    } else if (activeTool !== "select") {
-      setActiveTool("select");
-    }
-  }, [selectedDecorId, editSelectedTableId, selectedZoneId, activeTool]);
-
-  // Rotation unifiée : décor ou table selon la sélection
-  const handleRotateSelected = useCallback(
-    (degrees: number) => {
-      if (selectedDecorId) {
-        rotateElement(degrees);
-      } else if (editSelectedTableId) {
-        rotateTable(editSelectedTableId, degrees);
-      }
-    },
-    [selectedDecorId, editSelectedTableId, rotateElement, rotateTable]
-  );
-
-  // Basculer la visibilité de la grille (toggle snap)
-  const handleToggleSnap = useCallback(() => {
-    setSnapEnabled((prev) => !prev);
-  }, []);
-
-  // Centrer la vue sur l'élément sélectionné
-  const handleFocusSelected = useCallback(() => {
-    if (!containerRef.current) return;
-    const containerRect = containerRef.current.getBoundingClientRect();
-    let targetX = 0;
-    let targetY = 0;
-    let found = false;
-
-    if (selectedDecorId) {
-      const el = decorElements.find((e) => e.id === selectedDecorId);
-      if (el) {
-        targetX = el.x + el.width / 2;
-        targetY = el.y + el.height / 2;
-        found = true;
-      }
-    } else if (editSelectedTableId) {
-      const table = tables.find((t) => t.id === editSelectedTableId);
-      if (table) {
-        const pos = getPosition(table);
-        targetX = pos.x + (table.largeur || 80) / 2;
-        targetY = pos.y + (table.hauteur || 80) / 2;
-        found = true;
-      }
-    } else if (selectedZoneId) {
-      const zone = zones.find((z) => z.id === selectedZoneId);
-      if (zone) {
-        targetX = zone.x + zone.width / 2;
-        targetY = zone.y + zone.height / 2;
-        found = true;
-      }
-    }
-
-    if (found) {
-      const centerX = containerRect.width / 2;
-      const centerY = containerRect.height / 2;
-      setPan({
-        x: centerX - targetX * zoom,
-        y: centerY - targetY * zoom,
-      });
-    }
-  }, [selectedDecorId, editSelectedTableId, selectedZoneId, decorElements, tables, zones, zoom, getPosition]);
-
-  // Augmenter la taille de l'élément sélectionné
-  const handleIncreaseSize = useCallback(() => {
-    resizeElement(10, 10);
-  }, [resizeElement]);
-
-  // Réduire la taille de l'élément sélectionné
-  const handleDecreaseSize = useCallback(() => {
-    resizeElement(-10, -10);
-  }, [resizeElement]);
-
-  // Intégrer les raccourcis clavier
-  useFloorPlanKeyboard(
-    {
-      onDelete: handleDeleteSelected,
-      onDuplicate: duplicateElement,
-      onCopy: copyElement,
-      onPaste: pasteElement,
-      onUndo: undo,
-      onRedo: redo,
-      onEscape: handleEscape,
-      onMove: moveElement,
-      onRotate: handleRotateSelected,
-      onZoomIn: handleZoomIn,
-      onZoomOut: handleZoomOut,
-      onResetView: resetView,
-      onToggleSnap: handleToggleSnap,
-      onIncreaseSize: handleIncreaseSize,
-      onDecreaseSize: handleDecreaseSize,
-      onFocusSelected: handleFocusSelected,
-    },
-    {
-      enabled: isEditMode && !isPanning,
-      moveStep: snapEnabled ? gridSize : 1,
-      fastMoveStep: snapEnabled ? gridSize * 2 : 10,
-    }
-  );
 
   // Calculer les coins d'un élément sélectionné pour les poignées de rotation
   const getSelectedElementCorners = useCallback(() => {
@@ -886,7 +939,408 @@ export function FloorPlan({
     [getSelectedElementCorners]
   );
 
-  // (resetView défini plus haut)
+  // Collecter tous les ElementRect pour le snap inter-éléments et les smart guides
+  const collectAllElementRects = useCallback((): ElementRect[] => {
+    const rects: ElementRect[] = [];
+    // Décor
+    for (const el of decorElements) {
+      const dims = getEffectiveDimensions(el);
+      rects.push({ id: el.id, x: el.x, y: el.y, width: dims.width, height: dims.height });
+    }
+    // Tables
+    for (const t of tables) {
+      const pos = positions[t.id] || { x: t.positionX || 50, y: t.positionY || 50 };
+      rects.push({ id: t.id, x: pos.x, y: pos.y, width: t.largeur || 80, height: t.hauteur || 80 });
+    }
+    // Zones
+    for (const z of zones) {
+      rects.push({ id: z.id, x: z.x, y: z.y, width: z.width, height: z.height });
+    }
+    return rects;
+  }, [decorElements, tables, positions, zones]);
+
+  // Handler pour démarrer la rotation libre (drag-to-rotate)
+  const handleRotationStart = useCallback(
+    (e: React.MouseEvent) => {
+      if (!containerRef.current) return;
+      const el = getSelectedElementCorners();
+      if (!el) return;
+
+      const rect = containerRef.current.getBoundingClientRect();
+      const mouseX = (e.clientX - rect.left - pan.x) / zoom;
+      const mouseY = (e.clientY - rect.top - pan.y) / zoom;
+
+      const centerX = el.x + el.width / 2;
+      const centerY = el.y + el.height / 2;
+
+      // Angle initial entre le centre et la souris
+      const startAngle = Math.atan2(mouseY - centerY, mouseX - centerX) * (180 / Math.PI);
+      rotationStartAngleRef.current = startAngle;
+      rotationStartElementAngleRef.current = el.rotation;
+
+      setIsRotating(true);
+    },
+    [zoom, pan, getSelectedElementCorners]
+  );
+
+  // Rotation - normalise à 0, 90, 180, 270
+  // Pour les murs droits et étagères, échange width/height lors de rotation 90°
+  const rotateElement = useCallback(
+    (degrees: number) => {
+      if (!selectedDecorId) return;
+      const newElements = decorElements.map((el) => {
+        if (el.id === selectedDecorId) {
+          const currentRotation = el.rotation || 0;
+          let newRotation = (currentRotation + degrees) % 360;
+          if (newRotation < 0) newRotation += 360;
+
+          // Les murs droits et étagères utilisent le swap visuel dans DecorElement
+          // (getEffectiveDimensions échange width/height à 90°/270°)
+          // Pas besoin d'échanger les dimensions ici
+          return { ...el, rotation: newRotation };
+        }
+        return el;
+      });
+      setDecorElements(newElements);
+      setHasChanges(true);
+    },
+    [selectedDecorId, decorElements, setDecorElements]
+  );
+
+  // Rotation des tables
+  const rotateTable = useCallback((tableId: string, degrees: number) => {
+    setTableRotations((prev) => {
+      const current = prev[tableId] || 0;
+      let newRotation = (current + degrees) % 360;
+      if (newRotation < 0) newRotation += 360;
+      return { ...prev, [tableId]: newRotation };
+    });
+    setHasChanges(true);
+  }, []);
+
+  // Redimensionnement
+  const resizeElement = useCallback(
+    (widthDelta: number, heightDelta: number) => {
+      if (!selectedDecorId) return;
+      const newElements = decorElements.map((el) => {
+        if (el.id === selectedDecorId) {
+          return {
+            ...el,
+            width: Math.max(20, el.width + widthDelta),
+            height: Math.max(20, el.height + heightDelta),
+          };
+        }
+        return el;
+      });
+      setDecorElements(newElements);
+      setHasChanges(true);
+    },
+    [selectedDecorId, decorElements, setDecorElements]
+  );
+
+  // Dupliquer — support multi-sélection
+  const duplicateElement = useCallback(() => {
+    // Duplication groupée si multi-sélection active
+    if (selectedIds.size > 1) {
+      const newSelectedIds = new Set<string>();
+      const decorIdsInGroup = [...selectedIds].filter((id) =>
+        decorElements.some((el) => el.id === id)
+      );
+      const updatedElements = [...decorElements];
+      for (const did of decorIdsInGroup) {
+        const element = decorElements.find((el) => el.id === did);
+        if (!element) continue;
+        const newId = `decor-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`;
+        updatedElements.push({
+          ...element,
+          id: newId,
+          x: element.x + 20,
+          y: element.y + 20,
+        });
+        newSelectedIds.add(newId);
+      }
+      setDecorElements(updatedElements);
+      setSelectedIds(newSelectedIds);
+      setHasChanges(true);
+      return;
+    }
+
+    if (!selectedDecorId) return;
+    const element = decorElements.find((el) => el.id === selectedDecorId);
+    if (!element) return;
+    const newElement: DecorElementData = {
+      ...element,
+      id: `decor-${Date.now()}`,
+      x: element.x + 20,
+      y: element.y + 20,
+    };
+    const newElements = [...decorElements, newElement];
+    setDecorElements(newElements);
+    setSelectedDecorId(newElement.id);
+    setSelectedIds(new Set([newElement.id]));
+    setHasChanges(true);
+  }, [selectedDecorId, selectedIds, decorElements, setDecorElements]);
+
+  // Copier l'élément sélectionné
+  const copyElement = useCallback(() => {
+    if (!selectedDecorId) return;
+    const element = decorElements.find((el) => el.id === selectedDecorId);
+    if (element) {
+      setClipboard({ ...element });
+      toast.success("Élément copié");
+    }
+  }, [selectedDecorId, decorElements]);
+
+  // Coller l'élément copié
+  const pasteElement = useCallback(() => {
+    if (!clipboard) return;
+    const newElement: DecorElementData = {
+      ...clipboard,
+      id: `decor-${Date.now()}`,
+      x: clipboard.x + 30,
+      y: clipboard.y + 30,
+    };
+    const newElements = [...decorElements, newElement];
+    setDecorElements(newElements);
+    setSelectedDecorId(newElement.id);
+    setHasChanges(true);
+    toast.success("Élément collé");
+  }, [clipboard, decorElements, setDecorElements]);
+
+  // Déplacer l'élément sélectionné (clavier) — support multi-sélection
+  const moveElement = useCallback(
+    (deltaX: number, deltaY: number) => {
+      // Déplacement groupé si multi-sélection active
+      if (selectedIds.size > 1) {
+        // Déplacer les décors du groupe
+        const newElements = decorElements.map((el) => {
+          if (!selectedIds.has(el.id)) return el;
+          return {
+            ...el,
+            x: Math.max(0, el.x + deltaX),
+            y: Math.max(0, el.y + deltaY),
+          };
+        });
+        setDecorElements(newElements);
+
+        // Déplacer les tables du groupe
+        const tableIdsInGroup = [...selectedIds].filter((id) =>
+          tables.some((t) => t.id === id)
+        );
+        if (tableIdsInGroup.length > 0) {
+          setPositions((prev) => {
+            const next = { ...prev };
+            for (const tid of tableIdsInGroup) {
+              const table = tables.find((t) => t.id === tid);
+              const pos = next[tid] || {
+                x: table?.positionX || 50,
+                y: table?.positionY || 50,
+              };
+              next[tid] = {
+                x: Math.max(0, pos.x + deltaX),
+                y: Math.max(0, pos.y + deltaY),
+              };
+            }
+            return next;
+          });
+        }
+        setHasChanges(true);
+        return;
+      }
+
+      if (!selectedDecorId) return;
+      const newElements = decorElements.map((el) => {
+        if (el.id === selectedDecorId) {
+          return {
+            ...el,
+            x: Math.max(0, el.x + deltaX),
+            y: Math.max(0, el.y + deltaY),
+          };
+        }
+        return el;
+      });
+      setDecorElements(newElements);
+      setHasChanges(true);
+    },
+    [selectedDecorId, selectedIds, decorElements, setDecorElements, tables]
+  );
+
+  // Désélectionner / quitter mode édition
+  const handleEscape = useCallback(() => {
+    // Toujours vider la multi-sélection
+    if (selectedIds.size > 0) {
+      setSelectedIds(new Set());
+    }
+    if (selectedDecorId) {
+      setSelectedDecorId(null);
+    } else if (editSelectedTableId) {
+      setEditSelectedTableId(null);
+    } else if (selectedZoneId) {
+      setSelectedZoneId(null);
+    } else if (activeTool !== "select") {
+      setActiveTool("select");
+    }
+  }, [selectedDecorId, editSelectedTableId, selectedZoneId, activeTool, selectedIds]);
+
+  // Rotation unifiée : décor ou table selon la sélection — support multi-sélection
+  const handleRotateSelected = useCallback(
+    (degrees: number) => {
+      // Rotation groupée si multi-sélection active
+      if (selectedIds.size > 1) {
+        // Rotation des décors du groupe
+        const decorIdsInGroup = [...selectedIds].filter((id) =>
+          decorElements.some((el) => el.id === id)
+        );
+        if (decorIdsInGroup.length > 0) {
+          const newElements = decorElements.map((el) => {
+            if (!selectedIds.has(el.id)) return el;
+            const currentRotation = el.rotation || 0;
+            let newRotation = (currentRotation + degrees) % 360;
+            if (newRotation < 0) newRotation += 360;
+            return { ...el, rotation: newRotation };
+          });
+          setDecorElements(newElements);
+        }
+        // Rotation des tables du groupe
+        const tableIdsInGroup = [...selectedIds].filter((id) =>
+          tables.some((t) => t.id === id)
+        );
+        if (tableIdsInGroup.length > 0) {
+          setTableRotations((prev) => {
+            const next = { ...prev };
+            for (const tid of tableIdsInGroup) {
+              const current = next[tid] || 0;
+              let newRotation = (current + degrees) % 360;
+              if (newRotation < 0) newRotation += 360;
+              next[tid] = newRotation;
+            }
+            return next;
+          });
+        }
+        setHasChanges(true);
+        return;
+      }
+
+      if (selectedDecorId) {
+        rotateElement(degrees);
+      } else if (editSelectedTableId) {
+        rotateTable(editSelectedTableId, degrees);
+      }
+    },
+    [selectedDecorId, editSelectedTableId, rotateElement, rotateTable, selectedIds, decorElements, setDecorElements, tables]
+  );
+
+  // Basculer la visibilité de la grille (toggle snap)
+  const handleToggleSnap = useCallback(() => {
+    setSnapEnabled((prev) => !prev);
+  }, []);
+
+  // Centrer la vue sur l'élément sélectionné
+  const handleFocusSelected = useCallback(() => {
+    if (!containerRef.current) return;
+    const containerRect = containerRef.current.getBoundingClientRect();
+    let targetX = 0;
+    let targetY = 0;
+    let found = false;
+
+    if (selectedDecorId) {
+      const el = decorElements.find((e) => e.id === selectedDecorId);
+      if (el) {
+        targetX = el.x + el.width / 2;
+        targetY = el.y + el.height / 2;
+        found = true;
+      }
+    } else if (editSelectedTableId) {
+      const table = tables.find((t) => t.id === editSelectedTableId);
+      if (table) {
+        const pos = getPosition(table);
+        targetX = pos.x + (table.largeur || 80) / 2;
+        targetY = pos.y + (table.hauteur || 80) / 2;
+        found = true;
+      }
+    } else if (selectedZoneId) {
+      const zone = zones.find((z) => z.id === selectedZoneId);
+      if (zone) {
+        targetX = zone.x + zone.width / 2;
+        targetY = zone.y + zone.height / 2;
+        found = true;
+      }
+    }
+
+    if (found) {
+      const centerX = containerRect.width / 2;
+      const centerY = containerRect.height / 2;
+      setPan({
+        x: centerX - targetX * zoom,
+        y: centerY - targetY * zoom,
+      });
+    }
+  }, [selectedDecorId, editSelectedTableId, selectedZoneId, decorElements, tables, zones, zoom, getPosition]);
+
+  // Augmenter la taille de l'élément sélectionné
+  const handleIncreaseSize = useCallback(() => {
+    resizeElement(10, 10);
+  }, [resizeElement]);
+
+  // Réduire la taille de l'élément sélectionné
+  const handleDecreaseSize = useCallback(() => {
+    resizeElement(-10, -10);
+  }, [resizeElement]);
+
+  // Intégrer les raccourcis clavier
+  // Basculer l'orientation de placement H/V
+  const handleToggleOrientation = useCallback(() => {
+    setOrientation((prev) => {
+      const next = prev === "horizontal" ? "vertical" : "horizontal";
+      toast.info(next === "vertical" ? "Orientation : Verticale" : "Orientation : Horizontale");
+      return next;
+    });
+  }, []);
+
+  useFloorPlanKeyboard(
+    {
+      onDelete: handleDeleteSelected,
+      onDuplicate: duplicateElement,
+      onCopy: copyElement,
+      onPaste: pasteElement,
+      onUndo: undo,
+      onRedo: redo,
+      onEscape: handleEscape,
+      onMove: moveElement,
+      onRotate: handleRotateSelected,
+      onZoomIn: handleZoomIn,
+      onZoomOut: handleZoomOut,
+      onResetView: resetView,
+      onToggleSnap: handleToggleSnap,
+      onIncreaseSize: handleIncreaseSize,
+      onDecreaseSize: handleDecreaseSize,
+      onFocusSelected: handleFocusSelected,
+      onToggleOrientation: handleToggleOrientation,
+      onSelectAll: () => {
+        const allIds = new Set<string>();
+        for (const el of decorElements) {
+          allIds.add(el.id);
+        }
+        for (const t of tables) {
+          allIds.add(t.id);
+        }
+        setSelectedIds(allIds);
+        // Garder le primary sur le premier élément trouvé
+        if (decorElements.length > 0) {
+          setSelectedDecorId(decorElements[0].id);
+        } else if (tables.length > 0) {
+          setEditSelectedTableId(tables[0].id);
+        }
+      },
+    },
+    {
+      enabled: isEditMode && !isPanning,
+      moveStep: snapEnabled ? gridSize : 1,
+      fastMoveStep: snapEnabled ? gridSize * 2 : 10,
+    }
+  );
+
+  // (resetView et getSelectedElementCorners définis plus haut)
 
   // Détecter la touche Espace pour le mode pan, Alt pour le mode duplication, Alt+R pour reset
   useEffect(() => {
@@ -933,6 +1387,8 @@ export function FloorPlan({
       if (!element) return;
 
       resizeHasMoved.current = false;
+      // Capturer le ratio d'aspect pour le resize proportionnel (Shift+coin)
+      resizeAspectRatioRef.current = element.height > 0 ? element.width / element.height : 1;
       setResizing({
         elementId,
         handle,
@@ -1019,45 +1475,56 @@ export function FloorPlan({
 
         switch (resizing.handle) {
           case "right":
-            newWidth = Math.max(30, resizing.startWidth + deltaX);
+            newWidth = Math.max(20, resizing.startWidth + deltaX);
             break;
           case "bottom":
-            newHeight = Math.max(10, resizing.startHeight + deltaY);
+            newHeight = Math.max(20, resizing.startHeight + deltaY);
             break;
           case "left":
-            newWidth = Math.max(30, resizing.startWidth - deltaX);
+            newWidth = Math.max(20, resizing.startWidth - deltaX);
             newX = resizing.startPosX + (resizing.startWidth - newWidth);
             break;
           case "top":
-            newHeight = Math.max(10, resizing.startHeight - deltaY);
+            newHeight = Math.max(20, resizing.startHeight - deltaY);
             newY = resizing.startPosY + (resizing.startHeight - newHeight);
             break;
           case "bottom-right":
-            newWidth = Math.max(30, resizing.startWidth + deltaX);
-            newHeight = Math.max(10, resizing.startHeight + deltaY);
+            newWidth = Math.max(20, resizing.startWidth + deltaX);
+            newHeight = Math.max(20, resizing.startHeight + deltaY);
             break;
           case "bottom-left":
-            newWidth = Math.max(30, resizing.startWidth - deltaX);
+            newWidth = Math.max(20, resizing.startWidth - deltaX);
             newX = resizing.startPosX + (resizing.startWidth - newWidth);
-            newHeight = Math.max(10, resizing.startHeight + deltaY);
+            newHeight = Math.max(20, resizing.startHeight + deltaY);
             break;
           case "top-right":
-            newWidth = Math.max(30, resizing.startWidth + deltaX);
-            newHeight = Math.max(10, resizing.startHeight - deltaY);
+            newWidth = Math.max(20, resizing.startWidth + deltaX);
+            newHeight = Math.max(20, resizing.startHeight - deltaY);
             newY = resizing.startPosY + (resizing.startHeight - newHeight);
             break;
           case "top-left":
-            newWidth = Math.max(30, resizing.startWidth - deltaX);
+            newWidth = Math.max(20, resizing.startWidth - deltaX);
             newX = resizing.startPosX + (resizing.startWidth - newWidth);
-            newHeight = Math.max(10, resizing.startHeight - deltaY);
+            newHeight = Math.max(20, resizing.startHeight - deltaY);
             newY = resizing.startPosY + (resizing.startHeight - newHeight);
             break;
+        }
+
+        // Resize proportionnel : Shift + coin uniquement
+        const CORNER_HANDLES_SET = new Set(["top-left", "top-right", "bottom-left", "bottom-right"]);
+        if (e.shiftKey && CORNER_HANDLES_SET.has(resizing.handle) && resizeAspectRatioRef.current) {
+          const ratio = resizeAspectRatioRef.current;
+          newHeight = Math.max(20, newWidth / ratio);
+          // Ajuster la position pour les coins top-*
+          if (resizing.handle === "top-left" || resizing.handle === "top-right") {
+            newY = resizing.startPosY + resizing.startHeight - newHeight;
+          }
         }
 
         // Appliquer le snap-to-grid si activé
         if (snapEnabled) {
           const snappedPos = snapPositionIfEnabled(newX, newY, gridSize, snapEnabled);
-          const snappedDims = snapDimensions(newWidth, newHeight, gridSize, 30, 10);
+          const snappedDims = snapDimensions(newWidth, newHeight, gridSize, 20, 20);
           newX = snappedPos.x;
           newY = snappedPos.y;
           newWidth = snappedDims.width;
@@ -1069,11 +1536,78 @@ export function FloorPlan({
 
       setDecorElements(newElements);
     },
-    [resizing, decorElements, zoom, snapEnabled, gridSize]
+    [resizing, decorElements, setDecorElements, zones, zoom, snapEnabled, gridSize]
   );
 
   // Terminer le redimensionnement
   const handleMouseUp = useCallback(() => {
+    if (drawing) {
+      handleDrawEnd();
+      return;
+    }
+    if (marquee) {
+      // Finaliser la sélection par zone
+      const mx = Math.min(marquee.startX, marquee.currentX);
+      const my = Math.min(marquee.startY, marquee.currentY);
+      const mw = Math.abs(marquee.currentX - marquee.startX);
+      const mh = Math.abs(marquee.currentY - marquee.startY);
+
+      // Seuil minimum pour considérer comme une vraie sélection par zone
+      if (mw > drawingThreshold || mh > drawingThreshold) {
+        const newSelected = new Set<string>();
+
+        // Vérifier les éléments décor
+        for (const el of decorElements) {
+          if (
+            el.x + el.width > mx &&
+            el.x < mx + mw &&
+            el.y + el.height > my &&
+            el.y < my + mh
+          ) {
+            newSelected.add(el.id);
+          }
+        }
+
+        // Vérifier les tables
+        for (const table of tables) {
+          const pos = getPosition(table);
+          const tw = table.largeur || 80;
+          const th = table.hauteur || 80;
+          if (
+            pos.x + tw > mx &&
+            pos.x < mx + mw &&
+            pos.y + th > my &&
+            pos.y < my + mh
+          ) {
+            newSelected.add(table.id);
+          }
+        }
+
+        if (newSelected.size > 0) {
+          setSelectedIds(newSelected);
+          // Mettre le premier comme primary
+          const firstId = Array.from(newSelected)[0];
+          const isDecor = decorElements.some((el) => el.id === firstId);
+          if (isDecor) {
+            setSelectedDecorId(firstId);
+            setEditSelectedTableId(null);
+          } else {
+            setEditSelectedTableId(firstId);
+            setSelectedDecorId(null);
+          }
+          setSelectedZoneId(null);
+        }
+      }
+
+      setMarquee(null);
+      marqueeJustEndedRef.current = true;
+      requestAnimationFrame(() => { marqueeJustEndedRef.current = false; });
+      return;
+    }
+    if (isRotating) {
+      setIsRotating(false);
+      setHasChanges(true);
+    }
     if (resizing) {
       const CORNER_HANDLES = ["top-left", "top-right", "bottom-left", "bottom-right"];
       const isCornerHandle = CORNER_HANDLES.includes(resizing.handle);
@@ -1100,11 +1634,13 @@ export function FloorPlan({
         setHasChanges(true);
         setResizing(null);
       }
+      resizeAspectRatioRef.current = null;
     }
     if (dragging) {
       setHasChanges(true);
       setDragging(null);
       setDraggedTable(null);
+      setActiveGuides([]);
     }
     if (isPanning) {
       setIsPanning(false);
@@ -1113,6 +1649,12 @@ export function FloorPlan({
     resizing,
     dragging,
     isPanning,
+    isRotating,
+    drawing,
+    handleDrawEnd,
+    marquee,
+    getPosition,
+    tables,
     selectedDecorId,
     decorElements,
     setDecorElements,
@@ -1137,9 +1679,9 @@ export function FloorPlan({
     [isSpacePressed, pan]
   );
 
-  // Configuration du ghost preview selon l'outil actif
+  // Configuration du ghost preview selon l'outil actif et l'orientation
   const getGhostPreviewConfig = useCallback((tool: ToolType) => {
-    const sizeMap: Record<
+    const baseSizeMap: Record<
       string,
       { width: number; height: number; borderRadius: string | number }
     > = {
@@ -1156,6 +1698,19 @@ export function FloorPlan({
       counter: { width: 150, height: 50, borderRadius: 8 },
       bar: { width: 120, height: 60, borderRadius: 8 },
       decoration: { width: 50, height: 50, borderRadius: 8 },
+    };
+
+    // Appliquer l'inversion pour l'orientation verticale (éléments non-carrés uniquement)
+    const decorTools = new Set(["wall", "shelf", "door", "counter", "bar"]);
+    const entry = baseSizeMap[tool];
+    let sizeEntry = entry;
+    if (entry && decorTools.has(tool) && orientation === "vertical" && entry.width !== entry.height) {
+      sizeEntry = { width: entry.height, height: entry.width, borderRadius: entry.borderRadius };
+    }
+
+    const sizeMap: Record<string, { width: number; height: number; borderRadius: string | number }> = {
+      ...baseSizeMap,
+      ...(sizeEntry !== entry ? { [tool]: sizeEntry } : {}),
     };
 
     const iconMap: Record<string, React.ReactNode> = {
@@ -1195,7 +1750,7 @@ export function FloorPlan({
       icon: iconMap[tool],
       color: colorMap[tool],
     };
-  }, []);
+  }, [orientation]);
 
   // Gerer le mouvement de la souris sur le canvas pour le ghost
   const handleCanvasMouseMove = useCallback(
@@ -1217,60 +1772,227 @@ export function FloorPlan({
       const mouseX = (e.clientX - rect.left - pan.x) / zoom;
       const mouseY = (e.clientY - rect.top - pan.y) / zoom;
 
-      // Gerer le resize si actif
+      // Gérer la rotation libre si active
+      if (isRotating) {
+        const el = getSelectedElementCorners();
+        if (!el) return;
+
+        const centerX = el.x + el.width / 2;
+        const centerY = el.y + el.height / 2;
+
+        const currentAngle = Math.atan2(mouseY - centerY, mouseX - centerX) * (180 / Math.PI);
+        const deltaAngle = currentAngle - rotationStartAngleRef.current;
+        let newRotation = rotationStartElementAngleRef.current + deltaAngle;
+
+        // Normaliser à [0, 360)
+        newRotation = ((newRotation % 360) + 360) % 360;
+
+        // Snap angulaire
+        if (e.shiftKey) {
+          // Shift maintenu : snap à 15° incréments
+          newRotation = Math.round(newRotation / 15) * 15;
+        } else {
+          // Snap aux angles courants (0°, 45°, 90°, ...) avec ±5° de tolérance
+          const snapAngles = [0, 45, 90, 135, 180, 225, 270, 315];
+          for (const snapAngle of snapAngles) {
+            if (Math.abs(newRotation - snapAngle) <= 5 || Math.abs(newRotation - snapAngle - 360) <= 5) {
+              newRotation = snapAngle;
+              break;
+            }
+          }
+        }
+
+        // Appliquer la rotation à l'élément sélectionné
+        if (el.type === "decor" && selectedDecorId) {
+          const newElements = decorElements.map((dec) =>
+            dec.id === selectedDecorId ? { ...dec, rotation: newRotation } : dec
+          );
+          setDecorElements(newElements);
+        } else if (el.type === "table" && editSelectedTableId) {
+          setTableRotations((prev) => ({
+            ...prev,
+            [editSelectedTableId]: newRotation,
+          }));
+        }
+        return;
+      }
+
+      // Gérer le resize si actif
       if (resizing) {
         handleMouseMove(e);
         return;
       }
 
-      // Gerer le déplacement direct si actif
+      // Gérer le déplacement direct si actif
       if (dragging) {
         const rawX = mouseX - dragging.offsetX;
         const rawY = mouseY - dragging.offsetY;
 
-        // Appliquer le snap si activé
-        const snapped = snapPositionIfEnabled(rawX, rawY, gridSize, snapEnabled);
-
+        // Déterminer les dimensions de l'élément en cours de drag
+        let movingWidth = 80;
+        let movingHeight = 80;
         if (dragging.type === "decor") {
           const element = decorElements.find((el) => el.id === dragging.id);
           if (!element) return;
-
-          // Limiter aux bordures
-          const newX = Math.max(0, Math.min(snapped.x, rect.width / zoom - element.width));
-          const newY = Math.max(0, Math.min(snapped.y, rect.height / zoom - element.height));
-
-          // Mettre à jour directement la position
-          const newElements = decorElements.map((el) =>
-            el.id === dragging.id ? { ...el, x: newX, y: newY } : el
-          );
-          setDecorElements(newElements);
+          const dims = getEffectiveDimensions(element);
+          movingWidth = dims.width;
+          movingHeight = dims.height;
         } else if (dragging.type === "table") {
-          // Limiter aux bordures
-          const newX = Math.max(0, Math.min(snapped.x, rect.width / zoom - 80));
-          const newY = Math.max(0, Math.min(snapped.y, rect.height / zoom - 80));
-
-          setPositions((prev) => ({
-            ...prev,
-            [dragging.id]: { x: newX, y: newY },
-          }));
+          const table = tables.find((t) => t.id === dragging.id);
+          if (table) {
+            movingWidth = table.largeur || 80;
+            movingHeight = table.hauteur || 80;
+          }
         } else if (dragging.type === "zone") {
           const zone = zones.find((z) => z.id === dragging.id);
-          if (!zone) return;
+          if (zone) {
+            movingWidth = zone.width;
+            movingHeight = zone.height;
+          }
+        }
 
-          const newX = Math.max(0, Math.min(snapped.x, rect.width / zoom - zone.width));
-          const newY = Math.max(0, Math.min(snapped.y, rect.height / zoom - zone.height));
+        // 1. Snap inter-éléments (priorité sur la grille)
+        const allRects = collectAllElementRects();
+        const movingRect: SnapElementRect = {
+          id: dragging.id,
+          x: rawX,
+          y: rawY,
+          width: movingWidth,
+          height: movingHeight,
+        };
+        const elementSnap = snapToElements(movingRect, allRects, 5);
 
-          // Stocker la position locale pour le drag
+        // 2. Si pas de snap éléments, fallback sur la grille
+        let finalX = elementSnap.snappedX ? elementSnap.x : rawX;
+        let finalY = elementSnap.snappedY ? elementSnap.y : rawY;
+        if (!elementSnap.snappedX || !elementSnap.snappedY) {
+          const gridSnapped = snapPositionIfEnabled(
+            elementSnap.snappedX ? elementSnap.x : rawX,
+            elementSnap.snappedY ? elementSnap.y : rawY,
+            gridSize,
+            snapEnabled
+          );
+          if (!elementSnap.snappedX) finalX = gridSnapped.x;
+          if (!elementSnap.snappedY) finalY = gridSnapped.y;
+        }
+
+        // 3. Détecter les guides d'alignement
+        const guidesRect: ElementRect = {
+          id: dragging.id,
+          x: finalX,
+          y: finalY,
+          width: movingWidth,
+          height: movingHeight,
+        };
+        const guides = detectAlignmentGuides(guidesRect, allRects, 5);
+        setActiveGuides(guides);
+
+        // 4. Appliquer la position finale
+        const primaryNewX = Math.max(0, finalX);
+        const primaryNewY = Math.max(0, finalY);
+
+        // Déplacement groupé : si l'élément draggé est dans une multi-sélection
+        const isGroupDrag = selectedIds.has(dragging.id) && selectedIds.size > 1;
+        const groupOffsets = dragGroupOffsetsRef.current;
+
+        if (dragging.type === "decor") {
+          const newElements = decorElements.map((el) => {
+            if (el.id === dragging.id) {
+              return { ...el, x: primaryNewX, y: primaryNewY };
+            }
+            // Déplacer les autres éléments du groupe
+            if (isGroupDrag && groupOffsets[el.id]) {
+              return {
+                ...el,
+                x: Math.max(0, primaryNewX + groupOffsets[el.id].dx),
+                y: Math.max(0, primaryNewY + groupOffsets[el.id].dy),
+              };
+            }
+            return el;
+          });
+          setDecorElements(newElements);
+
+          // Déplacer aussi les tables du groupe
+          if (isGroupDrag) {
+            const tableUpdates: Record<string, { x: number; y: number }> = {};
+            for (const sid of selectedIds) {
+              if (sid === dragging.id) continue;
+              if (groupOffsets[sid] && tables.some((t) => t.id === sid)) {
+                tableUpdates[sid] = {
+                  x: Math.max(0, primaryNewX + groupOffsets[sid].dx),
+                  y: Math.max(0, primaryNewY + groupOffsets[sid].dy),
+                };
+              }
+            }
+            if (Object.keys(tableUpdates).length > 0) {
+              setPositions((prev) => ({ ...prev, ...tableUpdates }));
+            }
+          }
+        } else if (dragging.type === "table") {
+          const tableUpdates: Record<string, { x: number; y: number }> = {
+            [dragging.id]: { x: primaryNewX, y: primaryNewY },
+          };
+
+          // Déplacer les autres tables du groupe
+          if (isGroupDrag) {
+            for (const sid of selectedIds) {
+              if (sid === dragging.id) continue;
+              if (groupOffsets[sid] && tables.some((t) => t.id === sid)) {
+                tableUpdates[sid] = {
+                  x: Math.max(0, primaryNewX + groupOffsets[sid].dx),
+                  y: Math.max(0, primaryNewY + groupOffsets[sid].dy),
+                };
+              }
+            }
+          }
+          setPositions((prev) => ({ ...prev, ...tableUpdates }));
+
+          // Déplacer aussi les décors du groupe
+          if (isGroupDrag) {
+            const decorIdsToMove = [...selectedIds].filter(
+              (sid) => sid !== dragging.id && groupOffsets[sid] && decorElements.some((el) => el.id === sid)
+            );
+            if (decorIdsToMove.length > 0) {
+              const newElements = decorElements.map((el) => {
+                if (decorIdsToMove.includes(el.id) && groupOffsets[el.id]) {
+                  return {
+                    ...el,
+                    x: Math.max(0, primaryNewX + groupOffsets[el.id].dx),
+                    y: Math.max(0, primaryNewY + groupOffsets[el.id].dy),
+                  };
+                }
+                return el;
+              });
+              setDecorElements(newElements);
+            }
+          }
+        } else if (dragging.type === "zone") {
+          const newX = Math.max(0, Math.min(finalX, rect.width / zoom - movingWidth));
+          const newY = Math.max(0, Math.min(finalY, rect.height / zoom - movingHeight));
+          const zone = zones.find((z) => z.id === dragging.id);
           setZonePositions((prev) => ({
             ...prev,
             [dragging.id]: {
               x: newX,
               y: newY,
-              width: prev[dragging.id]?.width ?? zone.width,
-              height: prev[dragging.id]?.height ?? zone.height,
+              width: prev[dragging.id]?.width ?? zone?.width ?? 200,
+              height: prev[dragging.id]?.height ?? zone?.height ?? 150,
             },
           }));
         }
+        return;
+      }
+
+      // Mettre à jour le dessin en cours (clic-glisser pour créer un élément)
+      if (drawing) {
+        const snapped = snapPositionIfEnabled(mouseX, mouseY, gridSize, snapEnabled);
+        setDrawing((prev) => prev ? { ...prev, currentX: snapped.x, currentY: snapped.y } : null);
+        return;
+      }
+
+      // Mettre à jour la sélection par zone (marquee)
+      if (marquee) {
+        setMarquee((prev) => prev ? { ...prev, currentX: mouseX, currentY: mouseY } : null);
         return;
       }
 
@@ -1296,6 +2018,8 @@ export function FloorPlan({
       dragging,
       decorElements,
       setDecorElements,
+      tables,
+      zones,
       gridSize,
       snapEnabled,
       isPanning,
@@ -1303,6 +2027,12 @@ export function FloorPlan({
       selectedDecorId,
       editSelectedTableId,
       detectCornerProximity,
+      isRotating,
+      getSelectedElementCorners,
+      collectAllElementRects,
+      drawing,
+      marquee,
+      selectedIds,
     ]
   );
 
@@ -1310,6 +2040,9 @@ export function FloorPlan({
   const handleCanvasMouseLeave = useCallback(() => {
     setMousePosition(null);
     setHoveredRotationCorner(null);
+    setActiveGuides([]);
+    if (drawing) setDrawing(null);
+    if (marquee) setMarquee(null);
     handleMouseUp();
   }, [handleMouseUp]);
 
@@ -1601,6 +2334,8 @@ export function FloorPlan({
               onSnapToggle={setSnapEnabled}
               gridSize={gridSize}
               onGridSizeChange={setGridSize}
+              orientation={orientation}
+              onOrientationChange={setOrientation}
             />
           </div>
         ) : null}
@@ -1611,10 +2346,19 @@ export function FloorPlan({
           onMouseDown={(e) => {
             // Priorité au pan (Espace + clic)
             if (handlePanStart(e)) return;
+            // Démarrer le dessin d'un élément décor (clic-glisser)
+            handleDrawStart(e);
+            // Démarrer la sélection par zone (marquee) en mode select sur canvas vide
+            if (isEditMode && activeTool === "select" && !hoveredRotationCorner && containerRef.current) {
+              const rect = containerRef.current.getBoundingClientRect();
+              const mx = (e.clientX - rect.left - pan.x) / zoom;
+              const my = (e.clientY - rect.top - pan.y) / zoom;
+              setMarquee({ startX: mx, startY: my, currentX: mx, currentY: my });
+            }
           }}
           onClick={(e) => {
-            // Ne pas traiter le clic si on vient de finir un drag ou pan
-            if (dragging || isPanning) return;
+            // Ne pas traiter le clic si on vient de finir un drag, pan, dessin ou marquee
+            if (dragging || isPanning || drawing || marqueeJustEndedRef.current || elementClickedRef.current) return;
             // Rotation par clic sur un coin
             if (hoveredRotationCorner) {
               if (selectedDecorId) {
@@ -1623,6 +2367,13 @@ export function FloorPlan({
                 rotateTable(editSelectedTableId, 90);
               }
               return;
+            }
+            // Clic sur le canvas vide en mode select : vider la sélection
+            if (isEditMode && activeTool === "select") {
+              setSelectedIds(new Set());
+              setSelectedDecorId(null);
+              setEditSelectedTableId(null);
+              setSelectedZoneId(null);
             }
             handleCanvasClick(e);
             if (contextMenu) closeContextMenu();
@@ -1653,38 +2404,37 @@ export function FloorPlan({
               ? "grabbing"
               : isSpacePressed
                 ? "grab"
-                : dragging || resizing
+                : isRotating
                   ? "grabbing"
-                  : hoveredRotationCorner
-                    ? "alias"
-                    : isEditMode && isAltPressed
-                      ? "copy"
-                      : isEditMode && activeTool !== "select"
-                        ? "crosshair"
-                        : "default",
+                  : dragging || resizing
+                    ? "grabbing"
+                    : hoveredRotationCorner
+                      ? "alias"
+                      : isEditMode && isAltPressed
+                        ? "copy"
+                        : isEditMode && activeTool !== "select"
+                          ? "crosshair"
+                          : "default",
           }}
         >
-          {/* Grid background infinie - visible uniquement si snap activé */}
-          {snapEnabled ? (
-            <div
-              style={{
-                position: "absolute",
-                // Taille très large pour couvrir tout déplacement possible
-                top: -5000,
-                left: -5000,
-                width: 10000,
-                height: 10000,
-                backgroundImage:
-                  "linear-gradient(to right, var(--gray-a4) 1px, transparent 1px), linear-gradient(to bottom, var(--gray-a4) 1px, transparent 1px)",
-                backgroundSize: `${gridSize * zoom}px ${gridSize * zoom}px`,
-                // Ajuster la position de la grille en fonction du pan
-                backgroundPosition: `${pan.x % (gridSize * zoom)}px ${pan.y % (gridSize * zoom)}px`,
-                opacity: isEditMode ? 0.7 : 0.3,
-                transition: isPanning ? "none" : "opacity 0.2s",
-                pointerEvents: "none",
-              }}
-            />
-          ) : null}
+          {/* Grille visuelle (dots) - derrière tout */}
+          <FloorPlanGrid
+            gridSize={gridSize}
+            zoom={zoom}
+            pan={pan}
+            canvasWidth={containerRef.current?.clientWidth ?? 0}
+            canvasHeight={containerRef.current?.clientHeight ?? 0}
+            visible={!!(isEditMode && snapEnabled)}
+          />
+
+          {/* Smart guides d'alignement - au-dessus des éléments, sous les handles */}
+          <SmartGuides
+            guides={activeGuides}
+            zoom={zoom}
+            pan={pan}
+            canvasWidth={containerRef.current?.clientWidth ?? 0}
+            canvasHeight={containerRef.current?.clientHeight ?? 0}
+          />
 
           <div
             style={{
@@ -1696,8 +2446,70 @@ export function FloorPlan({
               transition: isPanning ? "none" : "transform 0.1s ease-out",
             }}
           >
-            {/* Ghost preview pour l'outil de creation actif */}
-            {isEditMode && activeTool !== "select" && mousePosition
+            {/* Rectangle de sélection par zone (marquee) */}
+            {marquee ? (() => {
+              const mx = Math.min(marquee.startX, marquee.currentX);
+              const my = Math.min(marquee.startY, marquee.currentY);
+              const mw = Math.abs(marquee.currentX - marquee.startX);
+              const mh = Math.abs(marquee.currentY - marquee.startY);
+              if (mw < 3 && mh < 3) return null;
+              return (
+                <div
+                  style={{
+                    position: "absolute",
+                    left: mx,
+                    top: my,
+                    width: mw,
+                    height: mh,
+                    backgroundColor: "rgba(59, 130, 246, 0.08)",
+                    border: "1px dashed rgba(59, 130, 246, 0.6)",
+                    borderRadius: 2,
+                    pointerEvents: "none",
+                    zIndex: 9999,
+                  }}
+                />
+              );
+            })() : null}
+
+            {/* Preview de dessin en cours (clic-glisser pour créer un élément) */}
+            {drawing ? (() => {
+              const x = Math.min(drawing.startX, drawing.currentX);
+              const y = Math.min(drawing.startY, drawing.currentY);
+              const w = Math.abs(drawing.currentX - drawing.startX);
+              const h = Math.abs(drawing.currentY - drawing.startY);
+              const config = getGhostPreviewConfig(activeTool);
+              const isSmall = w < drawingThreshold && h < drawingThreshold;
+
+              return (
+                <div
+                  style={{
+                    position: "absolute",
+                    left: x,
+                    top: y,
+                    width: Math.max(w, 2),
+                    height: Math.max(h, 2),
+                    backgroundColor: config.color?.bg || "rgba(249, 115, 22, 0.15)",
+                    border: `2px ${isSmall ? "dashed" : "solid"} ${config.color?.border || "rgba(249, 115, 22, 0.5)"}`,
+                    borderRadius: 2,
+                    pointerEvents: "none",
+                    opacity: 0.9,
+                    zIndex: 1000,
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    color: config.color?.border || "var(--accent-9)",
+                    fontSize: 11,
+                    fontWeight: 600,
+                    fontFamily: "var(--font-mono, monospace)",
+                  }}
+                >
+                  {!isSmall ? `${Math.round(w)}×${Math.round(h)}` : config.icon}
+                </div>
+              );
+            })() : null}
+
+            {/* Ghost preview pour l'outil de creation actif (quand pas en dessin) */}
+            {isEditMode && activeTool !== "select" && mousePosition && !drawing
               ? (() => {
                   const config = getGhostPreviewConfig(activeTool);
                   if (!config.size) return null;
@@ -1781,15 +2593,11 @@ export function FloorPlan({
                 key={element.id}
                 element={element}
                 isSelected={selectedDecorId === element.id}
+                isInMultiSelect={selectedIds.has(element.id) && selectedIds.size > 1}
                 isEditMode={isEditMode}
                 isDragging={dragging?.type === "decor" && dragging.id === element.id}
-                onClick={() => {
-                  if (isEditMode && !dragging) {
-                    setSelectedDecorId(element.id);
-                    setEditSelectedTableId(null);
-                  }
-                }}
                 onContextMenu={(e) => handleContextMenu(e, element.id)}
+                onClick={isEditMode ? (e: React.MouseEvent) => e.stopPropagation() : undefined}
                 onMouseDown={(e) => handleDecorMouseDown(e, element.id)}
                 onResizeStart={(handle, e) => handleResizeStart(element.id, handle, e)}
                 onRotate={(degrees) => {
@@ -1856,16 +2664,16 @@ export function FloorPlan({
                   isSelected={
                     isEditMode ? editSelectedTableId === table.id : selectedTableId === table.id
                   }
+                  isInMultiSelect={selectedIds.has(table.id) && selectedIds.size > 1}
                   isEditMode={isEditMode}
                   isDragging={dragging?.type === "table" && dragging.id === table.id}
-                  onClick={() => {
-                    if (!isEditMode && !dragging) {
-                      onTableSelect?.(table.id);
+                  onClick={(e: React.MouseEvent) => {
+                    if (isEditMode) {
+                      e.stopPropagation();
+                      return;
                     }
-                    if (isEditMode && !dragging) {
-                      setEditSelectedTableId(table.id);
-                      setSelectedDecorId(null);
-                      setSelectedZoneId(null);
+                    if (!dragging) {
+                      onTableSelect?.(table.id);
                     }
                   }}
                   onMouseDown={(e) => handleTableMouseDown(e, table.id)}
@@ -1969,8 +2777,28 @@ export function FloorPlan({
                 })()
               : null}
 
-            {/* Indicateur d'angle pour l'élément sélectionné */}
-            {isEditMode
+            {/* Poignée de rotation libre (drag-to-rotate) pour l'élément décor ou table sélectionné */}
+            {isEditMode && (selectedDecorId || editSelectedTableId)
+              ? (() => {
+                  const el = getSelectedElementCorners();
+                  if (!el) return null;
+                  return (
+                    <RotationHandle
+                      elementX={el.x}
+                      elementY={el.y}
+                      elementWidth={el.width}
+                      elementHeight={el.height}
+                      elementRotation={el.rotation}
+                      zoom={zoom}
+                      onRotationStart={handleRotationStart}
+                      isRotating={isRotating}
+                    />
+                  );
+                })()
+              : null}
+
+            {/* Indicateur d'angle pour l'élément sélectionné (quand pas en rotation active - le RotationHandle a son propre badge) */}
+            {isEditMode && !isRotating
               ? (() => {
                   const el = getSelectedElementCorners();
                   if (!el || el.rotation === 0) return null;

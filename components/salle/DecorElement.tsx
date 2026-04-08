@@ -4,9 +4,10 @@
  * DecorElement - Éléments de décor pour le plan de salle
  * (murs, portes, comptoirs, bars, décorations)
  *
- * Système de rotation intelligent :
- * - Les murs droits échangent width/height à 90° et 270°
- * - Les formes L, T, + conservent leurs proportions carrées
+ * Système de rotation libre :
+ * - Les murs droits : visual swap (width/height) aux angles ~90°/~270° (±5°), rotation CSS sinon
+ * - Les formes L, T, + : rotation CSS sur le SVG interne
+ * - Autres types : rotation CSS sur le conteneur
  */
 
 import { useState } from "react";
@@ -31,23 +32,34 @@ export interface DecorElementData {
   y: number;
   width: number;
   height: number;
-  rotation?: number; // 0, 90, 180, 270
+  rotation?: number; // Tout angle en degrés (rotation libre)
   label?: string;
 }
 
 /**
+ * Vérifie si un angle est proche d'un angle cible (tolérance ±5°)
+ */
+export function isNearAngle(angle: number, target: number, tolerance = 5): boolean {
+  const normalized = ((angle % 360) + 360) % 360;
+  const diff = Math.abs(normalized - target);
+  return diff <= tolerance || diff >= 360 - tolerance;
+}
+
+/**
  * Calcule les dimensions effectives en tenant compte de la rotation
- * Pour les murs droits, la rotation 90°/270° inverse width et height visuellement
+ * Pour les murs droits et étagères :
+ * - Angles proches de 90° ou 270° (±5°) : swap width/height (visual swap)
+ * - Autres angles : dimensions originales, rotation CSS pure
  */
 export function getEffectiveDimensions(element: DecorElementData): {
   width: number;
   height: number;
 } {
   const rotation = element.rotation || 0;
-  const isHorizontalRotation = rotation === 90 || rotation === 270;
+  const isNearHorizontal = isNearAngle(rotation, 90) || isNearAngle(rotation, 270);
 
   // Les murs droits et étagères échangent leurs dimensions visuellement
-  if ((element.type === "wall" || element.type === "shelf") && isHorizontalRotation) {
+  if ((element.type === "wall" || element.type === "shelf") && isNearHorizontal) {
     return { width: element.height, height: element.width };
   }
 
@@ -89,9 +101,10 @@ const DECOR_ICONS: Partial<Record<DecorType, typeof Door>> = {
 interface DecorElementProps {
   element: DecorElementData;
   isSelected?: boolean;
+  isInMultiSelect?: boolean;
   isEditMode?: boolean;
   isDragging?: boolean;
-  onClick?: () => void;
+  onClick?: (e: React.MouseEvent) => void;
   onContextMenu?: (e: React.MouseEvent) => void;
   onMouseDown?: (e: React.MouseEvent) => void;
   onResizeStart?: (handle: string, e: React.MouseEvent) => void;
@@ -114,6 +127,7 @@ const RESIZE_HANDLES: ResizeHandle[] = [
 export function DecorElement({
   element,
   isSelected,
+  isInMultiSelect,
   isEditMode,
   isDragging,
   onClick,
@@ -211,17 +225,24 @@ export function DecorElement({
     onResizeStart?.(handle, e);
   };
 
-  // Pour les murs droits et étagères : on échange width/height visuellement
-  // Pour les formes spéciales (L, T, +) : on utilise la rotation CSS sur le SVG interne
-  const useVisualSwap = (isStraightWall || isShelf) && (rotation === 90 || rotation === 270);
+  // Pour les murs droits et étagères :
+  // - Angles proches de 90°/270° (±5°) : swap width/height (visual swap classique)
+  // - Autres angles non-nuls : rotation CSS pure sur le conteneur
+  const isNearHorizontal = isNearAngle(rotation, 90) || isNearAngle(rotation, 270);
+  const useVisualSwap = (isStraightWall || isShelf) && isNearHorizontal;
   const displayWidth = useVisualSwap ? element.height : element.width;
   const displayHeight = useVisualSwap ? element.width : element.height;
 
   // Les formes spéciales utilisent la rotation CSS sur le SVG interne
   const useRotationTransform = isShapedWall && rotation !== 0;
 
-  // Les autres types (door, counter, bar, decoration) utilisent la rotation CSS sur le conteneur
-  const useContainerRotation = !isStraightWall && !isShelf && !isShapedWall && rotation !== 0;
+  // Rotation CSS sur le conteneur :
+  // - Murs droits/étagères : tout angle sauf ~0° (inutile) et ~90°/~270° (géré par visual swap)
+  // - Autres types (portes, comptoirs, bars, décorations) : tout angle non-nul
+  const useCSSRotationForStraight =
+    (isStraightWall || isShelf) && rotation !== 0 && !useVisualSwap && !isNearAngle(rotation, 0);
+  const useContainerRotation =
+    useCSSRotationForStraight || ((!isStraightWall && !isShelf && !isShapedWall) && rotation !== 0);
 
   return (
     <div
@@ -247,6 +268,7 @@ export function DecorElement({
       className={cn(
         "absolute select-none",
         isSelected && "ring-[3px] ring-[var(--accent-9)] ring-offset-2",
+        isInMultiSelect && !isSelected && "outline outline-2 outline-dashed outline-[var(--accent-9)] outline-offset-2",
         !isEditMode && !isWallType && "cursor-pointer"
       )}
       style={{

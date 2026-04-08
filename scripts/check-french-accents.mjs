@@ -1,142 +1,148 @@
 #!/usr/bin/env node
 
 /**
- * Script de vérification des accents français dans le code source
+ * Vérifie les accents français manquants dans les textes visibles par l'utilisateur.
  *
- * Détecte les mots français courants écrits sans accents dans :
- * - Les chaînes de caractères ("...", '...', `...`)
- * - Le texte JSX (entre balises >...</)
- * - Les commentaires (// ... et /* ... *\/)
+ * Cible uniquement :
+ * - Les chaînes littérales ("...", '...')
+ * - Le texte JSX (entre > et <)
  *
- * Ignore volontairement :
- * - Les noms de variables, fonctions, types (identifiants programmatiques)
- * - Les colonnes de base de données (Supabase/Prisma)
- * - Les imports et chemins de fichiers
- * - Les clés de permissions (ex: "vente:creer")
- * - Les slugs et URLs
+ * Ignore :
+ * - Les commentaires (// ..., /* ... *\/)
+ * - Les noms de variables, fonctions, types
+ * - Les colonnes DB, imports, slugs, clés de permission
  *
  * Usage:
- *   pnpm check:accents              # Vérification complète
- *   node scripts/check-french-accents.mjs
+ *   pnpm check:accents
+ *   pnpm check:accents --all     # Inclut aussi les commentaires
  */
 
 import { readFileSync, readdirSync, statSync } from "fs";
 import { join, relative, extname } from "path";
 
+const includeComments = process.argv.includes("--all");
+
 // ============================================================================
-// Règles de détection
+// Règles
 // ============================================================================
 
-// Mots français courants nécessitant des accents
-// Format: [regex, correction]
-// Ces regex ne matchent QUE des mots isolés (word boundary)
-const ACCENT_RULES = [
-  // Labels et mots courants (É/é)
+const RULES = [
+  // Mots courants (labels, titres)
   [/\bEtablissement(?:s)?\b/g, "Établissement(s)"],
   [/\bEmployes\b/g, "Employés"],
   [/\bParametres\b/g, "Paramètres"],
   [/\bSysteme\b/g, "Système"],
   [/\bCategories\b/g, "Catégories"],
   [/\bCategorie\b/g, "Catégorie"],
-
-  // Verbes
-  [/\bCreer\b/g, "Créer"],
-  [/\bGenerer\b/g, "Générer"],
-  [/\bGerer\b/g, "Gérer"],
-  [/\bReinitialiser\b/g, "Réinitialiser"],
-  [/\bCloturer\b/g, "Clôturer"],
-  [/\bDesactiver\b/g, "Désactiver"],
-  [/\bSelectionnez\b/g, "Sélectionnez"],
-  [/\bGerez\b/g, "Gérez"],
-
-  // Noms (majuscule initiale = label visible)
   [/\bPrenom\b/g, "Prénom"],
   [/\bTelephone\b/g, "Téléphone"],
   [/\bTelechargement\b/g, "Téléchargement"],
   [/\bNumero\b/g, "Numéro"],
-  [/\bDerniere\b/g, "Dernière"],
-  [/\bDernieres\b/g, "Dernières"],
+  [/\bDerniere(?:s)?\b/g, "Dernière(s)"],
   [/\bApercu\b/g, "Aperçu"],
   [/\bPrepaye\b/g, "Prépayé"],
   [/\bConcu\b/g, "Conçu"],
   [/\bAcces\b/g, "Accès"],
-  [/\bDeverrouillage\b/g, "Déverrouillage"],
   [/\bOperations\b/g, "Opérations"],
+  [/\bDeverrouillage\b/g, "Déverrouillage"],
+  [/\bSecurite\b/g, "Sécurité"],
+  [/\bDeconnexion\b/g, "Déconnexion"],
+  [/\bPeriode\b/g, "Période"],
+  [/\bEcran\b/g, "Écran"],
+  [/\bDemarrage\b/g, "Démarrage"],
+  [/\bDonnees\b/g, "Données"],
+  [/\bdonnees\b/g, "données"],
+  [/\bAmelioration\b/g, "Amélioration"],
+  [/\bRecuperer\b/g, "Récupérer"],
+  [/\bAcceder\b/g, "Accéder"],
 
-  // Dans les messages d'erreur et descriptions (minuscules dans des phrases)
+  // Verbes (labels de boutons, titres)
+  [/\bCreer\b/g, "Créer"],
+  [/\bCreez\b/g, "Créez"],
+  [/\bGenerer\b/g, "Générer"],
+  [/\bGerer\b/g, "Gérer"],
+  [/\bGerez\b/g, "Gérez"],
+  [/\bReinitialiser\b/g, "Réinitialiser"],
+  [/\bCloturer\b/g, "Clôturer"],
+  [/\bDesactiver\b/g, "Désactiver"],
+  [/\bReactiver\b/g, "Réactiver"],
+  [/\bSelectionnez\b/g, "Sélectionnez"],
+
+  // Phrases dans messages d'erreur / validation
   [/\bdoit etre\b/g, "doit être"],
-  [/\bpeut pas etre\b/g, "peut pas être"],
-  [/\bpeuvent pas etre\b/g, "peuvent pas être"],
   [/\bdoivent etre\b/g, "doivent être"],
+  [/\bpeut pas etre\b/g, "peut pas être"],
   [/\breessayer\b/g, "réessayer"],
-  [/\bverrouille\b(?!\()/g, "verrouillé"],
+  [/\bverrouille\b(?=["'\s,;.!)])/g, "verrouillé"],
   [/\bsuperieur\b/g, "supérieur"],
   [/\binferieur\b/g, "inférieur"],
-  [/\bdepasser\b/g, "dépasser"],
   [/\bmis a jour\b/g, "mis à jour"],
-  [/\bcree avec succes\b/g, "créé avec succès"],
-  [/\bcreee avec succes\b/g, "créée avec succès"],
-  [/\bsupprimee?\b(?=["'\s,;.!?)])/g, "supprimé(e)"],
+  [/\bcree avec succes\b/gi, "créé avec succès"],
   [/\btelechargement\b/g, "téléchargement"],
-  [/\bdesactive\b(?=["'\s,;.!?)])/g, "désactivé"],
+  [/\bdesactive\b(?=["'\s,;.!)])/g, "désactivé"],
   [/\birreversible\b/g, "irréversible"],
   [/\bEtes-vous sur\b/g, "Êtes-vous sûr"],
+  [/\bavec succes\b/g, "avec succès"],
+  [/\bexporte avec\b/g, "exporté avec"],
+  [/\bsupprimee?s? avec\b/g, "supprimé(e)(s) avec"],
+  [/\bmodifiee? avec\b/g, "modifié(e) avec"],
+  [/\bajoutee? avec\b/g, "ajouté(e) avec"],
+  [/\bcloturee? avec\b/g, "clôturé(e) avec"],
+  [/\benregistree? avec\b/g, "enregistré(e) avec"],
+  [/\bregeneree? avec\b/g, "régénéré(e) avec"],
+  [/\bpreparation\b/g, "préparation"],
+  [/\bconfigure avec\b/g, "configuré avec"],
+  [/\breinitialise avec\b/g, "réinitialisé avec"],
 ];
 
 // ============================================================================
-// Filtrage intelligent
+// Extraction de texte
 // ============================================================================
 
-/**
- * Extrait les chaînes littérales et texte JSX d'une ligne
- */
-function extractFrenchText(line) {
+function extractUserVisibleText(line) {
   const segments = [];
 
-  // Extraire les chaînes entre guillemets doubles
-  const doubleQuoted = line.matchAll(/"([^"]+)"/g);
-  for (const m of doubleQuoted) segments.push({ text: m[1], start: m.index + 1 });
+  // Chaînes entre guillemets doubles
+  for (const m of line.matchAll(/"([^"]{2,})"/g)) {
+    segments.push(m[1]);
+  }
 
-  // Extraire les chaînes entre guillemets simples
-  const singleQuoted = line.matchAll(/'([^']+)'/g);
-  for (const m of singleQuoted) segments.push({ text: m[1], start: m.index + 1 });
+  // Chaînes entre guillemets simples (pas les chars seuls)
+  for (const m of line.matchAll(/'([^']{2,})'/g)) {
+    segments.push(m[1]);
+  }
 
-  // Extraire les commentaires
-  const lineComment = line.match(/\/\/\s*(.+)/);
-  if (lineComment) segments.push({ text: lineComment[1], start: lineComment.index + 3 });
+  // Texte JSX entre > et <
+  for (const m of line.matchAll(/>([^<>{}`$]{2,})</g)) {
+    const t = m[1].trim();
+    if (t.length > 1) segments.push(t);
+  }
 
-  const blockComment = line.match(/\/\*\*?\s*(.+?)(?:\*\/)?$/);
-  if (blockComment) segments.push({ text: blockComment[1], start: blockComment.index + 3 });
+  // Template literals avec du texte (après ` ou avant `)
+  for (const m of line.matchAll(/`([^`]{2,})`/g)) {
+    segments.push(m[1]);
+  }
 
-  const docComment = line.match(/^\s*\*\s+(.+)/);
-  if (docComment) segments.push({ text: docComment[1], start: docComment.index + 3 });
-
-  // Extraire le texte JSX (entre > et <)
-  const jsxText = line.matchAll(/>([^<>{]+)</g);
-  for (const m of jsxText) {
-    const text = m[1].trim();
-    if (text.length > 1) segments.push({ text, start: m.index + 1 });
+  if (includeComments) {
+    const comment = line.match(/\/\/\s*(.{3,})/);
+    if (comment) segments.push(comment[1]);
+    const doc = line.match(/^\s*\*\s+(.{3,})/);
+    if (doc) segments.push(doc[1]);
   }
 
   return segments;
 }
 
-/**
- * Vérifie si un segment de texte est un identifiant programmatique
- */
 function isProgrammatic(text) {
-  // Clé de permission: "vente:creer"
-  if (/^[a-z_]+:[a-z_]+$/.test(text)) return true;
-  // Slug: "creer-modifier-produits"
-  if (/^[a-z0-9-]+$/.test(text)) return true;
-  // Chemin: "@/schemas/..."
-  if (text.startsWith("@/") || text.startsWith("./") || text.startsWith("../")) return true;
-  // Colonne DB: "nom, prenom, telephone" (virgules = select query)
-  if (/^[a-z_]+(?:,\s*[a-z_]+)+$/.test(text.trim())) return true;
-  // Nom de table/colonne seul
-  if (/^[a-z_]+$/.test(text.trim())) return true;
-  // Variable: camelCase
-  if (/^[a-z][a-zA-Z0-9]*$/.test(text.trim())) return true;
+  if (/^[a-z_]+:[a-z_]+$/.test(text)) return true;         // permission key
+  if (/^[a-z0-9][-a-z0-9]*$/.test(text)) return true;      // slug
+  if (text.startsWith("@/") || text.startsWith("./")) return true; // import
+  if (/^[a-z_]+(?:,\s*[a-z_*]+)+$/.test(text)) return true; // DB select
+  if (/^[a-z_]+$/.test(text)) return true;                  // column/table
+  if (/^[a-z][a-zA-Z0-9]*$/.test(text)) return true;        // camelCase
+  if (/^[A-Z][A-Z_]+$/.test(text)) return true;             // CONSTANT
+  if (/animation:\s*"/.test(text)) return true;              // CSS animation
+  if (/pulse-|fade-|slide-/.test(text)) return true;         // CSS keyframe names
   return false;
 }
 
@@ -144,93 +150,82 @@ function isProgrammatic(text) {
 // Scan
 // ============================================================================
 
-const EXTENSIONS = new Set([".ts", ".tsx"]);
-const IGNORE_DIRS = new Set(["node_modules", ".next", "dist", ".git", ".turbo"]);
+const EXTS = new Set([".ts", ".tsx"]);
+const SKIP = new Set(["node_modules", ".next", "dist", ".git", ".turbo"]);
 
-function getAllFiles(dir, files = []) {
-  for (const entry of readdirSync(dir)) {
-    if (IGNORE_DIRS.has(entry)) continue;
-    const full = join(dir, entry);
-    const stat = statSync(full);
-    if (stat.isDirectory()) {
-      getAllFiles(full, files);
-    } else if (EXTENSIONS.has(extname(entry))) {
-      files.push(full);
-    }
+function walk(dir) {
+  const files = [];
+  for (const e of readdirSync(dir)) {
+    if (SKIP.has(e)) continue;
+    const p = join(dir, e);
+    if (statSync(p).isDirectory()) files.push(...walk(p));
+    else if (EXTS.has(extname(e))) files.push(p);
   }
   return files;
 }
 
-function checkFile(filePath, rootDir) {
-  const content = readFileSync(filePath, "utf-8");
-  const lines = content.split("\n");
-  const issues = [];
+function check(filePath, root) {
+  const lines = readFileSync(filePath, "utf-8").split("\n");
+  const hits = [];
 
   for (let i = 0; i < lines.length; i++) {
-    const line = lines[i];
-    const segments = extractFrenchText(line);
+    const segments = extractUserVisibleText(lines[i]);
 
-    for (const segment of segments) {
-      if (isProgrammatic(segment.text)) continue;
+    for (const seg of segments) {
+      if (isProgrammatic(seg)) continue;
 
-      for (const [pattern, correction] of ACCENT_RULES) {
-        pattern.lastIndex = 0;
-        let match;
-
-        while ((match = pattern.exec(segment.text)) !== null) {
-          issues.push({
-            file: relative(rootDir, filePath),
+      for (const [re, fix] of RULES) {
+        re.lastIndex = 0;
+        let m;
+        while ((m = re.exec(seg)) !== null) {
+          hits.push({
+            file: relative(root, filePath),
             line: i + 1,
-            found: match[0],
-            expected: correction,
-            context: line.trim().substring(0, 120),
+            found: m[0],
+            fix,
+            ctx: lines[i].trim().slice(0, 120),
           });
         }
       }
     }
   }
-
-  return issues;
+  return hits;
 }
 
 // ============================================================================
 // Main
 // ============================================================================
 
-const rootDir = join(import.meta.dirname, "..");
-const files = getAllFiles(rootDir);
-const allIssues = [];
-
-for (const file of files) {
-  const issues = checkFile(file, rootDir);
-  allIssues.push(...issues);
-}
+const root = join(import.meta.dirname, "..");
+const allHits = walk(root).flatMap((f) => check(f, root));
 
 // Grouper par fichier
-const byFile = {};
-for (const issue of allIssues) {
-  if (!byFile[issue.file]) byFile[issue.file] = [];
-  byFile[issue.file].push(issue);
-}
+const grouped = Object.groupBy(allHits, (h) => h.file);
+const total = allHits.length;
+const fileCount = Object.keys(grouped).length;
 
-const totalIssues = allIssues.length;
-
-if (totalIssues === 0) {
+if (total === 0) {
   console.log("✅ Aucun accent français manquant détecté !");
   process.exit(0);
 }
 
-console.log(`\n⚠️  ${totalIssues} accent(s) français manquant(s) dans ${Object.keys(byFile).length} fichier(s) :\n`);
+console.log(
+  `\n⚠️  ${total} accent(s) manquant(s) dans ${fileCount} fichier(s)` +
+    (includeComments ? " (commentaires inclus)" : "") +
+    "\n"
+);
 
-for (const [file, issues] of Object.entries(byFile)) {
+for (const [file, hits] of Object.entries(grouped)) {
   console.log(`📄 ${file}`);
-  for (const issue of issues) {
-    console.log(`   L${issue.line}: "${issue.found}" → "${issue.expected}"`);
-    console.log(`      ${issue.context}`);
+  for (const h of hits) {
+    console.log(`   L${h.line}: "${h.found}" → "${h.fix}"`);
+    console.log(`      ${h.ctx}`);
   }
   console.log();
 }
 
-console.log(`Total: ${totalIssues} problème(s)`);
-console.log(`\nCorrigez ces accents puis relancez: pnpm check:accents`);
+console.log(`Total: ${total} problème(s)`);
+if (!includeComments) {
+  console.log("Astuce: pnpm check:accents --all  pour inclure les commentaires");
+}
 process.exit(1);

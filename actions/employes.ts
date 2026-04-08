@@ -11,6 +11,7 @@
 import { revalidatePath } from "next/cache";
 import { createAuthenticatedClient, createServiceClient, db } from "@/lib/db";
 import { hashPassword, hashPin, requireAuth, requireAnyRole } from "@/lib/auth";
+import { checkUserQuota } from "@/lib/plan-enforcement";
 import {
   createEmployeSchema,
   updateEmployeSchema,
@@ -91,7 +92,7 @@ export async function getEmployes(): Promise<
 
     // Filtrer les SUPER_ADMIN si l'utilisateur courant n'est pas SUPER_ADMIN
     const filteredEmployes = employes.filter((e) => {
-      // Si l'employe est SUPER_ADMIN
+      // Si l'employé est SUPER_ADMIN
       if (e.role === "SUPER_ADMIN") {
         // Seul un SUPER_ADMIN peut le voir, ou c'est lui-même
         return session.role === "SUPER_ADMIN" || e.id === session.userId;
@@ -114,10 +115,10 @@ export async function getEmployes(): Promise<
       })),
     };
   } catch (error) {
-    console.error("Erreur recuperation employes:", error);
+    console.error("Erreur récupération employés:", error);
     return {
       success: false,
-      error: "Erreur lors de la recuperation des employes",
+      error: "Erreur lors de la récupération des employés",
     };
   }
 }
@@ -165,10 +166,10 @@ export async function getEmployeById(id: string): Promise<
       },
     };
   } catch (error) {
-    console.error("Erreur recuperation employe:", error);
+    console.error("Erreur récupération employé:", error);
     return {
       success: false,
-      error: "Erreur lors de la recuperation de l'employe",
+      error: "Erreur lors de la récupération de l'employé",
     };
   }
 }
@@ -186,6 +187,12 @@ export async function createEmploye(input: CreateEmployeInput): Promise<ActionRe
     if (!session.etablissementId) return { success: false, error: "Aucun établissement associé" };
     const supabase = await getAuthClientFromSession(session);
 
+    // Vérification du quota utilisateurs
+    const quotaCheck = await checkUserQuota(supabase, session.etablissementId, { userRole: session.role });
+    if (!quotaCheck.allowed) {
+      return { success: false, error: quotaCheck.message };
+    }
+
     // Valider les donnees
     const validated = createEmployeSchema.parse(input);
 
@@ -195,7 +202,7 @@ export async function createEmploye(input: CreateEmployeInput): Promise<ActionRe
     if (emailExists) {
       return {
         success: false,
-        error: "Cet email est deja utilise",
+        error: "Cet email est déjà utilisé",
       };
     }
 
@@ -216,7 +223,7 @@ export async function createEmploye(input: CreateEmployeInput): Promise<ActionRe
     });
 
     if (authError) {
-      console.error("Erreur creation Supabase Auth:", authError);
+      console.error("Erreur création Supabase Auth:", authError);
       return {
         success: false,
         error: `Erreur Supabase Auth: ${authError.message}`,
@@ -226,7 +233,7 @@ export async function createEmploye(input: CreateEmployeInput): Promise<ActionRe
     if (!authData.user) {
       return {
         success: false,
-        error: "Erreur: utilisateur non cree dans Supabase Auth",
+        error: "Erreur: utilisateur non créé dans Supabase Auth",
       };
     }
 
@@ -239,7 +246,7 @@ export async function createEmploye(input: CreateEmployeInput): Promise<ActionRe
       hashedPin = await hashPin(validated.pinCode);
     }
 
-    // 4. Mettre à jour l'employe créé par le trigger avec les données complètes
+    // 4. Mettre à jour l'employé créé par le trigger avec les données complètes
     // Le trigger crée l'utilisateur avec les métadonnées, on ajoute le mot de passe hashé et le PIN
     const { data: employe, error: updateError } = await adminSupabase
       .from("utilisateurs")
@@ -278,10 +285,10 @@ export async function createEmploye(input: CreateEmployeInput): Promise<ActionRe
       data: employe.id,
     };
   } catch (error) {
-    console.error("Erreur creation employe:", error);
+    console.error("Erreur création employé:", error);
     return {
       success: false,
-      error: "Erreur lors de la creation de l'employe",
+      error: "Erreur lors de la création de l'employé",
     };
   }
 }
@@ -299,7 +306,7 @@ export async function updateEmploye(input: UpdateEmployeInput): Promise<ActionRe
     // Valider les donnees
     const validated = updateEmployeSchema.parse(input);
 
-    // Verifier que l'employe existe (RLS filtre par etablissement_id)
+    // Verifier que l'employé existe (RLS filtre par etablissement_id)
     const existingEmploye = await db.getEmployeById(supabase, validated.id);
 
     if (!existingEmploye) {
@@ -317,19 +324,19 @@ export async function updateEmploye(input: UpdateEmployeInput): Promise<ActionRe
       };
     }
 
-    // Verifier si l'email est deja utilise par un autre utilisateur
+    // Verifier si l'email est déjà utilisé par un autre utilisateur
     if (validated.email !== existingEmploye.email) {
       const emailExists = await db.emailExists(supabase, validated.email, validated.id);
 
       if (emailExists) {
         return {
           success: false,
-          error: "Cet email est deja utilise",
+          error: "Cet email est déjà utilisé",
         };
       }
     }
 
-    // Mettre a jour l'employe
+    // Mettre a jour l'employé
     await db.updateEmploye(supabase, validated.id, {
       nom: validated.nom,
       prenom: validated.prenom,
@@ -352,10 +359,10 @@ export async function updateEmploye(input: UpdateEmployeInput): Promise<ActionRe
 
     return { success: true };
   } catch (error) {
-    console.error("Erreur mise a jour employe:", error);
+    console.error("Erreur mise à jour employe:", error);
     return {
       success: false,
-      error: "Erreur lors de la mise a jour de l'employe",
+      error: "Erreur lors de la mise à jour de l'employé",
     };
   }
 }
@@ -373,7 +380,7 @@ export async function resetEmployePin(input: ResetPinInput): Promise<ActionResul
     // Valider les donnees
     const validated = resetPinSchema.parse(input);
 
-    // Verifier que l'employe existe (RLS filtre par etablissement_id)
+    // Verifier que l'employé existe (RLS filtre par etablissement_id)
     const employe = await db.getEmployeById(supabase, validated.employeId);
 
     if (!employe) {
@@ -434,7 +441,7 @@ export async function resetEmployePassword(input: ResetPasswordInput): Promise<A
     // Valider les donnees
     const validated = resetPasswordSchema.parse(input);
 
-    // Verifier que l'employe existe (RLS filtre par etablissement_id)
+    // Verifier que l'employé existe (RLS filtre par etablissement_id)
     const employe = await db.getEmployeById(supabase, validated.employeId);
 
     if (!employe) {
@@ -506,7 +513,7 @@ export async function toggleEmployeStatus(input: ToggleStatusInput): Promise<Act
     // Valider les donnees
     const validated = toggleStatusSchema.parse(input);
 
-    // Verifier que l'employe existe (RLS filtre par etablissement_id)
+    // Verifier que l'employé existe (RLS filtre par etablissement_id)
     const employe = await db.getEmployeById(supabase, validated.employeId);
 
     if (!employe) {
@@ -570,7 +577,7 @@ export async function deleteEmploye(employeId: string): Promise<ActionResult> {
     const session = await requireAnyRole(["SUPER_ADMIN", "ADMIN"]);
     const supabase = await getAuthClientFromSession(session);
 
-    // Verifier que l'employe existe (RLS filtre par etablissement_id)
+    // Verifier que l'employé existe (RLS filtre par etablissement_id)
     const employe = await db.getEmployeById(supabase, employeId);
 
     if (!employe) {
@@ -637,10 +644,10 @@ export async function deleteEmploye(employeId: string): Promise<ActionResult> {
 
     return { success: true };
   } catch (error) {
-    console.error("Erreur suppression employe:", error);
+    console.error("Erreur suppression employé:", error);
     return {
       success: false,
-      error: "Erreur lors de la suppression de l'employe",
+      error: "Erreur lors de la suppression de l'employé",
     };
   }
 }
@@ -660,7 +667,7 @@ export async function syncEmployeToSupabase(
     const session = await requireAnyRole(["SUPER_ADMIN", "ADMIN"]);
     const supabase = await getAuthClientFromSession(session);
 
-    // Verifier que l'employe existe (RLS filtre par etablissement_id)
+    // Verifier que l'employé existe (RLS filtre par etablissement_id)
     const employe = await db.getEmployeById(supabase, employeId);
 
     if (!employe) {
@@ -670,7 +677,7 @@ export async function syncEmployeToSupabase(
       };
     }
 
-    // Verifier si l'utilisateur existe deja dans Supabase Auth
+    // Verifier si l'utilisateur existe déjà dans Supabase Auth
     // L'id utilisateur est le même que l'id auth (sync trigger)
     const adminSupabase = createServiceClient();
     const { data: existingAuthUser, error: getUserError } =
@@ -679,7 +686,7 @@ export async function syncEmployeToSupabase(
     if (!getUserError && existingAuthUser?.user) {
       return {
         success: false,
-        error: "Cet utilisateur existe deja dans Supabase Auth",
+        error: "Cet utilisateur existe déjà dans Supabase Auth",
       };
     }
 
@@ -698,7 +705,7 @@ export async function syncEmployeToSupabase(
     if (createError) {
       return {
         success: false,
-        error: `Erreur creation Supabase Auth: ${createError.message}`,
+        error: `Erreur création Supabase Auth: ${createError.message}`,
       };
     }
 
@@ -742,7 +749,7 @@ export async function getEmployeStats(employeId: string): Promise<
     const session = await requireAuth();
     const supabase = await getAuthClientFromSession(session);
 
-    // Verifier que l'employe existe (RLS filtre par etablissement_id)
+    // Verifier que l'employé existe (RLS filtre par etablissement_id)
     const employe = await db.getEmployeById(supabase, employeId);
 
     if (!employe) {
@@ -796,7 +803,7 @@ export async function getEmployeStats(employeId: string): Promise<
     console.error("Erreur statistiques employe:", error);
     return {
       success: false,
-      error: "Erreur lors de la recuperation des statistiques",
+      error: "Erreur lors de la récupération des statistiques",
     };
   }
 }
@@ -873,7 +880,7 @@ export async function updateEmployeAllowedRoutes(input: {
     const session = await requireAnyRole(["SUPER_ADMIN", "ADMIN"]);
     const supabase = await getAuthClientFromSession(session);
 
-    // Verifier que l'employe existe (RLS filtre par etablissement_id)
+    // Verifier que l'employé existe (RLS filtre par etablissement_id)
     const employe = await db.getEmployeById(supabase, input.employeId);
 
     if (!employe) {
@@ -883,7 +890,7 @@ export async function updateEmployeAllowedRoutes(input: {
       };
     }
 
-    // Ne pas permettre la modification des acces pour les admins
+    // Ne pas permettre la modification des accès pour les admins
     if (employe.role === "SUPER_ADMIN" || employe.role === "ADMIN") {
       return {
         success: false,
@@ -901,7 +908,7 @@ export async function updateEmployeAllowedRoutes(input: {
       console.error("Erreur update allowed_routes:", updateError);
       return {
         success: false,
-        error: "Erreur lors de la mise a jour des acces",
+        error: "Erreur lors de la mise à jour des accès",
       };
     }
 
@@ -919,10 +926,10 @@ export async function updateEmployeAllowedRoutes(input: {
 
     return { success: true };
   } catch (error) {
-    console.error("Erreur mise a jour allowed_routes:", error);
+    console.error("Erreur mise à jour allowed_routes:", error);
     return {
       success: false,
-      error: "Erreur lors de la mise a jour des acces",
+      error: "Erreur lors de la mise à jour des accès",
     };
   }
 }

@@ -97,7 +97,7 @@ export const createPaymentSchema = z.object({
   montant: z.coerce
     .number()
     .int()
-    .min(1, "Le montant doit etre superieur a 0"),
+    .min(1, "Le montant doit être supérieur à 0"),
   methode: paymentMethodSchema,
   reference_externe: z
     .string()

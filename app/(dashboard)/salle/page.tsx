@@ -1,5 +1,6 @@
 import { SalleContent } from "./content";
 import { getTables, getZonesWithTableCount, getTablesStats, getTableById } from "@/actions/tables";
+import { PlanGate } from "@/components/shared/plan-gate";
 
 export default async function SallePage({
   searchParams,
@@ -19,13 +20,15 @@ export default async function SallePage({
   ]);
 
   return (
-    <SalleContent
-      tables={tables as never}
-      zones={zones as never}
-      stats={stats}
-      selectedTable={selectedTable as never}
-      selectedTableId={selectedTableId}
-      zoneFilter={zoneFilter}
-    />
+    <PlanGate feature="tables_salle">
+      <SalleContent
+        tables={tables as never}
+        zones={zones as never}
+        stats={stats}
+        selectedTable={selectedTable as never}
+        selectedTableId={selectedTableId}
+        zoneFilter={zoneFilter}
+      />
+    </PlanGate>
   );
 }

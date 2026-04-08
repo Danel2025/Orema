@@ -1,0 +1,61 @@
+{
+  "$schema": "https://raw.githubusercontent.com/tauri-apps/tauri/dev/crates/tauri-cli/schema.json",
+  "productName": "Oréma N+",
+  "version": "1.1.0",
+  "identifier": "com.orema.pos",
+  "build": {
+    "beforeDevCommand": "pnpm dev",
+    "devUrl": "http://localhost:3000",
+    "frontendDist": "../out"
+  },
+  "app": {
+    "windows": [
+      {
+        "url": "/login",
+        "title": "Oréma N+ - Point de Vente",
+        "width": 1280,
+        "height": 800,
+        "resizable": true,
+        "fullscreen": false,
+        "center": true,
+        "minWidth": 1024,
+        "minHeight": 768
+      }
+    ],
+    "security": {
+      "csp": null
+    }
+  },
+  "bundle": {
+    "active": true,
+    "targets": ["nsis", "msi"],
+    "icon": [
+      "icons/32x32.png",
+      "icons/128x128.png",
+      "icons/128x128@2x.png",
+      "icons/icon.icns",
+      "icons/icon.ico"
+    ],
+    "publisher": "Oréma",
+    "copyright": "© 2026 Oréma. Tous droits réservés.",
+    "category": "Business",
+    "createUpdaterArtifacts": true,
+    "windows": {
+      "webviewInstallMode": {
+        "type": "downloadBootstrapper"
+      },
+      "nsis": {
+        "installMode": "currentUser"
+      }
+    }
+  },
+  "plugins": {
+    "opener": {},
+    "updater": {
+      "endpoints": [
+        "https://github.com/Danel2025/Orema-n-/releases/latest/download/latest.json"
+      ],
+      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IEU4NkJDRUNERUEyNDk3RTIKUldUaWx5VHF6YzVyNkpMb3BpMURILzVVNGVTeEszNjlORXhuVklFcE9mLzJNLzJ6RkE2cDN5Ym8K"
+    }
+  }
+}

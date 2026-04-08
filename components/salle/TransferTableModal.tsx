@@ -205,7 +205,7 @@ export function TransferTableModal({
           setTimeout(() => {
             onOpenChange(false);
             onSuccess?.();
-            toast.success("Commandes fusionnees avec succes");
+            toast.success("Commandes fusionnées avec succès");
           }, 1500);
         } else {
           toast.error(result.error || "Erreur lors de la fusion");
@@ -278,7 +278,7 @@ export function TransferTableModal({
               <CheckCircle size={40} color="white" />
             </div>
             <Text size="5" weight="bold" style={{ color: "var(--green-11)" }}>
-              {showMergeConfirm ? "Commandes fusionnees!" : "Transfert reussi!"}
+              {showMergeConfirm ? "Commandes fusionnées!" : "Transfert réussi!"}
             </Text>
           </div>
         ) : null}

@@ -118,10 +118,10 @@ export function DeliverySettings({ initialData }: DeliverySettingsProps) {
         const updatedZone = result.data as ZoneLivraison;
         if (editingZone) {
           setZones((prev) => prev.map((z) => (z.id === editingZone.id ? updatedZone : z)));
-          toast.success("Zone modifiee avec succes");
+          toast.success("Zone modifiée avec succès");
         } else {
           setZones((prev) => [...prev, updatedZone]);
-          toast.success("Zone ajoutee avec succes");
+          toast.success("Zone ajoutée avec succès");
         }
         setIsDialogOpen(false);
       } else {
@@ -135,7 +135,7 @@ export function DeliverySettings({ initialData }: DeliverySettingsProps) {
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm("Etes-vous sur de vouloir supprimer cette zone de livraison ?")) {
+    if (!confirm("Êtes-vous sûr de vouloir supprimer cette zone de livraison ?")) {
       return;
     }
 
@@ -146,7 +146,7 @@ export function DeliverySettings({ initialData }: DeliverySettingsProps) {
 
       if (result.success) {
         setZones((prev) => prev.filter((z) => z.id !== id));
-        toast.success("Zone supprimee");
+        toast.success("Zone supprimée");
       } else {
         toast.error(result.error || "Erreur lors de la suppression");
       }
@@ -165,7 +165,7 @@ export function DeliverySettings({ initialData }: DeliverySettingsProps) {
       if (result.success && result.data) {
         const updatedZone = result.data as ZoneLivraison;
         setZones((prev) => prev.map((z) => (z.id === id ? updatedZone : z)));
-        toast.success(updatedZone.active ? "Zone activee" : "Zone desactivee");
+        toast.success(updatedZone.active ? "Zone activée" : "Zone désactivée");
       } else {
         toast.error(result.error || "Erreur lors du changement d'etat");
       }

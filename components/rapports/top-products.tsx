@@ -99,7 +99,7 @@ export function TopProducts({ initialData }: TopProductsProps) {
         </Flex>
         <Flex gap="2">
           <Select.Root value={periode} onValueChange={(v) => setPeriode(v as PeriodeType)}>
-            <Select.Trigger placeholder="Periode" />
+            <Select.Trigger placeholder="Période" />
             <Select.Content position="popper">
               <Select.Item value="jour">Aujourd'hui</Select.Item>
               <Select.Item value="semaine">Cette semaine</Select.Item>
@@ -130,8 +130,8 @@ export function TopProducts({ initialData }: TopProductsProps) {
             <Table.Row>
               <Table.ColumnHeaderCell width="50px">#</Table.ColumnHeaderCell>
               <Table.ColumnHeaderCell>Produit</Table.ColumnHeaderCell>
-              <Table.ColumnHeaderCell>Categorie</Table.ColumnHeaderCell>
-              <Table.ColumnHeaderCell align="right">Quantite</Table.ColumnHeaderCell>
+              <Table.ColumnHeaderCell>Catégorie</Table.ColumnHeaderCell>
+              <Table.ColumnHeaderCell align="right">Quantité</Table.ColumnHeaderCell>
               <Table.ColumnHeaderCell align="right">CA</Table.ColumnHeaderCell>
             </Table.Row>
           </Table.Header>

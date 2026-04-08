@@ -2,6 +2,7 @@ import { Suspense } from "react";
 import { Box, Flex, Heading, Text } from "@radix-ui/themes";
 import { StocksContent } from "./stocks-content";
 import { Loading } from "@/components/shared/loading";
+import { PlanGate } from "@/components/shared/plan-gate";
 
 export const metadata = {
   title: "Stocks | Oréma N+",
@@ -25,9 +26,11 @@ export default function StocksPage() {
         </Flex>
 
         {/* Contenu avec chargement des données */}
-        <Suspense fallback={<Loading />}>
-          <StocksContent />
-        </Suspense>
+        <PlanGate feature="stocks_avances">
+          <Suspense fallback={<Loading />}>
+            <StocksContent />
+          </Suspense>
+        </PlanGate>
       </Flex>
     </Box>
   );

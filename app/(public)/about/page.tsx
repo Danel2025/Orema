@@ -28,7 +28,7 @@ const values = [
     icon: ShieldCheck,
     title: "Fiabilite",
     description:
-      "Un systeme qui fonctionne en permanence, meme hors connexion. Vos donnees sont securisees et sauvegardees automatiquement.",
+      "Un systeme qui fonctionne en permanence, meme hors connexion. Vos données sont sécurisées et sauvegardees automatiquement.",
   },
   {
     icon: Lightning,

@@ -33,7 +33,7 @@ const contactInfo = [
   },
   {
     icon: Phone,
-    title: "Telephone",
+    title: "Téléphone",
     value: "+241 77 00 00 00",
     href: "tel:+24177000000",
     description: "Du lundi au vendredi, 8h - 18h",

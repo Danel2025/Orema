@@ -23,6 +23,7 @@ import {
   validerPrixMinimum,
   validerModePaiement,
 } from "@/lib/tarification/enforcement";
+import { checkSalesQuota } from "@/lib/plan-enforcement";
 import { createAuditLog } from "@/actions/audit";
 import { generateBonCuisine } from "@/lib/print/bon-cuisine";
 import { generateBonBar } from "@/lib/print/bon-bar";
@@ -664,6 +665,12 @@ export async function createVente(input: CreateVenteInput) {
     role: user.role,
   });
 
+  // Vérification du quota ventes mensuelles
+  const salesQuota = await checkSalesQuota(supabase, etablissementId, { userRole: user.role });
+  if (!salesQuota.allowed) {
+    return { success: false, error: salesQuota.message };
+  }
+
   try {
     // Vérifier les prix serveur (ne jamais faire confiance au client)
     const lignesVerifiees = await verifierPrixServeur(supabase, validatedInput.lignes as LigneVenteInput[]);
@@ -896,6 +903,12 @@ export async function createVenteEnAttente(input: CreateVenteEnAttenteInput) {
     etablissementId: user.etablissementId,
     role: user.role,
   });
+
+  // Vérification du quota ventes mensuelles
+  const salesQuota = await checkSalesQuota(supabase, etablissementId, { userRole: user.role });
+  if (!salesQuota.allowed) {
+    return { success: false, error: salesQuota.message };
+  }
 
   // Vérifier s'il y a déjà une commande en cours sur cette table
   if (validatedInput.tableId) {
@@ -1340,6 +1353,12 @@ export async function createVenteEnCompte(input: CreateVenteEnAttenteInput & { c
     etablissementId: user.etablissementId,
     role: user.role,
   });
+
+  // Vérification du quota ventes mensuelles
+  const salesQuota = await checkSalesQuota(supabase, etablissementId, { userRole: user.role });
+  if (!salesQuota.allowed) {
+    return { success: false, error: salesQuota.message };
+  }
 
   // Vérifier le client
   const { data: client } = await supabase

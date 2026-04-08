@@ -27,8 +27,8 @@ export const ecranSchema = z.object({
   delai_urgence_minutes: z.coerce
     .number()
     .int()
-    .min(1, "Le delai doit etre d'au moins 1 minute")
-    .max(120, "Le delai ne peut pas depasser 120 minutes")
+    .min(1, "Le délai doit être d'au moins 1 minute")
+    .max(120, "Le délai ne peut pas dépasser 120 minutes")
     .default(15),
 });
 

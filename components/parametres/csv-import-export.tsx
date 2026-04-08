@@ -87,7 +87,7 @@ function ImportSection() {
     if (!file) return;
 
     if (!file.name.endsWith(".csv")) {
-      toast.error("Veuillez selectionner un fichier CSV");
+      toast.error("Veuillez sélectionner un fichier CSV");
       return;
     }
 
@@ -119,13 +119,13 @@ function ImportSection() {
   const handleDownloadTemplate = () => {
     const csv = getProductsTemplate();
     downloadCSV(csv, "template_produits.csv");
-    toast.success("Template telecharge");
+    toast.success("Template téléchargé");
   };
 
   const handleDownloadExample = () => {
     const csv = getProductsExampleCSV();
     downloadCSV(csv, "exemple_produits.csv");
-    toast.success("Exemple telecharge");
+    toast.success("Exemple téléchargé");
   };
 
   return (
@@ -277,7 +277,7 @@ function ExportSection() {
       const result = await exportProducts();
       if (result.success && result.data) {
         downloadCSV(result.data, generateFilename("produits"));
-        toast.success("Export des produits termine");
+        toast.success("Export des produits terminé");
       } else {
         toast.error(result.error || "Erreur d'export");
       }

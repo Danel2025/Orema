@@ -18,9 +18,13 @@ import {
   Trash,
   GridFour,
   MapPin,
+  ArrowsHorizontal,
+  ArrowsVertical,
   type Icon,
 } from "@phosphor-icons/react";
 import { GRID_SIZES, type GridSize } from "@/lib/floorplan/snap-to-grid";
+
+export type Orientation = "horizontal" | "vertical";
 
 export type ToolType =
   | "select"
@@ -37,6 +41,15 @@ export type ToolType =
   | "counter"
   | "bar"
   | "decoration";
+
+/** Outils de structure non-carrés qui supportent le toggle d'orientation */
+export const ORIENTABLE_TOOLS: Set<ToolType> = new Set([
+  "wall",
+  "shelf",
+  "door",
+  "counter",
+  "bar",
+]);
 
 // Icone personnalisee pour le mur (plus intuitive que Minus)
 function WallIcon({ size = 16, ...props }: { size?: number; className?: string }) {
@@ -273,6 +286,9 @@ interface FloorPlanToolbarProps {
   onSnapToggle?: (enabled: boolean) => void;
   gridSize?: GridSize;
   onGridSizeChange?: (size: GridSize) => void;
+  // Orientation props
+  orientation?: Orientation;
+  onOrientationChange?: (orientation: Orientation) => void;
 }
 
 export function FloorPlanToolbar({
@@ -285,10 +301,13 @@ export function FloorPlanToolbar({
   onSnapToggle,
   gridSize = 20,
   onGridSizeChange,
+  orientation = "horizontal",
+  onOrientationChange,
 }: FloorPlanToolbarProps) {
+  const showOrientationToggle = ORIENTABLE_TOOLS.has(activeTool);
   // Touches qui sont aussi des raccourcis d'action quand un element est selectionne
-  // R = rotation, L = verrouiller, F = focus, N = snap, G = grille
-  const ACTION_KEYS_ON_SELECTION = new Set(["R", "L", "F", "N", "G"]);
+  // R = rotation, L = verrouiller, F = focus, N = snap, G = grille, H = orientation
+  const ACTION_KEYS_ON_SELECTION = new Set(["R", "L", "F", "N", "G", "H"]);
 
   // Raccourcis clavier (selection d'outils uniquement - les actions sont gerees par useFloorPlanKeyboard)
   const handleKeyDown = useCallback(
@@ -441,6 +460,142 @@ export function FloorPlanToolbar({
         );
       })}
 
+      {/* Toggle orientation H/V (visible uniquement pour les outils orientables) */}
+      {showOrientationToggle ? (
+        <>
+          <div
+            style={{
+              height: 1,
+              backgroundColor: "var(--gray-a5)",
+              margin: "4px 0",
+            }}
+          />
+          <div>
+            <span
+              style={{
+                display: "block",
+                fontSize: 10,
+                fontWeight: 600,
+                color: "var(--gray-9)",
+                textTransform: "uppercase",
+                letterSpacing: 0.5,
+                marginBottom: 4,
+                paddingLeft: 4,
+              }}
+            >
+              Orientation
+            </span>
+            <div
+              style={{
+                display: "flex",
+                gap: 4,
+                padding: 4,
+                backgroundColor: "var(--gray-a3)",
+                borderRadius: 6,
+              }}
+            >
+              <Tooltip
+                content="Horizontal"
+                side="bottom"
+                sideOffset={4}
+                delayDuration={200}
+              >
+                <button
+                  onClick={() => onOrientationChange?.("horizontal")}
+                  style={{
+                    flex: 1,
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    gap: 4,
+                    padding: "6px 8px",
+                    borderRadius: 4,
+                    border: "none",
+                    backgroundColor:
+                      orientation === "horizontal" ? "var(--accent-9)" : "transparent",
+                    color:
+                      orientation === "horizontal" ? "white" : "var(--gray-11)",
+                    cursor: "pointer",
+                    fontSize: 11,
+                    fontWeight: orientation === "horizontal" ? 600 : 400,
+                    transition: "all 0.15s",
+                  }}
+                  onMouseEnter={(e) => {
+                    if (orientation !== "horizontal") {
+                      e.currentTarget.style.backgroundColor = "var(--gray-a4)";
+                    }
+                  }}
+                  onMouseLeave={(e) => {
+                    if (orientation !== "horizontal") {
+                      e.currentTarget.style.backgroundColor = "transparent";
+                    }
+                  }}
+                >
+                  <ArrowsHorizontal size={14} weight="bold" />
+                  H
+                </button>
+              </Tooltip>
+              <Tooltip
+                content={
+                  <span style={{ display: "flex", flexDirection: "column", gap: 2 }}>
+                    <span style={{ fontWeight: 600 }}>Vertical</span>
+                    <span style={{ fontSize: 11, opacity: 0.8 }}>
+                      Raccourci : touche <kbd style={{
+                        padding: "1px 4px",
+                        fontSize: 9,
+                        fontWeight: 600,
+                        fontFamily: "var(--font-google-sans-code), ui-monospace, monospace",
+                        backgroundColor: "var(--gray-a5)",
+                        borderRadius: 3,
+                        border: "1px solid var(--gray-a6)",
+                      }}>H</kbd> pour basculer
+                    </span>
+                  </span>
+                }
+                side="bottom"
+                sideOffset={4}
+                delayDuration={200}
+              >
+                <button
+                  onClick={() => onOrientationChange?.("vertical")}
+                  style={{
+                    flex: 1,
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    gap: 4,
+                    padding: "6px 8px",
+                    borderRadius: 4,
+                    border: "none",
+                    backgroundColor:
+                      orientation === "vertical" ? "var(--accent-9)" : "transparent",
+                    color:
+                      orientation === "vertical" ? "white" : "var(--gray-11)",
+                    cursor: "pointer",
+                    fontSize: 11,
+                    fontWeight: orientation === "vertical" ? 600 : 400,
+                    transition: "all 0.15s",
+                  }}
+                  onMouseEnter={(e) => {
+                    if (orientation !== "vertical") {
+                      e.currentTarget.style.backgroundColor = "var(--gray-a4)";
+                    }
+                  }}
+                  onMouseLeave={(e) => {
+                    if (orientation !== "vertical") {
+                      e.currentTarget.style.backgroundColor = "transparent";
+                    }
+                  }}
+                >
+                  <ArrowsVertical size={14} weight="bold" />
+                  V
+                </button>
+              </Tooltip>
+            </div>
+          </div>
+        </>
+      ) : null}
+
       {/* Séparateur */}
       <div
         style={{
@@ -575,7 +730,7 @@ export function FloorPlanToolbar({
                 </span>
                 <span style={{ fontSize: 12, opacity: 0.8 }}>
                   {snapEnabled
-                    ? "Desactiver l'alignement automatique"
+                    ? "Désactiver l'alignement automatique"
                     : "Activer l'alignement automatique sur la grille"}
                 </span>
               </span>
@@ -705,7 +860,8 @@ export function FloorPlanToolbar({
             { keys: "Ctrl+D", desc: "Dupliquer" },
             { keys: "Ctrl+C/V", desc: "Copier/Coller" },
             { keys: "R / ⇧R", desc: "Rotation ±90°" },
-            { keys: "[ / ]", desc: "Reduire/Agrandir" },
+            { keys: "H", desc: "Orientation H/V" },
+            { keys: "[ / ]", desc: "Réduire/Agrandir" },
             { keys: "F", desc: "Centrer la vue" },
             { keys: "N", desc: "Snap magnetique" },
             { keys: "Ctrl+Z/Y", desc: "Annuler/Refaire" },

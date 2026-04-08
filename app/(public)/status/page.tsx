@@ -42,12 +42,12 @@ const services: Service[] = [
   },
   {
     name: "API REST",
-    description: "Endpoints de donnees et synchronisation",
+    description: "Endpoints de données et synchronisation",
     icon: CloudCheck,
     status: "operational",
   },
   {
-    name: "Base de donnees",
+    name: "Base de données",
     description: "PostgreSQL / Supabase",
     icon: Database,
     status: "operational",

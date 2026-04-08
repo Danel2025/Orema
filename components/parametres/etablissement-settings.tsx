@@ -137,7 +137,7 @@ export function EtablissementSettings({ initialData }: EtablissementSettingsProp
                 <Text as="label" size="2" weight="medium" mb="1">
                   <Flex align="center" gap="1">
                     <Phone size={14} weight="regular" />
-                    Telephone
+                    Téléphone
                   </Flex>
                 </Text>
                 <TextField.Root

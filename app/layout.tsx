@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Gabarito, Source_Sans_3, JetBrains_Mono } from "next/font/google";
+import Script from "next/script";
 import { Providers } from "./providers";
 import "./globals.css";
 
@@ -35,7 +36,9 @@ export const metadata: Metadata = {
   authors: [{ name: "Oréma N+" }],
   icons: {
     icon: "/favicon.ico",
-    apple: { url: "/images/logos/ic-lg.webp", type: "image/webp" },
+    apple: [
+      { url: "/images/logos/ic-lg.webp", type: "image/webp", sizes: "192x192" },
+    ],
   },
 };
 
@@ -62,8 +65,35 @@ export default function RootLayout({
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="default" />
         <meta name="apple-mobile-web-app-title" content="Oréma N+" />
+      </head>
+      <body
+        className={`${gabarito.variable} ${sourceSans3.variable} ${jetbrainsMono.variable} antialiased`}
+      >
+        <Providers>{children}</Providers>
+        {/* Enregistrement du Service Worker */}
+        <Script
+          id="sw-register"
+          strategy="afterInteractive"
+          dangerouslySetInnerHTML={{
+            __html: `
+              if ('serviceWorker' in navigator) {
+                window.addEventListener('load', function() {
+                  navigator.serviceWorker.register('/sw.js', { scope: '/' })
+                    .then(function(reg) {
+                      console.log('[Orema] Service Worker enregistre, scope:', reg.scope);
+                    })
+                    .catch(function(err) {
+                      console.warn('[Orema] Echec enregistrement Service Worker:', err);
+                    });
+                });
+              }
+            `,
+          }}
+        />
         {/* Protection contre les boucles de redirection infinies */}
-        <script
+        <Script
+          id="redirect-loop-protection"
+          strategy="afterInteractive"
           dangerouslySetInnerHTML={{
             __html: `
               (function() {
@@ -86,7 +116,7 @@ export default function RootLayout({
                   }
 
                   if (parsed.count >= REDIRECT_LIMIT) {
-                    console.warn('[Oréma] Boucle de redirection détectée, nettoyage de la session...');
+                    console.warn('[Orema] Boucle de redirection detectee, nettoyage de la session...');
                     document.cookie = 'orema_session=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; SameSite=Lax';
                     fetch('/api/clear-session', { method: 'POST' })
                       .then(function() {
@@ -99,17 +129,12 @@ export default function RootLayout({
                       });
                   }
                 } catch (e) {
-                  console.error('[Oréma] Erreur protection redirections:', e);
+                  console.error('[Orema] Erreur protection redirections:', e);
                 }
               })();
             `,
           }}
         />
-      </head>
-      <body
-        className={`${gabarito.variable} ${sourceSans3.variable} ${jetbrainsMono.variable} antialiased`}
-      >
-        <Providers>{children}</Providers>
       </body>
     </html>
   );

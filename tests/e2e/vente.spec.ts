@@ -15,7 +15,7 @@ import { test, expect } from "@playwright/test";
 // TESTS SANS AUTHENTIFICATION
 // =============================================================================
 
-test.describe("Caisse - Acces sans authentification", () => {
+test.describe("Caisse - Accès sans authentification", () => {
   test("redirige vers /login si non authentifie", async ({ page }) => {
     await page.goto("/caisse");
 

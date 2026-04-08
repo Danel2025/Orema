@@ -33,7 +33,7 @@ const editEtablissementSchema = z.object({
     .or(z.literal(""))
     .refine(
       (val) => !val || /^[\d\s+()-]+$/.test(val),
-      "Numero de telephone invalide"
+      "Numéro de téléphone invalide"
     ),
   email: z
     .string()
@@ -97,7 +97,7 @@ export function EditEtablissementDialog({
       toast.success("Établissement mis à jour");
       onOpenChange(false);
     } catch {
-      toast.error("Erreur lors de la mise a jour");
+      toast.error("Erreur lors de la mise à jour");
     }
   };
 

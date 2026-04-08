@@ -86,7 +86,7 @@ export type FiscalFormData = z.infer<typeof fiscalSchema>;
  * Types de connexion imprimante
  */
 export const typeConnexionOptions = [
-  { value: "SYSTEME", label: "Systeme (recommande — toutes imprimantes)" },
+  { value: "SYSTEME", label: "Système (recommandé — toutes imprimantes)" },
   { value: "RESEAU", label: "Reseau (IP directe — imprimantes thermiques)" },
   { value: "USB", label: "USB (ESC/POS — imprimantes thermiques)" },
   { value: "SERIE", label: "Port Serie (ESC/POS — via Web Serial)" },
@@ -429,10 +429,10 @@ export type SecuriteSettingsFormData = z.infer<typeof securiteSettingsSchema>;
  */
 export const affichageTableOptions = [
   { value: "NOM", label: "Nom uniquement" },
-  { value: "NUMERO", label: "Numero uniquement" },
-  { value: "CAPACITE", label: "Capacite uniquement" },
-  { value: "NOM_NUMERO", label: "Nom + Numero" },
-  { value: "NUMERO_CAPACITE", label: "Numero + Capacite" },
+  { value: "NUMERO", label: "Numéro uniquement" },
+  { value: "CAPACITE", label: "Capacité uniquement" },
+  { value: "NOM_NUMERO", label: "Nom + Numéro" },
+  { value: "NUMERO_CAPACITE", label: "Numéro + Capacité" },
 ] as const;
 
 /**
@@ -564,7 +564,7 @@ export const resetDataOptionsSchema = z
       );
     },
     {
-      message: "Vous devez selectionner au moins une categorie de donnees a supprimer",
+      message: "Vous devez selectionner au moins une catégorie de données à supprimer",
     }
   );
 

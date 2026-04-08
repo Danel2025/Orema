@@ -70,7 +70,7 @@ function getTooltipContent(
   pendingCount: number,
   lastSyncedAt: string | null
 ): string {
-  const syncText = `Derniere sync : ${formatLastSync(lastSyncedAt)}`;
+  const syncText = `Dernière sync : ${formatLastSync(lastSyncedAt)}`;
 
   switch (status) {
     case "online":

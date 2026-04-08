@@ -133,7 +133,7 @@ export async function loginWithPin(input: PinLoginInput): Promise<ActionResult> 
       return { success: false, error: "Email ou PIN incorrect" };
     }
     if (!user.pin_code)
-      return { success: false, error: "Aucun PIN configure pour cet utilisateur" };
+      return { success: false, error: "Aucun PIN configuré pour cet utilisateur" };
 
     const isPinValid = await verifyPin(validated.pin, user.pin_code);
     if (!isPinValid) {
@@ -293,7 +293,7 @@ export async function updatePassword(input: UpdatePasswordInput): Promise<Action
 
     if (updateError) {
       console.error("Password update failed");
-      return { success: false, error: "Erreur lors de la mise a jour du mot de passe" };
+      return { success: false, error: "Erreur lors de la mise à jour du mot de passe" };
     }
 
     // Log d'audit (seulement si un établissement est associé)

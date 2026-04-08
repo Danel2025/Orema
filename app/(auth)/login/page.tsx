@@ -428,7 +428,7 @@ function LoginPageContent() {
                 alt="Oréma N+"
                 width={56}
                 height={56}
-                style={{ objectFit: "contain" }}
+                style={{ objectFit: "contain", width: "auto", height: "auto" }}
               />
             </div>
             <h1 className="hero-title">Oréma N+</h1>
@@ -484,7 +484,7 @@ function LoginPageContent() {
                   alt="Oréma N+"
                   width={36}
                   height={36}
-                  style={{ objectFit: "contain" }}
+                  style={{ objectFit: "contain", width: "auto", height: "auto" }}
                 />
               </div>
               <h2 className="form-title">Connexion</h2>
@@ -577,9 +577,16 @@ function LoginPageContent() {
                 Créer mon établissement →
               </Link>
             </div>
+
           </div>
 
-          <div className="footer">Oréma N+ POS System © 2026</div>
+          <div className="footer">
+            <Link href="/" style={{ color: "var(--accent-9)", textDecoration: "none", fontWeight: 500 }}>
+              Découvrir la plateforme
+            </Link>
+            <span style={{ margin: "0 0.5rem" }}>·</span>
+            Oréma N+ © 2026
+          </div>
         </div>
       </div>
     </>

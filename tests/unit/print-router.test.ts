@@ -202,14 +202,14 @@ describe("Logique de routage par destinationPreparation", () => {
   // - AUCUNE -> pas de routage (skip)
   // - AUTO/absent -> detection par nom de categorie
 
-  it("la valeur AUCUNE doit etre geree comme skip", () => {
+  it("la valeur AUCUNE doit être gérée comme skip", () => {
     // On verifie que la constante existe et est une string valide
     const destination = "AUCUNE";
     expect(destination).toBe("AUCUNE");
     // Dans routeLinesToPrinters, les lignes avec AUCUNE sont filtrees
   });
 
-  it("la valeur AUTO doit etre geree comme fallback", () => {
+  it("la valeur AUTO doit être gérée comme fallback", () => {
     const destination = "AUTO";
     expect(destination).toBe("AUTO");
     // En mode AUTO, isBarCategory est utilise pour determiner la destination

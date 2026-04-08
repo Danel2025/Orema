@@ -89,7 +89,7 @@ export async function POST(request: NextRequest) {
     });
 
     if (invalidLines.length > 0) {
-      return NextResponse.json({ error: "Acces refuse" }, { status: 403 });
+      return NextResponse.json({ error: "Accès refusé" }, { status: 403 });
     }
 
     // Verifier les transitions valides

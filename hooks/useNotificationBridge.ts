@@ -54,7 +54,7 @@ export function useNotificationBridge({
       await broadcastNotification({
         type: "COMMANDE",
         titre: "Nouvelle commande",
-        message: `${ligne.quantite}x Produit - Table en preparation`,
+        message: `${ligne.quantite}x Produit - Table en préparation`,
         donnees: {
           ligneVenteId: ligne.id,
           venteId: ligne.vente_id,

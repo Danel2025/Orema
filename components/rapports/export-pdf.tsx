@@ -132,7 +132,7 @@ export function ExportPDF({
       footerText.style.color = "#999";
       footerText.style.fontSize = "10px";
       footerText.style.margin = "0";
-      footerText.textContent = "Orema N+ POS — Document genere automatiquement";
+      footerText.textContent = "Orema N+ POS — Document généré automatiquement";
       footer.appendChild(footerText);
 
       wrapper.appendChild(header);
@@ -168,7 +168,7 @@ export function ExportPDF({
       // Nettoyer
       document.body.removeChild(wrapper);
 
-      toast.success("PDF exporte avec succes");
+      toast.success("PDF exporté avec succès");
     } catch (error) {
       console.error("Erreur export PDF:", error);
 
@@ -237,7 +237,7 @@ export function ExportPDF({
         }
       }
 
-      toast.error("Export PDF echoue, fenetre d'impression ouverte");
+      toast.error("Export PDF échoué, fenêtre d'impression ouverte");
     } finally {
       setIsExporting(false);
     }

@@ -114,7 +114,7 @@ export function usePrint(options: UsePrintOptions = {}) {
             success: false,
             error:
               "Imprimante systeme detectee. Utilisez useSystemPrint() ou " +
-              "fournissez les donnees HTML pour l'impression via le navigateur.",
+              "fournissez les données HTML pour l'impression via le navigateur.",
           };
           setLastResult(systemFallbackResult);
           options.onError?.(systemFallbackResult.error!);

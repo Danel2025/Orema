@@ -3,6 +3,7 @@ import { Box, Flex, Heading, Text, Skeleton, Grid } from "@radix-ui/themes";
 import { getKPIs } from "@/actions/rapports";
 import { KPICards } from "@/components/rapports";
 import { RapportsTabs } from "./rapports-tabs";
+import { UpgradeBanner } from "@/components/shared/upgrade-banner";
 
 // Composants de chargement
 function KPICardsLoading() {
@@ -41,6 +42,14 @@ export default function RapportsPage() {
         <Suspense fallback={<KPICardsLoading />}>
           <KPICardsServer />
         </Suspense>
+      </Box>
+
+      {/* Banner upgrade pour rapports avancés */}
+      <Box mb="4">
+        <UpgradeBanner
+          feature="rapports"
+          message="Passez à un plan supérieur pour accéder aux rapports avancés, exports et analyses détaillées."
+        />
       </Box>
 
       {/* Onglets */}

@@ -11,6 +11,7 @@ import {
   FAQ,
   Footer,
 } from "@/components/landing";
+import "@/components/landing/landing-animations.css";
 
 const jsonLd = [
   {

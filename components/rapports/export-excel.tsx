@@ -10,6 +10,7 @@ import { Button } from "@radix-ui/themes";
 import { FileXls, CircleNotch } from "@phosphor-icons/react";
 import { toast } from "sonner";
 import { formatCurrency } from "@/lib/utils";
+import { PlanGate } from "@/components/shared/plan-gate";
 
 // ============================================================================
 // TYPES
@@ -142,7 +143,7 @@ export function ExportExcel({
       // ---- Feuille 2: Detail ventes ----
       if (ventesResume && ventesResume.length > 0) {
         const ventesHeaders = [
-          "Numero ticket",
+          "Numéro ticket",
           "Date",
           "Type",
           "Sous-total HT",
@@ -220,7 +221,7 @@ export function ExportExcel({
       });
       downloadBlob(blob, `${filename}-${new Date().toISOString().slice(0, 10)}.xlsx`);
 
-      toast.success("Excel exporte avec succes");
+      toast.success("Excel exporté avec succès");
     } catch (error) {
       console.error("Erreur export Excel:", error);
       toast.error("Erreur lors de l'export Excel");
@@ -230,9 +231,11 @@ export function ExportExcel({
   };
 
   return (
-    <Button variant={variant} color="green" onClick={handleExport} disabled={isExporting}>
-      {isExporting ? <CircleNotch size={16} className="animate-spin" /> : <FileXls size={16} />}
-      {isExporting ? "Export en cours..." : "Exporter Excel"}
-    </Button>
+    <PlanGate minPlan="business">
+      <Button variant={variant} color="green" onClick={handleExport} disabled={isExporting}>
+        {isExporting ? <CircleNotch size={16} className="animate-spin" /> : <FileXls size={16} />}
+        {isExporting ? "Export en cours..." : "Exporter Excel"}
+      </Button>
+    </PlanGate>
   );
 }

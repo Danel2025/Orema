@@ -250,6 +250,19 @@ export const db = {
   getExpiringTrials: queries.getExpiringTrials,
   getFailedPayments: queries.getFailedPayments,
   getQuotaAlerts: queries.getQuotaAlerts,
+
+  // Avis clients
+  getAvisByEtablissement: queries.getAvisByEtablissement,
+  getAvisById: queries.getAvisById,
+  createAvis: queries.createAvis,
+  getAvisReponses: queries.getAvisReponses,
+  saveAvisReponse: queries.saveAvisReponse,
+  publierAvisReponse: queries.publierAvisReponse,
+  getAvisQuestions: queries.getAvisQuestions,
+  saveAvisQuestions: queries.saveAvisQuestions,
+  getLatestAvisAnalyse: queries.getLatestAvisAnalyse,
+  getAvisAnalyses: queries.getAvisAnalyses,
+  saveAvisAnalyse: queries.saveAvisAnalyse,
 };
 
 // Export default pour compatibilité

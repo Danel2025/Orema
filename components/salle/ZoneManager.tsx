@@ -257,7 +257,7 @@ function ZoneItem({
           </Flex>
         ) : (
           <Tooltip
-            content={tableCount > 0 ? "Impossible de supprimer: tables associees" : "Supprimer"}
+            content={tableCount > 0 ? "Impossible de supprimer: tables associées" : "Supprimer"}
           >
             <IconButton
               variant="ghost"
@@ -331,7 +331,7 @@ function ZoneFormDialog({
         const result = isEdit ? await updateZone(zone.id, data) : await createZone(data);
 
         if (result.success) {
-          toast.success(isEdit ? "Zone mise a jour" : "Zone creee");
+          toast.success(isEdit ? "Zone mise à jour" : "Zone créée");
           onSuccess();
         } else {
           toast.error(result.error || "Une erreur est survenue");
@@ -349,7 +349,7 @@ function ZoneFormDialog({
         <Dialog.Description size="2" mb="4" color="gray">
           {isEdit
             ? "Modifiez les informations de la zone"
-            : "Creez une nouvelle zone pour organiser vos tables"}
+            : "Créez une nouvelle zone pour organiser vos tables"}
         </Dialog.Description>
 
         <form onSubmit={handleSubmit}>
@@ -451,7 +451,7 @@ function ZoneFormDialog({
               </Button>
             </Dialog.Close>
             <Button type="submit" disabled={isPending || !nom.trim()}>
-              {isPending ? "Enregistrement..." : isEdit ? "Enregistrer" : "Creer"}
+              {isPending ? "Enregistrement..." : isEdit ? "Enregistrer" : "Créer"}
             </Button>
           </Flex>
         </form>

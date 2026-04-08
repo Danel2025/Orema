@@ -353,7 +353,7 @@ export function generateRapportZCommands(
 
   // Heure d'impression
   printer.setTypeFontB();
-  printer.println("Document genere par Orema N+ POS");
+  printer.println("Document généré par Orema N+ POS");
   printer.println(`Imprime le ${formatDateTime(new Date())}`);
   printer.setTypeFontA();
 

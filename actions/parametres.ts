@@ -107,7 +107,7 @@ export async function updateEtablissement(data: EtablissementFormData): Promise<
     revalidatePath("/parametres");
     return { success: true, data: result };
   } catch (error) {
-    return handleError("Erreur lors de la mise a jour de l'etablissement", error);
+    return handleError("Erreur lors de la mise à jour de l'établissement", error);
   }
 }
 
@@ -164,7 +164,7 @@ export async function updateFiscalSettings(data: FiscalFormData): Promise<Action
       },
     };
   } catch (error) {
-    return handleError("Erreur lors de la mise a jour des parametres fiscaux", error);
+    return handleError("Erreur lors de la mise à jour des paramètres fiscaux", error);
   }
 }
 
@@ -300,7 +300,7 @@ export async function updateImprimante(
     revalidatePath("/parametres");
     return { success: true, data: result };
   } catch (error) {
-    return handleError("Erreur lors de la mise a jour de l'imprimante", error);
+    return handleError("Erreur lors de la mise à jour de l'imprimante", error);
   }
 }
 
@@ -493,7 +493,7 @@ export async function updateZoneLivraison(
     revalidatePath("/parametres");
     return { success: true, data: result };
   } catch (error) {
-    return handleError("Erreur lors de la mise a jour de la zone", error);
+    return handleError("Erreur lors de la mise à jour de la zone", error);
   }
 }
 
@@ -634,7 +634,7 @@ export async function updateCaisseVentesSettings(
       },
     };
   } catch (error) {
-    return handleError("Erreur lors de la mise a jour des parametres de caisse", error);
+    return handleError("Erreur lors de la mise à jour des paramètres de caisse", error);
   }
 }
 
@@ -688,7 +688,7 @@ export async function updateStockSettings(data: StockSettingsFormData): Promise<
       },
     };
   } catch (error) {
-    return handleError("Erreur lors de la mise a jour des parametres de stock", error);
+    return handleError("Erreur lors de la mise à jour des paramètres de stock", error);
   }
 }
 
@@ -747,7 +747,7 @@ export async function updateFideliteSettings(
       },
     };
   } catch (error) {
-    return handleError("Erreur lors de la mise a jour des parametres de fidelite", error);
+    return handleError("Erreur lors de la mise à jour des paramètres de fidélité", error);
   }
 }
 
@@ -816,7 +816,7 @@ export async function updateSecuriteSettings(
       },
     };
   } catch (error) {
-    return handleError("Erreur lors de la mise a jour des parametres de securite", error);
+    return handleError("Erreur lors de la mise à jour des paramètres de sécurité", error);
   }
 }
 
@@ -886,7 +886,7 @@ export async function updatePlanSalleSettings(
       },
     };
   } catch (error) {
-    return handleError("Erreur lors de la mise a jour des parametres du plan de salle", error);
+    return handleError("Erreur lors de la mise à jour des paramètres du plan de salle", error);
   }
 }
 
@@ -917,13 +917,13 @@ export async function resetData(data: ResetDataOptions): Promise<ActionResult<Re
     // 1. Verifier l'authentification et les permissions
     const currentUser = await getCurrentUser();
     if (!currentUser) {
-      return { success: false, error: "Vous devez etre connecte pour effectuer cette action" };
+      return { success: false, error: "Vous devez être connecté pour effectuer cette action" };
     }
 
     if (!RESET_ALLOWED_ROLES.includes(currentUser.role)) {
       return {
         success: false,
-        error: "Seuls les administrateurs peuvent effectuer une remise a zero des donnees",
+        error: "Seuls les administrateurs peuvent effectuer une remise à zéro des données",
       };
     }
 
@@ -933,7 +933,7 @@ export async function resetData(data: ResetDataOptions): Promise<ActionResult<Re
       return { success: false, error: validation.error };
     }
 
-    // 3. Recuperer l'etablissement
+    // 3. Recuperer l'établissement
     const etablissementId = await getEtablissementId();
     const supabase = createServiceClient();
     const deletedCounts: Record<string, number> = {};
@@ -943,7 +943,7 @@ export async function resetData(data: ResetDataOptions): Promise<ActionResult<Re
 
     // Ventes: paiements -> lignes_vente -> ventes -> sessions_caisse
     if (validation.data.ventes) {
-      // Supprimer les paiements des ventes de l'etablissement
+      // Supprimer les paiements des ventes de l'établissement
       const { data: ventes } = await supabase
         .from("ventes")
         .select("id")
@@ -1101,8 +1101,8 @@ export async function resetData(data: ResetDataOptions): Promise<ActionResult<Re
       },
     };
   } catch (error) {
-    console.error("Erreur lors de la remise a zero des donnees", error);
-    return { success: false, error: "Erreur lors de la remise a zero des donnees" };
+    console.error("Erreur lors de la remise à zéro des données", error);
+    return { success: false, error: "Erreur lors de la remise à zéro des données" };
   }
 }
 
@@ -1206,7 +1206,7 @@ export async function getDataStatistics(): Promise<ActionResult<Record<string, n
 // ============================================================================
 
 /**
- * Recupere les parametres de facture pour l'etablissement courant
+ * Recupere les paramètres de facture pour l'établissement courant
  * Cree les parametres par defaut s'ils n'existent pas
  */
 export async function getParametresFacture(): Promise<ParametresFactureFormData> {
@@ -1282,7 +1282,7 @@ function mapDbToFormData(data: Record<string, unknown>): ParametresFactureFormDa
 }
 
 /**
- * Met a jour les parametres de facture
+ * Met a jour les paramètres de facture
  */
 export async function updateParametresFacture(
   data: ParametresFactureFormData
@@ -1335,6 +1335,6 @@ export async function updateParametresFacture(
     revalidatePath("/parametres");
     return { success: true, data: mapDbToFormData(result) };
   } catch (error) {
-    return handleError("Erreur lors de la mise a jour des parametres de facture", error);
+    return handleError("Erreur lors de la mise à jour des paramètres de facture", error);
   }
 }

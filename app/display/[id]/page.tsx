@@ -14,18 +14,18 @@ export async function generateMetadata({
   const { token } = await searchParams;
 
   if (!token) {
-    return { title: "Erreur | Ecran d'affichage" };
+    return { title: "Erreur | Écran d'affichage" };
   }
 
   const result = await getEcranByToken(token);
 
   if (!result.success) {
-    return { title: "Erreur | Ecran d'affichage" };
+    return { title: "Erreur | Écran d'affichage" };
   }
 
   return {
     title: `${result.data.nom} | Orema N+`,
-    description: `Ecran d'affichage ${result.data.type.toLowerCase()} - ${result.data.nom}`,
+    description: `Écran d'affichage ${result.data.type.toLowerCase()} - ${result.data.nom}`,
   };
 }
 

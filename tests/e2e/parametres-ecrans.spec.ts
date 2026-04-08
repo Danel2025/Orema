@@ -8,14 +8,14 @@
 
 import { test, expect } from "@playwright/test";
 
-test.describe("Parametres - Protection d'acces", () => {
+test.describe("Paramètres - Protection d'acces", () => {
   test("la page /parametres redirige vers /login si non authentifie", async ({ page }) => {
     await page.goto("/parametres");
     await expect(page).toHaveURL(/\/login/, { timeout: 15000 });
   });
 });
 
-test.describe("Parametres - Onglet Ecrans (necessite auth)", () => {
+test.describe("Paramètres - Onglet Ecrans (necessite auth)", () => {
   // Ces tests necessitent une session authentifiee
   // Ils sont skips car la CI n'a pas de credentials
 

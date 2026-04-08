@@ -74,7 +74,7 @@ const partnerTypes = [
     benefits: [
       "Integration simplifiee",
       "Volume de transactions croissant",
-      "Acces au marche CHR",
+      "Accès au marché CHR",
       "Support technique",
     ],
   },

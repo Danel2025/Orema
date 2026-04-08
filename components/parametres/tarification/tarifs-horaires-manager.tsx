@@ -348,7 +348,7 @@ export function TarifsHorairesManager({
         };
         setTarifs((prev) => [...prev, newTarif]);
         setDialogOpen(false);
-        toast.success("Tarif horaire cree");
+        toast.success("Tarif horaire créé");
       } else {
         toast.error(result.error || "Erreur lors de la creation");
       }
@@ -372,7 +372,7 @@ export function TarifsHorairesManager({
         );
         setEditingTarif(null);
         setDialogOpen(false);
-        toast.success("Tarif horaire modifie");
+        toast.success("Tarif horaire modifié");
       } else {
         toast.error(result.error || "Erreur lors de la modification");
       }
@@ -388,7 +388,7 @@ export function TarifsHorairesManager({
       const result = await deleteTarifHoraireAction(id);
       if (result.success) {
         setTarifs((prev) => prev.filter((t) => t.id !== id));
-        toast.success("Tarif horaire supprime");
+        toast.success("Tarif horaire supprimé");
       } else {
         toast.error(result.error || "Erreur lors de la suppression");
       }

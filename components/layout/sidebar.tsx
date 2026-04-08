@@ -20,9 +20,10 @@ import {
   PanelLeftOpen,
   ShieldCheck,
 } from "lucide-react";
-import { CookingPot, BeerBottle } from "@phosphor-icons/react";
+import { CookingPot, BeerBottle, ChatCircleDots } from "@phosphor-icons/react";
 import { useUIStore } from "@/stores/ui-store";
 import { useAuth } from "@/lib/auth/context";
+import { SidebarPlanWidget } from "./sidebar-plan-widget";
 
 interface NavItem {
   label: string;
@@ -39,6 +40,7 @@ const allNavItems: NavItem[] = [
   { label: "Produits", href: "/produits" as Route, icon: Package },
   { label: "Stocks", href: "/stocks" as Route, icon: Warehouse },
   { label: "Clients", href: "/clients" as Route, icon: Users },
+  { label: "Avis", href: "/avis" as Route, icon: ChatCircleDots },
   { label: "Employés", href: "/employes" as Route, icon: UserCircle },
   { label: "Rapports", href: "/rapports" as Route, icon: BarChart3 },
   { label: "Paramètres", href: "/parametres" as Route, icon: Settings },
@@ -78,8 +80,7 @@ export function Sidebar() {
         zIndex: 50,
         display: "flex",
         flexDirection: "column",
-        overflowY: "auto",
-        overflowX: "hidden",
+        overflow: "hidden",
         transition: "width 0.2s ease",
       }}
     >
@@ -103,7 +104,7 @@ export function Sidebar() {
             alt="Oréma N+"
             width={40}
             height={40}
-            style={{ objectFit: "contain", flexShrink: 0 }}
+            style={{ objectFit: "contain", flexShrink: 0, width: "auto", height: "auto" }}
           />
           {!isCollapsed && (
             <div style={{ whiteSpace: "nowrap", overflow: "hidden" }}>
@@ -115,7 +116,7 @@ export function Sidebar() {
       </div>
 
       {/* Navigation */}
-      <nav role="navigation" aria-label="Menu principal" style={{ flex: 1, padding: "12px 8px" }}>
+      <nav role="navigation" aria-label="Menu principal" className="sidebar-nav-scroll" style={{ flex: 1, padding: "12px 8px", overflowY: "auto", overflowX: "hidden" }}>
         {navItems.map((item) => {
           const isActive = pathname === item.href;
           const Icon = item.icon;
@@ -178,6 +179,9 @@ export function Sidebar() {
           return linkContent;
         })}
       </nav>
+
+      {/* Plan widget */}
+      <SidebarPlanWidget isCollapsed={isCollapsed} />
 
       {/* Bouton Toggle */}
       <div

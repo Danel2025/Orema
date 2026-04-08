@@ -44,6 +44,8 @@ export interface FloorPlanKeyboardCallbacks {
   onDecreaseSize?: () => void;
   /** Centrer la vue sur la selection (F) */
   onFocusSelected?: () => void;
+  /** Basculer l'orientation de placement H/V (H) */
+  onToggleOrientation?: () => void;
 }
 
 /**
@@ -153,6 +155,13 @@ export function useFloorPlanKeyboard(
       if ((event.key === "f" || event.key === "F") && !modifierKey && !event.altKey) {
         event.preventDefault();
         callbacksRef.current.onFocusSelected?.();
+        return;
+      }
+
+      // Basculer l'orientation de placement H/V (H)
+      if ((event.key === "h" || event.key === "H") && !modifierKey && !event.altKey && !event.shiftKey) {
+        event.preventDefault();
+        callbacksRef.current.onToggleOrientation?.();
         return;
       }
 

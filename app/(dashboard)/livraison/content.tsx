@@ -50,7 +50,7 @@ export function LivraisonContent({ livraisons }: LivraisonContentProps) {
           delete next[livraisonId];
           return next;
         });
-        // Rafraichir les donnees serveur
+        // Rafraîchir les données serveur
         startTransition(() => {
           router.refresh();
         });
@@ -113,7 +113,7 @@ export function LivraisonContent({ livraisons }: LivraisonContentProps) {
           </div>
         </Flex>
 
-        <Tooltip content="Rafraichir les donnees">
+        <Tooltip content="Rafraîchir les données">
           <IconButton
             variant="surface"
             color="gray"

@@ -314,7 +314,7 @@ export function generateRapportZ(data: RapportZData, paperWidth: 58 | 80 = 80): 
   // Heure d'impression
   builder
     .font("B")
-    .println("Document genere par Orema N+ POS")
+    .println("Document généré par Orema N+ POS")
     .println(`Imprime le ${formatPrintDateTime(new Date())}`)
     .font("A");
 

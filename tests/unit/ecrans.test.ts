@@ -14,7 +14,7 @@ import type { EcranFormData } from "@/schemas/ecran.schema";
 
 describe("ecranSchema - Validation des ecrans d'affichage", () => {
   const validEcran = {
-    nom: "Ecran Cuisine",
+    nom: "Écran Cuisine",
     type: "CUISINE" as const,
   };
 
@@ -29,7 +29,7 @@ describe("ecranSchema - Validation des ecrans d'affichage", () => {
 
   it("valide un ecran complet avec toutes les options", () => {
     const result = ecranSchema.safeParse({
-      nom: "Ecran Bar Principal",
+      nom: "Écran Bar Principal",
       type: "BAR",
       categories: ["550e8400-e29b-41d4-a716-446655440000"],
       son_actif: false,
@@ -138,7 +138,7 @@ describe("ecranSchema - Validation des ecrans d'affichage", () => {
   });
 
   it("rejette sans type", () => {
-    const result = ecranSchema.safeParse({ nom: "Ecran Test" });
+    const result = ecranSchema.safeParse({ nom: "Écran Test" });
     expect(result.success).toBe(false);
   });
 
@@ -146,7 +146,7 @@ describe("ecranSchema - Validation des ecrans d'affichage", () => {
   // Cas invalides - delai_urgence_minutes
   // -----------------------------------------------------------------------
 
-  it("rejette un delai inferieur a 1 minute", () => {
+  it("rejette un délai inférieur a 1 minute", () => {
     const result = ecranSchema.safeParse({
       ...validEcran,
       delai_urgence_minutes: 0,
@@ -154,7 +154,7 @@ describe("ecranSchema - Validation des ecrans d'affichage", () => {
     expect(result.success).toBe(false);
   });
 
-  it("rejette un delai superieur a 120 minutes", () => {
+  it("rejette un délai supérieur a 120 minutes", () => {
     const result = ecranSchema.safeParse({
       ...validEcran,
       delai_urgence_minutes: 121,

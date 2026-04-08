@@ -2,7 +2,7 @@ import { useState, useCallback, useMemo, useRef, useEffect } from "react";
 import type { DecorElementData } from "@/components/salle/DecorElement";
 
 const MAX_HISTORY_LENGTH = 50;
-const LOCAL_STORAGE_KEY = "floorplan-decor";
+const LOCAL_STORAGE_KEY_PREFIX = "floorplan-decor";
 
 interface HistoryState {
   past: DecorElementData[][];
@@ -32,11 +32,18 @@ interface UseFloorPlanHistoryReturn {
 }
 
 /**
+ * Build the localStorage key scoped to an establishment
+ */
+function getStorageKey(etablissementId: string): string {
+  return `${LOCAL_STORAGE_KEY_PREFIX}-${etablissementId}`;
+}
+
+/**
  * Load state from localStorage (client-side only)
  */
-function loadFromLocalStorage(): DecorElementData[] {
+function loadFromLocalStorage(etablissementId: string): DecorElementData[] {
   try {
-    const saved = localStorage.getItem(LOCAL_STORAGE_KEY);
+    const saved = localStorage.getItem(getStorageKey(etablissementId));
     if (saved) {
       return JSON.parse(saved);
     }
@@ -49,10 +56,10 @@ function loadFromLocalStorage(): DecorElementData[] {
 /**
  * Save state to localStorage
  */
-function saveToLocalStorage(elements: DecorElementData[]): void {
+function saveToLocalStorage(etablissementId: string, elements: DecorElementData[]): void {
   if (typeof window === "undefined") return;
   try {
-    localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(elements));
+    localStorage.setItem(getStorageKey(etablissementId), JSON.stringify(elements));
   } catch {
     // Ignore storage errors
   }
@@ -66,7 +73,7 @@ function saveToLocalStorage(elements: DecorElementData[]): void {
  * - Provides undo() and redo() functions
  * - Exposes canUndo and canRedo flags
  */
-export function useFloorPlanHistory(): UseFloorPlanHistoryReturn {
+export function useFloorPlanHistory(etablissementId: string): UseFloorPlanHistoryReturn {
   // Start with empty array to avoid hydration mismatch
   const [history, setHistory] = useState<HistoryState>({
     past: [],
@@ -77,7 +84,8 @@ export function useFloorPlanHistory(): UseFloorPlanHistoryReturn {
   // Track if localStorage has been loaded (use lazy init + useSyncExternalStore pattern)
   const [isLoaded] = useState(() => {
     if (typeof window === "undefined") return false;
-    const saved = loadFromLocalStorage();
+    if (!etablissementId) return false;
+    const saved = loadFromLocalStorage(etablissementId);
     if (saved.length > 0) {
       // Will be applied in initial render via lazy init below
     }
@@ -86,13 +94,23 @@ export function useFloorPlanHistory(): UseFloorPlanHistoryReturn {
 
   // Lazy-load from localStorage on first render (client only)
   const hasLoadedRef = useRef(false);
-  if (!hasLoadedRef.current && typeof window !== "undefined") {
+  if (!hasLoadedRef.current && typeof window !== "undefined" && etablissementId) {
     hasLoadedRef.current = true;
-    const saved = loadFromLocalStorage();
+    const saved = loadFromLocalStorage(etablissementId);
     if (saved.length > 0) {
       setHistory({ past: [], present: saved, future: [] });
     }
   }
+
+  // Reload from localStorage when etablissementId changes
+  const prevEtablissementIdRef = useRef(etablissementId);
+  useEffect(() => {
+    if (prevEtablissementIdRef.current !== etablissementId && etablissementId) {
+      prevEtablissementIdRef.current = etablissementId;
+      const saved = loadFromLocalStorage(etablissementId);
+      setHistory({ past: [], present: saved, future: [] });
+    }
+  }, [etablissementId]);
 
   // Track if this is an internal update (undo/redo) to avoid double-pushing to history
   const isInternalUpdate = useRef(false);
@@ -108,7 +126,7 @@ export function useFloorPlanHistory(): UseFloorPlanHistoryReturn {
         }
 
         // Save to localStorage
-        saveToLocalStorage(newPresent);
+        saveToLocalStorage(etablissementId, newPresent);
 
         // If this is an internal update (undo/redo), don't modify history
         if (isInternalUpdate.current) {
@@ -132,7 +150,7 @@ export function useFloorPlanHistory(): UseFloorPlanHistoryReturn {
         };
       });
     },
-    []
+    [etablissementId]
   );
 
   const undo = useCallback(() => {
@@ -143,7 +161,7 @@ export function useFloorPlanHistory(): UseFloorPlanHistoryReturn {
       const previousState = newPast.pop()!;
 
       // Save to localStorage
-      saveToLocalStorage(previousState);
+      saveToLocalStorage(etablissementId, previousState);
 
       return {
         past: newPast,
@@ -151,7 +169,7 @@ export function useFloorPlanHistory(): UseFloorPlanHistoryReturn {
         future: [prev.present, ...prev.future].slice(0, MAX_HISTORY_LENGTH),
       };
     });
-  }, []);
+  }, [etablissementId]);
 
   const redo = useCallback(() => {
     setHistory((prev) => {
@@ -161,7 +179,7 @@ export function useFloorPlanHistory(): UseFloorPlanHistoryReturn {
       const nextState = newFuture.shift()!;
 
       // Save to localStorage
-      saveToLocalStorage(nextState);
+      saveToLocalStorage(etablissementId, nextState);
 
       return {
         past: [...prev.past, prev.present].slice(-MAX_HISTORY_LENGTH),
@@ -169,7 +187,7 @@ export function useFloorPlanHistory(): UseFloorPlanHistoryReturn {
         future: newFuture,
       };
     });
-  }, []);
+  }, [etablissementId]);
 
   const clearHistory = useCallback(() => {
     setHistory((prev) => ({

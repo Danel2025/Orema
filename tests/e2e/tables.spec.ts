@@ -17,7 +17,7 @@ import { test, expect } from "@playwright/test";
 // TESTS SANS AUTHENTIFICATION
 // =============================================================================
 
-test.describe("Plan de salle - Acces sans authentification", () => {
+test.describe("Plan de salle - Accès sans authentification", () => {
   test("redirige vers /login quand non authentifie", async ({ page }) => {
     await page.goto("/salle");
     await expect(page).toHaveURL(/\/login/);
@@ -78,7 +78,7 @@ test.describe("Plan de salle - Statistiques", () => {
     await expect(page.getByText(/occup[eé]es/i)).toBeVisible();
   });
 
-  test("affiche les statistiques 'En preparation'", async ({ page }) => {
+  test("affiche les statistiques 'En préparation'", async ({ page }) => {
     await expect(page.getByText(/en pr[eé]paration/i).first()).toBeVisible();
   });
 
@@ -128,7 +128,7 @@ test.describe("Plan de salle - Legende des statuts", () => {
     await expect(page.getByText(/occup[eé]e$/i).first()).toBeVisible();
   });
 
-  test("affiche le statut 'En preparation' dans la legende", async ({ page }) => {
+  test("affiche le statut 'En préparation' dans la legende", async ({ page }) => {
     await expect(page.getByText(/en pr[eé]paration/i).first()).toBeVisible();
   });
 

@@ -60,3 +60,5 @@ supabase/.temp/
 
 # windows artifacts
 nul
+out/
+src-tauri/target/

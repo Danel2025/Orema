@@ -19,7 +19,7 @@ import { HistoriquePrixTimeline } from "@/components/parametres/tarification/his
 import { ApprobationQueue } from "@/components/parametres/tarification/approbation-queue";
 
 export const metadata = {
-  title: "Tarification & Restrictions | Parametres",
+  title: "Tarification & Restrictions | Paramètres",
   description: "Configuration des regles tarifaires, marges et approbations",
 };
 

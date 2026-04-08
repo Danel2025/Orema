@@ -1,5 +1,8 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
-  <rect width="512" height="512" rx="96" fill="#f97316"/>
-  <text x="256" y="340" font-family="system-ui, -apple-system, sans-serif" font-size="280" font-weight="bold" fill="white" text-anchor="middle">O</text>
-  <text x="256" y="420" font-family="system-ui, -apple-system, sans-serif" font-size="80" font-weight="600" fill="white" text-anchor="middle">N+</text>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="-73 -134 978 978">
+  <polygon points="415.73,144.17 239.98,0 0,175.86" fill="#fed112"/>
+  <polygon points="0,358.42 0,175.86 415.73,144.17" fill="#6bfdc0"/>
+  <polygon points="0,358.42 415.73,144.17 415.73,710.47" fill="#f54f6d"/>
+  <polygon points="415.73,144.17 591.49,0 831.46,175.86" fill="#6bfdc0"/>
+  <polygon points="831.46,358.42 831.46,175.86 415.73,144.17" fill="#a855f7"/>
+  <polygon points="831.46,358.42 415.73,144.17 415.73,710.47" fill="#fed112"/>
 </svg>

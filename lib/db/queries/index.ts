@@ -61,3 +61,6 @@ export * from "./tarifs-horaires";
 
 // Billing stats admin
 export * from "./billing-stats";
+
+// Avis clients
+export * from "./avis";
